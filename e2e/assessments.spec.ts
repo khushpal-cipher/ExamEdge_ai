@@ -176,7 +176,8 @@ test('teacher builds a mixed test, student takes it, teacher checks and releases
   await card.getByLabel('Marks (out of 4)').fill('2.5');
   await card.getByLabel('Comment for the student (optional)').fill('Mention inertia.');
   await card.getByRole('button', { name: 'Save marks for Student 1' }).click();
-  await expect(page.getByRole('status')).toHaveText('Saved.');
+  // Re-rendered in place (no redirect), so the teacher keeps their place in a long list.
+  await expect(card.getByText('Checked: 2.5')).toBeVisible();
   await expect(page.getByText('1 of 1 checked')).toBeVisible();
   await expect(page).toHaveURL(/names=hidden/);
 

@@ -97,7 +97,7 @@ export async function Standings({ ctx, batch, sort }: { ctx: Ctx; batch: string;
                     <td>
                       <Link href={`/students/${r.user_id}`}>{r.name}</Link>
                     </td>
-                    <td>{r.average_percentage}</td>
+                    <td>{r.tests_counted ? r.average_percentage : '—'}</td>
                     <td>{r.last == null ? '—' : `${r.last}%`}</td>
                     <td>{r.tests_missed}</td>
                   </tr>

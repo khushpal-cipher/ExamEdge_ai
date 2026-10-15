@@ -2,6 +2,7 @@
 
 // Question bank, tests, checking and release (staff), and taking a test (students). Same rules as ../actions.ts:
 // institute from the host, role re-checked here, RLS and the definer RPCs check everything again.
+import { refresh } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { fromLocalInput } from '@/lib/assess';
 import { isUuid, requireMember, STAFF } from '@/lib/tenant';
@@ -241,7 +242,7 @@ export async function releaseResults(form: FormData) {
   done(`/tests/${id}`, error, 'released');
 }
 
-// The checking screen posts back to itself; the path is rebuilt from ids, never taken from the form.
+// The checking screen re-renders in place; on error the path is rebuilt from ids, never taken from the form.
 export async function gradeAnswer(form: FormData) {
   const { db } = await requireMember(STAFF);
   const test = form.get('test_id');
@@ -256,7 +257,8 @@ export async function gradeAnswer(form: FormData) {
     marks: marks ?? -1e9,
     comment: text(form, 'comment', 2000),
   });
-  done(back, error);
+  if (error) done(back, error);
+  refresh(); // re-render in place: a redirect would scroll a teacher back to the top of a long list
 }
 
 // ---------------------------------------------------------------- students

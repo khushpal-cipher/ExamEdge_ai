@@ -420,8 +420,8 @@ async function seedTests(
         const response =
           q.type === 'written'
             ? right
-              ? 'Because the angular momentum stays the same, so a smaller moment of inertia means faster spin.'
-              : 'It is because of gravity.'
+              ? (q.key as { model_answer: string }).model_answer
+              : 'I am not sure, I think it depends on the temperature.'
             : q.type === 'numerical'
               ? right
                 ? key.value!

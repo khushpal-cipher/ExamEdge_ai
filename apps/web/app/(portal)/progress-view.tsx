@@ -116,7 +116,7 @@ export function ProgressView({ p, staff }: { p: Progress; staff: boolean }) {
             </div>
             <div className="card stat">
               <span className="muted small">Average percentage</span>
-              <b>{s.average_percentage}%</b>
+              <b>{s.tests_counted ? `${s.average_percentage}%` : '—'}</b>
             </div>
             <div className="card stat">
               <span className="muted small">Tests taken / missed</span>
