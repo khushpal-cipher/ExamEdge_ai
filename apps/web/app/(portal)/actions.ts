@@ -19,9 +19,9 @@ function done(path: string, error?: { code?: string; message?: string } | null, 
     // 42501 = RLS/guard denied, 23505 = duplicate name, 23514 = check failed.
     const code = { '42501': 'denied', '23505': 'duplicate', '23514': 'invalid' }[error.code ?? ''] ?? 'failed';
     if (code === 'failed') log.error('staff.action_failed', { path, code: error.code });
-    redirect(`${path}?error=${code}`);
+    redirect(`${path}${path.includes('?') ? '&' : '?'}error=${code}`);
   }
-  redirect(`${path}?ok=${okCode}`);
+  redirect(`${path}${path.includes('?') ? '&' : '?'}ok=${okCode}`);
 }
 
 // ---------------------------------------------------------------- batches

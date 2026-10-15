@@ -40,6 +40,7 @@ test('owner sets up a batch, subject, chapter and invitations (AC3.1)', async ({
   await noSeriousA11yIssues(page);
 
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Subjects' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Subjects');
   await page.getByLabel('Name', { exact: true }).fill(`Economics ${tag}`);
   await page.getByRole('button', { name: 'Create subject' }).click();
   await expect(page.getByRole('status')).toHaveText('Saved.');
@@ -51,6 +52,7 @@ test('owner sets up a batch, subject, chapter and invitations (AC3.1)', async ({
   );
 
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Batches' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Batches');
   await page.getByLabel('Name', { exact: true }).fill(`Commerce ${tag}`);
   await page.getByLabel('Academic year', { exact: true }).fill('2026-27');
   await page.getByRole('button', { name: 'Create batch' }).click();
@@ -190,9 +192,13 @@ test('platform admin needs MFA, then manages institutes (AC2.7, Phase 3 platform
   await expect(page.getByLabel('Owner invitation link')).toHaveValue(
     new RegExp(`^http://gamma-${tag}\\.localhost:3000/invite/[0-9a-f]{64}$`),
   );
+  // React resets the form after a successful action, so fill every field again.
+  await page.getByLabel('Institute name').fill(`Delta ${tag}`);
   await page.getByLabel('Web address (subdomain)').fill('admin');
+  await page.getByLabel('Owner email').fill(`owner-${tag}@delta.test`);
   await page.getByRole('button', { name: 'Create institute' }).click();
-  await expect(page.getByRole('alert')).toHaveText('That address is reserved.');
+  // Scoped to our alert: Next's route announcer is also role=alert.
+  await expect(page.locator('form').getByRole('alert')).toHaveText('That address is reserved.');
 
   await page.reload();
   await page.getByRole('link', { name: `Gamma ${tag}` }).click();
