@@ -1,13 +1,16 @@
 // Embeddings for retrieval (the only module that will call an embeddings provider, ADR-009).
 // Demo mode (EMBEDDINGS_PROVIDER unset or "fake"): a deterministic hashed bag of words, so a question shares
 // dimensions with passages that use the same words. Voyage stays BLOCKED until Q-08 (data-use terms) is resolved.
-// shortcut: not metered yet (cost 0 in demo mode); usage_records and quotas arrive with the Phase 5 gateway.
+// Every call is metered through the gateway (feature ingest_embed in the worker, query_embed for the tutor).
+import { metered, type Meter } from './gateway';
+import { fakeTokens, maxTokens } from './routing';
+
 export const DIMS = 1024;
 
 export function embeddingProvider(env = process.env) {
   const p = env.EMBEDDINGS_PROVIDER || 'fake';
   if (p !== 'fake') throw new Error(`embeddings provider "${p}" is not available yet (BLOCKED: Q-08, no key)`);
-  return { name: p, model: 'fake-bow-1' };
+  return { name: p, model: 'fake-bow-1' as const };
 }
 
 // Letters with their combining marks (Devanagari matras, virama) and digits form one word.
@@ -27,9 +30,19 @@ export function fakeEmbedding(text: string) {
   return norm === 0 ? v : v.map((x) => x / norm);
 }
 
-export async function embed(texts: string[], _inputType: 'document' | 'query') {
+const sum = (texts: string[], f: (t: string) => number) => texts.reduce((n, t) => n + f(t), 0);
+
+export async function embed(
+  meter: Meter,
+  feature: 'ingest_embed' | 'query_embed',
+  texts: string[],
+  _inputType: 'document' | 'query',
+) {
   const { model } = embeddingProvider();
-  return { model, vectors: texts.map(fakeEmbedding) };
+  return metered(meter, { feature, model, worstCase: { input_tokens: sum(texts, maxTokens) } }, async () => ({
+    value: { model, vectors: texts.map(fakeEmbedding) },
+    usage: { input_tokens: sum(texts, fakeTokens) },
+  }));
 }
 
 // pgvector text literal.

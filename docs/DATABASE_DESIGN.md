@@ -171,13 +171,15 @@ Ranking rules (ADR-012, ADR-016) — **two ranks, both from institute-conducted 
 
 ### 4.6 Metering, quotas, activity, audit, consent
 
-**usage_records** (O) — `institute_id`, `user_id` (nullable for jobs), `feature`, `provider`, `model`, `input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_write_tokens`, `units` (chars/searches/seconds), `cost_micro_usd bigint`, `request_id`, `job_id`, `outcome` (`ok|error|refused|quota_blocked`), `created_at`.
-- Append-only: no UPDATE/DELETE grants to any app role. Index `(institute_id, created_at)`. Monthly partitioning when > ~10M rows [E].
-- S owner/admin of institute (own institute), platform admin all. I: gateway (server in user context with a narrow INSERT policy `user_id = auth.uid()`, or worker).
+**usage_records** (O) — `institute_id`, `user_id` (null for worker jobs), `feature`, `provider` (`fake|anthropic|voyage`), `model`, `counter_key` (daily counter used, refunded on `error`), `job_id`, `input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_write_tokens`, `units` (pages/searches), `reserved_micro_usd`, `cost_micro_usd bigint`, `outcome` (`pending|ok|error|refused|quota_blocked`), `created_at`, `settled_at`.
+- Written only by the definer RPCs (ADR-025): `ai_reserve`/`ai_settle` (member, user's session) and `ai_reserve_job`/`ai_settle_job` (worker, job tenant context). No INSERT/UPDATE/DELETE grant to any API role. A `pending` row counts its reservation against the budget until settled once. Index `(institute_id, created_at)`. Monthly partitioning when > ~10M rows [E].
+- S owner/admin of institute (own institute), platform admin all. `public.usage_summary(inst)` = this month per feature (invoker, RLS decides).
 
-**institute_quotas** (T) — pk `institute_id`, `monthly_ai_budget_micro_usd`, `student_daily_messages`, `student_daily_premium_messages`, `student_daily_generations`, `max_storage_bytes`, `max_upload_bytes`, `max_concurrent_jobs`, `hard_stop bool`. S owner/admin; U platform admin.
+**institute_quotas** (T) — pk `institute_id`, `monthly_ai_budget_micro_usd`, `student_daily_messages`, `student_daily_premium_messages`, `student_daily_generations`, `max_storage_bytes`, `max_upload_bytes`, `max_concurrent_jobs`, `hard_stop bool`, `ai_enabled bool` (per-institute kill switch). S owner/admin; U platform admin. Every reservation locks the institute's row (serialises reservations, AC5.3).
 
-**usage_counters** (O) — pk `(institute_id, user_id, day, counter_key)`, `value int`. Updated with `insert … on conflict do update set value = value + 1 … returning value` inside the quota RPC (atomic). Rows older than 35 days purged.
+**usage_counters** (O) — pk `(institute_id, user_id, day, counter_key)` (`day` = India date; `counter_key` `messages|premium_messages|generations`), `value int`. Students only; updated with `insert … on conflict do update set value = value + 1 where value < limit returning value` inside the reservation (atomic). S own row; owner/admin of institute. Rows older than 35 days purged (Phase 10 job).
+
+**private.ai_features** — feature → `who` (`member|worker`), `counter_key`, `max_reserve_micro_usd`. **private.settings** — one row, platform-wide `ai_enabled` (changed only by `set_ai_enabled`, aal2 platform admin, audited).
 
 **activity_events** (S/O) — `user_id`, `type` (`login|document_opened|tutor_message|practice_completed|test_submitted|artifact_generated`), `subject_id`, `ref_id`, `created_at`. **No free text.** Retention 12 months [A, legal Q-01]. S own rows; staff aggregates only via functions.
 

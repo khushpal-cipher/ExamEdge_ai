@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { rootHost } from '@/lib/tenant';
 import { signOut } from '../actions';
+import { setGlobalAi } from './actions';
 import { SignIn } from '../sign-in';
 import { CreateInstitute } from './create-form';
 import { Mfa } from './mfa';
@@ -39,10 +40,10 @@ export default async function Platform({ searchParams }: { searchParams: Promise
   }
 
   // RLS: rows appear only for platform admins with an aal2 session.
-  const { data: institutes } = await db
-    .from('institutes')
-    .select('id, slug, name, status, created_at')
-    .order('created_at', { ascending: false });
+  const [{ data: institutes }, { data: aiOn }] = await Promise.all([
+    db.from('institutes').select('id, slug, name, status, created_at').order('created_at', { ascending: false }),
+    db.rpc('ai_enabled'),
+  ]);
   return (
     <>
       <div className="top">
@@ -54,6 +55,22 @@ export default async function Platform({ searchParams }: { searchParams: Promise
           <button type="submit">Sign out</button>
         </form>
       </div>
+      {error === 'ai' && (
+        <p role="alert" className="alert">
+          Could not change the AI switch. Sign in again and retry.
+        </p>
+      )}
+      <section className="card stack" aria-labelledby="ai">
+        <h2 id="ai">AI for all institutes</h2>
+        <form action={setGlobalAi} className="row">
+          <span className={`badge ${aiOn ? 'good' : 'bad'}`}>{aiOn ? 'AI is on' : 'AI is off everywhere'}</span>
+          <input type="hidden" name="enabled" value={aiOn ? 'false' : 'true'} />
+          <button type="submit" className={aiOn ? '' : 'primary'}>
+            {aiOn ? 'Turn AI off for everyone' : 'Turn AI back on'}
+          </button>
+        </form>
+        <p className="small muted">Emergency switch: blocks every AI call of every institute from the next request.</p>
+      </section>
       <section className="card stack" aria-labelledby="new">
         <h2 id="new">New institute</h2>
         <CreateInstitute root={rootHost()} />

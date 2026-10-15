@@ -65,6 +65,13 @@ const version = async (id: string) =>
 const chunks = async (doc: string) =>
   (await db.query('select * from public.document_chunks where document_id = $1 order by chunk_index', [doc])).rows;
 const ingest = (id: string, institute = inst) => ingestVersion(deps, { institute_id: institute, version_id: id });
+const usage = async (job: string) =>
+  (
+    await db.query(
+      `select feature, provider, outcome, institute_id from public.usage_records where job_id = $1 order by feature`,
+      [job],
+    )
+  ).rows;
 
 beforeAll(async () => {
   await db.connect();
@@ -107,6 +114,7 @@ describe('AC4.1 fixture files', () => {
     expect((await db.query('select current_version_id from public.documents where id = $1', [doc])).rows[0]).toEqual({
       current_version_id: v,
     });
+    expect(await usage(v)).toEqual([{ feature: 'ingest_embed', provider: 'fake', outcome: 'ok', institute_id: inst }]);
   });
 
   it('scanned PDF (no text layer) → OCR', async () => {
@@ -115,6 +123,22 @@ describe('AC4.1 fixture files', () => {
     expect(await ingest(v)).toBe('ready');
     expect(await version(v)).toMatchObject({ extraction_method: 'ocr', page_count: 2 });
     expect((await chunks(doc))[0].content).toContain('Scanned page 1');
+    expect((await usage(v)).map((u) => `${u.feature}:${u.outcome}`)).toEqual(['ingest_embed:ok', 'ingest_ocr:ok']);
+  });
+
+  it('AI switched off for the institute → failed (ai_unavailable), the blocked call is recorded', async () => {
+    await db.query('update public.institute_quotas set ai_enabled = false where institute_id = $1', [inst]);
+    try {
+      const doc = await newDocument('AI off');
+      const v = await addVersion(doc, makePdf(english(1)));
+      expect(await ingest(v)).toBe('failed');
+      expect(await version(v)).toMatchObject({ error_code: 'ai_unavailable' });
+      expect(await usage(v)).toEqual([
+        { feature: 'ingest_embed', provider: 'fake', outcome: 'quota_blocked', institute_id: inst },
+      ]);
+    } finally {
+      await db.query('update public.institute_quotas set ai_enabled = true where institute_id = $1', [inst]);
+    }
   });
 
   it('text + scanned pages → mixed', async () => {

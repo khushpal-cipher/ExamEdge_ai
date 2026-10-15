@@ -1,6 +1,7 @@
 // File validation and per-page text (AI_PIPELINE §3). PDF text layer via pdfjs-dist (ADR-024); pages whose text
 // layer is missing or garbled, and photos, go to OCR. Limits follow Q-12 defaults: 50 MB, 300 pages.
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import type { Meter } from '@examedge/core/ai/gateway';
 import { ocrPages } from '@examedge/core/ai/ocr';
 import type { Page } from './chunk';
 
@@ -46,7 +47,7 @@ async function pdfText(bytes: Uint8Array): Promise<Page[]> {
   }
 }
 
-export async function readPages(bytes: Uint8Array, mime: string) {
+export async function readPages(bytes: Uint8Array, mime: string, meter: Meter) {
   if (bytes.length === 0) throw new IngestError('empty_file');
   if (bytes.length > MAX_BYTES) throw new IngestError('too_large');
   const magic = MAGIC[mime];
@@ -54,7 +55,10 @@ export async function readPages(bytes: Uint8Array, mime: string) {
   const pages = mime === 'application/pdf' ? await pdfText(bytes) : [{ page: 1, text: '' }];
   const low = pages.filter((p) => needsOcr(p.text));
   if (low.length) {
-    const { texts } = await ocrPages(low.map((p) => p.page));
+    const { texts } = await ocrPages(
+      meter,
+      low.map((p) => p.page),
+    );
     low.forEach((p, i) => (p.text = texts[i]!));
   }
   const method = low.length === 0 ? 'text_layer' : low.length === pages.length ? 'ocr' : 'mixed';

@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { isUuid, rootHost } from '@/lib/tenant';
 import { logoUrl } from '@/lib/brand';
+import { monthUsage, usd } from '@/lib/usage';
 import { updateInstitute, updateQuotas, uploadLogo } from '../../actions';
 
 const MB = 1024 * 1024;
@@ -20,9 +21,10 @@ export default async function InstituteAdmin({
   if (claims?.claims.aal !== 'aal2') redirect('/');
   const { id } = await params;
   if (!isUuid(id)) notFound();
-  const [{ data: inst }, { data: q }] = await Promise.all([
+  const [{ data: inst }, { data: q }, { spent }] = await Promise.all([
     db.from('institutes').select('id, slug, name, status, branding').eq('id', id).maybeSingle(),
     db.from('institute_quotas').select('*').eq('institute_id', id).maybeSingle(),
+    monthUsage(db, id),
   ]);
   if (!inst || !q) notFound();
   const { ok, error } = await searchParams;
@@ -90,6 +92,9 @@ export default async function InstituteAdmin({
       </section>
       <section className="card stack" aria-labelledby="quotas">
         <h2 id="quotas">Usage limits</h2>
+        <p>
+          AI spent this month: <b>{usd(spent)}</b> of {usd(q.monthly_ai_budget_micro_usd)}
+        </p>
         <form action={updateQuotas} className="stack">
           <input type="hidden" name="institute_id" value={inst.id} />
           <div className="inline">
@@ -151,6 +156,10 @@ export default async function InstituteAdmin({
               <input name="hard_stop" type="checkbox" defaultChecked={q.hard_stop} />
               Stop AI when the budget is used up
             </label>
+            <label className="row" style={{ display: 'flex' }}>
+              <input name="ai_enabled" type="checkbox" defaultChecked={q.ai_enabled} />
+              AI enabled
+            </label>
           </div>
           <div>
             <button type="submit" className="primary">
@@ -158,7 +167,7 @@ export default async function InstituteAdmin({
             </button>
           </div>
         </form>
-        <p className="small muted">Limits are enforced by the AI gateway once AI features are switched on.</p>
+        <p className="small muted">The AI gateway checks these limits before every AI call.</p>
       </section>
     </>
   );
