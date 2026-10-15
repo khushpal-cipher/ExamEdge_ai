@@ -151,7 +151,10 @@ async function seedInstitute(slug: string, name: string) {
 // document's audience = every batch that studies its subject. Rival's notes carry a canary phrase (leak detection).
 async function seedDocuments(inst: string, slug: string, subjects: Map<string, string>, chapters: Map<string, string>) {
   for (const n of NOTES) {
-    const pages = slug === 'rival' ? [...n.pages, ['Rival canary: quokka saffron lighthouse. This sentence exists only in Rival Academy notes.']] : n.pages;
+    const pages =
+      slug === 'rival'
+        ? [...n.pages, ['Rival canary: quokka saffron lighthouse. This sentence exists only in Rival Academy notes.']]
+        : n.pages;
     const { rows } = await db.query(
       `insert into public.documents (institute_id, subject_id, chapter_id, title) values ($1, $2, $3, $4) returning id`,
       [inst, subjects.get(n.subject), chapters.get(n.chapter), n.title],
