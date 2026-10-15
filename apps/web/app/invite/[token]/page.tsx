@@ -25,16 +25,22 @@ export default async function Invite({
   const member = await currentMember();
   const self = `/invite/${encodeURIComponent(token)}`;
   return (
-    <main>
+    <main className="center">
       <h1>Join {institute.name}</h1>
-      {error && MESSAGES[error] && <p role="alert">{MESSAGES[error]}</p>}
+      {error && MESSAGES[error] && (
+        <p role="alert" className="alert">
+          {MESSAGES[error]}
+        </p>
+      )}
       {!member ? (
         <SignIn next={self} failed={error === 'signin'} />
       ) : (
         <>
           <form action={acceptInvite}>
             <input type="hidden" name="token" value={token} />
-            <button type="submit">Accept invitation</button>
+            <button type="submit" className="primary">
+              Accept invitation
+            </button>
           </form>
           <form action={signOut}>
             <button type="submit">Use a different account</button>

@@ -16,6 +16,12 @@ select is(tests.affected($$ update public.institutes set status = 'active' $$), 
   'owner cannot change institute status');
 select throws_ok($$ select public.create_institute('evil', 'Evil', 'evil.localhost', 'a@b.test') $$, '42501', null,
   'owner cannot create institutes');
+select throws_ok(format($$ update public.memberships set role = 'teacher' where id = %L $$,
+  tests.mid('student1@alpha.test')), '23514', null, 'a student membership cannot be turned into staff');
+select throws_ok(format($$ update public.memberships set role = 'student' where id = %L $$,
+  tests.mid('teacher1@alpha.test')), '23514', null, 'a staff membership cannot be turned into a student');
+select is(tests.affected(format($$ update public.memberships set role = 'admin' where id = %L $$,
+  tests.mid('teacher2@alpha.test'))), 1::bigint, 'owner can still promote a teacher to admin');
 select tests.login('teacher1@alpha.test');
 select is((select count(*) from public.institute_quotas), 0::bigint, 'teacher cannot read quotas');
 select tests.login('student1@alpha.test');

@@ -105,3 +105,21 @@ create policy quotas_platform_update on public.institute_quotas for update to au
 grant update (name, status, branding) on public.institutes to authenticated;
 create policy institutes_platform_update on public.institutes for update to authenticated
   using (private.is_platform_admin()) with check (private.is_platform_admin());
+
+-- ---------------------------------------------------------------- membership guard: no student <-> staff switch
+-- batch_members.batch_role must keep matching the membership role (guard_batch_member checks inserts only).
+create or replace function private.guard_membership_update() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if (select auth.uid()) is not null
+     and (old.role in ('owner', 'admin') or new.role in ('owner', 'admin'))
+     and not private.has_role(old.institute_id, '{owner}') then
+    raise exception 'only an owner can change owner or admin memberships' using errcode = '42501';
+  end if;
+  if (old.role = 'student') <> (new.role = 'student') then
+    raise exception 'a student membership cannot become staff or the reverse; invite again' using errcode = '23514';
+  end if;
+  if new.status = 'removed' and old.status <> 'removed' then new.removed_at := now(); end if;
+  if new.status <> 'removed' then new.removed_at := null; end if;
+  return new;
+end $$;
