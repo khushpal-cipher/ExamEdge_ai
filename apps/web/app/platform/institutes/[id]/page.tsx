@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { isUuid, rootHost } from '@/lib/tenant';
-import { updateInstitute, updateQuotas } from '../../actions';
+import { logoUrl } from '@/lib/brand';
+import { updateInstitute, updateQuotas, uploadLogo } from '../../actions';
 
 const MB = 1024 * 1024;
 
@@ -25,7 +26,9 @@ export default async function InstituteAdmin({
   ]);
   if (!inst || !q) notFound();
   const { ok, error } = await searchParams;
-  const color = (inst.branding as { color?: string }).color ?? '#d97757';
+  const branding = inst.branding as { color?: string; logo?: string };
+  const color = branding.color ?? '#d97757';
+  const logo = logoUrl(branding.logo);
   return (
     <>
       <div className="top">
@@ -41,7 +44,7 @@ export default async function InstituteAdmin({
       </div>
       {error && (
         <p role="alert" className="alert">
-          Please check the values and try again.
+          {error === 'logo' ? 'Choose a PNG, JPG or WebP logo up to 500 KB.' : 'Please check the values and try again.'}
         </p>
       )}
       {ok && (
@@ -73,9 +76,17 @@ export default async function InstituteAdmin({
             Save institute
           </button>
         </form>
-        <p className="small muted">
-          Suspending blocks every member immediately. Logo upload arrives with file storage.
-        </p>
+        <p className="small muted">Suspending blocks every member immediately.</p>
+        <form action={uploadLogo} className="inline" aria-label="Logo">
+          <input type="hidden" name="institute_id" value={inst.id} />
+          {/* eslint-disable-next-line @next/next/no-img-element -- tiny public logo, not worth image optimisation config */}
+          {logo && <img src={logo} alt={`${inst.name} logo`} width={48} height={48} className="logo" />}
+          <label>
+            Logo (PNG, JPG or WebP, up to 500 KB)
+            <input name="logo" type="file" required accept="image/png,image/jpeg,image/webp" />
+          </label>
+          <button type="submit">Upload logo</button>
+        </form>
       </section>
       <section className="card stack" aria-labelledby="quotas">
         <h2 id="quotas">Usage limits</h2>

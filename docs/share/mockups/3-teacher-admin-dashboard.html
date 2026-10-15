@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Teacher and admin dashboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lora:wght@400;600&display=swap">
+<link rel="stylesheet" href="mockup.css">
+<style>
+.layout { grid-template-columns: 1.35fr 1fr 1fr; grid-template-rows: auto 1fr 1fr; }
+.rank { width: 28px; height: 28px; border-radius: 8px; background: var(--soft); display: grid; place-items: center; font-weight: 600; font-size: 12px; }
+.rank.gold { background: var(--accent); color: #fff; }
+.name { display: flex; align-items: center; gap: 10px; }
+.name .avatar { width: 28px; height: 28px; font-size: 11px; background: var(--soft); color: var(--ink); }
+.name u { text-decoration: none; border-bottom: 1px dashed var(--accent); }
+.big { font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.hb { display: grid; grid-template-columns: 150px 1fr 40px; gap: 10px; align-items: center; font-size: 13px; }
+.hb span:last-child { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+</style></head>
+<body>
+<aside class="side">
+  <div class="brand"><div class="logo">SC</div><div><b>Sharma Classes</b><small>Staff portal</small></div></div>
+  <nav class="nav">
+    <a class="on"><span>Dashboard</span></a>
+    <a><span>Batches</span></a>
+    <a><span>Students</span></a>
+    <a><span>Notes</span></a>
+    <a><span>Question bank</span></a>
+    <a><span>Tests</span></a>
+    <a><span>Check answers</span><span class="badge">34</span></a>
+    <a><span>Rank lists</span></a>
+    <a><span>AI drafts</span><span class="badge">5</span></a>
+    <a><span>Teachers &amp; invites</span></a>
+    <a><span>Settings</span></a>
+  </nav>
+  <div class="me"><div class="avatar">RS</div><div><b>Mr. R. Sharma</b><small>Owner · Physics</small></div></div>
+  <div class="powered">Powered by ExamEdge AI</div>
+</aside>
+
+<main class="main">
+  <div class="top">
+    <div><h1>Dashboard</h1><p>34 theory answers are waiting for checking in Maths Test 4.</p></div>
+    <div class="tools"><div class="select">JEE 2027 · Morning batch ▾</div><button class="btn ghost">Upload notes</button><button class="btn">Create test</button></div>
+  </div>
+
+  <div class="grid layout">
+    <div class="kpis" style="grid-column: 1 / -1;">
+      <div class="kpi"><small>Students in batch</small><b>180</b><em>4 invitations pending</em></div>
+      <div class="kpi"><small>Active this week</small><b>142 <span>· 79%</span></b><em class="up">▲ 6% vs last week</em></div>
+      <div class="kpi"><small>Batch average · all tests</small><b>68.4%</b><em class="up">▲ 2.1% after Physics Test 3</em></div>
+      <div class="kpi"><small>Theory answers to check</small><b>34</b><em>Maths Test 4 · results not released</em></div>
+    </div>
+
+    <div class="card" style="grid-row: 2 / 4;">
+      <h2>Overall rank list · average % of all tests <a>Full list · Export Excel</a></h2>
+      <table>
+        <thead><tr><th>Rank</th><th>Student</th><th class="r">Average</th><th class="r">Tests</th><th class="r">Last test</th><th class="r">Change</th></tr></thead>
+        <tbody>
+          <tr><td><div class="rank gold">1</div></td><td><div class="name"><div class="avatar">AK</div><u>Arjun Kapoor</u></div></td><td class="r">91.6%</td><td class="r">8 / 8</td><td class="r">94.2%</td><td class="r up">—</td></tr>
+          <tr><td><div class="rank gold">2</div></td><td><div class="name"><div class="avatar">SP</div><u>Sneha Patel</u></div></td><td class="r">89.3%</td><td class="r">8 / 8</td><td class="r">90.8%</td><td class="r up">▲ 1</td></tr>
+          <tr><td><div class="rank gold">3</div></td><td><div class="name"><div class="avatar">KR</div><u>Karan Rao</u></div></td><td class="r">88.9%</td><td class="r">8 / 8</td><td class="r">85.0%</td><td class="r down">▼ 1</td></tr>
+          <tr><td><div class="rank">4</div></td><td><div class="name"><div class="avatar">IM</div><u>Ishita Malik</u></div></td><td class="r">86.2%</td><td class="r">8 / 8</td><td class="r">88.3%</td><td class="r">—</td></tr>
+          <tr><td><div class="rank">5</div></td><td><div class="name"><div class="avatar">VS</div><u>Vivek Singh</u></div></td><td class="r">84.7%</td><td class="r">7 / 8</td><td class="r">86.7%</td><td class="r up">▲ 2</td></tr>
+          <tr><td><div class="rank">6</div></td><td><div class="name"><div class="avatar">AN</div><u>Ananya Nair</u></div></td><td class="r">83.9%</td><td class="r">8 / 8</td><td class="r">80.0%</td><td class="r">—</td></tr>
+          <tr><td><div class="rank">7</div></td><td><div class="name"><div class="avatar">DT</div><u>Dev Thakur</u></div></td><td class="r">82.5%</td><td class="r">8 / 8</td><td class="r">83.3%</td><td class="r down">▼ 2</td></tr>
+          <tr class="me-row"><td><div class="rank">12</div></td><td><div class="name"><div class="avatar">RV</div><u>Riya Verma</u></div></td><td class="r">71.8%</td><td class="r">8 / 8</td><td class="r">76.7%</td><td class="r up">▲ 4</td></tr>
+          <tr><td><div class="rank">13</div></td><td><div class="name"><div class="avatar">MJ</div><u>Manav Jain</u></div></td><td class="r">71.4%</td><td class="r">8 / 8</td><td class="r">68.3%</td><td class="r down">▼ 3</td></tr>
+        </tbody>
+      </table>
+      <p style="margin:0;font-size:12px;color:var(--muted)">Click any name to open that student's full progress. Missed tests count as 0%.</p>
+    </div>
+
+    <div class="card">
+      <h2>Check theory answers</h2>
+      <div><b>Maths Test 4</b> <span class="pill warn">Waiting for checking</span><div style="color:var(--muted);font-size:12px;margin-top:4px">15 MCQ marked automatically · 5 theory questions</div></div>
+      <div class="big">146 <span style="font-size:15px;color:var(--muted);font-weight:500">of 180 checked</span></div>
+      <div class="bar"><i style="width:81%"></i></div>
+      <div style="font-size:12px;color:var(--muted)">Results can be released after all answers are checked. Ranks update automatically.</div>
+      <div style="display:flex;gap:8px"><button class="btn">Continue checking</button><button class="btn ghost" disabled style="opacity:.5">Release results</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Students needing attention <a>All</a></h2>
+      <div class="list">
+        <div class="item"><div class="avatar" style="background:var(--soft);color:var(--ink)">AG</div><div class="grow"><b>Aman Gupta</b><small>Missed 2 of the last 3 tests</small></div><span class="pill bad">Missed tests</span></div>
+        <div class="item"><div class="avatar" style="background:var(--soft);color:var(--ink)">NJ</div><div class="grow"><b>Neha Joshi</b><small>Average fell from 74% to 62%</small></div><span class="pill warn">Falling</span></div>
+        <div class="item"><div class="avatar" style="background:var(--soft);color:var(--ink)">RM</div><div class="grow"><b>Rohit Mehta</b><small>Not active for 9 days</small></div><span class="pill mute">Inactive</span></div>
+        <div class="item"><div class="avatar" style="background:var(--soft);color:var(--ink)">PS</div><div class="grow"><b>Pooja Sinha</b><small>Weak in 4 Physics chapters</small></div><span class="pill warn">Weak chapters</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Weakest chapters in this batch</h2>
+      <div class="list">
+        <div class="hb"><span>Rotational Motion</span><div class="bar"><i class="bad" style="width:52%"></i></div><span>52%</span></div>
+        <div class="hb"><span>Electrochemistry</span><div class="bar"><i class="warn" style="width:58%"></i></div><span>58%</span></div>
+        <div class="hb"><span>Definite Integrals</span><div class="bar"><i class="warn" style="width:61%"></i></div><span>61%</span></div>
+        <div class="hb"><span>Thermodynamics</span><div class="bar"><i class="warn" style="width:64%"></i></div><span>64%</span></div>
+        <div class="hb"><span>GOC (Organic)</span><div class="bar"><i class="warn" style="width:66%"></i></div><span>66%</span></div>
+      </div>
+      <div style="font-size:12px;color:var(--muted)">Accuracy from institute tests and student practice.</div>
+    </div>
+
+    <div class="card">
+      <h2>Notes &amp; AI drafts <a>Notes</a></h2>
+      <div class="list">
+        <div class="item"><div class="grow"><b>Torque &amp; Angular Momentum.pdf</b><small>Physics · 18 pages</small></div><span class="pill good">Published</span></div>
+        <div class="item"><div class="grow"><b>Electrochem DPP 3.pdf</b><small>Chemistry · reading scanned pages</small></div><span class="pill mute">Processing</span></div>
+        <div class="item"><div class="grow"><b>Integration short notes.pdf</b><small>Maths · ready to check</small></div><span class="pill acc">Ready to publish</span></div>
+        <div class="item"><div class="grow"><b>AI quiz · Rotational Motion (20 MCQ)</b><small>2 answers flagged by double-check</small></div><span class="pill warn">Review draft</span></div>
+      </div>
+    </div>
+  </div>
+</main>
+<div class="mock">Design preview · sample data</div>
+</body></html>

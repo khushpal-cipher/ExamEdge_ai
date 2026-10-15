@@ -15,6 +15,8 @@ const ERRORS: Record<string, string> = {
   unmarked_answers: 'Some written answers are not checked yet. Check them all before releasing results.',
   invalid_marks: 'Marks must be whole or half marks between 0 and the maximum.',
   invalid_key: 'The answer key does not match the options.',
+  document_no_batches: 'Choose at least one batch.',
+  document_not_ready: 'The file is still being processed. Publish it when it is ready.',
   closed: 'This test is not open right now.',
   time: 'Please enter valid times: the test must close after it opens.',
 };
@@ -25,6 +27,10 @@ const OK: Record<string, string> = {
   scheduled: 'Test scheduled. Students see it on their home page.',
   released: 'Results released. Ranks are updated.',
   cancelled: 'Test cancelled.',
+  uploaded: 'Uploaded. The file is being read; this page updates by itself.',
+  queued: 'Queued for processing.',
+  published: 'Published. Students in the chosen batches can open it now.',
+  withdrawn: 'Withdrawn. Students can no longer open it.',
 };
 
 export async function Flash({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {

@@ -9,6 +9,11 @@ import { totp } from './totp';
 const DEMO = 'http://demo.localhost:3000';
 const RIVAL = 'http://rival.localhost:3000';
 const ADMIN = 'http://admin.localhost:3000';
+// 1×1 transparent PNG
+const PNG = Buffer.from(
+  '89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8ffff3f0005fe02fea7d6a4a80000000049454e44ae426082',
+  'hex',
+);
 
 async function login(page: Page, base: string, email: string) {
   await page.goto(`${base}/`);
@@ -209,8 +214,27 @@ test('platform admin needs MFA, then manages institutes (AC2.7, Phase 3 platform
   await page.getByRole('button', { name: 'Save institute' }).click();
   await expect(page.getByRole('status')).toHaveText('Saved.');
   await page.getByLabel('Doubts per student per day').fill('25');
-  await page.getByRole('button', { name: 'Save limits' }).click();
+  // Wait for the save to finish, then reload: proves it persisted and no redirect is still in flight for the next form.
+  await Promise.all([
+    page.waitForResponse((r) => r.request().method() === 'POST'),
+    page.getByRole('button', { name: 'Save limits' }).click(),
+  ]);
+  await page.reload();
   await expect(page.getByLabel('Doubts per student per day')).toHaveValue('25');
+
+  // Logo: wrong type refused, PNG stored in the public bucket, kept when the institute form is saved again.
+  const logoInput = page.getByLabel(/^Logo \(/);
+  await logoInput.setInputFiles({ name: 'logo.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg/>') });
+  await page.getByRole('button', { name: 'Upload logo' }).click();
+  await expect(page.locator('main').getByRole('alert')).toHaveText('Choose a PNG, JPG or WebP logo up to 500 KB.');
+  await logoInput.setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: PNG });
+  await page.getByRole('button', { name: 'Upload logo' }).click();
+  await expect(page.getByRole('status')).toHaveText('Saved.');
+  const logo = page.getByRole('img', { name: `Gamma ${tag} logo` });
+  const src = (await logo.getAttribute('src'))!;
+  expect((await page.request.get(src)).status()).toBe(200);
+  await page.getByRole('button', { name: 'Save institute' }).click();
+  await expect(page.getByRole('img', { name: `Gamma ${tag} logo` })).toHaveAttribute('src', src);
 
   const res = await page.goto(`http://gamma-${tag}.localhost:3000/`);
   expect(res?.status()).toBe(200);

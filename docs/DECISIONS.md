@@ -129,6 +129,17 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
 - **Times are entered and shown in India time** (shortcut in `lib/assess.ts`; per-institute timezone later).
 - **Deferred:** student practice quizzes → Phase 9 (Studio); AI question generation + dual-solve (AC7.5) → after Phase 5; AC7.4 (500 concurrent starts, p95 < 2 s) → BLOCKED until a staging/prod-sized database exists (a laptop run would not prove the target; measured with k6 in Phase 10, AC10.3).
 
+### ADR-024 Phase 4 refinements: documents and ingestion (2026-10-16, Accepted)
+- **Text extraction: `pdfjs-dist` 6.4.299** (Mozilla, Apache-2.0) in the worker, picked in the Phase 4 spike: it extracts English, Hindi (Devanagari) and formula symbols from generated PDFs, returns `''` for image-only pages and throws `InvalidPDFException` on corrupt/empty files. Test PDFs come from the dependency-free `scripts/make-pdf.ts`.
+- **Upload flow:** the server action inserts `documents` + `document_versions` with `processing_status='uploading'` and returns a signed upload URL; the browser PUTs the file straight to the private `documents` bucket (the file never passes the web server, R-04). Storage insert is allowed only for an object whose version is still `uploading`. Confirm = the user moves the version to `queued`; that is the only status change an API user may make (trigger). Path = `{institute_id}/{document_id}/{version_id}` (check constraint, stricter than "starts with institute_id").
+- **Web never enqueues jobs.** The worker polls `private.pending_jobs()` (definer, worker only) every 5 s and sends pg-boss jobs to queue `ingest` (policy `stately`, `singletonKey` = version id). The same poll is the sweeper: versions stuck in `processing` for > 30 min (`claimed_at`) are picked up again. Claim and chunk swap are idempotent; a failed version keeps the previous version live.
+- **Worker storage service account:** a dedicated Supabase Auth user listed in `private.service_accounts` downloads files; its storage policy only reads objects whose version is `queued|processing`. No secret key in the worker (ADR-005).
+- **Fake OCR and embeddings** (`packages/core/src/ai/`) are not metered yet; metering and quotas arrive with the gateway in Phase 5. AC4.5 (OCR formula review) and AC4.6 (cost per 100 pages) are BLOCKED until real keys exist.
+- **Limits:** bucket cap 50 MiB, 300 pages (worker). Per-institute `institute_quotas.max_upload_bytes` is not enforced yet (Phase 5 with the other quotas).
+- **Students never open the staff document page;** they open `/documents/<id>/file`, which re-checks access through RLS and redirects to a 5-minute signed URL. Withdraw/delete stops minting at once (AC4.3).
+- **Institute delete cascade fix:** `test_questions`/`attempt_answers` → `questions` were `ON DELETE RESTRICT`, so deleting an institute failed. Now cascade, and `guard_question` refuses deleting a question used by a non-draft test (`question_used_in_test`) unless its institute is being deleted.
+- **Logo upload** (closes the ADR-022 deferral): platform admin uploads PNG/JPG/WebP ≤ 500 KB through a Server Action (fits the 1 MB body limit) to the public `logos` bucket (insert only by aal2 platform admin); `branding.logo = '<institute_id>/<uuid>'`. Replaced logos stay in the bucket until the Phase 10 purge job.
+
 ---
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 

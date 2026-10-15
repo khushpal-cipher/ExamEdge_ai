@@ -1,12 +1,13 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-15
+Last updated: 2026-10-16
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
 **Phase 2 MERGED** into `main` (PR #2, merge commit `c106364`, CI green: unit 12, pgTAP 334, E2E 6, 2026-10-15).
 **Phase 3 MERGED** into `main` (PR #3, squash commit `0417717`, CI green: check + secrets, run 38702576710, 2026-10-15).
-**Phase 7 (tests, checking, ranks, progress page) — local gate GREEN** on branch `phase-7-tests` (pushed); PR → CI → merge in progress (see Next exact action).
+**Phase 7 MERGED** into `main` (PR #4, squash commit `2a5f25e`, CI green: check + secrets, run 38711008739, 2026-10-15).
+**Phase 4 (documents) — local gate GREEN** (session 10, 2026-10-16, commit `ca4b542`) on branch `phase-4-documents`; ADR-024 written; PR into `main` next (see Next exact action).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -22,11 +23,70 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Docker + tools installed | Docker Desktop 4.95.0 (engine 29.8.2) via `brew install --cask docker-desktop`; Supabase CLI 2.121.0 + gitleaks 8.30.1 via `brew install supabase/tap/supabase gitleaks` |
 | 2026-10-15 | Phase 1 partial: git init, workspaces, local Supabase | `git init -b main`, branch `phase-1-foundations`; npm workspaces installed (versions below); `supabase start` OK; `supabase test db` → `000_smoke.sql .. ok`, Files=1, Tests=4, PASS |
 | 2026-10-14 | Consistency check | All relative links resolve; every ADR, Q, test (T-*) and gate (G1–G8) ID referenced is defined; no secret-like strings in files |
+| 2026-10-16 | Phase 4 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 32/32, pgTAP Files=8 Tests=850 PASS, integration 16/16, build (+bundle scan), E2E 16/16 (commit `ca4b542`). `npm run audit` → ok. Two test fixes found by the gate (no assertion weakened): pgTAP `070` storage fixture inserted objects the seed had already uploaded (duplicate key after seeding) → skips existing objects; platform E2E picked the logo while the "Save limits" redirect was still in flight (re-render emptied the required file input, no POST in the trace) → waits for the POST, reloads, checks the saved value. ADR-024 added; DATABASE_DESIGN §4.3 updated (uploading status, claimed_at, path check, service_accounts). |
 | 2026-10-15 | Phase 7 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 21/21, pgTAP Files=7 Tests=693 PASS, build (+bundle scan), E2E 14/14 incl. `e2e/assessments.spec.ts` (commit `40fc4fc`). `npm run audit` → ok. Browser check (session 7, dev server): teacher1 checked all 22 written answers of "Chemistry Test 3" with names hidden and released (ranks with time tie-break, equal score+time share a rank); student01 started "Physics Practice Test" at 375 px (scrollWidth 375, autosave "Saved"), review + My progress at 375 px; owner JEE rank list, sort links, CSV `private, no-store`; owner@rival.test → 404 for Demo test/check/export, batch export and a real Demo student id. |
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### Phase 7 — tests, checking, ranks, progress (sessions 6–7) — gate GREEN locally; PR/CI/merge left
+### Phase 4 — documents (session 8, 2026-10-15) — IN PROGRESS
+Scope = IMPLEMENTATION_ROADMAP Phase 4. ACs: AC4.1 fixture suite, AC4.2 no duplicate chunks, AC4.3 withdraw invisible at
+once, AC4.4 cross-tenant job, AC4.5 OCR formula review on real docs (BLOCKED: no AI key, fake OCR), AC4.6 cost per 100 pages
+(BLOCKED: fake providers cost 0; measure in Phase 5 with real keys).
+DONE + TESTED (commits `49ca6d5`, `3a427c9`):
+- Spike → **pdfjs-dist 6.4.299** (Mozilla, Apache-2.0, `npm i -w @examedge/worker pdfjs-dist@6.4.299`): extracts English,
+  Hindi (Devanagari) and formula symbols from generated PDFs; empty page → ''; corrupt/empty → InvalidPDFException.
+  Not yet recorded as ADR-024 in docs/DECISIONS.md (TODO, with the points below).
+- `scripts/make-pdf.ts`: dependency-free PDF writer (Helvetica for ASCII, Type0 + identity ToUnicode for Hindi/symbols,
+  `null` page = no text layer) for fixtures and seed.
+- Migration `20261018000006_documents.sql`: documents / document_versions (status `uploading|queued|processing|ready|failed`,
+  `claimed_at`, path check `= institute/document/version`) / document_audience / document_chunks (vector(1024), tsv, no HNSW)
+  + RLS + worker policies (`private.job_institute()`), definers `can_read_document`, `can_read_object`, `pending_jobs` (worker
+  only), guards (API users may only queue a version; publish needs a processed version; published_at/withdrawn_at stamped),
+  audit on documents/audience, `public.match_chunks` (invoker, exact cosine + keyword, RRF), storage buckets `documents`
+  (private, 50 MiB, pdf/png/jpeg) and `logos` (public, platform admin insert) + policies, branding check allows
+  `logo = '<institute_id>/<uuid>'`, `private.service_accounts` (worker storage account).
+  **Real bug fixed:** deleting an institute failed (ON DELETE RESTRICT test_questions/attempt_answers → questions). Now
+  cascade + `guard_question` refuses deleting a used question (23503 `question_used_in_test`) unless its institute is gone.
+- pgTAP `070_documents.sql` (55 tests: upload/queue/publish rules, teachers publish only to taught batches, students never
+  read versions, AC4.3, T-ISO-06 canary, T-SEC-07 DB side, T-ISO-08, worker account, cascade). Fixture in
+  `supabase/test_helpers.sql` now has a published doc + canary chunk per institute; allowlist in `010` updated.
+  `supabase db reset && supabase test db` → Files=8, Tests=850, PASS (2026-10-15).
+- Core fake AI: `packages/core/src/ai/embed.ts` (hashed bag-of-words 1024-dim, Hindi-safe words; Voyage throws BLOCKED Q-08;
+  not metered yet → Phase 5) + `embed.test.ts`; `ai/ocr.ts` (fixed demo placeholder text; real OCR in Phase 5).
+- Worker: `chunk.ts` (+test: headings, ≤800 tokens, overlap, long paragraphs), `extract.ts` (magic bytes, 50 MB, 300 pages,
+  page-quality → OCR), `ingest.ts` (atomic claim, single swap transaction, failure keeps old version, `drain()`),
+  `storage.ts` (downloads as service account, no secret key), `index.ts` (5 s `pending_jobs()` poll → pg-boss queue `ingest`,
+  policy stately, singletonKey = version id). Worker env now also needs NEXT_PUBLIC_SUPABASE_URL,
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, WORKER_STORAGE_EMAIL, WORKER_STORAGE_PASSWORD (add names to `.env.example` — TODO).
+  `scripts/local-supabase.ts`: `LOCAL_WORKER` (worker@examedge.test, local-only password), `ensureWorkerAccount`, `localWorkerEnv`.
+- Integration `apps/worker/src/ingest.int.test.ts`: 16/16 PASS (text, scanned, mixed, Hindi+formula, PNG, corrupt, wrong
+  magic, PNG-as-JPEG, 301 pages, missing file, 0-byte, AC4.2 duplicate job + reprocess, new version swap, failed version
+  keeps old, crashed worker swept, T-ISO-08). Unit 32/32, lint, typecheck PASS at `3a427c9`.
+VERIFIED in session 9 (2026-10-15):
+- Web UI (`app/(portal)/documents/*`, Sources pane): browser check on the dev server with the real worker running
+  (`npm run dev:worker`): teacher1 uploaded a PDF on Physics → signed PUT to Storage worked (no `apikey` header needed,
+  no extra select policy needed) → worker processed it → "Ready" → published to JEE 2027 Morning; student01 saw it in
+  Sources at 375 px (scrollWidth 375), file route 200 `application/pdf`; staff document page is 404 for students (by
+  design, students open `/documents/<id>/file` from Sources); withdraw → file 404 and link gone at once; owner@rival.test
+  → 404 for Demo document page and file.
+- Seed canary: already fixed in `scripts/seed-demo.ts` (sentence ≥ 50 chars). After `supabase db reset && npm run seed:demo`:
+  "Processed 18 documents, published 16"; `document_chunks like '%quokka%'` = 9, all institute `rival` (one per Rival note).
+- Env (commit `c5f5215`): `.env.example` has WORKER_STORAGE_EMAIL / WORKER_STORAGE_PASSWORD; CI exports them (local
+  worker account values); worker `dev` script reads `apps/web/.env.local` then root `.env.local`. Local root `.env.local`
+  (gitignored) holds WORKER_DATABASE_URL + WORKER_STORAGE_* local values.
+- `e2e/documents.spec.ts` (commit `6e0ec74`): upload via UI → `drain()` in-process as worker role → Ready → publish →
+  student file 200 → withdraw → 404 (AC4.3); Rival owner 404s (AC4.4 web side); raw Storage: Rival student cannot sign or
+  download a Demo path; signed URL 200 while fresh, 4xx after expiry (T-SEC-07). `npx playwright test e2e/documents.spec.ts`
+  → 2 passed.
+- Logo upload (commit `3ca1483`, ADR-022 deferral closed): `/platform/institutes/[id]` "Upload logo" (PNG/JPG/WebP ≤ 500 KB
+  so it fits the 1 MB Server Action body limit; bucket `logos` public, insert only by aal2 platform admin), path stored in
+  `branding.logo`; `updateInstitute` now keeps the logo (it used to overwrite branding with `{color}`); portal header shows
+  the logo instead of initials (`lib/brand.ts` `logoUrl`). Shortcut: replaced logos stay in the bucket (purge in Phase 10).
+  E2E platform test extended (SVG refused, PNG saved, public URL 200, logo kept after Save institute) → 1 passed. Header
+  checked in the browser with a temporary Demo logo (img loaded), then removed. Unit 32/32 PASS, web lint/typecheck PASS.
+Full gate GREEN locally on 2026-10-16 (see Completed). CI on the PR: not yet run.
+
+### Phase 7 — tests, checking, ranks, progress (sessions 6–7) — MERGED (PR #4, `2a5f25e`)
 Built (branch `phase-7-tests`): migration `20261017000005_assessments.sql` (questions, question_keys, tests, test_questions,
 test_audience, test_attempts, attempt_answers, batch_standings + RLS + definer RPCs), pgTAP `060_assessments.sql`, web
 `/questions`, `/tests`, `/tests/[id]` (staff + student runner/review), `/tests/[id]/check`, CSV exports, batch rank list,
@@ -95,13 +155,17 @@ Design decisions already worked out for later phases (record as ADRs when built)
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action
-1. `git checkout phase-7-tests && git pull`; `docker info`; `supabase start` if stopped.
-2. If the Phase 7 PR is not merged yet: open/check PR "Phase 7: Tests, checking, ranks, progress" into `main`
-   (`gh pr list`), fix CI until green, merge (squash), pull `main`, record merge commit here.
-3. Phase 4 (documents) on new branch `phase-4-documents` from `main`: state scope + AC4.1–AC4.6 first (IMPLEMENTATION_ROADMAP
-   Phase 4), PDF-extraction spike (record choice in DECISIONS), storage bucket + policies, documents/document_versions/
-   document_audience/document_chunks migrations + RLS + pgTAP, worker ingestion with fake embeddings (demo mode, ADR in
-   NEXT_SESSION_PROMPT §2), upload/publish/withdraw UI, logo upload (ADR-022 deferral). Real document embedding stays BLOCKED (Q-08).
+0. If this is a fresh machine/session after a long pause: `cd ~/Documents/startup/examedge_ai && git checkout phase-4-documents
+   && git pull && npm ci && git config core.hooksPath .githooks`; `docker info` (else `open -a Docker` and wait);
+   `supabase start`; recreate the gitignored local env files if missing: `apps/web/.env.local` (NEXT_PUBLIC_SUPABASE_URL,
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY from `supabase status -o env`, DEMO_LOGIN_ENABLED=true) and root `.env.local`
+   (WORKER_DATABASE_URL=postgresql://worker:worker_local_only@127.0.0.1:54322/postgres, WORKER_STORAGE_EMAIL /
+   WORKER_STORAGE_PASSWORD = `LOCAL_WORKER` in `scripts/local-supabase.ts`). If tool versions changed (Node, Supabase CLI,
+   Docker), check `supabase --version` matches CI (2.121.0) or update CI to match.
+1. Open PR `phase-4-documents` → `main` (AC status: AC4.1 ✅ int suite, AC4.2 ✅ int, AC4.3 ✅ pgTAP + E2E, AC4.4 ✅
+   pgTAP T-ISO-08 + E2E, AC4.5 BLOCKED no AI key, AC4.6 BLOCKED fake providers), check CI, fix until green, merge.
+2. Next phase per build order: Phase 5 (AI tutor, demo mode with fake LLM; read docs/AI_PIPELINE_DESIGN.md and use the
+   claude-api skill before any Anthropic SDK code).
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -111,6 +175,7 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 - `@axe-core/playwright` 4.13.0 (session 5, `npm i -D`).
 - Playwright Chromium (session 3, `npx playwright install chromium`, chromium-1243/headless-shell-1248 in ~/Library/Caches/ms-playwright).
 - Seed/ops: `npm run seed:demo`, `npm run create-institute`, `npm run audit`. Demo logins: owner@demo.test, admin@demo.test, teacher1-3@demo.test, student01-50@demo.test (same for @rival.test) via "Sign in as demo user".
+- `pdfjs-dist` 6.4.299 (session 8, `npm i -w @examedge/worker pdfjs-dist@6.4.299`; optional `@napi-rs/canvas` comes with it); `@supabase/supabase-js` added to worker deps.
 - Tools installed by Claude: Docker Desktop 4.95.0 (`brew install --cask docker-desktop`), Supabase CLI 2.121.0 and gitleaks 8.30.1 (`brew install supabase/tap/supabase gitleaks`).
 
 ## Known regressions
@@ -123,5 +188,8 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 | 4 | 2026-10-15 | Phase 1 gate green, CI audit gate, PR #1 merged (`913ec7f`). Phase 2 built: tenancy schema + RLS, 334 pgTAP, web tenant/sign-in/invite, demo seed, 6 E2E; local gate green; PR not yet opened | see `git log` |
 | 5 | 2026-10-15 | PR #2 merged (`c106364`). Phase 3 built (migration + 394 pgTAP, staff/student portals, platform admin + TOTP, E2E spec); E2E 4 failures fixed but not re-run; gate not run | see `git log` |
 | 6 | 2026-10-15 | Phase 3 E2E fixed (12/12), aal from verified claims, gate green, PR #3 merged (`0417717`). Phase 7 DB (692 pgTAP) + UI built; seed WIP failing | see `git log` |
-| 7 | 2026-10-15 | Phase 7 seed fixed, `e2e/assessments.spec.ts`, 6 real bugs fixed (test creation RLS, key save, key embeds, submit, form state, checking scroll), browser check, ADR-023, gate green | `40fc4fc` |
+| 7 | 2026-10-15 | PR #4 merged (`2a5f25e`). Phase 7 seed fixed, `e2e/assessments.spec.ts`, 6 real bugs fixed (test creation RLS, key save, key embeds, submit, form state, checking scroll), browser check, ADR-023, gate green | `40fc4fc` |
+| 8 | 2026-10-15 | Phase 4 DB + worker + tests green (850 pgTAP, 16 integration); institute-delete cascade bug fixed; web UI + seed written, not verified | see `git log` |
+| 9 | 2026-10-15 | Phase 4 web UI browser-verified, worker env/CI, `e2e/documents.spec.ts`, logo upload; founder pausing subscription — handoff written | see `git log` |
+| 10 | 2026-10-16 | ADR-024, Phase 4 full gate green (2 test-fixture races fixed), PR | `ca4b542` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |

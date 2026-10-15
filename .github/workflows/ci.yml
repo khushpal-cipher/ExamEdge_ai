@@ -36,6 +36,8 @@ jobs:
         run: |
           supabase status -o env | grep -E '^(API_URL|PUBLISHABLE_KEY)=' | sed -e 's/^API_URL=/NEXT_PUBLIC_SUPABASE_URL=/' -e 's/^PUBLISHABLE_KEY=/NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=/' -e 's/"//g' >> "$GITHUB_ENV"
           echo "WORKER_DATABASE_URL=postgresql://worker:worker_local_only@127.0.0.1:54322/postgres" >> "$GITHUB_ENV"
+          echo "WORKER_STORAGE_EMAIL=worker@examedge.test" >> "$GITHUB_ENV"
+          echo "WORKER_STORAGE_PASSWORD=examedge-worker-local" >> "$GITHUB_ENV"
       - run: npm run test:db
       - run: npm run test:int
       - run: npm run build

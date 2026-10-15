@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Subject page with AI tutor</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lora:wght@400;600&display=swap">
+<link rel="stylesheet" href="mockup.css">
+<style>
+.panes { grid-template-columns: 300px 1fr 300px; height: 100%; }
+.src { display: grid; gap: 6px; }
+.src .item { padding: 9px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); }
+.src .item.sel { border-color: var(--accent); background: var(--accent-soft); }
+.ico { width: 30px; height: 36px; border-radius: 5px; background: var(--card); border: 1px solid var(--line); font-size: 9px; font-weight: 600; color: var(--accent-ink); display: grid; place-items: center; flex: none; }
+.ico.lib { color: #4a4943; }
+.label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; margin-top: 6px; }
+.chat { display: flex; flex-direction: column; gap: 14px; flex: 1; min-height: 0; }
+.q { align-self: flex-end; background: var(--ink); color: #fff; padding: 12px 16px; border-radius: 14px 14px 4px 14px; max-width: 70%; font-size: 14px; }
+.a { background: var(--bg); border: 1px solid var(--line); border-radius: 14px 14px 14px 4px; padding: 16px 18px; display: grid; gap: 12px; font-family: var(--read); font-size: 15px; line-height: 1.6; }
+.a p { margin: 0; }
+.a .part { display: grid; gap: 6px; }
+.formula { font-family: "Times New Roman", serif; font-size: 20px; text-align: center; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; font-family: var(--ui); }
+.composer { display: flex; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 8px 8px 8px 16px; background: var(--card); }
+.composer span { flex: 1; color: var(--muted); }
+.studio { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tool { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 4px; background: var(--bg); }
+.tool b { font-size: 13px; font-weight: 600; }
+.tool small { font-size: 11px; color: var(--muted); }
+.tool.soon { opacity: .55; }
+.tabs { display: flex; gap: 6px; }
+.tabs span { padding: 7px 14px; border-radius: 999px; font-size: 13px; border: 1px solid var(--line); background: var(--card); }
+.tabs span.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+</style></head>
+<body>
+<aside class="side">
+  <div class="brand"><div class="logo">SC</div><div><b>Sharma Classes</b><small>sharma.examedge.ai</small></div></div>
+  <nav class="nav">
+    <a><span>Home</span></a>
+    <a class="on"><span>Subjects</span></a>
+    <a><span>Tests</span><span class="badge">2</span></a>
+    <a><span>My progress</span></a>
+    <a><span>Practice</span></a>
+  </nav>
+  <div class="me"><div class="avatar">RV</div><div><b>Riya Verma</b><small>JEE 2027 · Morning batch</small></div></div>
+  <div class="powered">Powered by ExamEdge AI</div>
+</aside>
+
+<main class="main">
+  <div class="top">
+    <div><h1>Physics</h1><p>Chapter: Rotational Motion · 3 notes from your institute · ExamEdge library</p></div>
+    <div class="tabs"><span>Mechanics</span><span class="on">Rotational Motion</span><span>Gravitation</span><span>Thermodynamics</span></div>
+  </div>
+
+  <div class="grid panes">
+    <div class="card">
+      <h2>Sources</h2>
+      <div class="label">From Sharma Classes</div>
+      <div class="src">
+        <div class="item sel"><div class="ico">PDF</div><div class="grow"><b>Rotation – Class Notes</b><small>32 pages · Mr. Sharma · 2 Oct</small></div></div>
+        <div class="item"><div class="ico">PDF</div><div class="grow"><b>Torque &amp; Angular Momentum</b><small>18 pages · 9 Oct</small></div></div>
+        <div class="item"><div class="ico">PDF</div><div class="grow"><b>DPP 7 – Rotation</b><small>6 pages · 11 Oct</small></div></div>
+      </div>
+      <div class="label">ExamEdge library · JEE</div>
+      <div class="src">
+        <div class="item"><div class="ico lib">LIB</div><div class="grow"><b>Torque</b><small>Explanation · formulas · examples</small></div></div>
+        <div class="item"><div class="ico lib">LIB</div><div class="grow"><b>Moment of Inertia</b><small>Formula sheet · 12 solved examples</small></div></div>
+        <div class="item"><div class="ico lib">LIB</div><div class="grow"><b>Rolling Motion</b><small>Explanation · practice questions</small></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>AI tutor · Physics <span class="pill mute">7 of 40 doubts used today</span></h2>
+      <div class="chat">
+        <div class="q">Torque kya hota hai? Simple example se samjhao</div>
+        <div class="a">
+          <div class="part">
+            <p>Torque is the turning effect of a force. It tells you how strongly a force can rotate an object around a point (the axis).</p>
+            <div class="formula">τ = r × F &nbsp;&nbsp;|&nbsp;&nbsp; τ = r F sin θ</div>
+            <div><span class="chip">From your notes · Rotation – Class Notes, p. 4</span></div>
+          </div>
+          <div class="part">
+            <p>Example: opening a door. Push near the hinge and it barely moves; push at the handle (larger r) and it opens easily with the same force. Same force, bigger distance, bigger torque.</p>
+            <div><span class="chip lib">ExamEdge library · Torque</span></div>
+          </div>
+          <div class="part">
+            <p>JEE tip: torque is a vector. Its direction is given by the right-hand rule, and its unit is N·m.</p>
+            <div><span class="chip gen">General explanation</span></div>
+          </div>
+          <div class="actions"><button class="btn dark">Solve step by step</button><button class="btn ghost">Make 5 practice questions</button><button class="btn ghost">Report answer</button></div>
+        </div>
+      </div>
+      <div class="composer"><span>Ask a doubt about Rotational Motion…</span><button class="btn">Ask</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Studio</h2>
+      <div class="studio">
+        <div class="tool"><b>Practice quiz</b><small>10 questions from this chapter</small></div>
+        <div class="tool"><b>Flashcards</b><small>24 key points</small></div>
+        <div class="tool"><b>Summary</b><small>Approved by teacher</small></div>
+        <div class="tool"><b>Mind map</b><small>Chapter overview</small></div>
+        <div class="tool soon"><b>Audio lesson</b><small>Hindi · coming soon</small></div>
+        <div class="tool soon"><b>Video lesson</b><small>Animated · coming soon</small></div>
+      </div>
+      <h2 style="margin-top:4px">My practice in this chapter</h2>
+      <div class="list">
+        <div class="item"><div class="grow"><b>Practice quiz · Torque</b><small>Yesterday</small></div><span class="pill good">8 / 10</span></div>
+        <div class="item"><div class="grow"><b>Practice quiz · Moment of Inertia</b><small>3 days ago</small></div><span class="pill warn">5 / 10</span></div>
+        <div class="item"><div class="grow"><b>Flashcards · Rotation</b><small>Reviewed 24 cards</small></div><span class="pill mute">Done</span></div>
+      </div>
+      <p style="margin:0;font-size:11px;color:var(--muted)">Practice quizzes help you learn. They do not affect your rank.</p>
+    </div>
+  </div>
+</main>
+<div class="mock">Design preview · sample data</div>
+</body></html>

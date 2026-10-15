@@ -19,6 +19,8 @@ const NAMED = [
   'unmarked_answers',
   'invalid_marks',
   'invalid_key',
+  'document_no_batches',
+  'document_not_ready',
 ];
 
 export function done(path: string, error?: { code?: string; message?: string } | null, okCode = 'saved'): never {
