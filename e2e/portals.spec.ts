@@ -214,7 +214,12 @@ test('platform admin needs MFA, then manages institutes (AC2.7, Phase 3 platform
   await page.getByRole('button', { name: 'Save institute' }).click();
   await expect(page.getByRole('status')).toHaveText('Saved.');
   await page.getByLabel('Doubts per student per day').fill('25');
-  await page.getByRole('button', { name: 'Save limits' }).click();
+  // Wait for the save to finish, then reload: proves it persisted and no redirect is still in flight for the next form.
+  await Promise.all([
+    page.waitForResponse((r) => r.request().method() === 'POST'),
+    page.getByRole('button', { name: 'Save limits' }).click(),
+  ]);
+  await page.reload();
   await expect(page.getByLabel('Doubts per student per day')).toHaveValue('25');
 
   // Logo: wrong type refused, PNG stored in the public bucket, kept when the institute form is saved again.

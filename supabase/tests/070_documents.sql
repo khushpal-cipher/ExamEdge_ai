@@ -19,7 +19,8 @@ create temp table new_doc (id uuid, v uuid, path text) on commit drop;
 grant select on ids, new_doc to authenticated, worker;
 
 -- Files the policies are checked against (inserted as postgres, as the Storage API does after an upload).
-insert into storage.objects (bucket_id, name) select 'documents', storage_path from public.document_versions;
+insert into storage.objects (bucket_id, name) select 'documents', v.storage_path from public.document_versions v
+  where not exists (select 1 from storage.objects o where o.bucket_id = 'documents' and o.name = v.storage_path);
 
 -- ---------------------------------------------------------------- teacher uploads (alpha)
 select tests.login('teacher1@alpha.test');

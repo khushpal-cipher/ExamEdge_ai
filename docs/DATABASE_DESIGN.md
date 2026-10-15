@@ -110,8 +110,8 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 - Index `(institute_id, subject_id) where deleted_at is null`.
 - S `private.can_read_document(id)`. I/U staff. D: soft delete by staff; purge job hard-deletes after 30 days [A].
 
-**document_versions** — `document_id` (composite FK), `version int`, `storage_path text unique`, `mime`, `size_bytes`, `sha256`, `page_count`, `processing_status` (`queued|processing|ready|failed`), `error_code`, `extraction_method` (`text_layer|ocr|mixed`), `chunker_version`, `embedding_model`, `processed_at`; `unique(document_id, version)`.
-- Constraint: storage_path must start with `institute_id::text || '/'` (check).
+**document_versions** — `document_id` (composite FK), `version int`, `storage_path text unique`, `mime` (`application/pdf|image/png|image/jpeg`), `size_bytes` (≤ 50 MiB), `sha256`, `page_count`, `processing_status` (`uploading|queued|processing|ready|failed`), `error_code`, `extraction_method` (`text_layer|ocr|mixed`), `chunker_version`, `embedding_model`, `claimed_at` (worker claim; stale claims are re-run), `processed_at`; `unique(document_id, version)`.
+- Constraint: `storage_path = institute_id || '/' || document_id || '/' || id` (check). API users may only move a version to `queued` (trigger); the worker sets everything else (ADR-024).
 - S staff. Students never see versions directly (they read the current published version via signed URL RPC).
 
 **document_audience** — pk `(document_id, batch_id)`, `institute_id`, composite FKs. Which batches see a published document.
@@ -121,6 +121,8 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 - **No HNSW index in MVP** — retrieval uses exact distance over the pre-filtered set (one subject of one institute ≈ thousands of chunks [E]) (ADR-006).
 - S via `private.can_read_document(document_id)` (backstop); retrieval goes through `public.match_chunks(...)` (SECURITY INVOKER) which first resolves readable document ids. Writes: worker only (tenant context).
 - Deletion: chunks of superseded versions deleted in the same transaction that promotes the new version.
+
+**private.service_accounts** — `user_id`, `kind` (`worker`). The worker's Supabase Auth user for Storage downloads; storage policy lets it read only objects whose version is `queued|processing` (ADR-024).
 
 ### 4.4 AI conversations and generated content
 
