@@ -8,7 +8,7 @@ Last updated: 2026-10-16
 **Phase 3 MERGED** into `main` (PR #3, squash commit `0417717`, CI green: check + secrets, run 38702576710, 2026-10-15).
 **Phase 7 MERGED** into `main` (PR #4, squash commit `2a5f25e`, CI green: check + secrets, run 38711008739, 2026-10-15).
 **Phase 4 MERGED** into `main` (PR #5, squash commit `cbfb62e`, CI green: check + secrets, run 38795802409, 2026-10-16).
-**Phase 5 (AI gateway, metering, quotas) — NEXT** on branch `phase-5-ai-gateway`.
+**Phase 5 (AI gateway, metering, quotas) — IN PROGRESS** on branch `phase-5-ai-gateway` (WIP, pgTAP not green — see In progress).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -29,6 +29,44 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
+### Phase 5 — AI gateway, metering, quotas (session 10, 2026-10-16) — IN PROGRESS (WIP commit, NOT green)
+Scope = IMPLEMENTATION_ROADMAP Phase 5. ACs: AC5.1 provider SDKs only in `packages/core/src/ai` (rule already in
+`scripts/check-forbidden.ts`, needs evidence only), AC5.2 metered cost ±2 % vs provider tokens (BLOCKED: no key),
+AC5.3 limits hold under concurrency, AC5.4 kill switch blocks all AI at once.
+VERIFIED: prices on the official pricing page (WebFetch platform.claude.com/docs/en/about-claude/pricing.md, 2026-10-16),
+USD per MTok = micro-USD per token: Opus 5.5 in 4 / out 20 / 5-min cache write 5 / cache read 0.20; Sonnet 5.5 2 / 10 /
+2.50 / 0.10; Haiku 5.5 0.10 / 0.50 / 0.125 / 0.01, and 0.50 / 2.50 / 0.625 / 0.05 when the prompt (input + cache reads +
+cache writes) is over 100,000 tokens; Batch API 50 % off in and out (stacks with cache multipliers). Voyage voyage-4 0.06
+(COST_MODEL §1). COST_MODEL already matches these.
+WRITTEN, applies (`supabase db reset` OK), NOT tested: `supabase/migrations/20261019000007_usage.sql`:
+`usage_records` (append-only, outcome `pending|ok|error|refused|quota_blocked`, `reserved_micro_usd`, `counter_key`,
+`job_id`), `usage_counters` (India day), `institute_quotas.ai_enabled`, `private.ai_features` (feature → who
+member|worker, student counter, max reserve per call), `private.settings` (global kill switch). Invoker cores
+`private.ai_take` (locks the institute_quotas row `for update` = serialises reservations; checks global switch,
+institute `ai_enabled`, suspended, monthly budget incl. pending reservations when `hard_stop`, student-only daily
+counter via upsert `where value < limit`; writes a `pending` or `quota_blocked` row) and `private.ai_finish` (settles
+own pending row once, cost capped at reserved, refunds the counter on `error`). Definers (the only entry points):
+`ai_reserve`/`ai_settle` (authenticated, membership via `member_id`), `ai_reserve_job`/`ai_settle_job` (worker only,
+institute = `private.job_institute()`), `ai_globally_enabled`, `set_ai_enabled` (aal2 platform admin, audited
+`platform.ai_enabled`). Public invoker wrappers: `ai_reserve`, `ai_settle`, `ai_enabled`, `set_ai_enabled`,
+`usage_summary(inst)` (this month per feature, RLS decides). Read policies: records owner/admin + platform admin;
+counters own row + owner/admin.
+FAILING: `supabase test db` → Files=8, Tests=900, "Failed tests: 24-25" (file not identified yet). Most likely
+`010_policy_coverage.sql`: the six new SECURITY DEFINER names are not in its allowlist (add `ai_reserve`, `ai_settle`,
+`ai_reserve_job`, `ai_settle_job`, `ai_globally_enabled`, `set_ai_enabled`), or `020_isolation_matrix.sql` expectations
+for the two new tables. Diagnose one file at a time:
+`psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -f supabase/tests/010_policy_coverage.sql | grep -A8 "not ok"`.
+Do NOT use `supabase test db --debug` (it hung for 5 min).
+Gotchas found: PL/pgSQL ends an IF condition at the first THEN, so no `case … then` inside `if …` (use a variable);
+the Supabase CLI applied the file fine with apostrophes in `--` comments.
+Design decisions to record as ADR-025: reserve worst case → call → settle real cost; DB owns feature→counter mapping
+and per-call reserve cap (a student calling the RPC with their own token cannot dodge counters or reserve more than
+one call costs); daily limits for students only, staff limited by budget; global + per-institute + suspended switches
+checked inside every reservation (AC5.4 is immediate); India day/month; **no Anthropic SDK in Phase 5** — the real
+provider (streaming, citations) is written in Phase 6 with the tutor using the claude-api skill, so AC5.2 is BLOCKED;
+budget alert emails BLOCKED (Resend) → usage page shows a 50/80/100 % banner instead; provider spend limits BLOCKED (no
+accounts); per-institute `max_upload_bytes` still not enforced (decide: enforce in `startUpload` or defer to Phase 10).
+
 ### Phase 4 — documents (sessions 8–10) — MERGED (PR #5, `cbfb62e`)
 Scope = IMPLEMENTATION_ROADMAP Phase 4. ACs: AC4.1 fixture suite, AC4.2 no duplicate chunks, AC4.3 withdraw invisible at
 once, AC4.4 cross-tenant job, AC4.5 OCR formula review on real docs (BLOCKED: no AI key, fake OCR), AC4.6 cost per 100 pages
@@ -163,10 +201,35 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
    (WORKER_DATABASE_URL=postgresql://worker:worker_local_only@127.0.0.1:54322/postgres, WORKER_STORAGE_EMAIL /
    WORKER_STORAGE_PASSWORD = `LOCAL_WORKER` in `scripts/local-supabase.ts`). If tool versions changed (Node, Supabase CLI,
    Docker), check `supabase --version` matches CI (2.121.0) or update CI to match.
-1. Phase 5 (AI gateway, metering, quotas; roadmap ACs AC5.1–AC5.4) on branch `phase-5-ai-gateway`: usage_records +
-   usage_counters migrations, atomic quota RPC, gateway in `packages/core/src/ai` (fake provider records usage with cost 0,
-   provider='fake'), price table in `routing.ts`, kill switch, admin usage page; then Phase 6 (tutor). Read
-   docs/AI_PIPELINE_DESIGN.md §2 and use the claude-api skill before any Anthropic SDK code.
+1. Make pgTAP green again (see Phase 5 FAILING above), then write `supabase/tests/080_usage.sql`: counters stop at the
+   limit and only for students; staff not counted; budget hard stop (and not when `hard_stop=false`); global switch,
+   institute `ai_enabled` and suspended → `ai_disabled`; unknown feature / worker feature from a member / reserve
+   above cap → error; Rival member reserving for Demo → `not_allowed`; worker with Demo context reserving → Demo row,
+   no context → error; settle only own pending row once, cost capped, error refunds counter; students/teachers read no
+   usage_records and cannot insert/update/delete either table; owner reads own institute only; `set_ai_enabled` only aal2
+   platform admin and audited. Commit.
+2. Core gateway in `packages/core/src/ai/`: `routing.ts` (feature → model, price table above, `cost()` in micro-USD
+   rounded up, Haiku long tier, batch flag) + `gateway.ts` (`Meter` interface {reserve, settle}; reserve worst-case cost
+   from an upper-bound token estimate (UTF-8 bytes) → `AiBlocked(reason)` if blocked → run provider → settle real
+   usage, settle `error` on throw); fake provider records provider='fake', cost 0, token estimate chars/4. Route
+   `embed()` (features `ingest_embed`/`query_embed`) and `ocrPages()` (`ingest_ocr`) through it. Unit tests: cost math vs
+   hand-computed fixtures, blocked → provider never called, error → settled as error. Remove the "not metered yet"
+   shortcut comments in `embed.ts`/`ocr.ts`.
+3. Worker: `workerMeter(pool, institute)` next to `inTenant` in `apps/worker/src/ingest.ts` (each reserve/settle in its
+   own short `inTenant` transaction so a failed ingest keeps its usage rows); pass it to `readPages` and `embed`
+   (job_id = version id); `AiBlocked` → `IngestError('ai_unavailable')` and add that code to `ERROR_TEXT` in
+   `apps/web/app/(portal)/documents/status.ts`. Update `ingest.int.test.ts` (usage rows per ingested version) and add
+   `apps/worker/src/usage.int.test.ts`: 100 parallel `rpc('ai_reserve')` as a seeded student (supabase-js, limit set to
+   40) → exactly 40 ok; 100 parallel `ai_reserve_job` with a small budget → sum of reserved never above budget (AC5.3).
+4. Web (read node_modules/next/dist/docs first): owner/admin `/usage` page in `app/(portal)` (month spend vs budget with
+   50/80/100 % banner, `usage_summary` table, AI on/off state) + nav link for owner/admin; platform admin: global AI
+   switch on `/platform` (`set_ai_enabled`), "AI enabled" checkbox in the usage-limits form (add `ai_enabled` to
+   `updateQuotas`), month spend on `/platform/institutes/[id]`. E2E: owner sees usage page; platform admin turns AI off for
+   the new Gamma institute only (never toggle the global switch in E2E — other specs run the worker in parallel). Browser
+   check incl. global switch (turn it back on afterwards).
+5. ADR-025 in docs/DECISIONS.md, DATABASE_DESIGN §4.6 (outcome `pending`, reserved, counter_key, ai_features, settings,
+   ai_enabled), then gate: `supabase db reset && npm run seed:demo && npm run check`, `npm run audit`; record evidence;
+   PR `phase-5-ai-gateway` → `main`, CI green, merge. Then Phase 6 (tutor; claude-api skill before any SDK code).
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -192,5 +255,5 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 | 7 | 2026-10-15 | PR #4 merged (`2a5f25e`). Phase 7 seed fixed, `e2e/assessments.spec.ts`, 6 real bugs fixed (test creation RLS, key save, key embeds, submit, form state, checking scroll), browser check, ADR-023, gate green | `40fc4fc` |
 | 8 | 2026-10-15 | Phase 4 DB + worker + tests green (850 pgTAP, 16 integration); institute-delete cascade bug fixed; web UI + seed written, not verified | see `git log` |
 | 9 | 2026-10-15 | Phase 4 web UI browser-verified, worker env/CI, `e2e/documents.spec.ts`, logo upload; founder pausing subscription — handoff written | see `git log` |
-| 10 | 2026-10-16 | ADR-024, Phase 4 full gate green (2 test-fixture races fixed), PR #5 merged (`cbfb62e`) | `ca4b542` |
+| 10 | 2026-10-16 | ADR-024, Phase 4 full gate green (2 test-fixture races fixed), PR #5 merged (`cbfb62e`); Phase 5 prices verified, usage migration written (pgTAP 2 failing, WIP) | see `git log` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |
