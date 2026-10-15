@@ -38,7 +38,7 @@ end $$;
 -- Batch Y: teacher2, student3, subject Chemistry. Pending invitation token = 'tok-<slug>'.
 create or replace function tests.make_institute(slug text) returns uuid language plpgsql as $$
 declare
-  inst uuid; bx uuid; by_ uuid; sp uuid; sc uuid; m uuid; who text; s1 uuid; q uuid; t uuid; att uuid;
+  inst uuid; bx uuid; by_ uuid; sp uuid; sc uuid; m uuid; who text; s1 uuid; q uuid; t uuid; att uuid; d uuid; v uuid;
 begin
   insert into public.institutes (slug, name) values (slug, initcap(slug) || ' Classes') returning id into inst;
   insert into public.institute_domains (hostname, institute_id) values (slug || '.localhost', inst);
@@ -82,6 +82,19 @@ begin
   insert into public.attempt_answers (attempt_id, question_id, institute_id, response) values (att, q, inst, '["a"]');
   insert into public.batch_standings (batch_id, user_id, institute_id)
   select bx, user_id, inst from public.memberships where id = s1;
+  -- Phase 4: "Physics notes" published to Batch X with one processed version and one chunk carrying a canary
+  -- phrase unique to this institute (T-ISO-06).
+  insert into public.documents (institute_id, subject_id, title) values (inst, sp, 'Physics notes') returning id into d;
+  v := gen_random_uuid();
+  insert into public.document_versions (id, institute_id, document_id, version, storage_path, mime, size_bytes,
+                                        processing_status)
+  values (v, inst, d, 1, inst || '/' || d || '/' || v, 'application/pdf', 1000, 'ready');
+  update public.documents set current_version_id = v, status = 'published' where id = d;
+  insert into public.document_audience values (d, bx, inst);
+  insert into public.document_chunks (institute_id, document_id, document_version_id, subject_id, chunk_index,
+                                      page_start, page_end, content, embedding, token_count)
+  values (inst, d, v, sp, 0, 1, 1, 'Torque notes canary ' || slug || 'zebra',
+          ('[' || repeat('0.1,', 1023) || '0.1]')::extensions.vector, 6);
   return inst;
 end $$;
 

@@ -47,7 +47,8 @@ select set_eq($$ select proname::text from pg_temp.our_functions
         'resolve_institute', 'create_invitation', 'accept_invitation', 'create_institute',
         'can_see_test', 'can_manage_test', 'test_is_draft', 'can_grade', 'guard_question', 'guard_question_key',
         'guard_test', 'compute_standings', 'compute_results', 'start_attempt', 'get_attempt_questions', 'save_answer',
-        'submit_attempt', 'get_attempt_review', 'grade_answer', 'release_results', 'student_progress'],
+        'submit_attempt', 'get_attempt_review', 'grade_answer', 'release_results', 'student_progress',
+        'can_read_document', 'can_read_object', 'pending_jobs'],
   'SECURITY DEFINER functions match the reviewed allowlist');
 
 select is_empty($$ select proname from pg_temp.our_functions
