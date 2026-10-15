@@ -1,14 +1,15 @@
 import { cache } from 'react';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
+import { hostname } from './host';
 import { supabase } from './supabase';
+
+export { hostname, isAdminHost, isRootHost, rootHost } from './host';
 
 export type Institute = { id: string; slug: string; name: string; status: string; branding: Record<string, unknown> };
 export type Member = { userId: string; id: string | null; role: string | null };
 
 // The institute always comes from the Host header via the database, never from the browser (TH-04).
-export const hostname = (host: string | null) => (host ?? '').split(',')[0]!.trim().split(':')[0]!.toLowerCase();
-export const isRootHost = (host: string) => host === (process.env.ROOT_HOST ?? 'localhost');
 
 // Next (dev server actions) and Vercel put the client's host in x-forwarded-host. A spoofed value only picks the
 // context: RLS still requires membership, and the host-only session cookie belongs to the host actually visited.

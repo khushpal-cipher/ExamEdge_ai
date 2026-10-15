@@ -1,29 +1,7 @@
 // T-E2E-ISO-01, T-SEC-04, AC2.4/AC2.5 end to end. Needs `npm run seed:demo` (Demo Classes + Rival Academy).
-import { expect, test, type Page } from '@playwright/test';
-import { createClient } from '@supabase/supabase-js';
+import { expect, test } from '@playwright/test';
 import { DEMO_PASSWORD } from '../packages/core/src/demo';
-import { localSupabase } from '../scripts/local-supabase';
-
-const { env, admin } = localSupabase();
-const anonClient = () => createClient(env.API_URL!, env.PUBLISHABLE_KEY!, { auth: { persistSession: false } });
-
-async function signedIn(email: string) {
-  const c = anonClient();
-  const { error } = await c.auth.signInWithPassword({ email, password: DEMO_PASSWORD });
-  if (error) throw error;
-  return c;
-}
-
-async function instituteId(host: string) {
-  const { data, error } = await anonClient().rpc('resolve_institute', { host }).single<{ id: string }>();
-  if (error) throw error;
-  return data.id;
-}
-
-async function demoSignIn(page: Page, email: string) {
-  await page.getByLabel('Demo user email').fill(email);
-  await page.getByRole('button', { name: 'Sign in as demo user' }).click();
-}
+import { admin, demoSignIn, env, instituteId, signedIn } from './helpers';
 
 test('unknown host is a 404 and never shows an institute (T-SEC-04)', async ({ page }) => {
   const res = await page.goto('http://unknown-institute.localhost:3000/');
@@ -34,7 +12,7 @@ test('a Demo Classes student is not a member of Rival Academy (T-E2E-ISO-01)', a
   await page.goto('http://demo.localhost:3000/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Demo Classes');
   await demoSignIn(page, 'student01@demo.test');
-  await expect(page.getByText('Signed in as student.')).toBeVisible();
+  await expect(page).toHaveURL('http://demo.localhost:3000/home');
 
   // Session cookies are host-only: the other subdomain starts signed out.
   await page.goto('http://rival.localhost:3000/');
@@ -94,7 +72,7 @@ test('invitation link: wrong account is rejected, invited account joins once (AC
   await page.goto(link);
   await demoSignIn(page, email);
   await page.getByRole('button', { name: 'Accept invitation' }).click();
-  await expect(page.getByText('Signed in as student.')).toBeVisible();
+  await expect(page).toHaveURL('http://demo.localhost:3000/home');
 
   await page.goto(link);
   await page.getByRole('button', { name: 'Accept invitation' }).click();

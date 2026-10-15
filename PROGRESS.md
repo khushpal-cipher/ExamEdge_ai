@@ -4,7 +4,8 @@ Last updated: 2026-10-15
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
-**Phase 2 (Identity, tenancy, isolation) — local gate GREEN, PR not opened yet** on branch `phase-2-identity`.
+**Phase 2 MERGED** into `main` (PR #2, merge commit `c106364`, CI green: unit 12, pgTAP 334, E2E 6, 2026-10-15).
+**Phase 3 (Portals shell) — IN PROGRESS** on branch `phase-3-portals` (pushed; contains main). Gate NOT yet run.
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -22,44 +23,31 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-14 | Consistency check | All relative links resolve; every ADR, Q, test (T-*) and gate (G1–G8) ID referenced is defined; no secret-like strings in files |
 
 ## In progress
-### Phase 2 — identity, tenancy, isolation (session 4, 2026-10-15) — local gate PASSED
-Branch `phase-2-identity` (contains Phase 1 via merge). Full gate `npm run check` exit 0 on 2026-10-15 after
-`supabase db reset && npm run seed:demo`: Prettier ok; eslint + `check-forbidden: ok`; typecheck ok; unit 12 passed;
-pgTAP Files=5 Tests=334 PASS; test:int (none) ok; build + `check-bundle: ok`; Playwright 6 passed. `npm run audit` → ok.
+### Phase 3 — portals shell (session 5, 2026-10-15) — code written, E2E partly failing, gate NOT run
+Built (branch `phase-3-portals`):
+- `supabase/migrations/20261016000004_portals.sql`: `institute_quotas` (default row per institute via trigger), branding check
+  (only `{"color":"#rrggbb"}`), audit trigger now also on institutes/quotas (actor_kind platform_admin when aal2 admin),
+  `create_institute(slug, name, host, owner_email)` RPC (platform admin + aal2; reserved slugs; host must be `<slug>.<domain>`;
+  returns one-time owner invite token), platform-admin update policies, guard: student membership can never become staff or reverse.
+  pgTAP `050_platform.sql`; allowlist in `010` includes `create_institute`. `supabase test db` → Files=6, Tests=394, PASS (2026-10-15).
+- Web: `app/globals.css` (tokens from `docs/share/mockups`, Poppins/Lora via next/font, sidebar → top bar < 800px),
+  `app/(portal)/` layout + pages: `/dashboard`, `/batches`, `/batches/[id]`, `/subjects`, `/people` (staff/students/invitations,
+  single + CSV invites, links shown once, revoke, role/status), `/home` (student), `/subjects/[id]` (Sources/Tutor/Studio, tabs on phone).
+  `/` redirects members to `/dashboard` or `/home`. Server actions `app/(portal)/actions.ts` (institute from host + role re-check).
+  Teachers only open batches they teach. `lib/host.ts`, `lib/brand.ts` (+test; text colour by contrast).
+- Platform admin: `proxy.ts` rewrites `admin.localhost` → `/platform` and 404s `/platform` elsewhere; `app/platform/` (demo sign-in,
+  TOTP enrol/verify → aal2, institutes list, create institute with one-time owner link, `/institutes/[id]` status/name/colour/quotas).
+  Browser-checked: MFA enrol + verify works, institutes listed.
+- E2E: `e2e/helpers.ts` (shared), `e2e/portals.spec.ts` (owner/teacher/student journeys, AC3.2 cache headers, AC3.3 axe, AC3.4,
+  cross-tenant ids, platform MFA flow), `e2e/totp.ts` (+ RFC 6238 vector test). `playwright.config.ts` testMatch `*.spec.ts`.
+  Dev dep added: `@axe-core/playwright@4.13.0` (npm). `npm run audit` NOT yet re-run after adding it.
 
-Built:
-- `supabase/migrations/20261015000003_tenancy.sql`: exams, institutes, institute_domains, profiles (auto-created by trigger on
-  auth.users), private.platform_admins, memberships, batches, batch_members, invitations, subjects, batch_subjects, chapters,
-  audit_events, consent_records. Composite FKs, RLS + explicit column grants on every table, `revoke all` + default privileges
-  for anon/authenticated (no TRUNCATE/TRIGGER). Definer helpers in `private` (allowlisted). RPCs (invoker wrappers in public →
-  definer in private): `resolve_institute(host)`, `create_invitation(inst, email, role, batch)` (returns raw token once),
-  `accept_invitation(token)`. Audit trigger on memberships/batch_members/invitations; owner-only guard for owner/admin changes;
-  batch-role guard. ADR-019/020/021 explain the choices.
-- pgTAP: `supabase/test_helpers.sql` (loaded as seed file; tests.setup() builds institutes alpha/bravo + outsider; tests.login/as_anon/
-  logout/inst/uid/mid/affected). Tests: `000_smoke`, `010_policy_coverage` (T-ISO-05/AC2.1), `020_isolation_matrix` (T-ISO-02/AC2.2,
-  generated from catalog; negative control with injected leaky policies was caught), `030_roles` (T-ISO-01, T-ISO-03, AC2.6, AC2.7,
-  composite FKs, suspended institute), `040_invitations` (T-SEC-18, AC2.3, AC2.4). Report: `docs/reports/phase2-isolation-matrix.txt`
-  (253 ok, 0 not ok).
-- Web: `apps/web/proxy.ts` (session refresh only), `lib/supabase.ts`, `lib/tenant.ts` (host from x-forwarded-host/host → resolve_institute;
-  ROOT_HOST default `localhost` shows landing; unknown host → 404), `app/actions.ts` (signInDemo, signOut, acceptInvite), `app/page.tsx`
-  (institute home: sign-in / "not a member" / "Signed in as <role>"), `app/sign-in.tsx`, `app/invite/[token]/page.tsx`.
-  `packages/core/src/demo.ts` (+test): DEMO_PASSWORD, demoLoginAllowed (DEMO_LOGIN_ENABLED=true AND local Supabase URL), safeNext.
-- Scripts: `scripts/local-supabase.ts` (reads `supabase status -o env`, refuses non-local), `scripts/seed-demo.ts` (`npm run seed:demo`:
-  Demo Classes demo.localhost + Rival Academy rival.localhost, owner/admin/3 teachers/50 students each, 2 batches, 4 subjects × 4 chapters,
-  teacher1@demo.test also teaches at rival, platform@examedge.test platform admin; all password DEMO_PASSWORD), `scripts/create-institute.ts`
-  (`npm run create-institute -- <slug> "<Name>" <owner-email>` prints one-time owner invite link), `scripts/check-audit.ts` (+test; dated
-  exceptions; GHSA-vfj7-8cjw-p6xm braces dev-only excepted until 2027-01-15).
-- E2E `e2e/isolation.spec.ts`: unknown host 404; demo student is "not a member" on rival (host-only cookies); raw REST with demo owner token
-  reads 0 rival rows, forged insert/RPC → 42501; `private` schema not exposed; invite: wrong account rejected, right account joins once.
-- CI: `DEMO_LOGIN_ENABLED: true` in job env; `npm run seed:demo` before e2e; `npm run audit` replaces `npm audit`.
-- Local only (gitignored): `apps/web/.env.local` (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY from `supabase status -o env`,
-  DEMO_LOGIN_ENABLED=true). Recreate it in a fresh clone. `.claude/launch.json` (preview "web" → http://demo.localhost:3000).
-- Browser check done: demo.localhost sign-in as student01/owner works; rival.localhost shows sign-in (host-only session).
+FAILING / UNVERIFIED (last run 2026-10-15, before fixes): `npm run test:e2e` → 8 passed, 4 failed: axe colour-contrast
+(white on #d97757; badge greens/reds) and a select lookup in the teacher test. Fixes applied but NOT re-run: `--on-accent` ink text
+on accent, darker `--good`/`--bad`, `brandStyle()`, selects looked up via `getByRole('combobox', { name: /^Role/ })`.
+Deferred (record in DECISIONS.md as ADR-022 when closing Phase 3): logo upload (needs Storage, Phase 4) — branding is colour only.
 
-Phase 2 AC status: AC2.1 PASS, AC2.2 PASS (report committed), AC2.3 PASS, AC2.4 PASS (pgTAP + E2E), AC2.5 PASS, AC2.6 PASS,
-AC2.7 PASS at DB level (is_platform_admin requires aal2; TOTP enrolment UI comes with the Phase 3 platform admin area).
-BLOCKED: Google OAuth (no client), invitation emails via Resend (no account) → link shown once (ADR-020).
-Deferred to Phase 3 (ADR-021): invite creation UI (single + CSV), platform admin UI, 375px phone check of real screens.
+Phase 2 AC status: all PASS (AC2.7 at DB level; TOTP UI now built in Phase 3). BLOCKED: Google OAuth, Resend (links shown once).
 
 Design decisions already worked out for later phases (record as ADRs when built):
 - Web enqueues no jobs directly: it writes domain rows (e.g. `document_versions.processing_status='queued'`); the worker polls a SECURITY DEFINER `private.pending_jobs()` every ~5 s and sends pg-boss jobs with singleton keys (also acts as the sweeper).
@@ -82,16 +70,20 @@ Design decisions already worked out for later phases (record as ADRs when built)
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action
-1. `git checkout phase-2-identity`, `supabase start`, recreate `apps/web/.env.local` if missing (see In progress), `supabase db reset && npm run seed:demo`.
-2. Open PR `phase-2-identity` → `main` (title "Phase 2: Identity, tenancy and isolation"), bind it, wait for CI (first CI run of the
-   seed/E2E steps — watch `supabase start` applying `test_helpers.sql` seed and `npm run seed:demo`), fix until green, merge.
-3. Start Phase 3 (portals shell) on branch `phase-3-portals` per docs/IMPLEMENTATION_ROADMAP.md, including the deferred items above.
+1. `git checkout phase-3-portals`, `supabase start`, ensure `apps/web/.env.local` exists, `supabase db reset && npm run seed:demo`.
+2. `npm run build && npm run test:e2e` → fix until all pass (never weaken the axe or isolation assertions).
+3. `npm run audit`, then full gate `npm run check` (after a fresh `supabase db reset && npm run seed:demo`); record results here.
+4. Browser check as owner, teacher3, student01 (375 px) on demo.localhost, a rival user probing demo ids, platform admin on admin.localhost.
+5. Add ADR-022 (Phase 3 refinements: quotas table early, platform host rewrite, contrast tokens, logo deferred), update PROGRESS,
+   commit, push, open PR `phase-3-portals` → `main` "Phase 3: Portals shell", check CI, fix, merge.
+6. Start Phase 7 (tests, checking, ranks, progress page) on `phase-7-tests`.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
 - Roadmap and acceptance criteria: `docs/IMPLEMENTATION_ROADMAP.md`
 - Commands: `supabase start` / `supabase status` / `supabase test db`; scripts in root `package.json`.
 - Local Supabase: API http://127.0.0.1:54321, DB postgresql://postgres:postgres@127.0.0.1:54322/postgres (local defaults; keys via `supabase status -o env`, never commit them).
+- `@axe-core/playwright` 4.13.0 (session 5, `npm i -D`).
 - Playwright Chromium (session 3, `npx playwright install chromium`, chromium-1243/headless-shell-1248 in ~/Library/Caches/ms-playwright).
 - Seed/ops: `npm run seed:demo`, `npm run create-institute`, `npm run audit`. Demo logins: owner@demo.test, admin@demo.test, teacher1-3@demo.test, student01-50@demo.test (same for @rival.test) via "Sign in as demo user".
 - Tools installed by Claude: Docker Desktop 4.95.0 (`brew install --cask docker-desktop`), Supabase CLI 2.121.0 and gitleaks 8.30.1 (`brew install supabase/tap/supabase gitleaks`).
@@ -104,4 +96,5 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 |---|---|---|---|
 | 1–2 | 2026-10-14/15 | Planning docs, founder decisions, tools, git init, workspaces, local Supabase init + pgTAP smoke | `5d26fc7` |
 | 4 | 2026-10-15 | Phase 1 gate green, CI audit gate, PR #1 merged (`913ec7f`). Phase 2 built: tenancy schema + RLS, 334 pgTAP, web tenant/sign-in/invite, demo seed, 6 E2E; local gate green; PR not yet opened | see `git log` |
+| 5 | 2026-10-15 | PR #2 merged (`c106364`). Phase 3 built (migration + 394 pgTAP, staff/student portals, platform admin + TOTP, E2E spec); E2E 4 failures fixed but not re-run; gate not run | see `git log` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |

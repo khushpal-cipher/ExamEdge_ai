@@ -7,11 +7,12 @@
   --muted: #5f5e58;
   --line: #e4e1d8;
   --accent: #d97757;
+  --on-accent: #141413; /* white on #d97757 is ~3.1:1, ink is ~5.9:1 (WCAG AA) */
   --accent-ink: #a8492d;
-  --good: #2f7a4a;
+  --good: #22613a;
   --good-soft: #e3f1e7;
   --warn-soft: #fbf0db;
-  --bad: #b33b31;
+  --bad: #9e2f26;
   --bad-soft: #f8e1de;
   --radius: 12px;
 }
@@ -105,7 +106,7 @@ a {
   height: 38px;
   border-radius: 10px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 700;
   display: grid;
   place-items: center;
@@ -266,7 +267,7 @@ button.primary,
 .button.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 button.link {
   border: 0;
