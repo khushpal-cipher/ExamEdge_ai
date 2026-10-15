@@ -12,11 +12,11 @@
   "scripts": {
     "dev": "npm run dev -w @examedge/web",
     "dev:worker": "npm run dev -w @examedge/worker",
-    "build": "npm run build -w @examedge/web",
+    "build": "npm run build -w @examedge/web && tsx scripts/check-bundle.ts",
     "start": "npm run start -w @examedge/web",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "eslint . --max-warnings 0 && node scripts/check-forbidden.mjs",
+    "lint": "eslint . --max-warnings 0 && tsx scripts/check-forbidden.ts",
     "typecheck": "tsc -p apps/web --noEmit && tsc -p apps/worker --noEmit && tsc -p packages/core --noEmit && tsc -p tsconfig.scripts.json --noEmit",
     "test": "vitest run --project unit",
     "test:int": "vitest run --project integration",

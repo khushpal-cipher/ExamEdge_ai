@@ -1,0 +1,57 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm audit --audit-level=high
+      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
+        with:
+          version: 2.121.0
+      - run: supabase start
+      - name: Export local Supabase public settings
+        run: |
+          supabase status -o env | grep -E '^(API_URL|PUBLISHABLE_KEY)=' | sed -e 's/^API_URL=/NEXT_PUBLIC_SUPABASE_URL=/' -e 's/^PUBLISHABLE_KEY=/NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=/' -e 's/"//g' >> "$GITHUB_ENV"
+          echo "WORKER_DATABASE_URL=postgresql://worker:worker_local_only@127.0.0.1:54322/postgres" >> "$GITHUB_ENV"
+      - run: npm run test:db
+      - run: npm run test:int
+      - run: npm run build
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
+  secrets:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

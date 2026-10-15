@@ -14,5 +14,11 @@ Multi-tenant AI learning platform for coaching institutes. Start with `docs/PROJ
 - Mark unverified provider facts `[U]` in docs and verify them before depending on them.
 - Prefer the smallest change; no new dependency for a few lines; no new vendor without a DECISIONS.md entry.
 
+## Session handoff
+- Keep `PROGRESS.md` current: done (with evidence), unverified, failing, blocked, and the next exact action.
+- When the founder types "give me a prompt": update PROGRESS.md with a precise handoff, commit and push the
+  phase branch, then reply with the "Prompt to paste" box from `docs/NEXT_SESSION_PROMPT.md` (update it first if
+  anything changed) so a new context window can continue.
+
 ## Commands
 (Added in Phase 1.)
