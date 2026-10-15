@@ -8,7 +8,7 @@ Last updated: 2026-10-16
 **Phase 3 MERGED** into `main` (PR #3, squash commit `0417717`, CI green: check + secrets, run 38702576710, 2026-10-15).
 **Phase 7 MERGED** into `main` (PR #4, squash commit `2a5f25e`, CI green: check + secrets, run 38711008739, 2026-10-15).
 **Phase 4 MERGED** into `main` (PR #5, squash commit `cbfb62e`, CI green: check + secrets, run 38795802409, 2026-10-16).
-**Phase 5 (AI gateway, metering, quotas) — local gate GREEN** on branch `phase-5-ai-gateway` (commit `aa5dcce`, 2026-10-16); PR into `main` next (see Next exact action).
+**Phase 5 (AI gateway, metering, quotas) — local gate GREEN** on branch `phase-5-ai-gateway` (commit `aa5dcce`, 2026-10-16); PR #6 open, CI was still running at handoff (see Next exact action).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -185,8 +185,11 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
    (WORKER_DATABASE_URL=postgresql://worker:worker_local_only@127.0.0.1:54322/postgres, WORKER_STORAGE_EMAIL /
    WORKER_STORAGE_PASSWORD = `LOCAL_WORKER` in `scripts/local-supabase.ts`). If tool versions changed (Node, Supabase CLI,
    Docker), check `supabase --version` matches CI (2.121.0) or update CI to match.
-1. Open PR `phase-5-ai-gateway` → `main` ("Phase 5: AI gateway, metering and quotas"), check CI (check + secrets), fix
-   until green, squash-merge, record the merge commit and CI run here, then `git checkout main && git pull`.
+1. PR #6 `phase-5-ai-gateway` → `main` is OPEN (https://github.com/khushpal-cipher/ExamEdge_ai/pull/6, opened
+   2026-10-16; at handoff CI had 1 check passed, 1 pending, mergeable). Run `gh pr checks 6`; if a check failed, read
+   its log (`gh run view <id> --log-failed`), fix on `phase-5-ai-gateway`, push, recheck. When green:
+   `gh pr merge 6 --squash --delete-branch=false`, record the merge commit + CI run id under "Current phase" and
+   Completed, commit that PROGRESS update on `main`, push, then `git checkout main && git pull`.
 2. Phase 6 (tutor) on branch `phase-6-tutor`: state scope + AC6.1–AC6.6 first. Load the claude-api skill before any
    Anthropic SDK code (the real provider lives only in `packages/core/src/ai/`, behind `AI_PROVIDER=anthropic`, BLOCKED
    until a key exists). Build: conversations/messages migration + RLS + pgTAP (student-private, staff aggregates only);
@@ -221,5 +224,5 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 | 8 | 2026-10-15 | Phase 4 DB + worker + tests green (850 pgTAP, 16 integration); institute-delete cascade bug fixed; web UI + seed written, not verified | see `git log` |
 | 9 | 2026-10-15 | Phase 4 web UI browser-verified, worker env/CI, `e2e/documents.spec.ts`, logo upload; founder pausing subscription — handoff written | see `git log` |
 | 10 | 2026-10-16 | ADR-024, Phase 4 full gate green (2 test-fixture races fixed), PR #5 merged (`cbfb62e`); Phase 5 prices verified, usage migration written (pgTAP 2 failing, WIP) | see `git log` |
-| 11 | 2026-10-16 | Phase 5: pgTAP green + `080_usage.sql`, core gateway (routing/cost/metered), worker metering, `/usage` page, platform AI switches, AC5.3 concurrency + AC5.4 API tests; 2 real bugs fixed (safeupdate kill switch, phone layout); full gate green | `aa5dcce` |
+| 11 | 2026-10-16 | Phase 5: pgTAP green + `080_usage.sql`, core gateway (routing/cost/metered), worker metering, `/usage` page, platform AI switches, AC5.3 concurrency + AC5.4 API tests; 2 real bugs fixed (safeupdate kill switch, phone layout); full gate green; PR #6 opened, CI pending at handoff | `0802398` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |
