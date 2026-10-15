@@ -1,13 +1,13 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-15
+Last updated: 2026-10-16
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
 **Phase 2 MERGED** into `main` (PR #2, merge commit `c106364`, CI green: unit 12, pgTAP 334, E2E 6, 2026-10-15).
 **Phase 3 MERGED** into `main` (PR #3, squash commit `0417717`, CI green: check + secrets, run 38702576710, 2026-10-15).
 **Phase 7 MERGED** into `main` (PR #4, squash commit `2a5f25e`, CI green: check + secrets, run 38711008739, 2026-10-15).
-**Phase 4 (documents) — IN PROGRESS** (sessions 8–9) on branch `phase-4-documents` (pushed, last commit see session log): DB, worker, web UI, seed, E2E and logo upload done and tested; left: ADR-024, full gate, PR, merge.
+**Phase 4 (documents) — local gate GREEN** (session 10, 2026-10-16, commit `ca4b542`) on branch `phase-4-documents`; ADR-024 written; PR into `main` next (see Next exact action).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -23,6 +23,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Docker + tools installed | Docker Desktop 4.95.0 (engine 29.8.2) via `brew install --cask docker-desktop`; Supabase CLI 2.121.0 + gitleaks 8.30.1 via `brew install supabase/tap/supabase gitleaks` |
 | 2026-10-15 | Phase 1 partial: git init, workspaces, local Supabase | `git init -b main`, branch `phase-1-foundations`; npm workspaces installed (versions below); `supabase start` OK; `supabase test db` → `000_smoke.sql .. ok`, Files=1, Tests=4, PASS |
 | 2026-10-14 | Consistency check | All relative links resolve; every ADR, Q, test (T-*) and gate (G1–G8) ID referenced is defined; no secret-like strings in files |
+| 2026-10-16 | Phase 4 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 32/32, pgTAP Files=8 Tests=850 PASS, integration 16/16, build (+bundle scan), E2E 16/16 (commit `ca4b542`). `npm run audit` → ok. Two test fixes found by the gate (no assertion weakened): pgTAP `070` storage fixture inserted objects the seed had already uploaded (duplicate key after seeding) → skips existing objects; platform E2E picked the logo while the "Save limits" redirect was still in flight (re-render emptied the required file input, no POST in the trace) → waits for the POST, reloads, checks the saved value. ADR-024 added; DATABASE_DESIGN §4.3 updated (uploading status, claimed_at, path check, service_accounts). |
 | 2026-10-15 | Phase 7 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 21/21, pgTAP Files=7 Tests=693 PASS, build (+bundle scan), E2E 14/14 incl. `e2e/assessments.spec.ts` (commit `40fc4fc`). `npm run audit` → ok. Browser check (session 7, dev server): teacher1 checked all 22 written answers of "Chemistry Test 3" with names hidden and released (ranks with time tie-break, equal score+time share a rank); student01 started "Physics Practice Test" at 375 px (scrollWidth 375, autosave "Saved"), review + My progress at 375 px; owner JEE rank list, sort links, CSV `private, no-store`; owner@rival.test → 404 for Demo test/check/export, batch export and a real Demo student id. |
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
@@ -83,7 +84,7 @@ VERIFIED in session 9 (2026-10-15):
   the logo instead of initials (`lib/brand.ts` `logoUrl`). Shortcut: replaced logos stay in the bucket (purge in Phase 10).
   E2E platform test extended (SVG refused, PNG saved, public URL 200, logo kept after Save institute) → 1 passed. Header
   checked in the browser with a temporary Demo logo (img loaded), then removed. Unit 32/32 PASS, web lint/typecheck PASS.
-NOT YET RUN on this branch: the full gate (`npm run check`) and CI.
+Full gate GREEN locally on 2026-10-16 (see Completed). CI on the PR: not yet run.
 
 ### Phase 7 — tests, checking, ranks, progress (sessions 6–7) — MERGED (PR #4, `2a5f25e`)
 Built (branch `phase-7-tests`): migration `20261017000005_assessments.sql` (questions, question_keys, tests, test_questions,
@@ -161,17 +162,9 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
    (WORKER_DATABASE_URL=postgresql://worker:worker_local_only@127.0.0.1:54322/postgres, WORKER_STORAGE_EMAIL /
    WORKER_STORAGE_PASSWORD = `LOCAL_WORKER` in `scripts/local-supabase.ts`). If tool versions changed (Node, Supabase CLI,
    Docker), check `supabase --version` matches CI (2.121.0) or update CI to match.
-1. ADR-024 in docs/DECISIONS.md (after ADR-023): pdfjs-dist 6.4.299 for text extraction; `uploading` status + signed upload
-   URL (file never passes the web server); worker storage service account (no secret key); web never enqueues, worker
-   polls `private.pending_jobs()` → pg-boss stately queue, singletonKey = version id; fake OCR/embeddings not metered until
-   Phase 5; per-institute `max_upload_bytes` not enforced yet (bucket 50 MiB cap); institute-delete cascade fix; logo
-   upload ≤ 500 KB via Server Action, orphaned logos purged in Phase 10; staff-only document page, students open the file.
-   Update DATABASE_DESIGN §4.3 if it differs from the migration.
-2. Gate: `supabase db reset && npm run seed:demo && npm run check` (all of format, lint, typecheck, unit, pgTAP, int, build,
-   E2E must pass), `npm run audit`. Record results + commit hash here.
-3. Push, open PR `phase-4-documents` → `main` (AC status: AC4.1 ✅ int suite, AC4.2 ✅ int, AC4.3 ✅ pgTAP + E2E, AC4.4 ✅
+1. Open PR `phase-4-documents` → `main` (AC status: AC4.1 ✅ int suite, AC4.2 ✅ int, AC4.3 ✅ pgTAP + E2E, AC4.4 ✅
    pgTAP T-ISO-08 + E2E, AC4.5 BLOCKED no AI key, AC4.6 BLOCKED fake providers), check CI, fix until green, merge.
-4. Next phase per build order: Phase 5 (AI tutor, demo mode with fake LLM; read docs/AI_PIPELINE_DESIGN.md and use the
+2. Next phase per build order: Phase 5 (AI tutor, demo mode with fake LLM; read docs/AI_PIPELINE_DESIGN.md and use the
    claude-api skill before any Anthropic SDK code).
 
 ## Relevant files and commands
@@ -198,4 +191,5 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 | 7 | 2026-10-15 | PR #4 merged (`2a5f25e`). Phase 7 seed fixed, `e2e/assessments.spec.ts`, 6 real bugs fixed (test creation RLS, key save, key embeds, submit, form state, checking scroll), browser check, ADR-023, gate green | `40fc4fc` |
 | 8 | 2026-10-15 | Phase 4 DB + worker + tests green (850 pgTAP, 16 integration); institute-delete cascade bug fixed; web UI + seed written, not verified | see `git log` |
 | 9 | 2026-10-15 | Phase 4 web UI browser-verified, worker env/CI, `e2e/documents.spec.ts`, logo upload; founder pausing subscription — handoff written | see `git log` |
+| 10 | 2026-10-16 | ADR-024, Phase 4 full gate green (2 test-fixture races fixed), PR | `ca4b542` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |
