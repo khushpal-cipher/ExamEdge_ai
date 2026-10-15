@@ -136,6 +136,7 @@ export async function updateQuotas(form: FormData) {
     max_upload_bytes: int('max_upload_mb') * 1024 * 1024,
     max_storage_bytes: int('max_storage_gb') * 1024 * 1024 * 1024,
     hard_stop: form.get('hard_stop') === 'on',
+    ai_enabled: form.get('ai_enabled') === 'on',
     updated_at: new Date().toISOString(),
   };
   for (const k of QUOTA_FIELDS) row[k] = int(k);
@@ -144,4 +145,12 @@ export async function updateQuotas(form: FormData) {
   }
   const { error } = await db.from('institute_quotas').update(row).eq('institute_id', id);
   redirect(`/institutes/${id}?${error ? 'error=invalid' : 'ok=saved'}`);
+}
+
+// Platform-wide AI kill switch (AC5.4): every reservation checks it, so it applies to the next AI call everywhere.
+export async function setGlobalAi(form: FormData) {
+  const db = await requireAal2();
+  const { error } = await db.rpc('set_ai_enabled', { enabled: form.get('enabled') === 'true' });
+  if (error) log.error('platform.set_ai_enabled_failed', { code: error.code });
+  redirect(error ? '/?error=ai' : '/');
 }

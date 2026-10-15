@@ -1,5 +1,5 @@
 import { brandStyle, logoUrl } from '@/lib/brand';
-import { requireMember } from '@/lib/tenant';
+import { MANAGERS, requireMember } from '@/lib/tenant';
 import { signOut } from '../actions';
 import { NavLink } from '../nav-link';
 
@@ -29,7 +29,12 @@ export default async function PortalLayout({ children }: { children: React.React
   const { data: me } = await db.from('profiles').select('full_name').eq('user_id', member.userId).maybeSingle();
   const branding = institute.branding as { color?: string; logo?: string };
   const logo = logoUrl(branding.logo);
-  const nav = member.role === 'student' ? STUDENT_NAV : STAFF_NAV;
+  const nav =
+    member.role === 'student'
+      ? STUDENT_NAV
+      : MANAGERS.includes(member.role)
+        ? [...STAFF_NAV, ['/usage', 'AI usage']]
+        : STAFF_NAV;
   return (
     <div className="shell" style={brandStyle(branding.color)}>
       <aside className="side">

@@ -191,6 +191,7 @@ test('platform admin needs MFA, then manages institutes (AC2.7, Phase 3 platform
   await page.getByRole('button', { name: 'Verify' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Institutes');
   await expect(page.getByRole('link', { name: 'Demo Classes' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Turn AI off for everyone' })).toBeVisible();
   await noSeriousA11yIssues(page);
 
   await page.getByLabel('Institute name').fill(`Gamma ${tag}`);
@@ -213,7 +214,10 @@ test('platform admin needs MFA, then manages institutes (AC2.7, Phase 3 platform
   await page.getByRole('combobox', { name: /^Status/ }).selectOption('suspended');
   await page.getByRole('button', { name: 'Save institute' }).click();
   await expect(page.getByRole('status')).toHaveText('Saved.');
+  await expect(page.getByText(/^AI spent this month: \$0\.00 of \$20\.00$/)).toBeVisible();
   await page.getByLabel('Doubts per student per day').fill('25');
+  // AI off for this institute only (never the global switch here: other specs run the worker in parallel).
+  await page.getByLabel('AI enabled').uncheck();
   // Wait for the save to finish, then reload: proves it persisted and no redirect is still in flight for the next form.
   await Promise.all([
     page.waitForResponse((r) => r.request().method() === 'POST'),
@@ -221,6 +225,16 @@ test('platform admin needs MFA, then manages institutes (AC2.7, Phase 3 platform
   ]);
   await page.reload();
   await expect(page.getByLabel('Doubts per student per day')).toHaveValue('25');
+  await expect(page.getByLabel('AI enabled')).not.toBeChecked();
+  const { rows: ai } = await sql(
+    `select i.slug, q.ai_enabled from public.institute_quotas q join public.institutes i on i.id = q.institute_id
+     where i.slug in ('demo', $1) order by i.slug`,
+    [`gamma-${tag}`],
+  );
+  expect(ai).toEqual([
+    { slug: 'demo', ai_enabled: true },
+    { slug: `gamma-${tag}`, ai_enabled: false },
+  ]);
 
   // Logo: wrong type refused, PNG stored in the public bucket, kept when the institute form is saved again.
   const logoInput = page.getByLabel(/^Logo \(/);
