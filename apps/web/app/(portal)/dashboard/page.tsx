@@ -87,7 +87,8 @@ export default async function Dashboard() {
       <section className="card stack" aria-labelledby="next">
         <h2 id="next">Coming next</h2>
         <p className="empty">
-          Notes upload, tests with theory checking, rank lists and AI drafts appear here as they are switched on.
+          Notes upload, the AI tutor and Studio appear here as they are switched on. Tests, checking and rank lists are
+          under Tests.
         </p>
       </section>
     </>

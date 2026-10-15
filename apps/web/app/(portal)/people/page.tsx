@@ -134,7 +134,7 @@ export default async function People({ searchParams }: { searchParams: Search })
                 <tbody>
                   {list.map((p) => (
                     <tr key={p.id}>
-                      <td>{p.name}</td>
+                      <td>{p.role === 'student' ? <Link href={`/students/${p.user_id}`}>{p.name}</Link> : p.name}</td>
                       <td className="small">
                         {p.batch_members
                           .map((b) => batchName.get(b.batch_id))
