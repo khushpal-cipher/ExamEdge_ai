@@ -11,7 +11,7 @@ export const rules: Rule[] = [
   { id: 'session-set_config', pattern: /set_config\s*\([^)]*,\s*false\s*\)/i, applies: inWorkerRuntime },
   {
     id: 'session-SET',
-    pattern: /[`'"]\s*set\s+(?!local\b)(session\s+)?[a-z_."]+\s*(=|to\b)/i,
+    pattern: /[`'"]\s*set\s+(?!local\b)(session\s+)?(role\b|[a-z_."]+\s*(=|to\b))/i,
     applies: inWorkerRuntime,
   },
   {

@@ -21,33 +21,31 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-14 | Consistency check | All relative links resolve; every ADR, Q, test (T-*) and gate (G1–G8) ID referenced is defined; no secret-like strings in files |
 
 ## In progress
-Phase 1 (local parts). Session 3 (2026-10-15) state — see "Session log" at the bottom for detail.
+### Phase 1 — local quality gate PASSED (session 4, 2026-10-15)
+Evidence (all run on 2026-10-15 on branch `phase-1-foundations`, macOS arm64, Supabase CLI 2.121.0):
+| Command | Result |
+|---|---|
+| `npm run format:check` | All matched files use Prettier code style |
+| `npm run lint` | eslint 0 warnings; `check-forbidden: ok` |
+| `npm run typecheck` | exit 0 (web, worker, core, scripts) |
+| `npm test` | 2 files, 7 tests passed (logger + forbidden-pattern rules) |
+| `npm run test:db` | `000_smoke.sql .. ok`, Tests=4, PASS |
+| `npm run test:int` | no integration tests yet; exit 0 (`--passWithNoTests`) |
+| `npm run build` | Next 16.4.1 build OK; `check-bundle: ok` |
+| `npm run test:e2e` | 1 passed (`/api/health` ok + commit + no-store) |
+| AC1.3 hook proof | staged a fake AWS key in `tmp-leak/creds.txt`; `git commit` → gitleaks `leaks found: 2`, exit 1; file removed |
 
-Done and committed:
-- `883fece` Web skeleton: `apps/web/{tsconfig.json,next.config.ts,app/layout.tsx,app/page.tsx,app/api/health/route.ts}`. `npm run build` passed (Next 16.4.1, Turbopack). `/api/health` → `{status:'ok', commit}` with `cache-control: no-store`.
+Fixes made in session 4:
+- `scripts/check-forbidden.ts`: `session-SET` rule missed `SET ROLE x` (its unit test caught it) → regex now also matches `set role`.
+- `npm run test:int` uses `--passWithNoTests` (project-level option is ignored by Vitest 5).
+- ADR-017 (Sentry BLOCKED → JSON logger), ADR-018 (staging BLOCKED), ADR-019 (`private` schema grants; default ACL facts) added.
+- CLAUDE.md "## Commands" filled in.
 
-Done but only partly verified (committed at the end of session 3 as "WIP, unverified"):
-- `supabase/migrations/20261015000002_pgboss.sql`: `grant worker to postgres`; schema `pgboss` owned by `worker`; revoked from public/anon/authenticated. Applied with `supabase db reset` — OK.
-- `supabase/seed.sql`: `alter role worker with login password 'worker_local_only'` (LOCAL ONLY). `WORKER_DATABASE_URL=postgresql://worker:worker_local_only@127.0.0.1:54322/postgres`. Login verified with psql.
-- `apps/worker/src/index.ts`: pg-boss 12 (`new PgBoss({connectionString, schema:'pgboss', createSchema:false})`), queue `heartbeat`, cron `* * * * *`, writes `private.worker_heartbeats`. Ran it: heartbeat row written (count=1). Graceful SIGINT/SIGTERM.
-- `packages/core/src/log.ts` (+ `log.test.ts`): JSON logger, drops sensitive keys, masks emails. Unit test written, **not run yet**.
-- `@examedge/core` added as dependency of web and worker (`npm install` done).
-- `eslint.config.mjs` (typescript-eslint recommended + eslint-config-next core-web-vitals for apps/web), `.prettierrc.json` (singleQuote, printWidth 120), `.prettierignore` (md/docs ignored), `vitest.config.ts` (projects `unit` = `*.test.ts`, `integration` = `*.int.test.ts`), `playwright.config.ts` (webServer `npm run start`, baseURL localhost:3000), `e2e/health.spec.ts`.
-- `scripts/check-forbidden.ts` (+ test): bans session `SET`/`set_config(...,false)` in worker/core, provider SDK imports outside `packages/core/src/ai/`, `dangerouslySetInnerHTML` in web, secret-key names in runtime. `npm run lint` = eslint + this script → **PASSED** (after `prettier --write .`).
-- `scripts/check-bundle.ts`: T-SEC-11 scan of `apps/web/.next/static`; root `build` script = `next build` + this scan. Not run yet.
-- `.githooks/pre-commit` (gitleaks `git --pre-commit --staged`); `git config core.hooksPath .githooks` set locally (each clone must run it).
-- `.env.example` (names only). `.github/workflows/ci.yml` (actions pinned by SHA: checkout v7.0.1, setup-node v7.1.0, supabase/setup-cli v3.0.1 with CLI 2.121.0, gitleaks-action v3.0.0). Never run on GitHub yet.
-- Playwright Chromium downloaded (`npx playwright install chromium`).
-
-Open design point found (resolve at the start of Phase 2): RLS policies run as the caller, so helper functions in schema `private` need `grant usage on schema private to authenticated` (+ `grant execute` on each helper only, and `revoke execute on functions from public`). `private` stays out of the exposed API schemas, and its tables get no grants. This contradicts `supabase/tests/000_smoke.sql` (asserts authenticated has no usage on `private`). Plan: change that test to assert the real property (private not exposed + no table privileges for anon/authenticated) and record an ADR in docs/DECISIONS.md. Also check what `auto_expose_new_tables=false` in `supabase/config.toml` does to default grants (`select * from pg_default_acl`).
-
-Phase 1 remaining steps (in order):
-1. Run the full gate: `npm run format:check && npm run lint && npm run typecheck && npm test && npm run test:db && npm run build && npm run test:e2e` (`test:int` has no tests yet — vitest may exit non-zero on "no test files"; if so add `passWithNoTests` to the integration project only). Fix failures.
-2. Prove AC1.3 locally: stage a fake secret (e.g. a fake AWS key in a temp file), `git commit` must be blocked by the hook; then remove it. Record evidence.
-3. Add DECISIONS.md entries: Sentry BLOCKED (no account) → JSON logger only for now; staging deploy BLOCKED (needs Vercel/Railway/Supabase cloud accounts = founder approval); `private` schema usage grant (above).
-4. Update CLAUDE.md "## Commands" with the real commands.
-5. Commit, `git push origin phase-1-foundations`, open PR into `main`, check CI (`gh pr checks`), fix until green, merge. AC1.4/AC1.5/AC1.6 (staging, Sentry, CI migrations to staging) stay BLOCKED until the founder approves accounts.
-6. Then Phase 2 (identity, tenancy, isolation) per docs/IMPLEMENTATION_ROADMAP.md and docs/NEXT_SESSION_PROMPT.md order.
+Phase 1 acceptance status:
+- AC1.1 local PASS; CI → see PR below. AC1.2 local PASS; CI → see PR. AC1.3 local hook PASS; CI gitleaks job runs on every PR
+  (a fake secret is deliberately NOT pushed to the public repo — it would stay in history forever).
+- AC1.4, AC1.6 BLOCKED (ADR-018, needs accounts). AC1.5 BLOCKED (ADR-017, needs Sentry account).
+- Local part of AC1.4 done in session 3: worker heartbeat row written via pg-boss cron.
 
 Design decisions already worked out for later phases (record as ADRs when built):
 - Web enqueues no jobs directly: it writes domain rows (e.g. `document_versions.processing_status='queued'`); the worker polls a SECURITY DEFINER `private.pending_jobs()` every ~5 s and sends pg-boss jobs with singleton keys (also acts as the sweeper).
@@ -64,14 +62,13 @@ Design decisions already worked out for later phases (record as ADRs when built)
 | Pilot launch (Phase 10) | Q-01 legal opinion on minors' data |
 
 ## Failed checks
-- None run yet (no code).
+- None open.
 
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action
-Start a new Claude Code session in `examedge_ai/` and paste the prompt in `docs/NEXT_SESSION_PROMPT.md` ("Prompt to paste" box at the top).
-That session continues Phase 1 at "Phase 1 remaining steps", step 1 (run the full gate), on branch `phase-1-foundations`.
+Push `phase-1-foundations`, open PR into `main`, fix CI until green, merge. Then start Phase 2 on branch `phase-2-identity`.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -88,4 +85,5 @@ That session continues Phase 1 at "Phase 1 remaining steps", step 1 (run the ful
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
 | 1–2 | 2026-10-14/15 | Planning docs, founder decisions, tools, git init, workspaces, local Supabase init + pgTAP smoke | `5d26fc7` |
+| 4 | 2026-10-15 | Phase 1 full local gate green; SET ROLE lint hole fixed; ADR-017/018/019; PR to main | see `git log` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |

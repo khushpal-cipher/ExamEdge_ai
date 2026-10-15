@@ -19,7 +19,7 @@
     "lint": "eslint . --max-warnings 0 && tsx scripts/check-forbidden.ts",
     "typecheck": "tsc -p apps/web --noEmit && tsc -p apps/worker --noEmit && tsc -p packages/core --noEmit && tsc -p tsconfig.scripts.json --noEmit",
     "test": "vitest run --project unit",
-    "test:int": "vitest run --project integration",
+    "test:int": "vitest run --project integration --passWithNoTests",
     "test:db": "supabase test db",
     "test:e2e": "playwright test",
     "secrets": "gitleaks git --no-banner --redact -v . && gitleaks dir --no-banner --redact .",

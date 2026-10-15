@@ -21,4 +21,9 @@ Multi-tenant AI learning platform for coaching institutes. Start with `docs/PROJ
   anything changed) so a new context window can continue.
 
 ## Commands
-(Added in Phase 1.)
+- Once per clone: `npm ci && git config core.hooksPath .githooks` (gitleaks pre-commit hook).
+- Local stack: `supabase start` (Docker must run) · `npm run db:reset` re-applies migrations + `supabase/seed.sql`.
+- Dev: `npm run dev` (web, http://localhost:3000) · `npm run dev:worker` (needs `WORKER_DATABASE_URL`, see `.env.example`).
+- Full gate (TEST_STRATEGY §6): `npm run check` = format:check, lint (+ forbidden patterns), typecheck, unit,
+  `test:db` (pgTAP), `test:int`, build (+ bundle secret scan), `test:e2e` (Playwright).
+- Secrets scan: `npm run secrets`.

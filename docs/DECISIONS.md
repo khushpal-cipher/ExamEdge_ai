@@ -88,6 +88,20 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
 ### ADR-015 Staff visibility of student AI chats
 - **Decision (provisional):** staff see aggregates only (topics, counts), not chat text. Pending Q-03 and legal advice.
 
+### ADR-017 Error tracking: JSON logger now, Sentry when an account exists (2026-10-15, Accepted)
+- **Decision:** Phase 1 ships the PII-scrubbing JSON logger (`packages/core/src/log.ts`) only. Sentry (AC1.5) is BLOCKED until the founder approves creating a Sentry account.
+- **Why:** creating online accounts needs founder approval; the logger already enforces the "no PII in logs" rule.
+- **Revisit when:** the founder approves Sentry (free tier) — add `@sentry/nextjs` + `@sentry/node` with a `beforeSend` scrubber reusing `scrub()`.
+
+### ADR-018 Staging deploy deferred (2026-10-15, Accepted)
+- **Decision:** AC1.4 (staging health URL), AC1.6 (CI applies migrations to staging) are BLOCKED until the founder approves Supabase cloud, Vercel and Railway accounts. Everything is verified locally and in GitHub Actions against a local Supabase stack.
+- **Revisit when:** the founder approves accounts (needed before Phase 10 at the latest).
+
+### ADR-019 Grants on schema `private` and explicit table grants (2026-10-15, Accepted)
+- **Decision:** RLS policies run as the caller, so helper functions in `private` need `grant usage on schema private to authenticated` plus `grant execute` on each helper only. `private` stays out of the exposed API schemas (`supabase/config.toml` `schemas`), its tables get no grants for `anon`/`authenticated`, and each helper is SECURITY DEFINER with `search_path = ''`. The smoke test asserts these real properties instead of "no usage on private".
+- **Fact found (local stack, CLI 2.121.0):** with `auto_expose_new_tables = false`, new `public` tables owned by `postgres` grant `anon`/`authenticated` only TRUNCATE/REFERENCES/TRIGGER/MAINTAIN by default, and new functions grant no PUBLIC execute (`select * from pg_default_acl`). So every exposed table needs explicit `grant select/insert/update/delete` per role, and migrations `revoke truncate, references, trigger on all tables in schema public from anon, authenticated` (TRUNCATE ignores RLS).
+- **Why:** least privilege; a missing grant fails closed.
+
 ---
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
