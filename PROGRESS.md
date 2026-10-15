@@ -6,7 +6,8 @@ Last updated: 2026-10-15
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
 **Phase 2 MERGED** into `main` (PR #2, merge commit `c106364`, CI green: unit 12, pgTAP 334, E2E 6, 2026-10-15).
 **Phase 3 MERGED** into `main` (PR #3, squash commit `0417717`, CI green: check + secrets, run 38702576710, 2026-10-15).
-**Phase 7 (tests, checking, ranks, progress page) — local gate GREEN** on branch `phase-7-tests` (pushed); PR → CI → merge in progress (see Next exact action).
+**Phase 7 MERGED** into `main` (PR #4, squash commit `2a5f25e`, CI green: check + secrets, run 38711008739, 2026-10-15).
+**Phase 4 (documents) — NOT STARTED**; branch `phase-4-documents` created from `main` (`2a5f25e`).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -26,7 +27,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### Phase 7 — tests, checking, ranks, progress (sessions 6–7) — gate GREEN locally; PR/CI/merge left
+### Phase 7 — tests, checking, ranks, progress (sessions 6–7) — MERGED (PR #4, `2a5f25e`)
 Built (branch `phase-7-tests`): migration `20261017000005_assessments.sql` (questions, question_keys, tests, test_questions,
 test_audience, test_attempts, attempt_answers, batch_standings + RLS + definer RPCs), pgTAP `060_assessments.sql`, web
 `/questions`, `/tests`, `/tests/[id]` (staff + student runner/review), `/tests/[id]/check`, CSV exports, batch rank list,
@@ -95,13 +96,15 @@ Design decisions already worked out for later phases (record as ADRs when built)
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action
-1. `git checkout phase-7-tests && git pull`; `docker info`; `supabase start` if stopped.
-2. If the Phase 7 PR is not merged yet: open/check PR "Phase 7: Tests, checking, ranks, progress" into `main`
-   (`gh pr list`), fix CI until green, merge (squash), pull `main`, record merge commit here.
-3. Phase 4 (documents) on new branch `phase-4-documents` from `main`: state scope + AC4.1–AC4.6 first (IMPLEMENTATION_ROADMAP
-   Phase 4), PDF-extraction spike (record choice in DECISIONS), storage bucket + policies, documents/document_versions/
-   document_audience/document_chunks migrations + RLS + pgTAP, worker ingestion with fake embeddings (demo mode, ADR in
-   NEXT_SESSION_PROMPT §2), upload/publish/withdraw UI, logo upload (ADR-022 deferral). Real document embedding stays BLOCKED (Q-08).
+1. `git checkout phase-4-documents && git pull` (branch from `main` `2a5f25e`; push it with `git push -u origin phase-4-documents`
+   on first commit); `docker info`; `supabase start` if stopped; `supabase db reset && npm run seed:demo`.
+2. Phase 4 (documents): state scope + AC4.1–AC4.6 first (IMPLEMENTATION_ROADMAP Phase 4). Then: PDF text-extraction spike
+   (pick a library, record ADR-024 in DECISIONS); private storage bucket + policies (path `{institute_id}/...`);
+   documents / document_versions / document_audience / document_chunks migrations + RLS + pgTAP (+ T-ISO-06/08, T-SEC-07);
+   worker ingestion (transaction-local tenant context, `private.pending_jobs()` poller, idempotent chunk swap) with
+   fake embeddings (demo mode, NEXT_SESSION_PROMPT §2); upload / publish / withdraw / signed-view UI; logo upload (ADR-022
+   deferral); seed sample PDFs. Real document embedding stays BLOCKED (Q-08); OCR via fake provider until keys exist.
+3. Gate (`npm run check` after fresh reset + seed), browser check (owner, teacher, student at 375 px, rival probe), PR, CI, merge.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -123,5 +126,5 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 | 4 | 2026-10-15 | Phase 1 gate green, CI audit gate, PR #1 merged (`913ec7f`). Phase 2 built: tenancy schema + RLS, 334 pgTAP, web tenant/sign-in/invite, demo seed, 6 E2E; local gate green; PR not yet opened | see `git log` |
 | 5 | 2026-10-15 | PR #2 merged (`c106364`). Phase 3 built (migration + 394 pgTAP, staff/student portals, platform admin + TOTP, E2E spec); E2E 4 failures fixed but not re-run; gate not run | see `git log` |
 | 6 | 2026-10-15 | Phase 3 E2E fixed (12/12), aal from verified claims, gate green, PR #3 merged (`0417717`). Phase 7 DB (692 pgTAP) + UI built; seed WIP failing | see `git log` |
-| 7 | 2026-10-15 | Phase 7 seed fixed, `e2e/assessments.spec.ts`, 6 real bugs fixed (test creation RLS, key save, key embeds, submit, form state, checking scroll), browser check, ADR-023, gate green | `40fc4fc` |
+| 7 | 2026-10-15 | PR #4 merged (`2a5f25e`). Phase 7 seed fixed, `e2e/assessments.spec.ts`, 6 real bugs fixed (test creation RLS, key save, key embeds, submit, form state, checking scroll), browser check, ADR-023, gate green | `40fc4fc` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |
