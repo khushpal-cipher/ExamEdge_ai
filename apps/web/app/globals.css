@@ -368,7 +368,7 @@ th {
 
 @media (max-width: 800px) {
   .shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr); /* the nav scrolls instead of widening the page */
   }
   .side {
     position: static;

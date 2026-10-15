@@ -196,7 +196,8 @@ begin
   if not private.is_platform_admin() then
     raise exception 'platform admin with MFA required' using errcode = '42501';
   end if;
-  update private.settings set ai_enabled = enabled, updated_at = now();
+  -- PostgREST sessions load safeupdate, which refuses an UPDATE without WHERE (the table has one row).
+  update private.settings set ai_enabled = enabled, updated_at = now() where id;
   insert into public.audit_events (institute_id, actor_user_id, actor_kind, action, metadata)
   values (null, (select auth.uid()), 'platform_admin', 'platform.ai_enabled', jsonb_build_object('enabled', enabled));
 end $$;

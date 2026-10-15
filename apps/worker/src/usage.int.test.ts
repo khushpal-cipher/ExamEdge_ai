@@ -1,14 +1,17 @@
 // AC5.3: quotas hold under concurrency, through the same paths production uses — a student's own token against
-// PostgREST (rpc ai_reserve) and the worker role in a job's tenant context (ai_reserve_job).
+// PostgREST (rpc ai_reserve) and the worker role in a job's tenant context (ai_reserve_job). AC5.4: the platform
+// kill switch, flipped through PostgREST by an MFA platform admin, blocks the next call.
 import { createClient } from '@supabase/supabase-js';
 import pg from 'pg';
 import { afterAll, beforeAll, expect, it } from 'vitest';
+import { totp } from '../../../e2e/totp';
 import { localSupabase, localWorkerEnv } from '../../../scripts/local-supabase';
 import { workerMeter } from './ingest';
 
 const { env, admin, db } = localSupabase();
 const slug = `use${Date.now() % 1e9}`;
 const email = `student@${slug}.test`;
+const rootEmail = `root@${slug}.test`;
 const password = 'usage-test-local-only';
 let inst: string;
 let pool: pg.Pool;
@@ -27,7 +30,10 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db.query('delete from public.institutes where slug = $1', [slug]);
-  await db.query('delete from auth.users where email = $1', [email]);
+  await db.query(`delete from private.platform_admins where user_id in (select id from auth.users where email = $1)`, [
+    rootEmail,
+  ]);
+  await db.query('delete from auth.users where email in ($1, $2)', [email, rootEmail]);
   await pool?.end();
   await db.end();
 });
@@ -72,4 +78,24 @@ it('100 parallel worker reservations never reserve more than the institute budge
     [inst],
   );
   expect(rows[0].reserved).toBe(990);
+});
+
+it('AC5.4: an MFA platform admin turns AI off through the API; the next call anywhere is blocked', async () => {
+  const { data, error } = await admin.auth.admin.createUser({ email: rootEmail, password, email_confirm: true });
+  if (error) throw error;
+  await db.query(`insert into private.platform_admins (user_id, granted_by) values ($1, 'test')`, [data.user.id]);
+  const root = createClient(env.API_URL!, env.PUBLISHABLE_KEY!, { auth: { persistSession: false } });
+  await root.auth.signInWithPassword({ email: rootEmail, password });
+  const { data: factor } = await root.auth.mfa.enroll({ factorType: 'totp' });
+  const verified = await root.auth.mfa.challengeAndVerify({ factorId: factor!.id, code: totp(factor!.totp.secret) });
+  expect(verified.error).toBeNull();
+
+  const meter = workerMeter(pool, inst, crypto.randomUUID());
+  try {
+    expect((await root.rpc('set_ai_enabled', { enabled: false })).error).toBeNull();
+    expect((await meter.reserve('ingest_ocr', 'fake', 'fake', 1)).blocked).toBe('ai_disabled');
+  } finally {
+    expect((await root.rpc('set_ai_enabled', { enabled: true })).error).toBeNull();
+  }
+  expect((await meter.reserve('ingest_ocr', 'fake', 'fake', 1)).blocked).toBeNull();
 });
