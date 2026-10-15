@@ -5,24 +5,8 @@
 // together with that server-side institute id.
 import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
-import { log } from '@examedge/core/log';
+import { done, text } from './form';
 import { currentHost, hostname, isUuid, MANAGERS, requireMember, STAFF } from '@/lib/tenant';
-
-const text = (form: FormData, key: string, max = 120) =>
-  String(form.get(key) ?? '')
-    .trim()
-    .slice(0, max);
-
-function done(path: string, error?: { code?: string; message?: string } | null, okCode = 'saved'): never {
-  if (error) {
-    // 42501 = RLS/guard denied, 23505 = duplicate name, 23514 = check failed.
-    const code = { '42501': 'denied', '23505': 'duplicate', '23514': 'invalid' }[error.code ?? ''] ?? 'failed';
-    if (code === 'failed') log.error('staff.action_failed', { path, code: error.code });
-    redirect(`${path}${path.includes('?') ? '&' : '?'}error=${code}`);
-  }
-  redirect(`${path}${path.includes('?') ? '&' : '?'}ok=${okCode}`);
-}
 
 // ---------------------------------------------------------------- batches
 export async function createBatch(form: FormData) {

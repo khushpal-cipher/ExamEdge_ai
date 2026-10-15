@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { isUuid, MANAGERS, requireMember, STAFF } from '@/lib/tenant';
 import { addBatchMember, removeBatchMember, setBatchArchived, setBatchSubjects } from '../../actions';
-import { Flash, type Search } from '../../flash';
+import { Flash } from '../../flash';
+import { Standings } from './standings';
 
 type Row = { membership_id: string; batch_role: string; memberships: { user_id: string; status: string } | null };
 
@@ -11,7 +12,7 @@ export default async function Batch({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Search;
+  searchParams: Promise<{ ok?: string; error?: string; sort?: string }>;
 }) {
   const { institute, member, db } = await requireMember(STAFF);
   const { id } = await params;
@@ -111,6 +112,8 @@ export default async function Batch({
           </ul>
         )}
       </section>
+
+      <Standings ctx={{ institute, member, db }} batch={batch.id} sort={(await searchParams).sort} />
 
       {(['teacher', 'student'] as const).map((role) => {
         const list = sorted(role);

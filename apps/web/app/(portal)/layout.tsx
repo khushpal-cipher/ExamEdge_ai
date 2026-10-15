@@ -7,9 +7,14 @@ const STAFF_NAV = [
   ['/dashboard', 'Dashboard'],
   ['/batches', 'Batches'],
   ['/subjects', 'Subjects'],
+  ['/tests', 'Tests'],
+  ['/questions', 'Question bank'],
   ['/people', 'People'],
 ];
-const STUDENT_NAV = [['/home', 'Home']];
+const STUDENT_NAV = [
+  ['/home', 'Home'],
+  ['/progress', 'My progress'],
+];
 
 const initials = (name: string) =>
   name

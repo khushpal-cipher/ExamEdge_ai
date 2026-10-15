@@ -44,7 +44,10 @@ select set_eq($$ select proname::text from pg_temp.our_functions
   where pronamespace = 'private'::regnamespace and prosecdef $$,
   array['is_platform_admin', 'has_role', 'member_id', 'in_batch', 'teaches_batch', 'teaches_member', 'has_subject',
         'shares_institute_as_staff', 'handle_new_user', 'audit_row', 'guard_membership_update', 'guard_batch_member',
-        'resolve_institute', 'create_invitation', 'accept_invitation', 'create_institute'],
+        'resolve_institute', 'create_invitation', 'accept_invitation', 'create_institute',
+        'can_see_test', 'can_manage_test', 'test_is_draft', 'can_grade', 'guard_question', 'guard_question_key',
+        'guard_test', 'compute_standings', 'compute_results', 'start_attempt', 'get_attempt_questions', 'save_answer',
+        'submit_attempt', 'get_attempt_review', 'grade_answer', 'release_results', 'student_progress'],
   'SECURITY DEFINER functions match the reviewed allowlist');
 
 select is_empty($$ select proname from pg_temp.our_functions

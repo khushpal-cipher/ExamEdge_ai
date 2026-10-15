@@ -1,6 +1,6 @@
 // LOCAL demo data: "Demo Classes" (demo.localhost) and "Rival Academy" (rival.localhost, exists to prove isolation).
 // Run after `npm run db:reset`. All demo users sign in with "Sign in as demo user" (password: DEMO_PASSWORD).
-// Later phases extend this file (documents, tests, ranks, practice data).
+// Later phases extend this file (documents, practice data).
 import { DEMO_PASSWORD } from '../packages/core/src/demo';
 import { localSupabase } from './local-supabase';
 
@@ -97,18 +97,21 @@ async function seedInstitute(slug: string, name: string) {
     students[n] = await member(inst, `student${String(n).padStart(2, '0')}@${slug}.test`, fullName, 'student');
   }
   const subjects = new Map<string, string>();
+  const chapters = new Map<string, string>();
   for (const s of Object.keys(CHAPTERS)) {
     const sid = await one('insert into public.subjects (institute_id, name) values ($1, $2) returning id', [inst, s]);
     subjects.set(s, sid);
     for (const [i, c] of CHAPTERS[s]!.entries()) {
-      await db.query('insert into public.chapters (institute_id, subject_id, name, position) values ($1, $2, $3, $4)', [
-        inst,
-        sid,
+      chapters.set(
         c,
-        i + 1,
-      ]);
+        await one(
+          'insert into public.chapters (institute_id, subject_id, name, position) values ($1, $2, $3, $4) returning id',
+          [inst, sid, c, i + 1],
+        ),
+      );
     }
   }
+  const batches: { id: string; students: number[] }[] = [];
   for (const p of PLAN) {
     const bid = await one(
       `insert into public.batches (institute_id, name, academic_year, exam_id)
@@ -123,8 +126,336 @@ async function seedInstitute(slug: string, name: string) {
     for (let n = p.students[0]!; n <= p.students[1]!; n++) {
       await db.query(`insert into public.batch_members values ($1, $2, $3, 'student')`, [bid, students[n], inst]);
     }
+    batches.push({
+      id: bid,
+      students: Array.from({ length: p.students[1]! - p.students[0]! + 1 }, (_, i) => p.students[0]! + i),
+    });
   }
+  // Students joined two months ago, so every seeded test counts towards overall rank.
+  await db.query(`update public.batch_members set created_at = now() - interval '60 days' where institute_id = $1`, [
+    inst,
+  ]);
+  await seedTests(inst, slug, subjects, chapters, batches, students);
   return inst;
+}
+
+// ---------------------------------------------------------------- tests, answers and ranks (Phase 7)
+type Q = {
+  subject: string;
+  chapter: string;
+  type: string;
+  stem: string;
+  options?: string[];
+  key: unknown;
+  explanation?: string;
+};
+const QUESTIONS: Q[] = [
+  {
+    subject: 'Physics',
+    chapter: 'Units and Measurement',
+    type: 'single',
+    stem: 'The SI unit of force is',
+    options: ['Newton', 'Joule', 'Watt', 'Pascal'],
+    key: { correct: ['a'] },
+    explanation: '1 N = 1 kg·m/s².',
+  },
+  {
+    subject: 'Physics',
+    chapter: 'Laws of Motion',
+    type: 'single',
+    stem: 'A body at rest stays at rest unless acted on by a net force. This is',
+    options: ["Newton's first law", "Newton's second law", "Newton's third law", "Hooke's law"],
+    key: { correct: ['a'] },
+  },
+  {
+    subject: 'Physics',
+    chapter: 'Laws of Motion',
+    type: 'numerical',
+    stem: 'A 2 kg block accelerates at 3 m/s². What is the net force on it in newtons?',
+    key: { value: 6, tolerance_abs: 0.01 },
+    explanation: 'F = ma = 2 × 3 = 6 N.',
+  },
+  {
+    subject: 'Physics',
+    chapter: 'Rotational Motion',
+    type: 'multi',
+    stem: 'Which of these are vector quantities?',
+    options: ['Torque', 'Angular momentum', 'Moment of inertia', 'Kinetic energy'],
+    key: { correct: ['a', 'b'] },
+  },
+  {
+    subject: 'Physics',
+    chapter: 'Rotational Motion',
+    type: 'written',
+    stem: 'Explain why a figure skater spins faster when she pulls her arms in.',
+    key: {
+      model_answer:
+        'Angular momentum L = Iω is conserved (no external torque). Pulling the arms in lowers the moment of inertia I, so ω increases.',
+    },
+  },
+  {
+    subject: 'Physics',
+    chapter: 'Gravitation',
+    type: 'numerical',
+    stem: 'Take g = 9.8 m/s². How long (in s) does a ball dropped from 19.6 m take to reach the ground?',
+    key: { value: 2, tolerance_abs: 0.05 },
+    explanation: 'h = ½gt² → t = √(2h/g) = 2 s.',
+  },
+  {
+    subject: 'Physics',
+    chapter: 'Gravitation',
+    type: 'single',
+    stem: 'Escape velocity from the Earth is about',
+    options: ['11.2 km/s', '7.9 km/s', '3 km/s', '30 km/s'],
+    key: { correct: ['a'] },
+  },
+  {
+    subject: 'Chemistry',
+    chapter: 'Atomic Structure',
+    type: 'single',
+    stem: 'The number of electrons in a neutral carbon atom is',
+    options: ['6', '12', '4', '8'],
+    key: { correct: ['a'] },
+  },
+  {
+    subject: 'Chemistry',
+    chapter: 'Chemical Bonding',
+    type: 'multi',
+    stem: 'Which molecules have a linear shape?',
+    options: ['CO₂', 'H₂O', 'BeCl₂', 'NH₃'],
+    key: { correct: ['a', 'c'] },
+  },
+  {
+    subject: 'Chemistry',
+    chapter: 'Chemical Bonding',
+    type: 'written',
+    stem: 'Why is water a polar molecule even though each O–H bond is identical?',
+    key: {
+      model_answer:
+        'The O–H bonds are polar and the molecule is bent (about 104.5°), so the bond dipoles do not cancel and there is a net dipole moment.',
+    },
+  },
+  {
+    subject: 'Chemistry',
+    chapter: 'Thermodynamics',
+    type: 'single',
+    stem: 'For a spontaneous process at constant T and P',
+    options: ['ΔG < 0', 'ΔG > 0', 'ΔH > 0 always', 'ΔS < 0 always'],
+    key: { correct: ['a'] },
+  },
+  {
+    subject: 'Chemistry',
+    chapter: 'Equilibrium',
+    type: 'numerical',
+    stem: 'What is the pH of a 0.001 M HCl solution?',
+    key: { value: 3, tolerance_abs: 0.01 },
+  },
+  {
+    subject: 'Maths',
+    chapter: 'Quadratic Equations',
+    type: 'numerical',
+    stem: 'What is the sum of the roots of x² − 5x + 6 = 0?',
+    key: { value: 5, tolerance_abs: 0 },
+  },
+  {
+    subject: 'Maths',
+    chapter: 'Limits and Derivatives',
+    type: 'single',
+    stem: 'd/dx (x³) =',
+    options: ['3x²', 'x²', '3x', 'x³/3'],
+    key: { correct: ['a'] },
+  },
+  {
+    subject: 'Maths',
+    chapter: 'Probability',
+    type: 'single',
+    stem: 'Two fair coins are tossed. The probability of exactly one head is',
+    options: ['1/2', '1/4', '3/4', '1/3'],
+    key: { correct: ['a'] },
+  },
+  {
+    subject: 'Biology',
+    chapter: 'Cell: The Unit of Life',
+    type: 'single',
+    stem: 'The powerhouse of the cell is the',
+    options: ['Mitochondrion', 'Ribosome', 'Golgi body', 'Nucleus'],
+    key: { correct: ['a'] },
+  },
+  {
+    subject: 'Biology',
+    chapter: 'Genetics',
+    type: 'written',
+    stem: "State Mendel's law of segregation.",
+    key: {
+      model_answer:
+        'The two alleles of a gene separate during gamete formation, so each gamete receives only one allele.',
+    },
+  },
+  {
+    subject: 'Biology',
+    chapter: 'Human Physiology',
+    type: 'multi',
+    stem: 'Which of these are parts of the human digestive system?',
+    options: ['Liver', 'Pancreas', 'Kidney', 'Lungs'],
+    key: { correct: ['a', 'b'] },
+  },
+];
+
+// Deterministic per-student "ability" and choices, so every reseed gives the same ranks.
+const rand = (seed: number) => {
+  const x = Math.sin(seed * 9301 + 49297) * 233280;
+  return x - Math.floor(x);
+};
+
+async function seedTests(
+  inst: string,
+  slug: string,
+  subjects: Map<string, string>,
+  chapters: Map<string, string>,
+  batches: { id: string; students: number[] }[],
+  students: string[],
+) {
+  const one = async (sql: string, args: unknown[]) => (await db.query(sql, args)).rows[0].id as string;
+  const teacher = users.get(`teacher1@${slug}.test`)!;
+  const qid = new Map<string, string>();
+  for (const q of QUESTIONS) {
+    const options = (q.options ?? []).map((text, i) => ({ id: 'abcd'[i], text }));
+    const id = await one(
+      `insert into public.questions (institute_id, subject_id, chapter_id, type, stem, options, explanation, created_by)
+       values ($1, $2, $3, $4, $5, $6, $7, $8) returning id`,
+      [
+        inst,
+        subjects.get(q.subject),
+        chapters.get(q.chapter),
+        q.type,
+        q.stem,
+        JSON.stringify(options),
+        q.explanation ?? '',
+        teacher,
+      ],
+    );
+    await db.query('insert into public.question_keys values ($1, $2, $3)', [id, inst, JSON.stringify(q.key)]);
+    qid.set(q.stem, id);
+  }
+  const bySubject = (...names: string[]) => QUESTIONS.filter((q) => names.includes(q.subject));
+  const [jee, neet] = batches as [{ id: string; students: number[] }, { id: string; students: number[] }];
+  // closes = days from now (negative = past); state: released | checking | scheduled.
+  const plan: { title: string; batch: typeof jee; qs: Q[]; closes: number; opens: number; state: string }[] = [
+    {
+      title: 'Physics Test 1',
+      batch: jee,
+      qs: bySubject('Physics').filter((q) => q.type !== 'written'),
+      opens: -21.1,
+      closes: -21,
+      state: 'released',
+    },
+    {
+      title: 'Mixed Test 2',
+      batch: jee,
+      qs: bySubject('Physics', 'Chemistry', 'Maths').slice(2, 14),
+      opens: -7.1,
+      closes: -7,
+      state: 'released',
+    },
+    { title: 'Chemistry Test 3', batch: jee, qs: bySubject('Chemistry'), opens: -1.1, closes: -1, state: 'checking' },
+    {
+      title: 'Physics Practice Test',
+      batch: jee,
+      qs: bySubject('Physics').slice(0, 5),
+      opens: -0.1,
+      closes: 3,
+      state: 'scheduled',
+    },
+    { title: 'Maths Test 4', batch: jee, qs: bySubject('Maths'), opens: 2, closes: 2.1, state: 'scheduled' },
+    {
+      title: 'NEET Biology Test 1',
+      batch: neet,
+      qs: bySubject('Biology', 'Chemistry').slice(0, 8),
+      opens: -5.1,
+      closes: -5,
+      state: 'released',
+    },
+    {
+      title: 'NEET Physics Test 2',
+      batch: neet,
+      qs: bySubject('Physics').slice(0, 4),
+      opens: 3,
+      closes: 3.1,
+      state: 'scheduled',
+    },
+  ];
+  for (const [ti, t] of plan.entries()) {
+    const test = await one(
+      `insert into public.tests (institute_id, title, opens_at, closes_at, duration_seconds, status, created_by)
+       values ($1, $2, now() + make_interval(secs => $3::float8 * 86400), now() + make_interval(secs => $4::float8 * 86400), 3600,
+               'scheduled', $5) returning id`,
+      [inst, t.title, t.opens, t.closes, teacher],
+    );
+    await db.query('insert into public.test_audience values ($1, $2, $3)', [test, t.batch.id, inst]);
+    for (const [i, q] of t.qs.entries()) {
+      await db.query(
+        'insert into public.test_questions (test_id, question_id, institute_id, position, marks, negative_marks) values ($1, $2, $3, $4, $5, $6)',
+        [test, qid.get(q.stem), inst, i + 1, q.type === 'written' ? 5 : 4, q.type === 'single' ? 1 : 0],
+      );
+    }
+    if (t.state === 'scheduled') continue;
+    for (const n of t.batch.students) {
+      if (n > 1 && rand(n * 31 + ti) < 0.08) continue; // missed the test (student01, the demo login, never misses)
+      const ability = 0.35 + 0.6 * rand(n);
+      const minutes = 20 + Math.floor(35 * rand(n * 7 + ti));
+      const attempt = await one(
+        `insert into public.test_attempts (institute_id, test_id, user_id, membership_id, started_at, deadline_at,
+                                           submitted_at, status, question_order)
+         select $1, $2, m.user_id, m.id, t.opens_at + interval '5 minutes', t.opens_at + interval '65 minutes',
+                t.opens_at + interval '5 minutes' + make_interval(mins => $4), 'submitted',
+                (select array_agg(question_id order by position) from public.test_questions where test_id = $2)
+         from public.memberships m, public.tests t where m.id = $3 and t.id = $2 returning id`,
+        [inst, test, students[n], minutes],
+      );
+      for (const [qi, q] of t.qs.entries()) {
+        const r = rand(n * 101 + ti * 13 + qi);
+        if (r > 0.92) continue; // left blank
+        const right = r < ability;
+        const key = q.key as { correct?: string[]; value?: number };
+        const response =
+          q.type === 'written'
+            ? right
+              ? (q.key as { model_answer: string }).model_answer
+              : 'I am not sure, I think it depends on the temperature.'
+            : q.type === 'numerical'
+              ? right
+                ? key.value!
+                : key.value! + 1
+              : right
+                ? key.correct!
+                : q.type === 'single'
+                  ? [key.correct![0] === 'a' ? 'b' : 'a']
+                  : [key.correct![0]];
+        const marked = q.type === 'written' && t.state === 'released';
+        await db.query(
+          `insert into public.attempt_answers (attempt_id, question_id, institute_id, response, marks_awarded, graded_by,
+                                               graded_at, teacher_comment) values ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          [
+            attempt,
+            qid.get(q.stem),
+            inst,
+            JSON.stringify(response),
+            marked ? (right ? 4.5 : 1.5) : null,
+            marked ? teacher : null,
+            marked ? new Date() : null,
+            marked && !right ? 'Explain the reason, not just the cause.' : null,
+          ],
+        );
+      }
+    }
+    if (t.state === 'released') {
+      await db.query(
+        `update public.tests set status = 'results_released', results_release_at = closes_at where id = $1`,
+        [test],
+      );
+      await db.query('select private.compute_results($1)', [test]);
+    }
+  }
 }
 
 await db.connect();
