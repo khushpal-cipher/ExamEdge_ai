@@ -4,6 +4,7 @@
 import { createHash } from 'node:crypto';
 import type pg from 'pg';
 import { embed, toVector } from '@examedge/core/ai/embed';
+import { AiBlocked, type Meter } from '@examedge/core/ai/gateway';
 import { log } from '@examedge/core/log';
 import { chunkPages, CHUNKER_VERSION } from './chunk';
 import { IngestError, readPages } from './extract';
@@ -28,6 +29,24 @@ export async function inTenant<T>(pool: pg.Pool, institute: string, fn: (c: pg.P
   }
 }
 
+// AI usage of one job, billed to the job's institute (ai_reserve_job reads it from the tenant context). Each
+// reserve/settle is its own short transaction, so usage stays recorded when the ingest itself fails.
+export const workerMeter = (pool: pg.Pool, institute: string, job: string): Meter => ({
+  reserve: (feature, provider, model, microUsd) =>
+    inTenant(pool, institute, async (c) => {
+      const { rows } = await c.query(
+        'select record_id as id, blocked from private.ai_reserve_job($1, $2, $3, $4, $5)',
+        [feature, provider, model, microUsd, job],
+      );
+      return rows[0];
+    }),
+  settle: async (id, usage, microUsd, outcome) => {
+    await inTenant(pool, institute, (c) =>
+      c.query('select private.ai_settle_job($1, $2, $3, $4)', [id, usage, microUsd, outcome]),
+    );
+  },
+});
+
 export async function ingestVersion(deps: Deps, job: Job): Promise<'ready' | 'failed' | 'skipped'> {
   const { rows } = await inTenant(deps.pool, job.institute_id, (c) =>
     c.query(
@@ -44,10 +63,13 @@ export async function ingestVersion(deps: Deps, job: Job): Promise<'ready' | 'fa
     const bytes = await deps.download(v.storage_path).catch(() => {
       throw new IngestError('file_missing');
     });
-    const { pages, method } = await readPages(bytes, v.mime);
+    const meter = workerMeter(deps.pool, job.institute_id, job.version_id);
+    const { pages, method } = await readPages(bytes, v.mime, meter);
     const chunks = chunkPages(pages);
     if (!chunks.length) throw new IngestError('no_text');
     const { model, vectors } = await embed(
+      meter,
+      'ingest_embed',
       chunks.map((c) => c.content),
       'document',
     );
@@ -92,7 +114,7 @@ export async function ingestVersion(deps: Deps, job: Job): Promise<'ready' | 'fa
     log.info('ingest.ready', { version_id: job.version_id, chunks: chunks.length, method });
     return 'ready';
   } catch (e) {
-    const code = e instanceof IngestError ? e.code : 'internal';
+    const code = e instanceof IngestError ? e.code : e instanceof AiBlocked ? 'ai_unavailable' : 'internal';
     if (code === 'internal') log.error('ingest.failed', { version_id: job.version_id, err: e });
     await inTenant(deps.pool, job.institute_id, (c) =>
       c.query(
