@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Student progress (teacher view)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lora:wght@400;600&display=swap">
+<link rel="stylesheet" href="mockup.css">
+<style>
+.layout { grid-template-columns: 1.45fr 1fr 1fr; grid-template-rows: auto auto 1fr; }
+.profile { display: flex; align-items: center; gap: 14px; }
+.profile .avatar { width: 52px; height: 52px; font-size: 18px; background: var(--accent); }
+.crumb { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+.hb { display: grid; grid-template-columns: 140px 1fr 44px; gap: 10px; align-items: center; font-size: 13px; }
+.hb span:last-child { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+.stat { display: flex; justify-content: space-between; font-size: 13px; padding: 7px 0; border-bottom: 1px solid var(--soft); }
+.stat:last-child { border-bottom: 0; }
+.stat b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.note { background: var(--soft); border-radius: 10px; padding: 10px 12px; font-size: 12px; color: var(--muted); }
+</style></head>
+<body>
+<aside class="side">
+  <div class="brand"><div class="logo">SC</div><div><b>Sharma Classes</b><small>Staff portal</small></div></div>
+  <nav class="nav">
+    <a><span>Dashboard</span></a>
+    <a><span>Batches</span></a>
+    <a class="on"><span>Students</span></a>
+    <a><span>Notes</span></a>
+    <a><span>Question bank</span></a>
+    <a><span>Tests</span></a>
+    <a><span>Check answers</span><span class="badge">34</span></a>
+    <a><span>Rank lists</span></a>
+    <a><span>AI drafts</span><span class="badge">5</span></a>
+    <a><span>Teachers &amp; invites</span></a>
+    <a><span>Settings</span></a>
+  </nav>
+  <div class="me"><div class="avatar">RS</div><div><b>Mr. R. Sharma</b><small>Owner · Physics</small></div></div>
+  <div class="powered">Powered by ExamEdge AI</div>
+</aside>
+
+<main class="main">
+  <div class="top">
+    <div class="profile"><div class="avatar">RV</div><div><div class="crumb">Students › JEE 2027 · Morning</div><h1>Riya Verma</h1><p>Joined 1 Jul 2026 · Last active today, 7:42 PM</p></div></div>
+    <div class="tools"><button class="btn ghost">Export report</button><button class="btn">Message student</button></div>
+  </div>
+
+  <div class="grid layout">
+    <div class="kpis" style="grid-column: 1 / -1;">
+      <div class="kpi"><small>Overall rank</small><b>12 <span>of 180</span></b><em class="up">▲ 4 places this month</em></div>
+      <div class="kpi"><small>Average · all tests</small><b>71.8%</b><em>Batch average 68.4%</em></div>
+      <div class="kpi"><small>Tests</small><b>8 <span>taken · 0 missed</span></b><em>Best: Maths Test 3, rank 6</em></div>
+      <div class="kpi"><small>Self practice · this month</small><b>23 <span>quizzes</span></b><em>Average score 72%</em></div>
+    </div>
+
+    <div class="card" style="grid-row: 2 / 4;">
+      <h2>Institute tests <a>All 8 tests</a></h2>
+      <table>
+        <thead><tr><th>Test</th><th class="r">MCQ</th><th class="r">Theory</th><th class="r">Total</th><th class="r">%</th><th class="r">Batch avg</th><th class="r">Rank</th></tr></thead>
+        <tbody>
+          <tr><td>Physics Test 3</td><td class="r">68/80</td><td class="r">24/40</td><td class="r">92/120</td><td class="r">76.7%</td><td class="r">69.1%</td><td class="r">9</td></tr>
+          <tr><td>Maths Test 3</td><td class="r">84/100</td><td class="r">28/40</td><td class="r">112/140</td><td class="r">80.0%</td><td class="r">70.4%</td><td class="r">6</td></tr>
+          <tr><td>Chemistry Test 3</td><td class="r">51/70</td><td class="r">20/30</td><td class="r">71/100</td><td class="r">71.0%</td><td class="r">66.2%</td><td class="r">18</td></tr>
+          <tr><td>Physics Test 2</td><td class="r">62/80</td><td class="r">28/40</td><td class="r">90/120</td><td class="r">75.0%</td><td class="r">68.0%</td><td class="r">11</td></tr>
+          <tr><td>Maths Test 2</td><td class="r">75/100</td><td class="r">26/40</td><td class="r">101/140</td><td class="r">72.1%</td><td class="r">65.8%</td><td class="r">22</td></tr>
+        </tbody>
+      </table>
+      <h2 style="margin-top:6px">Rank in each test</h2>
+      <svg viewBox="0 0 600 170" width="100%" height="170" aria-label="Test rank over 8 tests, lower is better">
+        <g stroke="#e4e1d8"><line x1="40" y1="20" x2="590" y2="20"/><line x1="40" y1="80" x2="590" y2="80"/><line x1="40" y1="140" x2="590" y2="140"/></g>
+        <g font-size="11" fill="#6b6a64"><text x="6" y="24">1</text><text x="6" y="84">30</text><text x="6" y="144">60</text></g>
+        <polyline fill="none" stroke="#d97757" stroke-width="2.5" points="50,111 125,93 200,101 275,63 350,40 425,55 500,30 575,36"/>
+        <g fill="#d97757"><circle cx="575" cy="36" r="5"/></g>
+        <text x="548" y="58" font-size="12" font-weight="600" fill="#141413">Rank 9</text>
+        <g font-size="11" fill="#6b6a64"><text x="44" y="162">T1</text><text x="119" y="162">T2</text><text x="194" y="162">T3</text><text x="269" y="162">T4</text><text x="344" y="162">T5</text><text x="419" y="162">T6</text><text x="494" y="162">T7</text><text x="569" y="162">T8</text></g>
+      </svg>
+      <div class="note">Theory marks were given by teachers. Click a test to see every answer and the teacher's comments.</div>
+    </div>
+
+    <div class="card">
+      <h2>Chapter strength</h2>
+      <div class="list">
+        <div class="hb"><span>Limits &amp; Continuity</span><div class="bar"><i class="good" style="width:88%"></i></div><span>88%</span></div>
+        <div class="hb"><span>Laws of Motion</span><div class="bar"><i class="good" style="width:84%"></i></div><span>84%</span></div>
+        <div class="hb"><span>Chemical Bonding</span><div class="bar"><i class="good" style="width:79%"></i></div><span>79%</span></div>
+        <div class="hb"><span>Definite Integrals</span><div class="bar"><i class="warn" style="width:63%"></i></div><span>63%</span></div>
+        <div class="hb"><span>Electrochemistry</span><div class="bar"><i class="warn" style="width:61%"></i></div><span>61%</span></div>
+        <div class="hb"><span>Rotational Motion</span><div class="bar"><i class="bad" style="width:54%"></i></div><span>54%</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Accuracy by question type</h2>
+      <div class="stat"><span>MCQ</span><b>78%</b></div>
+      <div class="stat"><span>Numerical</span><b>69%</b></div>
+      <div class="stat"><span>Theory (teacher marks)</span><b>64%</b></div>
+      <div class="stat"><span>Marks lost to negative marking</span><b class="down">14</b></div>
+      <div class="note">High negative marks can mean guessing in MCQs.</div>
+    </div>
+
+    <div class="card">
+      <h2>Study activity · last 30 days</h2>
+      <div class="stat"><span>Days active</span><b>26 of 30</b></div>
+      <div class="stat"><span>Notes opened</span><b>41</b></div>
+      <div class="stat"><span>AI doubts asked</span><b>58</b></div>
+      <div class="stat"><span>Most doubts in</span><b>Rotational Motion (17)</b></div>
+      <div class="stat"><span>Flashcards reviewed</span><b>212</b></div>
+    </div>
+
+    <div class="card">
+      <h2>Average test % by subject vs batch</h2>
+      <div class="legend"><span><i style="background:#d97757"></i>Riya</span><span><i style="background:#c9c6bc"></i>Batch</span></div>
+      <svg viewBox="0 0 300 140" width="100%" height="140" aria-label="Riya vs batch average by subject">
+        <g stroke="#e4e1d8"><line x1="0" y1="120" x2="300" y2="120"/></g>
+        <g font-size="11" fill="#6b6a64"><text x="30" y="135">Physics</text><text x="125" y="135">Chemistry</text><text x="232" y="135">Maths</text></g>
+        <rect x="30" y="31" width="24" height="89" fill="#d97757"/><rect x="58" y="38" width="24" height="82" fill="#c9c6bc"/>
+        <rect x="130" y="35" width="24" height="85" fill="#d97757"/><rect x="158" y="41" width="24" height="79" fill="#c9c6bc"/>
+        <rect x="230" y="34" width="24" height="86" fill="#d97757"/><rect x="258" y="38" width="24" height="82" fill="#c9c6bc"/>
+        <g font-size="10" fill="#141413"><text x="30" y="26">74%</text><text x="130" y="30">71%</text><text x="230" y="29">72%</text></g>
+      </svg>
+      <div class="note">AI chat messages are private to the student. Staff see topics and counts only.</div>
+    </div>
+  </div>
+</main>
+<div class="mock">Design preview · sample data</div>
+</body></html>

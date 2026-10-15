@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Student dashboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lora:wght@400;600&display=swap">
+<link rel="stylesheet" href="mockup.css">
+<style>
+.layout { grid-template-columns: 1.55fr 1fr; grid-template-rows: auto 1fr auto; }
+.subjects { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.subj { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 8px; background: var(--bg); }
+.subj b { font-size: 15px; font-weight: 600; }
+.subj small { color: var(--muted); font-size: 12px; }
+.subj .row { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+</style></head>
+<body>
+<aside class="side">
+  <div class="brand"><div class="logo">SC</div><div><b>Sharma Classes</b><small>sharma.examedge.ai</small></div></div>
+  <nav class="nav">
+    <a class="on"><span>Home</span></a>
+    <a><span>Subjects</span></a>
+    <a><span>Tests</span><span class="badge">2</span></a>
+    <a><span>My progress</span></a>
+    <a><span>Practice</span></a>
+  </nav>
+  <div class="me"><div class="avatar">RV</div><div><b>Riya Verma</b><small>JEE 2027 · Morning batch</small></div></div>
+  <div class="powered">Powered by ExamEdge AI</div>
+</aside>
+
+<main class="main">
+  <div class="top">
+    <div><h1>Good evening, Riya</h1><p>Chemistry Test 4 is this Saturday. You have 3 weak chapters to revise.</p></div>
+    <div class="tools"><div class="search">Search notes, chapters, tests…</div><button class="btn">Ask AI tutor</button></div>
+  </div>
+
+  <div class="grid layout">
+    <div class="kpis" style="grid-column: 1 / -1;">
+      <div class="kpi"><small>Overall rank · batch</small><b>12 <span>of 180</span></b><em class="up">▲ 4 places this month</em></div>
+      <div class="kpi"><small>Overall average</small><b>71.8%</b><em>across 8 institute tests</em></div>
+      <div class="kpi"><small>Last test · Physics Test 3</small><b>92<span>/120</span></b><em>Test rank 9 of 176</em></div>
+      <div class="kpi"><small>AI doubts today</small><b>7 <span>/ 40</span></b><em>6 practice quizzes this week</em></div>
+    </div>
+
+    <div class="card">
+      <h2>My subjects <a>All subjects</a></h2>
+      <div class="subjects">
+        <div class="subj"><b>Physics</b><small>14 notes · 2 new this week</small><div class="bar"><i style="width:74%"></i></div><div class="row"><span>Accuracy</span><span>74%</span></div></div>
+        <div class="subj"><b>Chemistry</b><small>11 notes · 1 new</small><div class="bar"><i class="warn" style="width:66%"></i></div><div class="row"><span>Accuracy</span><span>66%</span></div></div>
+        <div class="subj"><b>Maths</b><small>16 notes</small><div class="bar"><i class="good" style="width:81%"></i></div><div class="row"><span>Accuracy</span><span>81%</span></div></div>
+      </div>
+      <h2 style="margin-top:4px">Marks trend <a>My progress</a></h2>
+      <svg viewBox="0 0 900 200" width="100%" height="200" aria-label="Percentage in last 8 tests">
+        <g stroke="#e4e1d8" stroke-width="1"><line x1="34" y1="20" x2="890" y2="20"/><line x1="34" y1="95" x2="890" y2="95"/><line x1="34" y1="170" x2="890" y2="170"/></g>
+        <g font-size="11" fill="#6b6a64"><text x="0" y="24">100%</text><text x="4" y="99">75%</text><text x="4" y="174">50%</text></g>
+        <polygon fill="#fbe9e1" points="40,170 40,128 160,113 280,122 400,104 520,95 640,107 760,80 880,89 880,170"/>
+        <polyline fill="none" stroke="#d97757" stroke-width="2.5" points="40,128 160,113 280,122 400,104 520,95 640,107 760,80 880,89"/>
+        <circle cx="880" cy="89" r="5" fill="#d97757"/><text x="852" y="74" font-size="12" font-weight="600" fill="#141413">77%</text>
+        <g font-size="11" fill="#6b6a64"><text x="32" y="192">T1</text><text x="152" y="192">T2</text><text x="272" y="192">T3</text><text x="392" y="192">T4</text><text x="512" y="192">T5</text><text x="632" y="192">T6</text><text x="752" y="192">T7</text><text x="872" y="192">T8</text></g>
+      </svg>
+    </div>
+
+    <div class="card">
+      <h2>Upcoming tests <a>All tests</a></h2>
+      <div class="list">
+        <div class="item"><div class="date"><small>Sat</small><b>18</b></div><div class="grow"><b>Chemistry Test 4</b><small>10:00 AM · 90 min · 20 MCQ + 4 theory</small></div><span class="pill acc">In 3 days</span></div>
+        <div class="item"><div class="date"><small>Mon</small><b>20</b></div><div class="grow"><b>Maths Weekly Quiz</b><small>6:00 PM · 30 min · 15 MCQ</small></div><span class="pill mute">Scheduled</span></div>
+      </div>
+      <h2 style="margin-top:6px">Weak chapters <a>Practice</a></h2>
+      <div class="list">
+        <div class="item"><div class="grow"><b>Rotational Motion</b><small>Physics · 54% accuracy</small><div class="bar" style="margin-top:6px"><i class="bad" style="width:54%"></i></div></div><button class="btn ghost">Practice</button></div>
+        <div class="item"><div class="grow"><b>Electrochemistry</b><small>Chemistry · 61% accuracy</small><div class="bar" style="margin-top:6px"><i class="warn" style="width:61%"></i></div></div><button class="btn ghost">Practice</button></div>
+        <div class="item"><div class="grow"><b>Definite Integrals</b><small>Maths · 63% accuracy</small><div class="bar" style="margin-top:6px"><i class="warn" style="width:63%"></i></div></div><button class="btn ghost">Practice</button></div>
+      </div>
+    </div>
+
+    <div class="card" style="grid-column: 1 / -1;">
+      <h2>Recent results <a>All results</a></h2>
+      <table>
+        <thead><tr><th>Test</th><th>Date</th><th class="r">MCQ marks</th><th class="r">Theory marks (checked by teacher)</th><th class="r">Total</th><th class="r">Percentage</th><th class="r">Test rank</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>Physics Test 3</td><td>12 Oct</td><td class="r">68 / 80</td><td class="r">24 / 40</td><td class="r">92 / 120</td><td class="r">76.7%</td><td class="r">9 of 176</td><td class="r"><span class="pill good">Released</span></td></tr>
+          <tr><td>Maths Test 3</td><td>5 Oct</td><td class="r">84 / 100</td><td class="r">28 / 40</td><td class="r">112 / 140</td><td class="r">80.0%</td><td class="r">6 of 178</td><td class="r"><span class="pill good">Released</span></td></tr>
+          <tr><td>Chemistry Test 3</td><td>28 Sep</td><td class="r">51 / 70</td><td class="r">20 / 30</td><td class="r">71 / 100</td><td class="r">71.0%</td><td class="r">18 of 175</td><td class="r"><span class="pill good">Released</span></td></tr>
+          <tr><td>Physics Test 2</td><td>21 Sep</td><td class="r">62 / 80</td><td class="r">28 / 40</td><td class="r">90 / 120</td><td class="r">75.0%</td><td class="r">11 of 174</td><td class="r"><span class="pill good">Released</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+<div class="mock">Design preview · sample data</div>
+</body></html>
