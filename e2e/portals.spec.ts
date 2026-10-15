@@ -120,7 +120,10 @@ test('student sees only own batch subjects, works at phone width (AC3.1, AC3.4)'
   expect((await page.goto(`${DEMO}/people`))?.status()).toBe(404);
 
   await page.goto(`${DEMO}/home`);
-  await page.getByRole('link', { name: /Physics/ }).click();
+  await page
+    .getByRole('region', { name: 'My subjects' })
+    .getByRole('link', { name: /Physics/ })
+    .click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Physics');
   await expect(page.getByRole('tabpanel', { name: 'AI tutor' })).toBeVisible();
   await expect(page.getByRole('tabpanel', { name: 'Sources' })).toBeHidden();

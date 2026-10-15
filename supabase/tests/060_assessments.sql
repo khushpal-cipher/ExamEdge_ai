@@ -80,6 +80,10 @@ select lives_ok(format($$
          (%1$L, 'Secret draft', now() - interval '1 hour', now() + interval '1 hour', 3600) $$, tests.inst('alpha')),
   'teacher creates tests');
 select lives_ok(format($$
+  insert into public.tests (institute_id, title, opens_at, closes_at, duration_seconds)
+  values (%L, 'Read back', now(), now() + interval '1 hour', 3600) returning id $$, tests.inst('alpha')),
+  'teacher reads back the test they just created (insert … returning, as the app does)');
+select lives_ok(format($$
   insert into public.test_questions (test_id, question_id, institute_id, position, marks, negative_marks) values
     (%1$L, %2$L, %6$L, 1, 4, 1), (%1$L, %3$L, %6$L, 2, 4, 1), (%1$L, %4$L, %6$L, 3, 4, 1), (%1$L, %5$L, %6$L, 4, 5, 0) $$,
   tests.id_of('tests', 'title', 'Unit 1'), tests.id_of('questions', 'stem', 'Q1 single'),

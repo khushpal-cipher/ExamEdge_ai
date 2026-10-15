@@ -58,9 +58,14 @@ export async function saveQuestion(form: FormData) {
     if (error) done(back, error);
     questionId = data!.id as string;
   }
-  const { error } = await db
-    .from('question_keys')
-    .upsert({ question_id: questionId, institute_id: institute.id, key }, { onConflict: 'question_id' });
+  // Not an upsert: ON CONFLICT DO UPDATE would need UPDATE on question_id/institute_id, and only `key` is granted.
+  const { data: updated, error: updateError } = isUuid(id)
+    ? await db.from('question_keys').update({ key }).eq('question_id', questionId).select('question_id')
+    : { data: [], error: null };
+  const { error } =
+    updateError || updated?.length
+      ? { error: updateError }
+      : await db.from('question_keys').insert({ question_id: questionId, institute_id: institute.id, key });
   if (error) done(`/questions/${questionId}`, error);
   done(back);
 }

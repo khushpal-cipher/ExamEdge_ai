@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { startTransition, useEffect, useRef, useState } from 'react';
 import { saveAnswer, submitAttempt } from '../actions';
 
 export type RunnerQuestion = {
@@ -48,7 +48,7 @@ export function Runner({
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const pending = useRef(new Set<string>());
   const latest = useRef(answers);
-  const ready = useRef(false);
+  const submitting = useRef(false);
 
   useEffect(() => {
     const offset = Date.parse(serverNow) - Date.now();
@@ -187,24 +187,25 @@ export function Runner({
       })}
       <form
         ref={form}
-        action={submitAttempt}
         onSubmit={(e) => {
-          if (ready.current) return;
           e.preventDefault();
+          if (submitting.current) return;
           const auto = left != null && left <= 0;
           if (
             !auto &&
             !confirm(unanswered ? `${unanswered} questions are unanswered. Submit anyway?` : 'Submit the test?')
           )
             return;
-          // Save anything still waiting for its autosave delay, then submit.
+          // Save anything still waiting for its autosave delay, then submit. Called directly: after preventDefault a
+          // second requestSubmit() does not run a form `action` again.
+          submitting.current = true;
+          const data = new FormData(e.currentTarget);
           const ids = [...pending.current];
           pending.current.clear();
           ids.forEach((id) => clearTimeout(timers.current[id]));
-          void Promise.all(ids.map((id) => save(id, latest.current[id]))).finally(() => {
-            ready.current = true;
-            form.current?.requestSubmit();
-          });
+          void Promise.all(ids.map((id) => save(id, latest.current[id]))).finally(() =>
+            startTransition(() => submitAttempt(data)),
+          );
         }}
       >
         <input type="hidden" name="test_id" value={testId} />

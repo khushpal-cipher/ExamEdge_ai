@@ -62,7 +62,7 @@ export default async function QuestionBank({
           </nav>
           <section className="card stack" aria-labelledby="new-question">
             <h2 id="new-question">New question</h2>
-            <QuestionForm subjects={list} subjectId={subject.id} />
+            <QuestionForm key={subject.id} subjects={list} subjectId={subject.id} />
           </section>
           <section className="card stack" aria-labelledby="bank">
             <h2 id="bank">

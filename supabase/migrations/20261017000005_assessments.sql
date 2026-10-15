@@ -32,6 +32,8 @@ create table public.question_keys (
   institute_id uuid not null,
   -- {correct:[optionIds]} | {value, tolerance_abs | tolerance_pct} | {model_answer} (a guide, never auto-graded)
   key jsonb not null check (jsonb_typeof(key) = 'object'),
+  -- Makes the composite FK one-to-one for PostgREST, so `questions(question_keys(...))` embeds an object, not a list.
+  unique (institute_id, question_id),
   foreign key (institute_id, question_id) references public.questions (institute_id, id) on delete cascade
 );
 
@@ -680,7 +682,12 @@ create policy question_keys_staff on public.question_keys for all to authenticat
 grant select, insert (institute_id, title, opens_at, closes_at, duration_seconds, shuffle_questions),
   update (title, opens_at, closes_at, duration_seconds, shuffle_questions, status), delete
   on public.tests to authenticated;
-create policy tests_read on public.tests for select to authenticated using (private.can_see_test(id));
+-- The creator/manager check is inline: can_see_test(id) looks the row up by id and cannot see a row being inserted,
+-- so `insert … returning` (what the app does) would be refused.
+create policy tests_read on public.tests for select to authenticated
+  using (private.has_role(institute_id, '{owner,admin}')
+         or (created_by = (select auth.uid()) and private.has_role(institute_id, '{teacher}'))
+         or private.can_see_test(id));
 create policy tests_insert on public.tests for insert to authenticated
   with check (private.has_role(institute_id, '{owner,admin,teacher}'));
 create policy tests_update on public.tests for update to authenticated

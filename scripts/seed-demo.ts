@@ -400,7 +400,7 @@ async function seedTests(
     }
     if (t.state === 'scheduled') continue;
     for (const n of t.batch.students) {
-      if (rand(n * 31 + ti) < 0.08) continue; // missed the test
+      if (n > 1 && rand(n * 31 + ti) < 0.08) continue; // missed the test (student01, the demo login, never misses)
       const ability = 0.35 + 0.6 * rand(n);
       const minutes = 20 + Math.floor(35 * rand(n * 7 + ti));
       const attempt = await one(
