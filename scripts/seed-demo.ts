@@ -1,8 +1,14 @@
 // LOCAL demo data: "Demo Classes" (demo.localhost) and "Rival Academy" (rival.localhost, exists to prove isolation).
 // Run after `npm run db:reset`. All demo users sign in with "Sign in as demo user" (password: DEMO_PASSWORD).
 // Later phases extend this file (documents, practice data).
+import { randomUUID } from 'node:crypto';
+import pg from 'pg';
+import { drain } from '../apps/worker/src/ingest';
+import { workerDownloader } from '../apps/worker/src/storage';
 import { DEMO_PASSWORD } from '../packages/core/src/demo';
-import { localSupabase } from './local-supabase';
+import { NOTES } from './demo-notes';
+import { ensureWorkerAccount, localSupabase, localWorkerEnv } from './local-supabase';
+import { makePdf } from './make-pdf';
 
 const FIRST = [
   'Aarav',
@@ -55,7 +61,8 @@ const CHAPTERS: Record<string, string[]> = {
   Biology: ['Cell: The Unit of Life', 'Plant Physiology', 'Human Physiology', 'Genetics'],
 };
 
-const { admin, db } = localSupabase();
+const { env, admin, db } = localSupabase();
+const files: { path: string; pdf: Buffer }[] = [];
 const users = new Map<string, string>();
 
 async function user(email: string, fullName: string) {
@@ -136,7 +143,57 @@ async function seedInstitute(slug: string, name: string) {
     inst,
   ]);
   await seedTests(inst, slug, subjects, chapters, batches, students);
+  await seedDocuments(inst, slug, subjects, chapters);
   return inst;
+}
+
+// Notes for every subject, queued for the worker; the files are uploaded and processed after the commit. Each
+// document's audience = every batch that studies its subject. Rival's notes carry a canary phrase (leak detection).
+async function seedDocuments(inst: string, slug: string, subjects: Map<string, string>, chapters: Map<string, string>) {
+  for (const n of NOTES) {
+    const pages = slug === 'rival' ? [...n.pages, ['Rival canary: quokka saffron lighthouse. This sentence exists only in Rival Academy notes.']] : n.pages;
+    const { rows } = await db.query(
+      `insert into public.documents (institute_id, subject_id, chapter_id, title) values ($1, $2, $3, $4) returning id`,
+      [inst, subjects.get(n.subject), chapters.get(n.chapter), n.title],
+    );
+    const doc = rows[0].id as string;
+    const version = randomUUID();
+    const path = `${inst}/${doc}/${version}`;
+    const pdf = makePdf(pages);
+    await db.query(
+      `insert into public.document_versions (id, institute_id, document_id, version, storage_path, mime, size_bytes,
+         processing_status) values ($1, $2, $3, 1, $4, 'application/pdf', $5, 'queued')`,
+      [version, inst, doc, path, pdf.length],
+    );
+    if (!n.draft)
+      await db.query(
+        `insert into public.document_audience (document_id, batch_id, institute_id)
+         select $1, batch_id, $2 from public.batch_subjects where subject_id = $3`,
+        [doc, inst, subjects.get(n.subject)],
+      );
+    files.push({ path, pdf });
+  }
+}
+
+// Upload the queued files, run the real ingestion once (as the worker role and service account), then publish.
+async function processDocuments() {
+  await ensureWorkerAccount(admin, db);
+  for (const f of files) {
+    const { error } = await admin.storage.from('documents').upload(f.path, f.pdf, { contentType: 'application/pdf' });
+    if (error) throw new Error(`upload ${f.path}: ${error.message}`);
+  }
+  const workerEnv = localWorkerEnv(env);
+  const pool = new pg.Pool({ connectionString: workerEnv.WORKER_DATABASE_URL, max: 2 });
+  try {
+    await drain({ pool, download: await workerDownloader(workerEnv) });
+  } finally {
+    await pool.end();
+  }
+  const { rowCount } = await db.query(
+    `update public.documents d set status = 'published'
+     where current_version_id is not null and exists (select 1 from public.document_audience a where a.document_id = d.id)`,
+  );
+  console.log(`Processed ${files.length} documents, published ${rowCount}.`);
 }
 
 // ---------------------------------------------------------------- tests, answers and ranks (Phase 7)
@@ -471,6 +528,7 @@ try {
     await user('platform@examedge.test', 'Platform Admin'),
   ]);
   await db.query('commit');
+  await processDocuments();
   console.log(
     `Seeded demo + rival (${users.size} users). Sign in at http://demo.localhost:3000 as e.g. owner@demo.test`,
   );
