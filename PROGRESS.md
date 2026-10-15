@@ -5,7 +5,8 @@ Last updated: 2026-10-15
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
 **Phase 2 MERGED** into `main` (PR #2, merge commit `c106364`, CI green: unit 12, pgTAP 334, E2E 6, 2026-10-15).
-**Phase 3 (Portals shell) — local gate GREEN** on `phase-3-portals` (2026-10-15, session 6); PR into `main` being opened.
+**Phase 3 MERGED** into `main` (PR #3, squash commit `0417717`, CI green: check + secrets, run 38702576710, 2026-10-15).
+**Phase 7 (tests, checking, ranks, progress page) — NOT STARTED** on branch `phase-7-tests`.
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -74,8 +75,7 @@ Design decisions already worked out for later phases (record as ADRs when built)
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action
-1. Open PR `phase-3-portals` → `main` "Phase 3: Portals shell", check CI (check + secrets), fix until green, merge, record merge commit here.
-2. `git checkout main && git pull`, create `phase-7-tests`; state Phase 7 scope + acceptance criteria from IMPLEMENTATION_ROADMAP.md
+1. On `phase-7-tests` (created from `main` @ `0417717`): state Phase 7 scope + acceptance criteria from IMPLEMENTATION_ROADMAP.md
    (tests, checking screen, ranks, progress page — no AI needed) and build it.
 
 ## Relevant files and commands
