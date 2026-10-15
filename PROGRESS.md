@@ -6,7 +6,7 @@ Last updated: 2026-10-15
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
 **Phase 2 MERGED** into `main` (PR #2, merge commit `c106364`, CI green: unit 12, pgTAP 334, E2E 6, 2026-10-15).
 **Phase 3 MERGED** into `main` (PR #3, squash commit `0417717`, CI green: check + secrets, run 38702576710, 2026-10-15).
-**Phase 7 (tests, checking, ranks, progress page) — IN PROGRESS** on branch `phase-7-tests` (pushed). DB + UI built; seed broken (one-line fix below); E2E, gate, browser check, ADR-023, PR not done.
+**Phase 7 (tests, checking, ranks, progress page) — local gate GREEN** on branch `phase-7-tests` (pushed); PR → CI → merge in progress (see Next exact action).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -22,45 +22,30 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Docker + tools installed | Docker Desktop 4.95.0 (engine 29.8.2) via `brew install --cask docker-desktop`; Supabase CLI 2.121.0 + gitleaks 8.30.1 via `brew install supabase/tap/supabase gitleaks` |
 | 2026-10-15 | Phase 1 partial: git init, workspaces, local Supabase | `git init -b main`, branch `phase-1-foundations`; npm workspaces installed (versions below); `supabase start` OK; `supabase test db` → `000_smoke.sql .. ok`, Files=1, Tests=4, PASS |
 | 2026-10-14 | Consistency check | All relative links resolve; every ADR, Q, test (T-*) and gate (G1–G8) ID referenced is defined; no secret-like strings in files |
+| 2026-10-15 | Phase 7 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 21/21, pgTAP Files=7 Tests=693 PASS, build (+bundle scan), E2E 14/14 incl. `e2e/assessments.spec.ts` (commit `40fc4fc`). `npm run audit` → ok. Browser check (session 7, dev server): teacher1 checked all 22 written answers of "Chemistry Test 3" with names hidden and released (ranks with time tie-break, equal score+time share a rank); student01 started "Physics Practice Test" at 375 px (scrollWidth 375, autosave "Saved"), review + My progress at 375 px; owner JEE rank list, sort links, CSV `private, no-store`; owner@rival.test → 404 for Demo test/check/export, batch export and a real Demo student id. |
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### Phase 7 — tests, checking, ranks, progress (session 6, 2026-10-15) — IN PROGRESS
-Done (committed + pushed on `phase-7-tests`):
-- `f7ed9fb` migration `supabase/migrations/20261017000005_assessments.sql`: questions, question_keys (staff only), tests,
-  test_questions, test_audience, test_attempts, attempt_answers, batch_standings + RLS; pure helpers `private.valid_response`,
-  `valid_key`, `grade_objective`; definer RPCs start_attempt / get_attempt_questions / save_answer / submit_attempt /
-  get_attempt_review / grade_answer / release_results / student_progress (+ internal compute_results, compute_standings,
-  guards). pgTAP `060_assessments.sql` (98 tests: AC7.1 grading tables, AC7.2 keys, AC7.3 deadline, double start/submit,
-  AC7.6 hand-computed ranks with ties + missed test + regrade, AC7.7, AC7.8, AC7.9). Helpers in `supabase/test_helpers.sql`
-  (fixture rows for every new table, `tests.id_of`, `tests.attempt`, `tests.email`); 010 allowlist updated.
-  `supabase test db` → Files=7, Tests=692, PASS (2026-10-15).
-- `05364ab` web: `/questions` (+`[id]` edit, client `question-form.tsx`), `/tests` list+create, `/tests/[id]` (staff-test.tsx:
-  draft edit, schedule, cancel, checking progress, release/recalculate, rank list; student-test.tsx: start, `runner.tsx`
-  timer from DB deadline + autosave + flush-before-submit + auto-submit, submitted state, review after release),
-  `/tests/[id]/check` checking screen (one written question at a time, half marks, comment, hide names, x of y checked),
-  `/tests/[id]/export` + `/batches/[id]/export` CSV, batch rank list (`batches/[id]/standings.tsx`, sortable),
-  `/students/[id]` and `/progress` sharing `progress-view.tsx` (trend SVG, tests, chapters, types, subjects, comments),
-  student home upcoming tests + last rank, nav entries, People student names link to progress. Shared helpers moved to
-  `app/(portal)/form.ts` (`text`, `done`, named DB errors) and `lib/assess.ts` (IST time, phase, CSV, `requestTime`) + unit test.
-  typecheck, lint, build (+bundle scan) OK on 2026-10-15.
-- Bug found and fixed by the new tests: starting a draft test returned `test_not_open` (leaked existence) → now `test_not_found`.
+### Phase 7 — tests, checking, ranks, progress (sessions 6–7) — gate GREEN locally; PR/CI/merge left
+Built (branch `phase-7-tests`): migration `20261017000005_assessments.sql` (questions, question_keys, tests, test_questions,
+test_audience, test_attempts, attempt_answers, batch_standings + RLS + definer RPCs), pgTAP `060_assessments.sql`, web
+`/questions`, `/tests`, `/tests/[id]` (staff + student runner/review), `/tests/[id]/check`, CSV exports, batch rank list,
+`/students/[id]` + `/progress`, seed with released tests/ranks and "Chemistry Test 3" waiting for checking. Decisions: ADR-023.
+Session 7 bugs found by the new E2E/browser check and fixed (`4a21a8a`, `40fc4fc`):
+- nobody could create a test: `insert … returning` was refused because the read policy's `can_see_test(id)` cannot see
+  the new row → creator/manager checked inline (pgTAP regression "teacher reads back the test they just created").
+- answer keys never saved from the UI: PostgREST upsert needs UPDATE on every column, only `key` is granted → update, else insert.
+- `question_keys` embedded as a list (composite FK not one-to-one) → checking screen crashed, "No answer key" badge never
+  showed → `unique (institute_id, question_id)`.
+- Submit test never posted (second `requestSubmit()` after `preventDefault` does not re-run a form action) → `startTransition`.
+- Question form kept the previous subject after switching subject tabs → keyed by subject.
+- Checking screen jumped to the top after every save → `refresh()` in place.
+AC status: AC7.1 ✅ pgTAP grading tables · AC7.2 ✅ pgTAP + E2E (REST returns no keys) · AC7.3 ✅ pgTAP · AC7.6 ✅ pgTAP
+hand-computed fixture · AC7.7 ✅ pgTAP + E2E (release disabled) · AC7.8 ✅ pgTAP + E2E (teacher3 404 + RPC `not_allowed`) ·
+AC7.9 ✅ pgTAP + E2E (region text equal) · AC7.4 BLOCKED (needs staging/prod-sized DB; k6 in Phase 10) · AC7.5 deferred
+(AI generation after Phase 5) · practice quizzes deferred to Phase 9.
 
-UNCOMMITTED → committed as WIP with this handoff: `scripts/seed-demo.ts` seeds 18 questions, 7 tests per institute
-(released ×3, one closed "Chemistry Test 3" waiting for checking, one open now "Physics Practice Test", two upcoming),
-attempts/answers with deterministic ability, then `private.compute_results`. **FAILING:** `npm run seed:demo` →
-`invalid input syntax for type integer: "-21.1"`. Fix: in `seedTests`, change `make_interval(secs => $3 * 86400)` and
-`$4 * 86400` to `$3::float8 * 86400` / `$4::float8 * 86400`. Then `supabase db reset && npm run seed:demo` (a failed run leaves
-auth users behind: always reset before reseeding).
-
-Decisions to record as ADR-023 when closing Phase 7: test statuses draft|scheduled|results_released|cancelled with
-closed/waiting-for-checking derived from closes_at + unmarked answers; release = manual click (results_release_at = release
-time), releasing again = recalculate after a key fix; marks re-graded from current keys unless a teacher overrode them;
-multi-correct = exact set, no partial marks; blank = 0; students read no answers/keys directly (RPCs only), score/rank null
-until release; standings: students see own row only; times entered/shown in IST (shortcut, per-institute tz later);
-practice quizzes deferred to Phase 9, AI question generation + dual-solve (AC7.5) after Phase 5; AC7.4 (500-start burst) needs k6.
-
-### Phase 3 — portals shell (sessions 5–6) — DONE locally (see Completed); only PR/CI/merge left
+### Phase 3 — portals shell (sessions 5–6) — MERGED (PR #3, `0417717`); history below kept for reference
 Built (branch `phase-3-portals`):
 - `supabase/migrations/20261016000004_portals.sql`: `institute_quotas` (default row per institute via trigger), branding check
   (only `{"color":"#rrggbb"}`), audit trigger now also on institutes/quotas (actor_kind platform_admin when aal2 admin),
@@ -111,19 +96,12 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 
 ## Next exact action
 1. `git checkout phase-7-tests && git pull`; `docker info`; `supabase start` if stopped.
-2. Fix the seed (see Phase 7 "FAILING" above), `supabase db reset && npm run seed:demo`, check counts (released tests have ranks,
-   batch_standings filled, "Chemistry Test 3" has unmarked written answers). Commit.
-3. Write `e2e/assessments.spec.ts`: teacher creates questions (all 4 types) + test opening now (IST datetime-local), schedules;
-   student01 starts, answers, reloads (answers kept), submits; time-travel via `sql()` helper to close it; teacher2 (other batch)
-   cannot open check page answers; teacher checks written answers (hide names), releases; student sees review, comments, rank,
-   My progress equals teacher's /students/[id] numbers (AC7.9); rival user gets 404 on the test, check, export URLs; axe on
-   /tests, /tests/[id], /tests/[id]/check, /progress; CSV export headers no-store. Run `npm run build && npm run test:e2e`.
-4. Fresh `supabase db reset && npm run seed:demo`, then full gate `npm run check`; `npm run audit`. Record results here.
-5. Browser check (built-in browser, `preview_start` name `web`): teacher1 checking "Chemistry Test 3" and releasing; student01
-   taking "Physics Practice Test" at 375 px; owner batch rank list + CSV; rival owner probing demo test ids.
-6. Optional AC7.4: `brew install k6`, burst 500 `start_attempt` RPC calls on local stack; else mark BLOCKED (staging needed).
-7. Add ADR-023 (above), update HOW_IT_WORKS only if behaviour differs, PROGRESS; commit, push, PR "Phase 7: Tests, checking,
-   ranks, progress", check CI, fix, merge. Then Phase 4 on `phase-4-documents`.
+2. If the Phase 7 PR is not merged yet: open/check PR "Phase 7: Tests, checking, ranks, progress" into `main`
+   (`gh pr list`), fix CI until green, merge (squash), pull `main`, record merge commit here.
+3. Phase 4 (documents) on new branch `phase-4-documents` from `main`: state scope + AC4.1–AC4.6 first (IMPLEMENTATION_ROADMAP
+   Phase 4), PDF-extraction spike (record choice in DECISIONS), storage bucket + policies, documents/document_versions/
+   document_audience/document_chunks migrations + RLS + pgTAP, worker ingestion with fake embeddings (demo mode, ADR in
+   NEXT_SESSION_PROMPT §2), upload/publish/withdraw UI, logo upload (ADR-022 deferral). Real document embedding stays BLOCKED (Q-08).
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -145,4 +123,5 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 | 4 | 2026-10-15 | Phase 1 gate green, CI audit gate, PR #1 merged (`913ec7f`). Phase 2 built: tenancy schema + RLS, 334 pgTAP, web tenant/sign-in/invite, demo seed, 6 E2E; local gate green; PR not yet opened | see `git log` |
 | 5 | 2026-10-15 | PR #2 merged (`c106364`). Phase 3 built (migration + 394 pgTAP, staff/student portals, platform admin + TOTP, E2E spec); E2E 4 failures fixed but not re-run; gate not run | see `git log` |
 | 6 | 2026-10-15 | Phase 3 E2E fixed (12/12), aal from verified claims, gate green, PR #3 merged (`0417717`). Phase 7 DB (692 pgTAP) + UI built; seed WIP failing | see `git log` |
+| 7 | 2026-10-15 | Phase 7 seed fixed, `e2e/assessments.spec.ts`, 6 real bugs fixed (test creation RLS, key save, key embeds, submit, form state, checking scroll), browser check, ADR-023, gate green | `40fc4fc` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |

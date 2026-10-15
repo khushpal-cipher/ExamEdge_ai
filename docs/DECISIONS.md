@@ -120,6 +120,15 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
 - **Contrast tokens:** text on the accent colour uses dark ink (`--on-accent`), and `--good`/`--bad` were darkened, so axe reports no serious colour-contrast issues (AC3.3). Institute brand colour picks black or white text by contrast (`lib/brand.ts`).
 - **Logo upload deferred to Phase 4** (needs Storage); branding is colour only (`{"color":"#rrggbb"}` check constraint).
 
+### ADR-023 Phase 7 refinements: tests, checking and ranks (2026-10-15, Accepted)
+- **Test statuses** are `draft | scheduled | results_released | cancelled`. "Open", "closed" and "waiting for checking" are derived from `opens_at`/`closes_at` and unmarked written answers, so no job has to flip statuses at the right second (DATABASE_DESIGN's `closed`/`grading` are not stored).
+- **Release is a manual click** by owner/admin or a teacher of every batch of the test (`results_release_at` = release time). Releasing again = "Recalculate" after fixing an answer key. Changing a mark after release recalculates both ranks at once.
+- **Marking:** objective answers are re-graded from the current keys on every release/recalculate unless a teacher set the marks; multi-correct = exact set, no partial marks; blank = 0; numerical tolerance absolute or percentage of |value|; written answers 0..max in half marks.
+- **Students read no questions, keys or answers directly** — only through `get_attempt_questions` / `get_attempt_review` (after release). Score and rank stay null until release. Students see their own `batch_standings` row only; teachers see their batches.
+- **PostgREST shape:** `question_keys` has `unique (institute_id, question_id)` so the composite FK is one-to-one and embeds return one object. The `tests` read policy checks owner/admin/creator inline because `can_see_test(id)` cannot see a row inside its own `insert … returning`.
+- **Times are entered and shown in India time** (shortcut in `lib/assess.ts`; per-institute timezone later).
+- **Deferred:** student practice quizzes → Phase 9 (Studio); AI question generation + dual-solve (AC7.5) → after Phase 5; AC7.4 (500 concurrent starts, p95 < 2 s) → BLOCKED until a staging/prod-sized database exists (a laptop run would not prove the target; measured with k6 in Phase 10, AC10.3).
+
 ---
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
