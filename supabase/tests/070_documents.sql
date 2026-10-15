@@ -180,5 +180,14 @@ select ok(exists (select 1 from public.audit_events where target_type = 'documen
 select ok(exists (select 1 from public.audit_events where target_type = 'document_audience'
   and action = 'document_audience.insert'), 'audience change is audited');
 
+-- DATABASE_DESIGN §7: deleting an institute removes all of its rows (a used question alone still cannot be deleted).
+select throws_ok($$ delete from public.questions where institute_id = (select inst from ids where slug = 'alpha') $$,
+  '23503', 'question_used_in_test', 'a question used in a test cannot be deleted on its own');
+select throws_ok($$ delete from public.subjects where institute_id = (select inst from ids where slug = 'alpha') $$,
+  '23503', 'question_used_in_test', 'nor through deleting its subject');
+select lives_ok($$ delete from public.institutes where slug = 'alpha' $$, 'an institute delete cascades to every row');
+select is((select count(*) from public.documents where institute_id = (select inst from ids where slug = 'alpha')),
+  0::bigint, 'its documents are gone');
+
 select * from finish();
 rollback;

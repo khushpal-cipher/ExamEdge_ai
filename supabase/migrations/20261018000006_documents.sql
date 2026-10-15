@@ -293,3 +293,32 @@ alter table public.institutes add constraint branding_shape check (
   and (not branding ? 'color' or branding ->> 'color' ~ '^#[0-9a-f]{6}$')
   and (not branding ? 'logo' or branding ->> 'logo' ~ ('^' || id::text || '/[0-9a-f-]{36}$'))
   and branding - 'color' - 'logo' = '{}'::jsonb);
+
+-- ---------------------------------------------------------------- fix: institute delete must cascade (DATABASE_DESIGN §7)
+-- ON DELETE RESTRICT on questions blocked deleting an institute. The FKs now cascade, and the existing question guard
+-- refuses to delete a question used in any test unless its institute is being deleted (graded answers depend on it).
+-- Same error code as before (23503), so the UI still says "still used somewhere".
+alter table public.test_questions drop constraint test_questions_institute_id_question_id_fkey,
+  add foreign key (institute_id, question_id) references public.questions (institute_id, id) on delete cascade;
+alter table public.attempt_answers drop constraint attempt_answers_institute_id_question_id_fkey,
+  add foreign key (institute_id, question_id) references public.questions (institute_id, id) on delete cascade;
+
+create or replace function private.guard_question() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if tg_op = 'DELETE' then
+    if exists (select 1 from public.test_questions where question_id = old.id)
+       and exists (select 1 from public.institutes where id = old.institute_id) then
+      raise exception 'question_used_in_test' using errcode = '23503';
+    end if;
+    return old;
+  end if;
+  if (new.stem, new.options, new.type) is distinct from (old.stem, old.options, old.type) and exists (
+       select 1 from public.test_questions tq join public.tests t on t.id = tq.test_id
+       where tq.question_id = old.id and t.status <> 'draft') then
+    raise exception 'question_in_use' using errcode = 'P0001';
+  end if;
+  return new;
+end $$;
+create trigger guard_delete before delete on public.questions
+  for each row execute function private.guard_question();
