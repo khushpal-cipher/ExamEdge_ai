@@ -3,7 +3,8 @@
 Last updated: 2026-10-15
 
 ## Current phase
-**Phase 1 (Foundations) IN PROGRESS** on git branch `phase-1-foundations` (local repo, no remote). Started 2026-10-15.
+**Phase 1 (Foundations) IN PROGRESS** on git branch `phase-1-foundations`. Started 2026-10-15.
+GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
 | Date | Item | Evidence |
@@ -20,22 +21,31 @@ Last updated: 2026-10-15
 | 2026-10-14 | Consistency check | All relative links resolve; every ADR, Q, test (T-*) and gate (G1–G8) ID referenced is defined; no secret-like strings in files |
 
 ## In progress
-Phase 1 (local parts). Done so far:
-- `supabase/config.toml` edited: `auto_expose_new_tables=false` (explicit GRANTs required), realtime/studio/mailpit/analytics/edge/s3/vector disabled (disk), site_url `http://demo.localhost:3000`, redirect `http://*.localhost:3000/**`, TOTP MFA enabled, Google provider block present but `enabled=false` (BLOCKED: no OAuth client).
-- `supabase/migrations/20261015000001_init.sql`: pgvector + citext in `extensions`, `private` schema (revoked from anon/authenticated), `worker` role (NOLOGIN, NOBYPASSRLS), `private.worker_heartbeats`.
-- `supabase/tests/000_smoke.sql` (passes). `supabase/seed.sql` empty.
-- Root `package.json` (workspaces + scripts: lint, typecheck, test, test:int, test:db, test:e2e, secrets, seed:demo, check), `tsconfig.base.json`, `tsconfig.scripts.json`, `.gitignore`.
-- `apps/web/package.json`, `apps/worker/{package.json,tsconfig.json}`, `packages/core/{package.json,tsconfig.json}` (core exports `./*` → `./src/*.ts`).
-- Installed: next 16.4.1, react 19.3.1, @supabase/supabase-js 2.117.3, @supabase/ssr 0.12.7, zod 4.6.7 (web); pg 8.23.1, pg-boss 12.38.0 (worker); dev: typescript 6.0.3 (NOT 7 — typescript-eslint needs <6.1), eslint 9.39.5 (NOT 10 — eslint-plugin-react peer), typescript-eslint 8.71.2, eslint-config-next 16.4.1, prettier 3.9.10, vitest 5.0.4, @playwright/test 1.64.1, tsx 4.23.15, @types/node 24.
+### Phase 1 — local quality gate PASSED (session 4, 2026-10-15)
+Evidence (all run on 2026-10-15 on branch `phase-1-foundations`, macOS arm64, Supabase CLI 2.121.0):
+| Command | Result |
+|---|---|
+| `npm run format:check` | All matched files use Prettier code style |
+| `npm run lint` | eslint 0 warnings; `check-forbidden: ok` |
+| `npm run typecheck` | exit 0 (web, worker, core, scripts) |
+| `npm test` | 2 files, 7 tests passed (logger + forbidden-pattern rules) |
+| `npm run test:db` | `000_smoke.sql .. ok`, Tests=4, PASS |
+| `npm run test:int` | no integration tests yet; exit 0 (`--passWithNoTests`) |
+| `npm run build` | Next 16.4.1 build OK; `check-bundle: ok` |
+| `npm run test:e2e` | 1 passed (`/api/health` ok + commit + no-store) |
+| AC1.3 hook proof | staged a fake AWS key in `tmp-leak/creds.txt`; `git commit` → gitleaks `leaks found: 2`, exit 1; file removed |
 
-Not done yet in Phase 1 (do these next, in order):
-1. `apps/web`: tsconfig.json, next.config.ts, `app/layout.tsx`, `app/page.tsx`, `app/api/health/route.ts` (200 + commit SHA). **Next 16 notes:** read `node_modules/next/dist/docs/` before writing Next code (AGENTS.md says APIs changed); `middleware.ts` is now **`proxy.ts`** exporting `proxy()` (Node runtime default); not using `cacheComponents`.
-2. `apps/worker/src/index.ts`: pg-boss start + heartbeat job writing `private.worker_heartbeats` (verify pg-boss 12 API/schema permissions from its README in node_modules first).
-3. `packages/core/src/log.ts`: JSON logger with request_id and PII scrubbing (Sentry BLOCKED: no account — add a DECISIONS entry).
-4. `eslint.config.mjs`, `.prettierrc.json`/`.prettierignore`, `vitest.config.ts` (projects `unit` and `integration`), `playwright.config.ts` + `e2e/health.spec.ts`, `scripts/check-forbidden.mjs` (bans session `SET`/`set_config(...,false)` in worker, provider SDK imports outside `packages/core/src/ai`, `dangerouslySetInnerHTML`).
-5. `.githooks/pre-commit` running gitleaks (`git config core.hooksPath .githooks`), prove AC1.3 locally with a fake secret.
-6. `.github/workflows/ci.yml` (written, actions pinned by SHA; cannot run → BLOCKED until a GitHub remote is approved), `.env.example` (names only).
-7. Run the gate: `npm run format:check && npm run lint && npm run typecheck && npm test && npm run test:db && npm run build && npm run test:e2e`; record results; commit; merge to main.
+Fixes made in session 4:
+- `scripts/check-forbidden.ts`: `session-SET` rule missed `SET ROLE x` (its unit test caught it) → regex now also matches `set role`.
+- `npm run test:int` uses `--passWithNoTests` (project-level option is ignored by Vitest 5).
+- ADR-017 (Sentry BLOCKED → JSON logger), ADR-018 (staging BLOCKED), ADR-019 (`private` schema grants; default ACL facts) added.
+- CLAUDE.md "## Commands" filled in.
+
+Phase 1 acceptance status:
+- AC1.1 local PASS; CI → see PR below. AC1.2 local PASS; CI → see PR. AC1.3 local hook PASS; CI gitleaks job runs on every PR
+  (a fake secret is deliberately NOT pushed to the public repo — it would stay in history forever).
+- AC1.4, AC1.6 BLOCKED (ADR-018, needs accounts). AC1.5 BLOCKED (ADR-017, needs Sentry account).
+- Local part of AC1.4 done in session 3: worker heartbeat row written via pg-boss cron.
 
 Design decisions already worked out for later phases (record as ADRs when built):
 - Web enqueues no jobs directly: it writes domain rows (e.g. `document_versions.processing_status='queued'`); the worker polls a SECURITY DEFINER `private.pending_jobs()` every ~5 s and sends pg-boss jobs with singleton keys (also acts as the sweeper).
@@ -52,20 +62,28 @@ Design decisions already worked out for later phases (record as ADRs when built)
 | Pilot launch (Phase 10) | Q-01 legal opinion on minors' data |
 
 ## Failed checks
-- None run yet (no code).
+- None open.
 
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action
-Docker Desktop 29.8.2 installed (2026-10-15). Start a Claude Code session in `examedge_ai/` with the prompt in `docs/NEXT_SESSION_PROMPT.md` (Phase 1, Tasks 1–2 first).
+Push `phase-1-foundations`, open PR into `main`, fix CI until green, merge. Then start Phase 2 on branch `phase-2-identity`.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
 - Roadmap and acceptance criteria: `docs/IMPLEMENTATION_ROADMAP.md`
 - Commands: `supabase start` / `supabase status` / `supabase test db`; scripts in root `package.json`.
 - Local Supabase: API http://127.0.0.1:54321, DB postgresql://postgres:postgres@127.0.0.1:54322/postgres (local defaults; keys via `supabase status -o env`, never commit them).
+- Playwright Chromium (session 3, `npx playwright install chromium`, chromium-1243/headless-shell-1248 in ~/Library/Caches/ms-playwright).
 - Tools installed by Claude: Docker Desktop 4.95.0 (`brew install --cask docker-desktop`), Supabase CLI 2.121.0 and gitleaks 8.30.1 (`brew install supabase/tap/supabase gitleaks`).
 
 ## Known regressions
 - None.
+
+## Session log
+| Session | Date | Summary | Last commit |
+|---|---|---|---|
+| 1–2 | 2026-10-14/15 | Planning docs, founder decisions, tools, git init, workspaces, local Supabase init + pgTAP smoke | `5d26fc7` |
+| 4 | 2026-10-15 | Phase 1 full local gate green; SET ROLE lint hole fixed; ADR-017/018/019; PR to main | see `git log` |
+| 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |

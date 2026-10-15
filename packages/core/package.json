@@ -2,5 +2,7 @@
   "name": "@examedge/core",
   "private": true,
   "type": "module",
-  "exports": { "./*": "./src/*.ts" }
+  "exports": {
+    "./*": "./src/*.ts"
+  }
 }

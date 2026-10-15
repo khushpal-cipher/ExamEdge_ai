@@ -1,8 +1,37 @@
 # Prompt for the next Claude Code session (build + self-test)
 
-Docker Desktop was installed on 2026-10-15. Missing tools are now installed by the session itself (section 5).
-Then open Claude Code in `~/Documents/startup/examedge_ai` and paste everything inside the box below.
+## Prompt to paste (copy everything inside this box into a new Claude Code session)
 
+```text
+Continue building ExamEdge AI Release 1 in ~/Documents/startup/examedge_ai.
+
+1. Read these files fully before doing anything else, in this order, so you have the complete picture:
+   CLAUDE.md, PROGRESS.md, docs/NEXT_SESSION_PROMPT.md (your full instructions are the "Full instructions" box
+   in that file — follow them exactly), docs/PROJECT_MASTER_PLAN.md, docs/IMPLEMENTATION_ROADMAP.md,
+   docs/DATABASE_DESIGN.md, docs/SECURITY_THREAT_MODEL.md, docs/AI_PIPELINE_DESIGN.md, docs/TEST_STRATEGY.md,
+   docs/DECISIONS.md, docs/HOW_IT_WORKS.md, docs/ARCHITECTURE.md. Then run `git log --oneline -15` and `git status`.
+2. Continue from PROGRESS.md "Next exact action" and "In progress". Do not restart or redo finished work;
+   re-verify only what PROGRESS.md marks as unverified.
+3. First check `docker info` (run `open -a Docker` and wait if it fails) and `supabase status`
+   (run `supabase start` if stopped).
+4. Before writing any Next.js code, read node_modules/next/AGENTS.md and the relevant files in
+   node_modules/next/dist/docs/. This is Next 16: middleware.ts is now proxy.ts.
+5. Standing rule: install any free dev tool you need from trusted sources without asking and log it in
+   PROGRESS.md; only ask me about money, new online accounts/deployments, or product decisions not in the docs.
+6. Commit after every green task and push the phase branch. When a phase passes the full quality gate, open a PR
+   into main, check CI, fix until green, then merge. The repo is PUBLIC: never commit secrets.
+7. Keep PROGRESS.md accurate as you go (done / unverified / failing / blocked / next exact action, with commands,
+   results, dates and commit hashes) so any new session can continue.
+8. When I type "give me a prompt": update PROGRESS.md with a precise handoff, commit and push, then reply with
+   the "Prompt to paste" box from docs/NEXT_SESSION_PROMPT.md (updated if anything changed) so I can start a
+   new context window.
+```
+
+---
+
+## Full instructions (referenced by the prompt above)
+
+Docker Desktop is installed (2026-10-15). Missing tools are installed by the session itself (section 5).
 ```text
 You are the lead engineer building ExamEdge AI, a multi-tenant AI learning platform for coaching institutes.
 The founder has APPROVED the plan in this repository and wants you to build Release 1 (the pilot MVP) end to end
@@ -25,9 +54,11 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
   student joined excluded, same average to 2 decimals = same rank). Regrading recalculates both ranks.
 - Clicking a student's name shows a full progress page (HOW_IT_WORKS.md Part 2E); the student sees the same page as "My progress".
 - Staff never see the text of students' AI chats — only counts/topics.
-- `examedge_ai/` becomes its own git repository (the parent repo ignores this folder). Use `git init` here,
-  work on a branch per phase, commit after every green task with clear messages. Do NOT create a GitHub remote,
-  push, deploy, or create any cloud account/resource — ask the founder first for any of those.
+- `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
+  commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
+  origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full
+  quality gate, open a PR into main, check its CI result, fix until green, then merge it.
+  Do NOT deploy or create any other cloud account/resource — ask the founder first.
 
 ## 2. There are NO API keys yet — build "demo mode"
 - All AI goes through packages/core/ai (the gateway). Provider is chosen by env:
