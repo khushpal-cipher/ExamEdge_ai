@@ -15,8 +15,8 @@ async function adminDb() {
 
 async function requireAal2() {
   const db = await adminDb();
-  const { data } = await db.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (data?.currentLevel !== 'aal2') redirect('/');
+  const { data } = await db.auth.getClaims();
+  if (data?.claims.aal !== 'aal2') redirect('/');
   return db;
 }
 

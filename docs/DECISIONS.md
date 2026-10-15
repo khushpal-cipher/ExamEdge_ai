@@ -114,6 +114,12 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
 - **Tenant host:** the web app reads `x-forwarded-host` before `host` (Next dev server actions and Vercel put the client host there). A spoofed value only changes which institute context is rendered; RLS still requires membership and session cookies are host-only.
 - **Invite creation UI** (single + CSV) is built with the Phase 3 institute dashboard; Phase 2 delivers the RPC, accept page and pgTAP/E2E proof.
 
+### ADR-022 Phase 3 refinements (2026-10-15, Accepted)
+- **`institute_quotas` created in Phase 3** (one default row per institute via trigger) so the platform admin can set limits now; Phase 5 enforces them in the AI gateway.
+- **Platform admin host:** `proxy.ts` rewrites `admin.<root>` to `/platform` and returns 404 for `/platform` on any other host. Pages and Server Functions read the MFA level from verified JWT claims (`getClaims().aal`), never from the unverified cookie session; the database re-checks `aal2` in every policy and RPC.
+- **Contrast tokens:** text on the accent colour uses dark ink (`--on-accent`), and `--good`/`--bad` were darkened, so axe reports no serious colour-contrast issues (AC3.3). Institute brand colour picks black or white text by contrast (`lib/brand.ts`).
+- **Logo upload deferred to Phase 4** (needs Storage); branding is colour only (`{"color":"#rrggbb"}` check constraint).
+
 ---
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 

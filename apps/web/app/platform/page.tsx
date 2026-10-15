@@ -18,8 +18,7 @@ export default async function Platform({ searchParams }: { searchParams: Promise
       </div>
     );
 
-  const { data: aal } = await db.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (aal?.currentLevel !== 'aal2') {
+  if (claims.claims.aal !== 'aal2') {
     const { data: factors } = await db.auth.mfa.listFactors();
     return (
       <div className="center">

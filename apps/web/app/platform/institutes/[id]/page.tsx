@@ -14,8 +14,9 @@ export default async function InstituteAdmin({
   searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
   const db = await supabase();
-  const { data: aal } = await db.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (aal?.currentLevel !== 'aal2') redirect('/');
+  // getClaims verifies the JWT; the database re-checks aal2 in every policy anyway.
+  const { data: claims } = await db.auth.getClaims();
+  if (claims?.claims.aal !== 'aal2') redirect('/');
   const { id } = await params;
   if (!isUuid(id)) notFound();
   const [{ data: inst }, { data: q }] = await Promise.all([

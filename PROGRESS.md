@@ -5,7 +5,7 @@ Last updated: 2026-10-15
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
 **Phase 2 MERGED** into `main` (PR #2, merge commit `c106364`, CI green: unit 12, pgTAP 334, E2E 6, 2026-10-15).
-**Phase 3 (Portals shell) — IN PROGRESS** on branch `phase-3-portals` (pushed; contains main). Gate NOT yet run.
+**Phase 3 (Portals shell) — local gate GREEN** on `phase-3-portals` (2026-10-15, session 6); PR into `main` being opened.
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -21,9 +21,10 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Docker + tools installed | Docker Desktop 4.95.0 (engine 29.8.2) via `brew install --cask docker-desktop`; Supabase CLI 2.121.0 + gitleaks 8.30.1 via `brew install supabase/tap/supabase gitleaks` |
 | 2026-10-15 | Phase 1 partial: git init, workspaces, local Supabase | `git init -b main`, branch `phase-1-foundations`; npm workspaces installed (versions below); `supabase start` OK; `supabase test db` → `000_smoke.sql .. ok`, Files=1, Tests=4, PASS |
 | 2026-10-14 | Consistency check | All relative links resolve; every ADR, Q, test (T-*) and gate (G1–G8) ID referenced is defined; no secret-like strings in files |
+| 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### Phase 3 — portals shell (session 5, 2026-10-15) — code written, E2E partly failing, gate NOT run
+### Phase 3 — portals shell (sessions 5–6) — DONE locally (see Completed); only PR/CI/merge left
 Built (branch `phase-3-portals`):
 - `supabase/migrations/20261016000004_portals.sql`: `institute_quotas` (default row per institute via trigger), branding check
   (only `{"color":"#rrggbb"}`), audit trigger now also on institutes/quotas (actor_kind platform_admin when aal2 admin),
@@ -73,13 +74,9 @@ Design decisions already worked out for later phases (record as ADRs when built)
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action
-1. `git checkout phase-3-portals`, `supabase start`, ensure `apps/web/.env.local` exists, `supabase db reset && npm run seed:demo`.
-2. `npm run build && npm run test:e2e` → fix until all pass (never weaken the axe or isolation assertions).
-3. `npm run audit`, then full gate `npm run check` (after a fresh `supabase db reset && npm run seed:demo`); record results here.
-4. Browser check as owner, teacher3, student01 (375 px) on demo.localhost, a rival user probing demo ids, platform admin on admin.localhost.
-5. Add ADR-022 (Phase 3 refinements: quotas table early, platform host rewrite, contrast tokens, logo deferred), update PROGRESS,
-   commit, push, open PR `phase-3-portals` → `main` "Phase 3: Portals shell", check CI, fix, merge.
-6. Start Phase 7 (tests, checking, ranks, progress page) on `phase-7-tests`.
+1. Open PR `phase-3-portals` → `main` "Phase 3: Portals shell", check CI (check + secrets), fix until green, merge, record merge commit here.
+2. `git checkout main && git pull`, create `phase-7-tests`; state Phase 7 scope + acceptance criteria from IMPLEMENTATION_ROADMAP.md
+   (tests, checking screen, ranks, progress page — no AI needed) and build it.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -100,4 +97,5 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 | 1–2 | 2026-10-14/15 | Planning docs, founder decisions, tools, git init, workspaces, local Supabase init + pgTAP smoke | `5d26fc7` |
 | 4 | 2026-10-15 | Phase 1 gate green, CI audit gate, PR #1 merged (`913ec7f`). Phase 2 built: tenancy schema + RLS, 334 pgTAP, web tenant/sign-in/invite, demo seed, 6 E2E; local gate green; PR not yet opened | see `git log` |
 | 5 | 2026-10-15 | PR #2 merged (`c106364`). Phase 3 built (migration + 394 pgTAP, staff/student portals, platform admin + TOTP, E2E spec); E2E 4 failures fixed but not re-run; gate not run | see `git log` |
+| 6 | 2026-10-15 | Phase 3 E2E fixed (12/12), aal from verified claims, full gate green, browser check, ADR-022 | see `git log` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |
