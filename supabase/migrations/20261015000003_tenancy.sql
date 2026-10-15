@@ -462,7 +462,7 @@ create policy invitations_read on public.invitations for select to authenticated
 create policy invitations_revoke on public.invitations for update to authenticated
   using (private.has_role(institute_id, '{owner,admin}')
          or (created_by = (select auth.uid()) and private.has_role(institute_id, '{teacher}')))
-  with check (private.has_role(institute_id, '{owner,admin,teacher}'));
+  with check (revoked_at is not null and private.has_role(institute_id, '{owner,admin,teacher}'));
 
 grant select, insert (institute_id, name), update (name), delete on public.subjects to authenticated;
 create policy subjects_read on public.subjects for select to authenticated

@@ -100,7 +100,8 @@ insert into private.platform_admins (user_id, granted_by) values (tests.uid('out
 select tests.login('outsider@nowhere.test', 'aal1');
 select is((select count(*) from public.institutes), 0::bigint, 'platform admin without MFA sees no institutes');
 select tests.login('outsider@nowhere.test', 'aal2');
-select is((select count(*) from public.institutes), 2::bigint, 'platform admin with MFA sees institutes');
+select is((select count(*) from public.institutes where slug in ('alpha', 'bravo')), 2::bigint,
+  'platform admin with MFA sees institutes');
 select is((select count(*) from public.batches), 0::bigint, 'platform admin cannot read tenant data (T-SEC-15)');
 
 -- ---------------------------------------------------------------- composite FKs and role guards (as table owner)

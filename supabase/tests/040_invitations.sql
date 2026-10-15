@@ -39,6 +39,8 @@ select tests.login('owner@alpha.test');
 select set_config('t.token', public.create_invitation(tests.inst('alpha'), 'revoked@alpha.test', 'teacher'), true);
 select is(tests.affected($$ update public.invitations set revoked_at = now() where email = 'revoked@alpha.test' $$),
   1::bigint, 'owner revokes an invitation');
+select throws_ok($$ update public.invitations set revoked_at = null where email = 'revoked@alpha.test' $$,
+  '42501', null, 'a revoked invitation cannot be un-revoked');
 select tests.logout();
 select tests.create_user('revoked@alpha.test');
 select tests.login('revoked@alpha.test');

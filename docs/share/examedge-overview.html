@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ExamEdge AI Overview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Lora:wght@400;600&display=swap">
+<style>
+/* One-page overview poster, 1600px wide: structure → two portals → two flows → privacy strip */
+:root {
+  --bg: #faf9f5; --card: #ffffff; --soft: #f0eee6; --fg: #141413; --muted: #5e5d59;
+  --line: #dcd9cf; --accent: #d97757; --accent-soft: #f6e1d8;
+  --display: "Poppins", "Helvetica Neue", Arial, sans-serif;
+  --body: "Lora", Georgia, serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); width: 1600px; }
+.page { padding: 64px 72px 56px; display: grid; gap: 44px; }
+h1, h2, h3, .chip, .step b, .tier b, .eyebrow { font-family: var(--display); }
+header { display: flex; justify-content: space-between; align-items: end; border-bottom: 3px solid var(--fg); padding-bottom: 24px; }
+h1 { margin: 0; font-size: 72px; line-height: 1; letter-spacing: -1.5px; }
+h1 span { color: var(--accent); }
+.tag { font-size: 26px; color: var(--muted); margin-top: 12px; }
+.status { font-family: var(--display); font-size: 18px; background: var(--fg); color: var(--bg); padding: 10px 18px; border-radius: 999px; }
+h2 { margin: 0 0 18px; font-size: 30px; display: flex; align-items: center; gap: 14px; }
+h2 .n { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 20px; display: grid; place-items: center; }
+
+/* Structure */
+.tiers { display: grid; gap: 14px; justify-items: center; }
+.tier { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 16px 26px; text-align: center; font-size: 19px; color: var(--muted); }
+.tier b { display: block; font-size: 24px; color: var(--fg); margin-bottom: 4px; }
+.tier.top { background: var(--fg); border-color: var(--fg); color: #c9c7be; width: 760px; }
+.tier.top b { color: var(--bg); }
+.arrow { font-family: var(--display); font-size: 28px; color: var(--accent); line-height: 1; }
+.row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; width: 100%; }
+.inst { border-color: var(--accent); }
+.students { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+.students i { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-soft); border: 2px solid var(--accent); font-style: normal; font-family: var(--display); font-size: 13px; display: grid; place-items: center; color: var(--fg); }
+
+/* Portals */
+.portals { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.portal { background: var(--card); border: 2px solid var(--line); border-radius: 16px; padding: 28px 32px; }
+.portal h3 { margin: 0 0 6px; font-size: 26px; }
+.portal .who { color: var(--muted); font-size: 18px; margin-bottom: 16px; }
+.portal ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+.portal li { font-size: 20px; line-height: 1.4; padding-left: 30px; position: relative; }
+.portal li::before { content: ""; position: absolute; left: 4px; top: 9px; width: 12px; height: 12px; border-radius: 3px; background: var(--accent); }
+.portal li b { font-family: var(--display); font-weight: 600; }
+
+/* Flows */
+.flow { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 0; align-items: stretch; }
+.step { background: var(--soft); border-radius: 14px; padding: 18px 18px; font-size: 18px; line-height: 1.4; position: relative; margin-right: 34px; }
+.step:last-child { margin-right: 0; }
+.step:not(:last-child)::after { content: "→"; position: absolute; right: -30px; top: 50%; transform: translateY(-50%); font-family: var(--display); font-size: 26px; color: var(--accent); }
+.step b { display: block; font-size: 19px; margin-bottom: 6px; }
+.step.hi { background: var(--fg); color: #e3e1d8; }
+.step.hi b { color: #fff; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip { font-size: 13px; padding: 4px 9px; border-radius: 999px; border: 1.5px solid var(--accent); background: var(--card); color: var(--fg); }
+.split { display: grid; gap: 8px; }
+.split div { background: var(--card); border-radius: 10px; padding: 8px 10px; font-size: 16px; }
+
+/* Footer strip */
+.strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.strip div { border-top: 4px solid var(--accent); padding-top: 14px; font-size: 19px; line-height: 1.45; }
+.strip b { font-family: var(--display); display: block; font-size: 21px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div>
+      <h1>ExamEdge <span>AI</span></h1>
+      <div class="tag">An AI study platform for coaching institutes and their students</div>
+    </div>
+    <div class="status">Plan ready · First version being built</div>
+  </header>
+
+  <section>
+    <h2><span class="n">1</span>How it is organised</h2>
+    <div class="tiers">
+      <div class="tier top"><b>ExamEdge platform</b>Adds institutes · runs the AI · shared expert-checked study library · usage limits</div>
+      <div class="arrow">↓</div>
+      <div class="row">
+        <div class="tier inst"><b>Coaching Institute A</b>own portal · own logo · private data
+          <div class="students"><i>S1</i><i>S2</i><i>S3</i><i>…</i></div></div>
+        <div class="tier inst"><b>Coaching Institute B</b>own portal · own logo · private data
+          <div class="students"><i>S1</i><i>S2</i><i>S3</i><i>…</i></div></div>
+        <div class="tier inst"><b>Coaching Institute C</b>own portal · own logo · private data
+          <div class="students"><i>S1</i><i>S2</i><i>S3</i><i>…</i></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="portals">
+    <div class="portal">
+      <h3>Coaching institute portal</h3>
+      <div class="who">For the owner, admins and teachers</div>
+      <ul>
+        <li><b>Batches &amp; subjects:</b> create batches, subjects, chapters; invite teachers and students</li>
+        <li><b>Notes:</b> upload notes and PDFs; they appear in the right subject for the right batch</li>
+        <li><b>Tests:</b> mix MCQ, numerical and theory questions; set marks, negative marking and timing</li>
+        <li><b>Checking:</b> MCQs marked automatically; teachers check theory answers and give marks</li>
+        <li><b>Two ranks:</b> rank for each test and overall rank (average % of all tests)</li>
+        <li><b>Student tracking:</b> click any name to see marks, ranks, weak chapters and practice</li>
+        <li><b>AI drafts:</b> quizzes, summaries and flashcards made by AI, approved by teachers</li>
+      </ul>
+    </div>
+    <div class="portal">
+      <h3>Student portal</h3>
+      <div class="who">Login with Google, after the institute invites them</div>
+      <ul>
+        <li><b>Subjects:</b> every subject with the institute's notes inside</li>
+        <li><b>AI tutor:</b> ask doubts any time in each subject, no uploading needed</li>
+        <li><b>Answers with source:</b> shows the exact notes page it used</li>
+        <li><b>Self practice:</b> practice quizzes, flashcards, summaries and mind maps</li>
+        <li><b>Tests:</b> attempt institute tests and see marks with teacher comments</li>
+        <li><b>My progress:</b> test rank, overall rank, weak chapters, marks trend</li>
+        <li><b>Coming later:</b> audio lessons in Hindi and other languages, animated videos</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span>How a student's doubt is answered</h2>
+    <div class="flow">
+      <div class="step"><b>Student asks</b>"Torque kya hota hai?" in the Physics tutor</div>
+      <div class="step"><b>Security check</b>Is the student a member of this institute? AI limit left today?</div>
+      <div class="step"><b>Find the right pages</b>From the institute's Physics notes and the ExamEdge library</div>
+      <div class="step"><b>AI writes answer</b>Using only those pages plus general knowledge</div>
+      <div class="step hi"><b>Answer shows its source</b>
+        <div class="chips"><span class="chip">Your notes, p. 4</span><span class="chip">ExamEdge library</span><span class="chip">General explanation</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span>How a test works</h2>
+    <div class="flow">
+      <div class="step"><b>Teacher creates test</b>e.g. 10 MCQs + 5 theory questions, for selected batches</div>
+      <div class="step"><b>Students attempt</b>Server-controlled timer, answers auto-saved</div>
+      <div class="step"><b>Marking</b>
+        <div class="split"><div>MCQ &amp; numerical: automatic</div><div>Theory: checked by teacher</div></div></div>
+      <div class="step"><b>Teacher releases</b>Only after every theory answer is checked</div>
+      <div class="step hi"><b>Ranks update</b>Test rank + overall rank (average %) and each student's progress page</div>
+    </div>
+  </section>
+
+  <section class="strip">
+    <div><b>Private by design</b>Each institute's notes, tests and students are locked to that institute. No other institute can see them.</div>
+    <div><b>Teacher stays in control</b>AI drafts are approved by teachers. Theory marks are always decided by teachers.</div>
+    <div><b>Next step</b>Pilot with 2–3 coaching institutes and improve the product from their feedback.</div>
+  </section>
+
+</div>
+</body>
+</html>
