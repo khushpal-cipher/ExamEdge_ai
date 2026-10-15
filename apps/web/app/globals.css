@@ -112,6 +112,10 @@ a {
   place-items: center;
   flex: none;
 }
+img.logo {
+  object-fit: contain;
+  background: #fff;
+}
 .brand b {
   display: block;
   font-size: 16px;

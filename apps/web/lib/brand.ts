@@ -8,6 +8,10 @@ const lum = (hex: string) => {
 };
 const INK = '#141413';
 
+// branding.logo is an object path in the public `logos` bucket (shape enforced by the institutes check constraint).
+export const logoUrl = (logo: string | undefined) =>
+  logo && `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/logos/${logo}`;
+
 export function brandStyle(color: string | undefined) {
   if (!color || !/^#[0-9a-f]{6}$/i.test(color)) return undefined;
   const l = lum(color);

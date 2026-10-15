@@ -2,6 +2,7 @@
 
 // Platform admin Server Functions. They only work on the admin host with an MFA (aal2) session, and the database
 // re-checks private.is_platform_admin() (which itself requires aal2) in every policy and RPC (AC2.7, TH-15).
+import { randomUUID } from 'node:crypto';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { log } from '@examedge/core/log';
@@ -82,15 +83,40 @@ export async function updateInstitute(form: FormData) {
   if (!isUuid(id)) notFound();
   const status = String(form.get('status') ?? '');
   const color = String(form.get('color') ?? '').toLowerCase();
+  const { data: inst } = await db.from('institutes').select('branding').eq('id', id).maybeSingle();
+  const { logo } = (inst?.branding ?? {}) as { logo?: string };
   const { error } = await db
     .from('institutes')
     .update({
       name: String(form.get('name') ?? '').trim(),
       status: STATUSES.includes(status) ? status : 'pilot',
-      branding: /^#[0-9a-f]{6}$/.test(color) ? { color } : {},
+      branding: { ...(/^#[0-9a-f]{6}$/.test(color) && { color }), ...(logo && { logo }) },
     })
     .eq('id', id);
   redirect(`/institutes/${id}?${error ? 'error=invalid' : 'ok=saved'}`);
+}
+
+const LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+const LOGO_MAX = 500 * 1024; // under the 1 MB Server Action body limit; the bucket caps at 1 MiB
+
+// Logos are public files (bucket `logos`), written only by an aal2 platform admin (storage policy).
+// shortcut: a replaced logo stays in the bucket; purge orphans with the Phase 10 retention job.
+export async function uploadLogo(form: FormData) {
+  const db = await requireAal2();
+  const id = form.get('institute_id');
+  if (!isUuid(id)) notFound();
+  const file = form.get('logo');
+  if (!(file instanceof File) || !LOGO_TYPES.includes(file.type) || !file.size || file.size > LOGO_MAX)
+    redirect(`/institutes/${id}?error=logo`);
+  const path = `${id}/${randomUUID()}`;
+  const { error: uploadError } = await db.storage.from('logos').upload(path, file, { contentType: file.type });
+  if (uploadError) redirect(`/institutes/${id}?error=logo`);
+  const { data: inst } = await db.from('institutes').select('branding').eq('id', id).maybeSingle();
+  const { error } = await db
+    .from('institutes')
+    .update({ branding: { ...(inst?.branding as object), logo: path } })
+    .eq('id', id);
+  redirect(`/institutes/${id}?${error ? 'error=logo' : 'ok=saved'}`);
 }
 
 const QUOTA_FIELDS = [

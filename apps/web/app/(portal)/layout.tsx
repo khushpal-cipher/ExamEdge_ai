@@ -1,4 +1,4 @@
-import { brandStyle } from '@/lib/brand';
+import { brandStyle, logoUrl } from '@/lib/brand';
 import { requireMember } from '@/lib/tenant';
 import { signOut } from '../actions';
 import { NavLink } from '../nav-link';
@@ -27,14 +27,21 @@ const initials = (name: string) =>
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const { institute, member, db } = await requireMember();
   const { data: me } = await db.from('profiles').select('full_name').eq('user_id', member.userId).maybeSingle();
+  const branding = institute.branding as { color?: string; logo?: string };
+  const logo = logoUrl(branding.logo);
   const nav = member.role === 'student' ? STUDENT_NAV : STAFF_NAV;
   return (
-    <div className="shell" style={brandStyle((institute.branding as { color?: string }).color)}>
+    <div className="shell" style={brandStyle(branding.color)}>
       <aside className="side">
         <a className="brand" href={nav[0]![0]}>
-          <span className="logo" aria-hidden="true">
-            {initials(institute.name)}
-          </span>
+          {logo ? (
+            // eslint-disable-next-line @next/next/no-img-element -- tiny public logo, not worth image optimisation config
+            <img className="logo" src={logo} alt="" width={38} height={38} />
+          ) : (
+            <span className="logo" aria-hidden="true">
+              {initials(institute.name)}
+            </span>
+          )}
           <span>
             <b>{institute.name}</b>
             <small>{member.role === 'student' ? 'Student portal' : 'Staff portal'}</small>
