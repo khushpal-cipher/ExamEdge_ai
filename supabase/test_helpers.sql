@@ -95,6 +95,12 @@ begin
                                       page_start, page_end, content, embedding, token_count)
   values (inst, d, v, sp, 0, 1, 1, 'Torque notes canary ' || slug || 'zebra',
           ('[' || repeat('0.1,', 1023) || '0.1]')::extensions.vector, 6);
+  -- Phase 5: one settled tutor call by student1 and its daily counter.
+  insert into public.usage_records (institute_id, user_id, feature, provider, model, counter_key, reserved_micro_usd,
+                                    cost_micro_usd, outcome, settled_at)
+  select inst, user_id, 'tutor', 'fake', 'fake', 'messages', 100, 0, 'ok', now() from public.memberships where id = s1;
+  insert into public.usage_counters (institute_id, user_id, day, counter_key, value)
+  select inst, user_id, (now() at time zone 'Asia/Kolkata')::date, 'messages', 1 from public.memberships where id = s1;
   return inst;
 end $$;
 
