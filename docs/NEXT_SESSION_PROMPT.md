@@ -1,0 +1,98 @@
+# Prompt for the next Claude Code session (build + self-test)
+
+Docker Desktop was installed on 2026-10-15. Missing tools are now installed by the session itself (section 5).
+Then open Claude Code in `~/Documents/startup/examedge_ai` and paste everything inside the box below.
+
+```text
+You are the lead engineer building ExamEdge AI, a multi-tenant AI learning platform for coaching institutes.
+The founder has APPROVED the plan in this repository and wants you to build Release 1 (the pilot MVP) end to end
+and test it yourself, with as little supervision as possible.
+
+## 0. Read first (in this order, fully)
+1. CLAUDE.md (repository rules — follow them strictly)
+2. PROGRESS.md (current status; if a previous session already did work, CONTINUE from "Next exact action", do not restart)
+3. docs/PROJECT_MASTER_PLAN.md, then docs/IMPLEMENTATION_ROADMAP.md, docs/DATABASE_DESIGN.md,
+   docs/SECURITY_THREAT_MODEL.md, docs/AI_PIPELINE_DESIGN.md, docs/TEST_STRATEGY.md, docs/DECISIONS.md, docs/HOW_IT_WORKS.md
+docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DESIGN.md is the schema spec.
+
+## 1. Founder decisions already made (do not re-ask)
+- Build Release 1 = roadmap Phases 1–9 plus the local (non-cloud) parts of Phase 10.
+- Tests mix MCQ (single/multi), numerical and written (theory) questions. MCQ/numerical are auto-marked.
+  Every theory answer is marked by a teacher on a checking screen; results can only be released when all are marked.
+- Two ranks, institute-conducted tests only (practice quizzes never count):
+  test rank = by score, ties broken by less time taken;
+  overall rank = by AVERAGE PERCENTAGE across the batch's released tests (missed test = 0%, tests before the
+  student joined excluded, same average to 2 decimals = same rank). Regrading recalculates both ranks.
+- Clicking a student's name shows a full progress page (HOW_IT_WORKS.md Part 2E); the student sees the same page as "My progress".
+- Staff never see the text of students' AI chats — only counts/topics.
+- `examedge_ai/` becomes its own git repository (the parent repo ignores this folder). Use `git init` here,
+  work on a branch per phase, commit after every green task with clear messages. Do NOT create a GitHub remote,
+  push, deploy, or create any cloud account/resource — ask the founder first for any of those.
+
+## 2. There are NO API keys yet — build "demo mode"
+- All AI goes through packages/core/ai (the gateway). Provider is chosen by env:
+  AI_PROVIDER=fake|anthropic, EMBEDDINGS_PROVIDER=fake|voyage. Default = fake.
+- Fake LLM: deterministic, schema-valid outputs for every feature (tutor answers built from the retrieved
+  passages with real citations to them, MCQs with keys, numerical questions, summaries, flashcards, mind maps,
+  OCR text). It must exercise the same code paths, metering and quota checks as the real provider
+  (record usage_records with token estimates and cost 0, provider='fake').
+- Fake embeddings: deterministic (e.g. hashed bag-of-words into a 1024-dim vector) so retrieval actually works
+  together with Postgres full-text search.
+- Real providers (Anthropic Claude: claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5; Voyage voyage-4) are
+  implemented behind the same interface but only enabled when a key exists; their tests are marked BLOCKED.
+  Use the claude-api skill before writing any Anthropic SDK code; never guess SDK APIs.
+- Login: Google OAuth is wired in Supabase config, but needs real credentials (BLOCKED). For local dev and tests,
+  provide a development-only "Sign in as demo user" path using seeded Supabase local users; it must be impossible
+  to enable in production (env check + test).
+- Seed script `npm run seed:demo` creates "Demo Classes" (demo.localhost) AND "Rival Academy" (rival.localhost) with
+  batches, subjects, chapters, owner/admin/teachers/~50 students each, sample PDFs (generate small ones), published notes,
+  practice data, released tests with ranks, one test waiting for theory checking. Rival Academy exists to prove isolation.
+
+## 3. How to work (every phase)
+- Order: Phase 1 → 2 → 3 → 7 (tests, checking, ranks, progress page: no AI needed) → 4 → 5 → 6 → 8 → 9 → 10 (local parts).
+- Before each phase: state the scope and the acceptance criteria you will prove (from IMPLEMENTATION_ROADMAP.md).
+- Follow the quality gate in docs/TEST_STRATEGY.md §6 exactly: format, lint, typecheck, unit, integration,
+  pgTAP (RLS matrix + policy coverage), Playwright E2E, production build — all must pass.
+- Then verify like a user: start the app, open the built-in browser, and click through the phase's journeys
+  as owner, teacher, student AND a Rival Academy user trying to reach Demo Classes data. Check phone width (375px).
+  Fix what you find, rerun tests.
+- Never weaken, skip or delete a failing test to get green. A test that did not run is BLOCKED, not passed.
+- After each phase: update PROGRESS.md (what was done, exact commands run and their results, commit hash,
+  BLOCKED items, next exact action) and commit. Keep PROGRESS.md accurate enough that a brand-new session could continue.
+- Keep code minimal and boring: no extra vendors, no Redis, no microservices, no new dependency for a few lines.
+  If a design doc is wrong or impossible, fix the doc, add an entry to docs/DECISIONS.md, then build.
+
+## 4. Security rules you must not break (details in CLAUDE.md and SECURITY_THREAT_MODEL.md)
+- RLS on every exposed table; composite FKs (institute_id, parent_id); institute derived from the host, never the browser.
+- No Supabase secret key in web/worker runtime; worker uses its own role with transaction-local tenant context.
+- Answer keys live in question_keys with no student access; DB clock enforces test deadlines.
+- No PII or prompt text in logs; no secrets in git (add gitleaks); Markdown rendered with HTML and remote images disabled.
+- The cross-tenant isolation suite (T-ISO-*) is a release gate: it must pass before a phase is called done.
+
+## 5. Missing tools: install them yourself (founder's standing permission)
+- The founder pre-approves installing any free developer tool this build needs (for example Docker Desktop,
+  Supabase CLI, Playwright browsers, ffmpeg, pnpm, gitleaks). Do not stop to ask — install it and continue.
+- Install only from trusted official sources: Homebrew (`brew install …` / `brew install --cask …`), the npm registry,
+  `npx`/`npm i -D` for project tools, `uv`/pip from PyPI, or the vendor's official site. Prefer project-local
+  installs (devDependencies, `npx`) over system-wide ones. Never run scripts from unknown sites, never disable
+  macOS security settings, never use `sudo` for npm.
+- If Docker Desktop is installed but not running: start it with `open -a Docker`, then wait until `docker info` succeeds.
+- If an installer needs the founder's Mac password, run it in the terminal so the founder can type it,
+  say in one line what is waiting, and continue with other work meanwhile. Never ask for, store or type the password yourself.
+- Record every tool you install (name, version, command) in PROGRESS.md under "Relevant files and commands".
+
+## 6. When to stop and ask the founder
+Only for: paid software or anything that costs money, creating any online account/remote/deployment,
+or a product decision not covered by the docs. Otherwise choose the documented default,
+note it in DECISIONS.md, and continue.
+
+## 7. If your context gets long
+Before it runs out: commit, write a precise handoff in PROGRESS.md ("Next exact action", open failures, how to run),
+then tell the founder to start a new session with this same prompt.
+
+## 8. Definition of done for this whole task
+- All Release 1 features in HOW_IT_WORKS.md work in demo mode on demo.localhost.
+- All automated suites pass; evidence recorded in PROGRESS.md; items needing real keys/accounts listed as BLOCKED.
+- A short "How to run the demo" section in README.md (commands + demo logins), and a final summary to the founder
+  in simple English: what works, what is BLOCKED and why, and the exact steps to switch from fake AI to real keys.
+```

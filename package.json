@@ -1,0 +1,42 @@
+{
+  "name": "examedge-ai",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @examedge/web",
+    "dev:worker": "npm run dev -w @examedge/worker",
+    "build": "npm run build -w @examedge/web",
+    "start": "npm run start -w @examedge/web",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings 0 && node scripts/check-forbidden.mjs",
+    "typecheck": "tsc -p apps/web --noEmit && tsc -p apps/worker --noEmit && tsc -p packages/core --noEmit && tsc -p tsconfig.scripts.json --noEmit",
+    "test": "vitest run --project unit",
+    "test:int": "vitest run --project integration",
+    "test:db": "supabase test db",
+    "test:e2e": "playwright test",
+    "secrets": "gitleaks git --no-banner --redact -v . && gitleaks dir --no-banner --redact .",
+    "db:reset": "supabase db reset",
+    "seed:demo": "tsx scripts/seed-demo.ts",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run test:db && npm run test:int && npm run build && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^24.19.2",
+    "@types/pg": "^8.23.1",
+    "eslint": "^9.39.5",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^5.0.4"
+  }
+}

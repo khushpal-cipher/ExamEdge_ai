@@ -1,0 +1,221 @@
+# ExamEdge AI — Database Design
+
+Status: **Draft for approval** · Last updated: 2026-10-14 · Labels: see [ARCHITECTURE.md](ARCHITECTURE.md) header.
+Source of truth after Phase 1 = SQL migrations in `supabase/migrations/`. This document is the design they implement.
+
+## 1. Ownership classes
+
+| Class | Meaning | Examples | Who can read |
+|---|---|---|---|
+| **G — Global/platform** | Owned by ExamEdge, shared by all institutes, read-only to tenants | exams, library_* , institutes (own row only) | Any authenticated user (published rows); writes = platform admins / library worker |
+| **T — Tenant** | Owned by one institute | batches, subjects, documents, tests | Members of that institute per role |
+| **S — Student-private (inside a tenant)** | Owned by one student within one institute | conversations, messages, practice_attempts, student-scope artifacts | That student; staff see **aggregates only** by default (open question Q-03) |
+| **O — Operational** | Metering, audit, jobs | usage_records, audit_events, pg-boss schema | Platform admins; institute owners/admins see their own institute's rows |
+
+**Rule:** adding `institute_id` is not isolation. Isolation = (1) RLS policy on every table, (2) composite FKs so
+cross-tenant references are impossible, (3) no privileged role in request paths, (4) automated tests (TEST_STRATEGY §3).
+
+## 2. Conventions
+
+- PK: `id uuid default gen_random_uuid()` unless noted. Timestamps `timestamptz default now()`.
+- Every tenant table: `institute_id uuid not null references institutes(id)`, plus `unique (institute_id, id)` on
+  tables that are referenced by children. Children reference `(institute_id, parent_id)` → `parent(institute_id, id)`.
+- Soft delete via `deleted_at` only where recovery matters (documents); everything else hard-deletes with cascade.
+- Enums as Postgres `text` + `check` constraints (easier migrations than enum types) [R].
+- Every exposed table: `alter table … enable row level security` — enforced by a pgTAP test.
+- Views: `with (security_invoker = true)` only (views otherwise bypass RLS [V]).
+- `SECURITY DEFINER` functions: only in schema `private` (not exposed by the API), `set search_path = ''`,
+  fully qualified names [V]. Allowlist enforced by a pgTAP test.
+- RLS helper calls wrapped as `(select private.fn(...))` for per-statement caching [V]; every policy column indexed [V].
+
+## 3. RLS helper functions (schema `private`, SECURITY DEFINER, stable)
+
+| Function | Returns true when |
+|---|---|
+| `private.uid()` | wrapper for `auth.uid()` (null for anon) |
+| `private.is_platform_admin()` | caller in `platform_admins` |
+| `private.has_role(inst uuid, roles text[])` | caller has an **active** membership in `inst` with one of `roles` |
+| `private.member_id(inst uuid)` | caller's membership id in `inst` (or null) |
+| `private.in_batch(batch uuid)` | caller's membership is in `batch_members` for that batch (any batch role) |
+| `private.teaches_batch(batch uuid)` | caller is teacher in that batch, or admin/owner of its institute |
+| `private.can_read_document(doc uuid)` | staff of the institute, **or** student enrolled in a batch in `document_audience` and doc `status='published'` and `deleted_at is null` |
+| `private.job_institute()` | `nullif(current_setting('app.institute_id', true), '')::uuid` — worker tenant context |
+
+Role hierarchy: `owner ⊃ admin ⊃ teacher`; `student` is separate. "staff" = owner, admin, teacher.
+
+## 4. Tables — MVP (Release 1)
+
+Format: **purpose · keys · columns · indexes/constraints · deletion · access (S=select, I=insert, U=update, D=delete)**.
+
+### 4.1 Global / platform
+
+**institutes** (G-ish: one row per tenant, read by own members)
+- Purpose: the tenant. Columns: `slug citext unique` (subdomain; `^[a-z0-9-]{3,40}$`), `name`, `status` (`pilot|active|suspended|offboarding`), `cell text default 'main'`, `branding jsonb` (logo path, primary colour), `created_at`.
+- Deletion: offboarding → export → hard delete after 30-day grace [A, Q-07]. `suspended` blocks all member access in `has_role`.
+- Access: S own institute (any active member) / platform admin all. I/U/D platform admin only (via RPC).
+
+**institute_domains**
+- `hostname citext unique`, `institute_id`, `kind` (`subdomain|custom`), `verified_at`.
+- Access: no direct S for users. Read only through `public.resolve_institute(host)` (SECURITY DEFINER in `private`, exposed wrapper returns `id, slug, name, branding` only). Platform admin manages.
+
+**profiles** — `user_id uuid pk references auth.users on delete cascade`, `full_name`, `avatar_url`.
+- Access: S self; S by staff of any institute where the profile's user is an active member (helper `private.shares_institute_as_staff(user_id)`). U self (name only). Email comes from `auth.users`, never copied into tenant tables except `invitations.email`.
+
+**platform_admins** — `user_id pk`, `granted_by`, `granted_at`. Access: none via API; managed by migration/ops script. MFA required (Phase 2 acceptance).
+
+**exams** — `code text unique` (`JEE_MAIN`, `NEET_UG`…), `name`. S all authenticated. Writes platform admin.
+
+**library_subjects / library_chapters / library_topics** — tree Exam → Subject → Chapter → Topic.
+- `library_subjects(exam_id, name, unique(exam_id,name))`, `library_chapters(subject_id, position, name, unique(subject_id,name))`, `library_topics(chapter_id, position, name)`.
+- S all authenticated. Writes platform admin / library editors.
+
+**library_items** — `topic_id`, `kind` (`explanation|formula_sheet|worked_example|question|flashcard_set`), `content jsonb` (schema-validated per kind), `status` (`draft|reviewed|published|retired`), `version int`, `provenance text not null` (how produced + rights basis), `generated_by_model`, `reviewed_by`, `reviewed_at`.
+- Constraint: `status='published'` requires `reviewed_by is not null` (check constraint).
+- S authenticated where `status='published'`; staff of library team all. Never written from tenant data (ADR-010).
+
+**library_chunks** — `item_id`, `content`, `tsv tsvector generated`, `embedding vector(1024)`, `embedding_model`, `chunk_index`.
+- Indexes: GIN(tsv); HNSW (cosine) is acceptable here because the library is one shared, non-tenant corpus [R].
+- S authenticated when parent item published.
+
+### 4.2 Tenant core
+
+**memberships** (T)
+- `institute_id`, `user_id → auth.users`, `role` (`owner|admin|teacher|student`), `status` (`active|suspended|removed`), `created_at`, `removed_at`.
+- `unique (institute_id, user_id)`; `unique (institute_id, id)`; index `(user_id, institute_id) where status='active'`.
+- Deletion: set `removed` (keeps history for test results); hard delete with institute.
+- Access: S own row; S all rows of institute for admin/owner; S rows of students in teacher's batches for teachers. I only via `accept_invitation` RPC or owner/admin RPC. U role/status: owner/admin (owner role changes: owner only). No student writes.
+
+**invitations** (T)
+- `institute_id`, `email citext`, `role`, `batch_id` (nullable; composite FK), `token_hash bytea unique` (SHA-256 of a 32-byte random token; raw token only in the email), `expires_at` (default +7 days), `accepted_at`, `accepted_by`, `revoked_at`, `created_by`.
+- Partial unique `(institute_id, email) where accepted_at is null and revoked_at is null`.
+- Acceptance (RPC `accept_invitation(token)`, SECURITY DEFINER): token valid, unexpired, unrevoked, unaccepted **and** caller's verified Google email equals `email` (case-insensitive) → creates membership (+ batch membership) in one transaction, marks accepted, writes audit event. Rate-limited.
+- Access: S/I/U owner/admin (teachers may invite students to batches they teach [R]). Students none.
+
+**batches** (T) — `name`, `academic_year`, `exam_id → exams` (nullable), `archived_at`; `unique(institute_id, name, academic_year)`, `unique(institute_id,id)`.
+- S staff; S students in batch. I/U/D admin/owner.
+
+**batch_members** (T) — pk `(batch_id, membership_id)`, `institute_id`, `batch_role` (`teacher|student`). Composite FKs to `batches(institute_id,id)` and `memberships(institute_id,id)`. Index `(membership_id)`.
+- Check: `batch_role='student'` requires membership role `student` (trigger) — prevents a student being made a batch teacher.
+- S staff of institute; S own rows. I/D admin/owner (teachers for students in own batches [R]).
+
+**subjects** (T) — `name`, `library_subject_id` (nullable → library_subjects); `unique(institute_id,name)`, `unique(institute_id,id)`.
+**batch_subjects** (T) — pk `(batch_id, subject_id)`, composite FKs. Which subjects a batch studies.
+**chapters** (T) — `subject_id` (composite FK), `name`, `position`, `library_chapter_id` (nullable).
+- Access for all three: S staff; S students whose batches include the subject. Writes admin/owner/teacher [R].
+
+### 4.3 Documents and retrieval (T)
+
+**documents** — `subject_id`, `chapter_id` (nullable; composite FKs), `title`, `current_version_id`, `status` (`draft|published|withdrawn`), `published_at`, `withdrawn_at`, `deleted_at`, `created_by`.
+- Index `(institute_id, subject_id) where deleted_at is null`.
+- S `private.can_read_document(id)`. I/U staff. D: soft delete by staff; purge job hard-deletes after 30 days [A].
+
+**document_versions** — `document_id` (composite FK), `version int`, `storage_path text unique`, `mime`, `size_bytes`, `sha256`, `page_count`, `processing_status` (`queued|processing|ready|failed`), `error_code`, `extraction_method` (`text_layer|ocr|mixed`), `chunker_version`, `embedding_model`, `processed_at`; `unique(document_id, version)`.
+- Constraint: storage_path must start with `institute_id::text || '/'` (check).
+- S staff. Students never see versions directly (they read the current published version via signed URL RPC).
+
+**document_audience** — pk `(document_id, batch_id)`, `institute_id`, composite FKs. Which batches see a published document.
+
+**document_chunks** — `document_id`, `document_version_id` (composite FKs), `subject_id` (denormalised for filtering; trigger keeps in sync), `chunk_index`, `page_start`, `page_end`, `heading_path`, `content`, `tsv tsvector generated always as (to_tsvector('simple', content))`, `embedding vector(1024)`, `token_count`.
+- `unique (document_version_id, chunk_index)`; btree `(institute_id, subject_id, document_id)`; GIN `(tsv)`.
+- **No HNSW index in MVP** — retrieval uses exact distance over the pre-filtered set (one subject of one institute ≈ thousands of chunks [E]) (ADR-006).
+- S via `private.can_read_document(document_id)` (backstop); retrieval goes through `public.match_chunks(...)` (SECURITY INVOKER) which first resolves readable document ids. Writes: worker only (tenant context).
+- Deletion: chunks of superseded versions deleted in the same transaction that promotes the new version.
+
+### 4.4 AI conversations and generated content
+
+**conversations** (S) — `user_id`, `subject_id` (composite FK), `title`, `created_at`, `deleted_at`. Index `(institute_id, user_id, created_at desc)`.
+- S/I/U/D owner student only. Staff: none (aggregates via `private.institute_tutor_stats()`), pending Q-03.
+
+**messages** (S) — `conversation_id` (composite FK), `role` (`user|assistant`), `content`, `citations jsonb` (list of `{source_kind, document_id|library_item_id, page_start, page_end, cited_text}`), `answer_labels jsonb`, `model`, `usage_record_id`, `feedback` (`up|down|null`), `created_at`.
+- S/I owner student (assistant rows inserted by server in user context). Retention 12 months then deleted [A, Q-06].
+
+**generated_artifacts** (T or S) — `owner_scope` (`institute|student`), `owner_user_id` (required iff student), `kind` (`summary|study_guide|flashcards|quiz|mind_map|table|report|slides|infographic|audio|video`), `subject_id`, `chapter_id`, `source_refs jsonb`, `input_hash`, `prompt_version`, `model`, `schema_version`, `content jsonb`, `asset_path`, `status` (`generating|draft|approved|published|withdrawn|failed`), `approved_by`, `approved_at`, `audience_batch_ids uuid[]` (published institute artifacts only).
+- Partial unique `(institute_id, kind, input_hash, prompt_version) where owner_scope='institute'` → generate once, reuse.
+- S: institute scope → staff all, students only `published` and audience match; student scope → owner only. Writes: staff (institute scope) / owner student via quota-checked RPC (student scope) / worker.
+
+### 4.5 Assessments
+
+**questions** (T) — `subject_id`, `chapter_id`, `type` (`single|multi|numerical|written`; written = theory answer typed by the student, checked by a teacher), `stem` (Markdown + LaTeX), `options jsonb` (`[{id, text}]`), `explanation`, `difficulty`, `origin` (`teacher|ai|library`), `verification` (`unverified|dual_solve_agree|dual_solve_disagree|teacher_verified`), `status` (`draft|approved|retired`), `created_by`.
+- Trigger: no UPDATE of `stem/options` once referenced by a non-draft test (edit = new question) — preserves grading integrity.
+- S staff. Students **never** select questions directly; they get stems/options through `get_attempt_questions(attempt_id)` RPC.
+
+**question_keys** (T) — pk `question_id`, `institute_id`, `key jsonb` (`{correct:[optionIds]}`, `{value, tolerance_abs|tolerance_pct, unit}`, or for written questions `{model_answer, max_marks}` — the teacher's reference answer, a guide only, never auto-graded).
+- Separate table so no student-visible policy can ever expose keys. S/I/U staff only. Students: none, ever. Post-release answers shown via `get_attempt_review(attempt_id)` RPC that checks `results_release_at <= now()`.
+
+**tests** (T) — `title`, `opens_at`, `closes_at`, `duration_seconds`, `marking jsonb` (default marks/negative), `shuffle_questions bool`, `results_release_at`, `status` (`draft|scheduled|closed|grading|results_released|cancelled`), `created_by`.
+- Checks: `closes_at > opens_at`; `results_release_at >= closes_at`.
+- A test with written questions moves `closed → grading`; results can be released only when every written answer has teacher marks (enforced in the `release_results` RPC).
+- S staff (teachers: tests targeting their batches); students: tests whose audience includes their batch and `status <> 'draft'`.
+
+**test_questions** — pk `(test_id, question_id)`, `institute_id`, `position`, `marks`, `negative_marks`; composite FKs.
+**test_audience** — pk `(test_id, batch_id)`, composite FKs.
+
+**test_attempts** (S) — `test_id`, `user_id`, `membership_id`, `started_at`, `deadline_at` (server: `least(started_at + duration, closes_at)`), `submitted_at`, `status` (`in_progress|submitted|auto_submitted|graded`), `score`, `max_score`, `rank`, `percentile`, `question_order int[]`.
+- `unique (test_id, user_id)` (single attempt). Index `(institute_id, test_id, score desc)`.
+- S own attempt; S staff (teachers only for their batches). I via `start_attempt` RPC only. U via `submit_attempt` RPC / worker. Rank written only by release job.
+
+**attempt_answers** (S) — pk `(attempt_id, question_id)`, `institute_id`, `response jsonb` (option ids, a number, or typed text for written questions), `answered_at`, `is_correct`, `marks_awarded`, `graded_by`, `graded_at`, `teacher_comment`.
+- I/U via `save_answer` RPC only: checks caller owns attempt, `status='in_progress'`, `now() < deadline_at` (DB clock), question belongs to the test. Students cannot set `is_correct/marks_awarded` (column privileges).
+- Objective answers (single/multi/numerical) are marked automatically. Written answers are marked **only by a teacher** of that batch (or admin) via `grade_answer` RPC: `0 ≤ marks ≤ max` (half marks allowed), optional comment, audited. Changing marks after release recalculates both ranks.
+
+**practice_attempts** (S) — `user_id`, `artifact_id` (student or published quiz), `score`, `max_score`, `answers jsonb`, `started_at`, `completed_at`. Owner only; staff get counts/averages via aggregate function.
+
+**batch_standings** (T) — pk `(batch_id, user_id)`, `institute_id`, `average_percentage numeric(5,2)`, `total_marks`, `total_max_marks`, `tests_counted`, `tests_missed`, `overall_rank`, `updated_at`. Recomputed by the release job whenever a test's results are released or regraded. S: staff of the batch; students see their own row and the batch rank list.
+
+Ranking rules (ADR-012, ADR-016) — **two ranks, both from institute-conducted tests only** (self-made practice quizzes never count):
+- **Test rank:** `rank() over (partition by test_id order by score desc, (submitted_at - started_at) asc)` where score = auto MCQ/numerical marks + teacher marks for written answers; computed when results are released.
+- **Overall rank:** within the batch, by **average percentage** = mean of (score ÷ max marks × 100) over all released tests of the batch that were open while the student was enrolled; a missed test counts as 0 %. Same average (2 decimals) = same rank. Decided by the founder on 2026-10-15 (Q-05) because tests can have very different total marks.
+
+### 4.6 Metering, quotas, activity, audit, consent
+
+**usage_records** (O) — `institute_id`, `user_id` (nullable for jobs), `feature`, `provider`, `model`, `input_tokens`, `output_tokens`, `cache_read_tokens`, `cache_write_tokens`, `units` (chars/searches/seconds), `cost_micro_usd bigint`, `request_id`, `job_id`, `outcome` (`ok|error|refused|quota_blocked`), `created_at`.
+- Append-only: no UPDATE/DELETE grants to any app role. Index `(institute_id, created_at)`. Monthly partitioning when > ~10M rows [E].
+- S owner/admin of institute (own institute), platform admin all. I: gateway (server in user context with a narrow INSERT policy `user_id = auth.uid()`, or worker).
+
+**institute_quotas** (T) — pk `institute_id`, `monthly_ai_budget_micro_usd`, `student_daily_messages`, `student_daily_premium_messages`, `student_daily_generations`, `max_storage_bytes`, `max_upload_bytes`, `max_concurrent_jobs`, `hard_stop bool`. S owner/admin; U platform admin.
+
+**usage_counters** (O) — pk `(institute_id, user_id, day, counter_key)`, `value int`. Updated with `insert … on conflict do update set value = value + 1 … returning value` inside the quota RPC (atomic). Rows older than 35 days purged.
+
+**activity_events** (S/O) — `user_id`, `type` (`login|document_opened|tutor_message|practice_completed|test_submitted|artifact_generated`), `subject_id`, `ref_id`, `created_at`. **No free text.** Retention 12 months [A, legal Q-01]. S own rows; staff aggregates only via functions.
+
+**audit_events** (O) — `institute_id` (nullable for platform actions), `actor_user_id`, `actor_kind` (`user|platform_admin|worker|system`), `action`, `target_type`, `target_id`, `metadata jsonb` (ids only), `ip_hash`, `created_at`. Append-only. S owner/admin own institute; platform admin all. Written by triggers/RPCs on sensitive actions (role change, invitation, publish/withdraw, test release, break-glass access, export, delete).
+
+**consent_records** (S) — `user_id`, `kind` (`terms|privacy|guardian_consent|ai_processing`), `policy_version`, `method`, `granted_at`, `withdrawn_at`, `evidence_ref`. Process design blocked on legal review (Q-01); table exists so consent can be recorded from day one.
+
+**pg-boss schema** — managed by pg-boss. Not exposed via API. Worker role has access. Payloads: ids only (no PII, no document text).
+
+## 5. Deferred tables (with release)
+
+| Table | Release | Note |
+|---|---|---|
+| `subscriptions`, `invoices`, `payment_events (provider, event_id unique)` | R2 | Razorpay; `event_id` unique = idempotent webhooks |
+| `ai_grading_suggestions` | R2 | Optional AI-suggested marks for written answers shown to the teacher; teacher marks stay final |
+| `topic_mastery (institute_id, user_id, chapter_id, accuracy, attempts, updated_at)` | R2 | Feeds recommendations; derived, rebuildable |
+| `notifications` | R2 | In-app + email |
+| `media_assets` (audio/video renders) | R2/R3 | Or `generated_artifacts.asset_path` if sufficient |
+| `batch_join_codes` | R2 | Join requests require staff approval (never auto-membership) |
+| `support_sessions` (break-glass) | R1 if a pilot needs support access, else R2 | Time-boxed, audited, visible to institute owner |
+
+## 6. Database roles and privileged paths
+
+| Role | Used by | RLS | Notes |
+|---|---|---|---|
+| `anon` | Unauthenticated requests | Yes | Can call only `resolve_institute` |
+| `authenticated` | Web app with user JWT | Yes | All request paths |
+| `worker` (custom, `NOBYPASSRLS`) | Worker via direct/pooler connection | Yes, policies `to worker using (institute_id = private.job_institute())` | Tenant context set per transaction with `set_config(..., true)` |
+| `library_worker` (custom) | Library generation jobs | Yes (library tables only) | No grants on tenant tables |
+| `service_role` / secret key | **Ops scripts only** (create institute, break-glass) | **Bypasses RLS** [V] | Not present in Vercel or worker env (ADR-005) |
+| `postgres` | Migrations in CI | Bypasses | CI only, protected environment |
+
+**Risks addressed:** (1) connection poolers — session `SET` forbidden; transaction-local only. (2) security definer
+functions — `private` schema + empty `search_path` + allowlist test. (3) views — `security_invoker`. (4) the secret key
+bypasses RLS only when no user token is sent [V]; we avoid it entirely in request paths. (5) `raw_user_meta_data` is
+user-editable [V] → never used for authorization.
+
+## 7. Migrations, retention, deletion
+
+- Migrations are forward-only SQL; destructive changes use expand → backfill → contract across two releases.
+- Every migration PR runs: pgTAP suite, policy coverage test, `supabase db lint` [U: verify command], and E2E isolation tests.
+- Deletion cascade: institute → all T/S rows (FK `on delete cascade`) + storage prefix purge job + audit record kept (institute_id nulled, action retained).
+- Student removal from institute: membership `removed` immediately (access ends); their S data retained per policy then erased (Q-06).
+- Right to erasure (DPDP) handled by an RPC that deletes a user's S data across institutes and anonymises attempts (scores kept for rank integrity if lawful — Q-01).

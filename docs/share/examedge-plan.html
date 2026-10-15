@@ -1,0 +1,242 @@
+<title>ExamEdge AI Plan</title>
+<meta name="description" content="A private AI study platform for coaching institutes, explained simply.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Layout: single reading column, chalkboard-style "level" diagram, tables scroll inside their own box */
+:root {
+  --bg: #faf9f5;
+  --surface: #f0eee6;
+  --fg: #141413;
+  --muted: #5e5d59;
+  --line: #dcd9cf;
+  --accent: #d97757;
+  --accent-ink: #b85a3b;
+  --font-display: "Poppins", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Lora", Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141413; --surface: #1f1e1b; --fg: #faf9f5; --muted: #b0aea5; --line: #3a3934;
+    --accent: #d97757; --accent-ink: #e8957a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141413; --surface: #1f1e1b; --fg: #faf9f5; --muted: #b0aea5; --line: #3a3934;
+  --accent: #d97757; --accent-ink: #e8957a; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 17px; line-height: 1.65; }
+.wrap { max-width: 46rem; margin: 0 auto; padding-inline: 20px; padding-block: 40px 64px; display: grid; gap: 40px; }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.2; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2rem, 6vw, 2.75rem); font-weight: 700; }
+h2 { font-size: 1.4rem; font-weight: 600; }
+h3 { font-size: 1.05rem; font-weight: 600; }
+p, ul, ol { margin: 0; }
+section { display: grid; gap: 14px; }
+ul, ol { padding-left: 1.3em; display: grid; gap: 6px; }
+.eyebrow { font-family: var(--font-display); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); font-weight: 600; }
+.lead { font-size: 1.2rem; color: var(--fg); }
+.status { font-family: var(--font-display); font-size: .85rem; color: var(--muted); }
+header { display: grid; gap: 14px; border-bottom: 1px solid var(--line); padding-bottom: 28px; }
+.levels { display: grid; gap: 10px; }
+.level { display: grid; grid-template-columns: 3rem 1fr; gap: 14px; align-items: start; }
+.level .num { font-family: var(--font-display); font-weight: 700; font-size: 1.6rem; color: var(--accent); line-height: 1; padding-top: 4px; }
+.level > div { min-width: 0; display: grid; gap: 8px; }
+.tree { background: var(--surface); border-radius: 10px; padding: 18px; overflow-x: auto; }
+.tree pre { margin: 0; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .85rem; line-height: 1.5; color: var(--fg); }
+.labels { display: flex; flex-wrap: wrap; gap: 8px; }
+.label { font-family: var(--font-display); font-size: .8rem; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); }
+.label.inst { border-color: var(--accent); color: var(--accent-ink); }
+.table-box { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: .95rem; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-display); font-weight: 600; font-size: .85rem; background: var(--surface); }
+tr:last-child td { border-bottom: none; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.note { font-size: .92rem; color: var(--muted); }
+.releases { display: grid; gap: 18px; }
+.release { border-left: 3px solid var(--line); padding-left: 16px; display: grid; gap: 8px; }
+.release.now { border-left-color: var(--accent); }
+dl { display: grid; gap: 8px; margin: 0; }
+dt { font-family: var(--font-display); font-weight: 600; font-size: .95rem; }
+dd { margin: 0 0 6px; color: var(--muted); }
+a { color: var(--accent-ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 480px) { body { font-size: 16px; } .level { grid-template-columns: 2.2rem 1fr; } }
+</style>
+
+<main class="wrap">
+  <header>
+    <span class="eyebrow">Startup idea · October 2026</span>
+    <h1>ExamEdge AI</h1>
+    <p class="lead">A private AI study platform that coaching institutes give to their students. Each institute gets its own branded portal where teachers upload notes and run tests, and every student gets an AI tutor for each subject.</p>
+    <p class="status">Status: idea and plan ready. Nothing is built yet.</p>
+  </header>
+
+  <section>
+    <h2>The problem</h2>
+    <ul>
+      <li>Coaching students have doubts all day, but teachers can't answer everyone at once.</li>
+      <li>Notes, PDFs and tests are scattered across WhatsApp groups, printouts and different apps.</li>
+      <li>Tools like NotebookLM are powerful, but every student must upload their own material first, and the institute has no control over it and no view of how students are doing.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>The solution: three levels</h2>
+    <div class="tree" role="img" aria-label="ExamEdge platform at the top, connected to Institutes A, B and C, each with its own students">
+<pre>              ExamEdge (the main platform)
+                        │
+   ┌─────────────┬──────┴──────┬─────────────┐
+ Institute A   Institute B   Institute C    …more
+ own portal    own portal    own portal
+   │             │             │
+ its students  its students  its students</pre>
+    </div>
+    <div class="levels">
+      <div class="level"><span class="num">1</span><div>
+        <h3>ExamEdge (the platform)</h3>
+        <p>Runs the platform, adds new institutes, keeps the AI running and maintains a shared, expert-checked study library, for example JEE → Physics → Rotational Motion → Torque.</p>
+      </div></div>
+      <div class="level"><span class="num">2</span><div>
+        <h3>Each coaching institute</h3>
+        <p>Gets its own web address, like <em>yourinstitute.examedge.ai</em>, with its own logo. Teachers can:</p>
+        <ul>
+          <li>upload notes and PDFs, which appear under the right subject for the right batch</li>
+          <li>create tests mixing MCQs, numerical and theory questions; MCQs are marked automatically and teachers check theory answers themselves</li>
+          <li>see two ranks: a rank for each test and an overall rank across all tests</li>
+          <li>click any student's name to see their full progress: marks, ranks, weak chapters, practice and activity</li>
+          <li>let the AI draft quizzes, summaries and flashcards, then check and approve them</li>
+        </ul>
+      </div></div>
+      <div class="level"><span class="num">3</span><div>
+        <h3>Each student</h3>
+        <p>Logs in with Google and sees their subjects. Inside each subject:</p>
+        <ul>
+          <li>all the notes the institute uploaded</li>
+          <li>an AI tutor for that subject, for doubts any time</li>
+          <li>a Studio for practice quizzes, flashcards, summaries and mind maps (later: audio lessons in Indian languages and animated videos)</li>
+          <li>their test results, test rank, overall rank and full progress page</li>
+        </ul>
+      </div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Different from NotebookLM</h2>
+    <ul>
+      <li><strong>No uploading needed by the student.</strong> The AI already knows the syllabus through the ExamEdge library and its general knowledge.</li>
+      <li><strong>The institute's own notes come first,</strong> and every answer shows where it came from:</li>
+    </ul>
+    <div class="labels">
+      <span class="label inst">From your institute's notes, p. 4</span>
+      <span class="label">From the ExamEdge library</span>
+      <span class="label">General explanation</span>
+    </div>
+    <ul>
+      <li><strong>Built for coaching:</strong> batches, scheduled tests, ranks, teacher approval and progress tracking.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>How each institute's data stays private</h2>
+    <ul>
+      <li>Every piece of data is stamped with its institute, and the database itself blocks anyone who isn't a member. A mistake in a web page cannot show another institute's data.</li>
+      <li>Google login proves who you are. You only get into an institute after it invites you.</li>
+      <li>Test answers are stored separately. Students can never see them before results are released.</li>
+      <li>Before every update, automatic tests try to break into another institute's data. If any succeeds, the update is blocked.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Tools it uses</h2>
+    <div class="table-box"><table>
+      <thead><tr><th>Need</th><th>Tool</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Website for institutes and students</td><td>Next.js on Vercel</td><td>One app serves all three levels</td></tr>
+        <tr><td>Database, Google login, files</td><td>Supabase (servers in Mumbai)</td><td>Privacy rules built into the database</td></tr>
+        <tr><td>Background work</td><td>Worker server on Railway</td><td>Reading PDFs and making quizzes don't slow the site</td></tr>
+        <tr><td>AI answers and content</td><td>Claude by Anthropic</td><td>Fast cheap model for most doubts, stronger ones for hard problems and writing tests; points to its sources</td></tr>
+        <tr><td>Search inside notes</td><td>Voyage AI</td><td>Finds the right paragraph for each question</td></tr>
+        <tr><td>Indian-language voices (later)</td><td>Sarvam AI</td><td>Natural voices in 11 Indian languages</td></tr>
+        <tr><td>Animated videos (later)</td><td>Remotion and Manim</td><td>Code-drawn, so formulas and diagrams are exactly right</td></tr>
+        <tr><td>Payments (later)</td><td>Razorpay</td><td>UPI AutoPay, cards, mandates</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Running cost (estimates)</h2>
+    <div class="table-box"><table>
+      <thead><tr><th>Size</th><th>Per month</th><th>Per student per month</th></tr></thead>
+      <tbody>
+        <tr><td>3 institutes × 500 students</td><td class="num">≈ ₹62,000</td><td class="num">≈ ₹41</td></tr>
+        <tr><td>10 institutes × 1,000 students</td><td class="num">≈ ₹3.45 lakh</td><td class="num">≈ ₹35</td></tr>
+        <tr><td>100 institutes × 1,000 students</td><td class="num">≈ ₹34 lakh</td><td class="num">≈ ₹34</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">Assumes 60% of students are active and each asks about 4 AI doubts a day. Most of the cost is AI usage, and every institute gets usage limits so costs can't run away.</p>
+    <p><strong>Price idea (not yet tested):</strong> around ₹99 per student per month, lower during the pilot, leaving roughly 65% margin. Talking to coaching institutes comes first.</p>
+  </section>
+
+  <section>
+    <h2>The plan</h2>
+    <div class="releases">
+      <div class="release now">
+        <h3>Release 1 · Pilot with 2–3 coaching institutes</h3>
+        <ol>
+          <li>Project setup with automatic quality and security checks</li>
+          <li>Logins, institutes, batches, invitations and data privacy, fully tested</li>
+          <li>Institute and student portals</li>
+          <li>Note and PDF uploads, including scanned notes</li>
+          <li>Usage limits and cost tracking</li>
+          <li>AI tutor with sources</li>
+          <li>Tests with MCQ, numerical and theory questions, teacher checking, test rank and overall rank, student progress page</li>
+          <li>Shared library for one exam and subject (e.g. JEE Physics)</li>
+          <li>Practice quizzes, flashcards, summaries, mind maps</li>
+          <li>Security, backups and legal check, then launch to pilot institutes</li>
+        </ol>
+      </div>
+      <div class="release">
+        <h3>Release 2 · After pilot feedback</h3>
+        <p>AI-suggested marks to speed up theory checking, practice suggestions, audio lessons in Hindi and English, online payments.</p>
+      </div>
+      <div class="release">
+        <h3>Release 3</h3>
+        <p>Slides, infographics, animated videos, more languages and exams, and separate private servers for very large institutes.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Still to figure out</h2>
+    <ul>
+      <li><strong>Legal:</strong> most students are under 18. India's DPDP law has special rules for children's data and tracking. A lawyer must confirm what's allowed before real student data goes in.</li>
+      <li><strong>Demand and price:</strong> do coaching institutes want this, and what will they pay?</li>
+      <li><strong>Starting point:</strong> which exam and subject first (JEE, NEET, boards or UPSC).</li>
+      <li><strong>Teacher visibility:</strong> should teachers read students' AI chats, or only see summaries? Default for now: summaries only.</li>
+      <li><strong>Language quality:</strong> Hindi and other Indian-language answers need testing.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Next steps</h2>
+    <ol>
+      <li>Talk to coaching centres and find 2–3 pilot partners.</li>
+      <li>Get a short legal opinion on student data.</li>
+      <li>Start building Release 1.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Words used here</h2>
+    <dl>
+      <dt>Portal</dt><dd>The website a user logs into.</dd>
+      <dt>Batch</dt><dd>A group of students studying together, like "JEE 2027 Morning".</dd>
+      <dt>AI tutor</dt><dd>A chatbot that answers study doubts.</dd>
+      <dt>Pilot</dt><dd>A first trial with a few real institutes before a wider launch.</dd>
+      <dt>Library</dt><dd>ExamEdge's own expert-checked study content, shared with every institute.</dd>
+    </dl>
+  </section>
+</main>
