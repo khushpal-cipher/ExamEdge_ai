@@ -102,6 +102,18 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
 - **Fact found (local stack, CLI 2.121.0):** with `auto_expose_new_tables = false`, new `public` tables owned by `postgres` grant `anon`/`authenticated` only TRUNCATE/REFERENCES/TRIGGER/MAINTAIN by default, and new functions grant no PUBLIC execute (`select * from pg_default_acl`). So every exposed table needs explicit `grant select/insert/update/delete` per role, and migrations `revoke truncate, references, trigger on all tables in schema public from anon, authenticated` (TRUNCATE ignores RLS).
 - **Why:** least privilege; a missing grant fails closed.
 
+### ADR-020 Development-only demo sign-in (2026-10-15, Accepted)
+- **Decision:** with no Google OAuth client yet (BLOCKED, founder approval), local dev, CI and E2E sign in seeded users with "Sign in as demo user": server action `signInDemo` calls `signInWithPassword` with a fixed local password (`packages/core/src/demo.ts`). It works only when `DEMO_LOGIN_ENABLED=true` **and** `NEXT_PUBLIC_SUPABASE_URL` is `127.0.0.1`/`localhost` (unit-tested), so it can never run against a cloud project. Invitation emails (Resend) are BLOCKED: the admin is shown the invite link once (`create_invitation` returns the raw token; only its SHA-256 is stored).
+- **Revisit when:** Google OAuth credentials and a Resend account are approved — enable `[auth.external.google]` in `supabase/config.toml` and send links from the worker.
+
+### ADR-021 Phase 2 schema refinements (2026-10-15, Accepted)
+- **citext → lowercase-checked text** for `institutes.slug`, `institute_domains.hostname`, `invitations.email`: citext operators live in schema `extensions`, so inside `search_path = ''` definer functions `=` would silently become a case-sensitive text comparison. Values are normalised with `lower(trim())` and check constraints.
+- **`platform_admins` lives in schema `private`** (never exposed); `private.is_platform_admin()` also requires an MFA session (`aal = aal2`), which enforces AC2.7 in the database.
+- **`audit_events.institute_id` has no FK** so audit rows survive institute deletion (DATABASE_DESIGN §7). An audit trigger covers memberships, batch members and invitations (ids/roles only; emails and token hashes are stripped).
+- **Owner/admin changes are owner-only** (trigger), and `invitations.token_hash` is not selectable by any API role (column grants). A revoked invitation cannot be un-revoked (policy check).
+- **Tenant host:** the web app reads `x-forwarded-host` before `host` (Next dev server actions and Vercel put the client host there). A spoofed value only changes which institute context is rendered; RLS still requires membership and session cookies are host-only.
+- **Invite creation UI** (single + CSV) is built with the Phase 3 institute dashboard; Phase 2 delivers the RPC, accept page and pgTAP/E2E proof.
+
 ---
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 

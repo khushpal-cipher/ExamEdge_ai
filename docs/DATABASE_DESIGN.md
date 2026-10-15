@@ -22,6 +22,7 @@ cross-tenant references are impossible, (3) no privileged role in request paths,
   tables that are referenced by children. Children reference `(institute_id, parent_id)` → `parent(institute_id, id)`.
 - Soft delete via `deleted_at` only where recovery matters (documents); everything else hard-deletes with cascade.
 - Enums as Postgres `text` + `check` constraints (easier migrations than enum types) [R].
+- Case-insensitive identifiers (slug, hostname, email) are lowercase-checked `text`, not `citext` (ADR-021).
 - Every exposed table: `alter table … enable row level security` — enforced by a pgTAP test.
 - Views: `with (security_invoker = true)` only (views otherwise bypass RLS [V]).
 - `SECURITY DEFINER` functions: only in schema `private` (not exposed by the API), `set search_path = ''`,
