@@ -7,7 +7,7 @@ Last updated: 2026-10-15
 **Phase 2 MERGED** into `main` (PR #2, merge commit `c106364`, CI green: unit 12, pgTAP 334, E2E 6, 2026-10-15).
 **Phase 3 MERGED** into `main` (PR #3, squash commit `0417717`, CI green: check + secrets, run 38702576710, 2026-10-15).
 **Phase 7 MERGED** into `main` (PR #4, squash commit `2a5f25e`, CI green: check + secrets, run 38711008739, 2026-10-15).
-**Phase 4 (documents) — IN PROGRESS** (session 8) on branch `phase-4-documents`: DB + worker done and tested; web UI + seed written but NOT yet verified (see In progress).
+**Phase 4 (documents) — IN PROGRESS** (sessions 8–9) on branch `phase-4-documents` (pushed, last commit see session log): DB, worker, web UI, seed, E2E and logo upload done and tested; left: ADR-024, full gate, PR, merge.
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -61,17 +61,29 @@ DONE + TESTED (commits `49ca6d5`, `3a427c9`):
 - Integration `apps/worker/src/ingest.int.test.ts`: 16/16 PASS (text, scanned, mixed, Hindi+formula, PNG, corrupt, wrong
   magic, PNG-as-JPEG, 301 pages, missing file, 0-byte, AC4.2 duplicate job + reprocess, new version swap, failed version
   keeps old, crashed worker swept, T-ISO-08). Unit 32/32, lint, typecheck PASS at `3a427c9`.
-WRITTEN, NOT VERIFIED (committed as WIP in the handoff commit; typecheck + lint passed, never run in a browser or E2E):
-- Web: `app/(portal)/documents/actions.ts` (startUpload → signed upload URL, confirmUpload, requeue, publish, withdraw,
-  soft delete), `documents/upload.tsx` (browser PUTs the file to the signed URL), `documents/[id]/page.tsx` (+auto-refresh),
-  `documents/[id]/file/route.ts` (5-min signed URL via user session, 303, no-store), `documents/status.ts`, Sources pane in
-  `subjects/[id]/page.tsx`, new flash/NAMED codes. Unknown: whether storage needs an `apikey` header on the signed PUT,
-  and whether storage insert also needs a select policy.
-- Seed: `scripts/demo-notes.ts` (9 notes per institute, 1 draft, 1 with a scanned page) + `seedDocuments`/`processDocuments`
-  in `scripts/seed-demo.ts` (uploads, runs `drain` as worker role, publishes). Ran OK: "Processed 18 documents, published 16".
-  **OPEN BUG:** Rival's canary page `['Rival canary: quokka saffron lighthouse.']` is under 50 chars, so `needsOcr` sends it
-  to fake OCR and the canary text is lost. Fix: make that page ≥ 50 visible chars (e.g. append "This sentence exists only in
-  Rival Academy notes."), reseed, check `select count(*) from document_chunks where content like '%quokka%'` = 1.
+VERIFIED in session 9 (2026-10-15):
+- Web UI (`app/(portal)/documents/*`, Sources pane): browser check on the dev server with the real worker running
+  (`npm run dev:worker`): teacher1 uploaded a PDF on Physics → signed PUT to Storage worked (no `apikey` header needed,
+  no extra select policy needed) → worker processed it → "Ready" → published to JEE 2027 Morning; student01 saw it in
+  Sources at 375 px (scrollWidth 375), file route 200 `application/pdf`; staff document page is 404 for students (by
+  design, students open `/documents/<id>/file` from Sources); withdraw → file 404 and link gone at once; owner@rival.test
+  → 404 for Demo document page and file.
+- Seed canary: already fixed in `scripts/seed-demo.ts` (sentence ≥ 50 chars). After `supabase db reset && npm run seed:demo`:
+  "Processed 18 documents, published 16"; `document_chunks like '%quokka%'` = 9, all institute `rival` (one per Rival note).
+- Env (commit `c5f5215`): `.env.example` has WORKER_STORAGE_EMAIL / WORKER_STORAGE_PASSWORD; CI exports them (local
+  worker account values); worker `dev` script reads `apps/web/.env.local` then root `.env.local`. Local root `.env.local`
+  (gitignored) holds WORKER_DATABASE_URL + WORKER_STORAGE_* local values.
+- `e2e/documents.spec.ts` (commit `6e0ec74`): upload via UI → `drain()` in-process as worker role → Ready → publish →
+  student file 200 → withdraw → 404 (AC4.3); Rival owner 404s (AC4.4 web side); raw Storage: Rival student cannot sign or
+  download a Demo path; signed URL 200 while fresh, 4xx after expiry (T-SEC-07). `npx playwright test e2e/documents.spec.ts`
+  → 2 passed.
+- Logo upload (commit `3ca1483`, ADR-022 deferral closed): `/platform/institutes/[id]` "Upload logo" (PNG/JPG/WebP ≤ 500 KB
+  so it fits the 1 MB Server Action body limit; bucket `logos` public, insert only by aal2 platform admin), path stored in
+  `branding.logo`; `updateInstitute` now keeps the logo (it used to overwrite branding with `{color}`); portal header shows
+  the logo instead of initials (`lib/brand.ts` `logoUrl`). Shortcut: replaced logos stay in the bucket (purge in Phase 10).
+  E2E platform test extended (SVG refused, PNG saved, public URL 200, logo kept after Save institute) → 1 passed. Header
+  checked in the browser with a temporary Demo logo (img loaded), then removed. Unit 32/32 PASS, web lint/typecheck PASS.
+NOT YET RUN on this branch: the full gate (`npm run check`) and CI.
 
 ### Phase 7 — tests, checking, ranks, progress (sessions 6–7) — MERGED (PR #4, `2a5f25e`)
 Built (branch `phase-7-tests`): migration `20261017000005_assessments.sql` (questions, question_keys, tests, test_questions,
@@ -142,19 +154,25 @@ Design decisions already worked out for later phases (record as ADRs when built)
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action
-1. `git checkout phase-4-documents && git pull`; `docker info` (else `open -a Docker`); `supabase start` if stopped.
-2. Fix the Rival canary bug above in `scripts/seed-demo.ts`; `supabase db reset && npm run seed:demo`; verify canary chunk.
-3. Add worker env names to `.env.example`; set them for CI in `.github/workflows/ci.yml` (WORKER_STORAGE_EMAIL /
-   WORKER_STORAGE_PASSWORD = LOCAL_WORKER values, NEXT_PUBLIC_* already exported); worker dev script should also read
-   `apps/web/.env.local`. Start the worker once (`npm run dev:worker` with env) and confirm an upload is processed.
-4. Browser check (dev server): teacher1 uploads a PDF on Physics → Ready → publish to JEE batch; student01 opens it (375 px);
-   withdraw → student 404; rival owner → demo document/file 404. Fix what breaks.
-5. `e2e/documents.spec.ts`: the journey above (process with `drain()` in-process), raw REST: rival student cannot sign a demo
-   path, expired signed URL (expiresIn 1) → 4xx (T-SEC-07).
-6. Logo upload on `/platform/institutes/[id]` (bucket `logos`, branding.logo) + show logo in the portal header (ADR-022 deferral).
-7. ADR-024 in docs/DECISIONS.md (pdfjs-dist; uploading status; service account; fake OCR/embeddings unmetered until Phase 5;
-   per-institute max_upload_bytes not enforced yet (bucket 50 MiB cap); cascade fix). Update DATABASE_DESIGN §4.3 if needed.
-8. Gate: `supabase db reset && npm run seed:demo && npm run check`, `npm run audit`; PR into main, CI green, merge.
+0. If this is a fresh machine/session after a long pause: `cd ~/Documents/startup/examedge_ai && git checkout phase-4-documents
+   && git pull && npm ci && git config core.hooksPath .githooks`; `docker info` (else `open -a Docker` and wait);
+   `supabase start`; recreate the gitignored local env files if missing: `apps/web/.env.local` (NEXT_PUBLIC_SUPABASE_URL,
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY from `supabase status -o env`, DEMO_LOGIN_ENABLED=true) and root `.env.local`
+   (WORKER_DATABASE_URL=postgresql://worker:worker_local_only@127.0.0.1:54322/postgres, WORKER_STORAGE_EMAIL /
+   WORKER_STORAGE_PASSWORD = `LOCAL_WORKER` in `scripts/local-supabase.ts`). If tool versions changed (Node, Supabase CLI,
+   Docker), check `supabase --version` matches CI (2.121.0) or update CI to match.
+1. ADR-024 in docs/DECISIONS.md (after ADR-023): pdfjs-dist 6.4.299 for text extraction; `uploading` status + signed upload
+   URL (file never passes the web server); worker storage service account (no secret key); web never enqueues, worker
+   polls `private.pending_jobs()` → pg-boss stately queue, singletonKey = version id; fake OCR/embeddings not metered until
+   Phase 5; per-institute `max_upload_bytes` not enforced yet (bucket 50 MiB cap); institute-delete cascade fix; logo
+   upload ≤ 500 KB via Server Action, orphaned logos purged in Phase 10; staff-only document page, students open the file.
+   Update DATABASE_DESIGN §4.3 if it differs from the migration.
+2. Gate: `supabase db reset && npm run seed:demo && npm run check` (all of format, lint, typecheck, unit, pgTAP, int, build,
+   E2E must pass), `npm run audit`. Record results + commit hash here.
+3. Push, open PR `phase-4-documents` → `main` (AC status: AC4.1 ✅ int suite, AC4.2 ✅ int, AC4.3 ✅ pgTAP + E2E, AC4.4 ✅
+   pgTAP T-ISO-08 + E2E, AC4.5 BLOCKED no AI key, AC4.6 BLOCKED fake providers), check CI, fix until green, merge.
+4. Next phase per build order: Phase 5 (AI tutor, demo mode with fake LLM; read docs/AI_PIPELINE_DESIGN.md and use the
+   claude-api skill before any Anthropic SDK code).
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -179,4 +197,5 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 | 6 | 2026-10-15 | Phase 3 E2E fixed (12/12), aal from verified claims, gate green, PR #3 merged (`0417717`). Phase 7 DB (692 pgTAP) + UI built; seed WIP failing | see `git log` |
 | 7 | 2026-10-15 | PR #4 merged (`2a5f25e`). Phase 7 seed fixed, `e2e/assessments.spec.ts`, 6 real bugs fixed (test creation RLS, key save, key embeds, submit, form state, checking scroll), browser check, ADR-023, gate green | `40fc4fc` |
 | 8 | 2026-10-15 | Phase 4 DB + worker + tests green (850 pgTAP, 16 integration); institute-delete cascade bug fixed; web UI + seed written, not verified | see `git log` |
+| 9 | 2026-10-15 | Phase 4 web UI browser-verified, worker env/CI, `e2e/documents.spec.ts`, logo upload; founder pausing subscription — handoff written | see `git log` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |
