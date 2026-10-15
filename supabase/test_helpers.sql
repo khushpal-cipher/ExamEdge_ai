@@ -38,7 +38,7 @@ end $$;
 -- Batch Y: teacher2, student3, subject Chemistry. Pending invitation token = 'tok-<slug>'.
 create or replace function tests.make_institute(slug text) returns uuid language plpgsql as $$
 declare
-  inst uuid; bx uuid; by_ uuid; sp uuid; sc uuid; m uuid; who text;
+  inst uuid; bx uuid; by_ uuid; sp uuid; sc uuid; m uuid; who text; s1 uuid; q uuid; t uuid; att uuid;
 begin
   insert into public.institutes (slug, name) values (slug, initcap(slug) || ' Classes') returning id into inst;
   insert into public.institute_domains (hostname, institute_id) values (slug || '.localhost', inst);
@@ -52,6 +52,7 @@ begin
     insert into public.memberships (institute_id, user_id, role)
     values (inst, tests.create_user(who || '@' || slug || '.test'), regexp_replace(who, '\d', ''))
     returning id into m;
+    if who = 'student1' then s1 := m; end if;
     if who in ('teacher1', 'student1', 'student2') then
       insert into public.batch_members values (bx, m, inst, regexp_replace(who, '\d', ''));
     elsif who in ('teacher2', 'student3') then
@@ -62,6 +63,25 @@ begin
   values (inst, 'new@' || slug || '.test', 'student', bx, sha256(convert_to('tok-' || slug, 'UTF8')));
   insert into public.consent_records (user_id, kind, policy_version, method)
   values ((select id from auth.users where email = 'student1@' || slug || '.test'), 'terms', 'v1', 'test');
+  -- One released test in Batch X with student1's attempt (Phase 7 tables). It closed before anyone joined, so it never
+  -- counts towards overall rank in tests that recompute standings.
+  insert into public.questions (institute_id, subject_id, type, stem, options)
+  values (inst, sp, 'single', 'Fixture question', '[{"id":"a","text":"A"},{"id":"b","text":"B"}]') returning id into q;
+  insert into public.question_keys values (q, inst, '{"correct":["a"]}');
+  insert into public.tests (institute_id, title, opens_at, closes_at, duration_seconds, status)
+  values (inst, 'Fixture test', now() - interval '2 days', now() - interval '1 day', 3600, 'results_released')
+  returning id into t;
+  insert into public.test_questions (test_id, question_id, institute_id) values (t, q, inst);
+  insert into public.test_audience values (t, bx, inst);
+  insert into public.test_attempts (institute_id, test_id, user_id, membership_id, started_at, deadline_at, submitted_at,
+                                    status, question_order)
+  select inst, t, user_id, s1, now() - interval '2 days', now() - interval '2 days' + interval '1 hour',
+         now() - interval '2 days' + interval '30 minutes', 'submitted', array[q]
+  from public.memberships where id = s1
+  returning id into att;
+  insert into public.attempt_answers (attempt_id, question_id, institute_id, response) values (att, q, inst, '["a"]');
+  insert into public.batch_standings (batch_id, user_id, institute_id)
+  select bx, user_id, inst from public.memberships where id = s1;
   return inst;
 end $$;
 
@@ -91,3 +111,21 @@ create or replace function tests.mid(email text) returns uuid language sql stabl
 set search_path = '' as $$
   select m.id from public.memberships m join auth.users u on u.id = m.user_id where u.email = mid.email
 $$;
+
+-- Id of the row in public.<tbl> whose <col> equals <val> (definer: usable while acting as any role).
+create or replace function tests.id_of(tbl text, col text, val text) returns uuid language plpgsql stable
+security definer set search_path = '' as $$
+declare r uuid;
+begin
+  execute format('select id from public.%I where %I = $1', tbl, col) into r using val;
+  return r;
+end $$;
+
+create or replace function tests.attempt(test_title text, email text) returns uuid language sql stable
+security definer set search_path = '' as $$
+  select a.id from public.test_attempts a join public.tests t on t.id = a.test_id join auth.users u on u.id = a.user_id
+  where t.title = test_title and u.email = attempt.email
+$$;
+
+create or replace function tests.email(uid uuid) returns text language sql stable security definer
+set search_path = '' as $$ select email from auth.users where id = uid $$;
