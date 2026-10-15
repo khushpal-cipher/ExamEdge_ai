@@ -28,12 +28,13 @@ fallbacks; Haiku has no server-side fallback [V] — the gateway retries once on
 ```
 call(feature, ctx{institute_id, user_id?, job_id?}, input)
   1. kill switch? feature enabled for institute plan?
-  2. quota RPC: atomic counter + institute budget check (reject → 429 "limit reached")
+  2. reserve the worst-case cost (ai_reserve / ai_reserve_job): kill switches, atomic counter + institute budget
+     check (reject → AiBlocked → "limit reached"; provider never called) — ADR-025
   3. build prompt from versioned template (prompt_version), no PII
   4. assert all context passages belong to ctx.institute_id or the library
   5. call provider (stream for chat), timeout, 1 retry on 429/5xx with backoff
   6. validate output (zod schema for structured kinds)
-  7. write usage_records (tokens, cost_micro_usd computed from routing.ts price table)
+  7. settle the reservation once (tokens, cost_micro_usd from the routing.ts price table; error → counter refunded)
   8. return output + usage_record_id
 ```
 
