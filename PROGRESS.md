@@ -7,7 +7,8 @@ Last updated: 2026-10-16
 **Phase 2 MERGED** into `main` (PR #2, merge commit `c106364`, CI green: unit 12, pgTAP 334, E2E 6, 2026-10-15).
 **Phase 3 MERGED** into `main` (PR #3, squash commit `0417717`, CI green: check + secrets, run 38702576710, 2026-10-15).
 **Phase 7 MERGED** into `main` (PR #4, squash commit `2a5f25e`, CI green: check + secrets, run 38711008739, 2026-10-15).
-**Phase 4 (documents) — local gate GREEN** (session 10, 2026-10-16, commit `ca4b542`) on branch `phase-4-documents`; ADR-024 written; PR into `main` next (see Next exact action).
+**Phase 4 MERGED** into `main` (PR #5, squash commit `cbfb62e`, CI green: check + secrets, run 38795802409, 2026-10-16).
+**Phase 5 (AI gateway, metering, quotas) — NEXT** on branch `phase-5-ai-gateway`.
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -28,7 +29,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### Phase 4 — documents (session 8, 2026-10-15) — IN PROGRESS
+### Phase 4 — documents (sessions 8–10) — MERGED (PR #5, `cbfb62e`)
 Scope = IMPLEMENTATION_ROADMAP Phase 4. ACs: AC4.1 fixture suite, AC4.2 no duplicate chunks, AC4.3 withdraw invisible at
 once, AC4.4 cross-tenant job, AC4.5 OCR formula review on real docs (BLOCKED: no AI key, fake OCR), AC4.6 cost per 100 pages
 (BLOCKED: fake providers cost 0; measure in Phase 5 with real keys).
@@ -84,7 +85,7 @@ VERIFIED in session 9 (2026-10-15):
   the logo instead of initials (`lib/brand.ts` `logoUrl`). Shortcut: replaced logos stay in the bucket (purge in Phase 10).
   E2E platform test extended (SVG refused, PNG saved, public URL 200, logo kept after Save institute) → 1 passed. Header
   checked in the browser with a temporary Demo logo (img loaded), then removed. Unit 32/32 PASS, web lint/typecheck PASS.
-Full gate GREEN locally on 2026-10-16 (see Completed). CI on the PR: not yet run.
+Full gate GREEN locally on 2026-10-16 (see Completed). CI on PR #5 green (run 38795802409), merged 2026-10-16.
 
 ### Phase 7 — tests, checking, ranks, progress (sessions 6–7) — MERGED (PR #4, `2a5f25e`)
 Built (branch `phase-7-tests`): migration `20261017000005_assessments.sql` (questions, question_keys, tests, test_questions,
@@ -155,17 +156,17 @@ Design decisions already worked out for later phases (record as ADRs when built)
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action
-0. If this is a fresh machine/session after a long pause: `cd ~/Documents/startup/examedge_ai && git checkout phase-4-documents
+0. If this is a fresh machine/session after a long pause: `cd ~/Documents/startup/examedge_ai && git checkout phase-5-ai-gateway
    && git pull && npm ci && git config core.hooksPath .githooks`; `docker info` (else `open -a Docker` and wait);
    `supabase start`; recreate the gitignored local env files if missing: `apps/web/.env.local` (NEXT_PUBLIC_SUPABASE_URL,
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY from `supabase status -o env`, DEMO_LOGIN_ENABLED=true) and root `.env.local`
    (WORKER_DATABASE_URL=postgresql://worker:worker_local_only@127.0.0.1:54322/postgres, WORKER_STORAGE_EMAIL /
    WORKER_STORAGE_PASSWORD = `LOCAL_WORKER` in `scripts/local-supabase.ts`). If tool versions changed (Node, Supabase CLI,
    Docker), check `supabase --version` matches CI (2.121.0) or update CI to match.
-1. Open PR `phase-4-documents` → `main` (AC status: AC4.1 ✅ int suite, AC4.2 ✅ int, AC4.3 ✅ pgTAP + E2E, AC4.4 ✅
-   pgTAP T-ISO-08 + E2E, AC4.5 BLOCKED no AI key, AC4.6 BLOCKED fake providers), check CI, fix until green, merge.
-2. Next phase per build order: Phase 5 (AI tutor, demo mode with fake LLM; read docs/AI_PIPELINE_DESIGN.md and use the
-   claude-api skill before any Anthropic SDK code).
+1. Phase 5 (AI gateway, metering, quotas; roadmap ACs AC5.1–AC5.4) on branch `phase-5-ai-gateway`: usage_records +
+   usage_counters migrations, atomic quota RPC, gateway in `packages/core/src/ai` (fake provider records usage with cost 0,
+   provider='fake'), price table in `routing.ts`, kill switch, admin usage page; then Phase 6 (tutor). Read
+   docs/AI_PIPELINE_DESIGN.md §2 and use the claude-api skill before any Anthropic SDK code.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -191,5 +192,5 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 | 7 | 2026-10-15 | PR #4 merged (`2a5f25e`). Phase 7 seed fixed, `e2e/assessments.spec.ts`, 6 real bugs fixed (test creation RLS, key save, key embeds, submit, form state, checking scroll), browser check, ADR-023, gate green | `40fc4fc` |
 | 8 | 2026-10-15 | Phase 4 DB + worker + tests green (850 pgTAP, 16 integration); institute-delete cascade bug fixed; web UI + seed written, not verified | see `git log` |
 | 9 | 2026-10-15 | Phase 4 web UI browser-verified, worker env/CI, `e2e/documents.spec.ts`, logo upload; founder pausing subscription — handoff written | see `git log` |
-| 10 | 2026-10-16 | ADR-024, Phase 4 full gate green (2 test-fixture races fixed), PR | `ca4b542` |
+| 10 | 2026-10-16 | ADR-024, Phase 4 full gate green (2 test-fixture races fixed), PR #5 merged (`cbfb62e`) | `ca4b542` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |
