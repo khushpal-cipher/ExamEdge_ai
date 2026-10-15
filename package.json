@@ -22,6 +22,7 @@
     "test:int": "vitest run --project integration --passWithNoTests",
     "test:db": "supabase test db",
     "test:e2e": "playwright test",
+    "audit": "tsx scripts/check-audit.ts",
     "secrets": "gitleaks git --no-banner --redact -v . && gitleaks dir --no-banner --redact .",
     "db:reset": "supabase db reset",
     "seed:demo": "tsx scripts/seed-demo.ts",
