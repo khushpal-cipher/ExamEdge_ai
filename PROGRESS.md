@@ -3,7 +3,8 @@
 Last updated: 2026-10-15
 
 ## Current phase
-**Phase 1 (Foundations) IN PROGRESS** on git branch `phase-1-foundations` (local repo, no remote). Started 2026-10-15.
+**Phase 1 (Foundations) IN PROGRESS** on git branch `phase-1-foundations`. Started 2026-10-15.
+GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
 | Date | Item | Evidence |
@@ -34,7 +35,7 @@ Not done yet in Phase 1 (do these next, in order):
 3. `packages/core/src/log.ts`: JSON logger with request_id and PII scrubbing (Sentry BLOCKED: no account — add a DECISIONS entry).
 4. `eslint.config.mjs`, `.prettierrc.json`/`.prettierignore`, `vitest.config.ts` (projects `unit` and `integration`), `playwright.config.ts` + `e2e/health.spec.ts`, `scripts/check-forbidden.mjs` (bans session `SET`/`set_config(...,false)` in worker, provider SDK imports outside `packages/core/src/ai`, `dangerouslySetInnerHTML`).
 5. `.githooks/pre-commit` running gitleaks (`git config core.hooksPath .githooks`), prove AC1.3 locally with a fake secret.
-6. `.github/workflows/ci.yml` (written, actions pinned by SHA; cannot run → BLOCKED until a GitHub remote is approved), `.env.example` (names only).
+6. `.github/workflows/ci.yml` (actions pinned by SHA; runs on GitHub now that the remote exists), `.env.example` (names only).
 7. Run the gate: `npm run format:check && npm run lint && npm run typecheck && npm test && npm run test:db && npm run build && npm run test:e2e`; record results; commit; merge to main.
 
 Design decisions already worked out for later phases (record as ADRs when built):
