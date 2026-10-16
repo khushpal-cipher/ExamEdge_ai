@@ -131,7 +131,7 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 - S/I/D owner (any active member; insert only on a subject the caller can read). Staff: none — counts per subject via `tutor_activity(inst, student)` (definer, same callers as `student_progress`), pending Q-03.
 
 **messages** (S) — `conversation_id` (composite FK), `role` (`user|assistant`), `content`, `citations jsonb` (list of `{source_kind, document_id|library_item_id, title, page_start, page_end, cited_text}`), `answer_labels jsonb` (`[{label: notes|library|general, citations: [index]}]` per paragraph), `model`, `usage_record_id`, `feedback` (`up|down|null`), `created_at`.
-- S/I owner (rows written by the server in the user's session after the answer is complete); U `feedback` only. Retention 12 months then deleted [A, Q-06].
+- S/I owner (rows written by the server in the user's session after the answer is complete); U `feedback` only. Retention 12 months then deleted daily by `purge_expired()` (chats left empty go too) [A, Q-06].
 
 **answer_reports** (T) — `subject_id` (composite FK), `message_id` (unique; composite FK, `on delete set null`), `reported_by`, `question`, `answer`, `citations`, `reason` (≤ 500), `created_at`, `resolved_at`, `resolved_by`.
 - Written only by definer `report_answer(msg, why)` (caller must own the conversation): a copy, so it survives the chat being deleted. S/U(`resolved_at`, `resolved_by`) staff of the institute; `reported_by` has no column grant (staff never see who reported). Students: none.
@@ -184,9 +184,9 @@ Ranking rules (ADR-012, ADR-016) — **two ranks, both from institute-conducted 
 - Written only by the definer RPCs (ADR-025): `ai_reserve`/`ai_settle` (member, user's session) and `ai_reserve_job`/`ai_settle_job` (worker, job tenant context). No INSERT/UPDATE/DELETE grant to any API role. A `pending` row counts its reservation against the budget until settled once. Index `(institute_id, created_at)`. Monthly partitioning when > ~10M rows [E].
 - S owner/admin of institute (own institute), platform admin all. `public.usage_summary(inst)` = this month per feature (invoker, RLS decides).
 
-**institute_quotas** (T) — pk `institute_id`, `monthly_ai_budget_micro_usd`, `student_daily_messages`, `student_daily_premium_messages`, `student_daily_generations`, `max_storage_bytes`, `max_upload_bytes`, `max_concurrent_jobs`, `hard_stop bool`, `ai_enabled bool` (per-institute kill switch). S owner/admin; U platform admin. Every reservation locks the institute's row (serialises reservations, AC5.3).
+**institute_quotas** (T) — pk `institute_id`, `monthly_ai_budget_micro_usd`, `student_daily_messages`, `student_daily_premium_messages`, `student_daily_generations`, `max_storage_bytes`, `max_upload_bytes`, `max_concurrent_jobs`, `hard_stop bool`, `ai_enabled bool` (per-institute kill switch). S owner/admin; U platform admin. Every reservation locks the institute's row (serialises reservations, AC5.3). Upload/storage limits are enforced by trigger `guard_upload` on `document_versions` insert, job concurrency by `pending_jobs` + `job_slot_free()` (ADR-029).
 
-**usage_counters** (O) — pk `(institute_id, user_id, day, counter_key)` (`day` = India date; `counter_key` `messages|premium_messages|generations`), `value int`. Students only; updated with `insert … on conflict do update set value = value + 1 where value < limit returning value` inside the reservation (atomic). S own row; owner/admin of institute. Rows older than 35 days purged (Phase 10 job).
+**usage_counters** (O) — pk `(institute_id, user_id, day, counter_key)` (`day` = India date; `counter_key` `messages|premium_messages|generations`), `value int`. Students only; updated with `insert … on conflict do update set value = value + 1 where value < limit returning value` inside the reservation (atomic). S own row; owner/admin of institute. Rows older than 35 days purged daily by `purge_expired()` (worker, ADR-029).
 
 **private.ai_features** — feature → `who` (`member|worker`), `counter_key`, `max_reserve_micro_usd`. **private.settings** — one row, platform-wide `ai_enabled` (changed only by `set_ai_enabled`, aal2 platform admin, audited).
 

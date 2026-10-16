@@ -16,6 +16,7 @@ This is the entry point. Details live in one place each — this file summarises
 | Costs and pricing hypothesis | [COST_MODEL.md](COST_MODEL.md) |
 | Phases, tasks, acceptance criteria | [IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md) |
 | Testing and quality gates | [TEST_STRATEGY.md](TEST_STRATEGY.md) |
+| Operations: incidents, key rotation, backup/restore, offboarding, switching to real AI | [RUNBOOKS.md](RUNBOOKS.md) |
 | Decisions and review log | [DECISIONS.md](DECISIONS.md) |
 | Open questions, risks, assumptions | [RISKS_AND_OPEN_QUESTIONS.md](RISKS_AND_OPEN_QUESTIONS.md) |
 | Current status and next action | [../PROGRESS.md](../PROGRESS.md) |

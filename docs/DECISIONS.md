@@ -181,6 +181,36 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
 - **Mind map** is rendered as a nested list (depth ≤ 3 below the root); markmap not used (no new dependency, better on phones and for screen readers).
 - **Deferred / BLOCKED:** real-provider quality and latency (no key); worker-based generation; KaTeX (ADR-026); flashcard review tracking for "flashcards reviewed" on the progress page.
 
+### ADR-029 Phase 10 (local parts): limits, retention, backups, runbooks (2026-10-16, Accepted)
+- **Scope:** the parts of Phase 10 that need no cloud account. Everything else is BLOCKED on founder approval:
+  production Supabase/Vercel/Railway, domain + wildcard TLS, production Google OAuth, Sentry and spend alerts, the
+  real restore drill (G7, AC10.2), k6 load test on production-sized compute (AC10.3, AC7.4), deployment rollback
+  rehearsal (AC10.5), and the legal opinion Q-01 (G8, AC10.4).
+- **Upload and storage limits in the database** (closes the ADR-025 deferral): trigger `guard_upload` (definer, so
+  teachers need no read access to quotas) refuses a version whose declared size is over `max_upload_bytes`
+  (`file_too_large`) or that would take the institute's total of all stored versions over `max_storage_bytes`
+  (`storage_full`); a per-institute advisory lock makes parallel upload starts take turns. The worker then fails a
+  file larger than its declared size (`too_large`), so the real file cannot get round the check. The 50 MiB bucket
+  cap still applies on top (raising `max_upload_bytes` above 50 MiB also needs the bucket limit raised). A refused
+  first upload soft-deletes the empty document it created.
+- **Job concurrency:** `pending_jobs` hands out at most `max_concurrent_jobs` versions per institute (minus those
+  running), so one institute's big upload cannot starve the others; `job_slot_free()` (definer, worker only, advisory
+  lock until the claim commits) is the strict check at claim time, so it also holds with several workers. A job
+  without a free slot is skipped and its version stays `queued` for the next poll. "Running" = claimed within 30 min.
+- **Retention purge:** definer `purge_expired()` run by the worker daily at 03:00 India time (pg-boss schedule):
+  messages older than 12 months (per message, so an active chat loses only its old part), chats with no messages
+  left, `usage_counters` older than 35 days. Logs counts only. `activity_events` does not exist in R1, so there is
+  nothing more to purge. Soft-deleted documents' files and replaced logos are **not purged yet** (needs Storage
+  deletion from the worker account); offboarding runbook covers manual deletion.
+- **Backups:** `scripts/backup.ts` = `pg_dump -Fc` (PostgreSQL 17 client, `brew install postgresql@17`, must match
+  the server) + a copy of every Storage object + a manifest of row counts and checksums. The drill restores as
+  `supabase_admin` inside the local DB container (only it can own `auth`/`storage` objects; as `postgres` 121
+  ownership/grant errors) into a scratch database and fails on any count or checksum difference. Local only (the
+  script refuses non-local URLs) until the production project exists.
+- **Runbooks** in `docs/RUNBOOKS.md`: incident, key rotation, backup/restore, offboarding, fake → real AI, rollback.
+  Writing them found that `AI_PROVIDER=anthropic` covers the tutor and Studio only: Claude OCR (`ocr.ts`) and the
+  Voyage client (`embed.ts`, Q-08) are not written, so the worker must stay on fake AI until they are.
+
 ---
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
