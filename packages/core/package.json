@@ -6,6 +6,7 @@
     "./*": "./src/*.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.131.0"
+    "@anthropic-ai/sdk": "^0.131.0",
+    "zod": "^4.6.7"
   }
 }

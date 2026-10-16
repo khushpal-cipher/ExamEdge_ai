@@ -21,6 +21,7 @@ export const MODELS = {
   'fake-bow-1': { provider: 'fake', prices: FREE },
   'fake-ocr-1': { provider: 'fake', prices: FREE },
   'fake-tutor-1': { provider: 'fake', prices: FREE },
+  'fake-studio-1': { provider: 'fake', prices: FREE },
 } as const satisfies Record<string, { provider: 'anthropic' | 'voyage' | 'fake'; prices: Prices }>;
 export type Model = keyof typeof MODELS;
 
