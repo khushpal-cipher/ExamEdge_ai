@@ -31,7 +31,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### Phase 6 — source-grounded AI tutor (session 12) — IN PROGRESS on `phase-6-tutor`
+### Phase 6 — source-grounded AI tutor (sessions 12–13) — IN PROGRESS on `phase-6-tutor`
 Scope = IMPLEMENTATION_ROADMAP Phase 6. AC plan: AC6.4 (0 cross-tenant passages in 1,000 queries) provable locally as an
 integration test; AC6.1 eval harness on demo data (real threshold BLOCKED: real embeddings + pilot golden set); AC6.2,
 AC6.3, AC6.5, AC6.6 BLOCKED (no Anthropic key / no staging / human grading).
@@ -44,22 +44,36 @@ DONE + TESTED (commit `830b03a`, 2026-10-16):
   `supabase db reset && supabase test db` → Files=10, Tests=1064, PASS (new `090_tutor.sql`: 30 tests).
 - Dependency: `@anthropic-ai/sdk@0.131.0` in `packages/core` (`npm i -w @examedge/core @anthropic-ai/sdk@0.131.0`,
   released 2026-09-30; planned in ADR-008).
-WIP (committed as WIP, NOT green):
-- `packages/core/src/ai/gateway.ts`: `metered()` now passes the reservation id to `run(recordId)` (stored as
-  `messages.usage_record_id`). `routing.ts`: model `fake-tutor-1` (cost 0).
-- `packages/core/src/ai/tutor.ts`: `tutorAnswer(meter, {institute, question, history, premium, retrieve}, onText)` —
-  reserves `tutor`/`tutor_premium` first, then retrieves (callback, so a blocked student never embeds), caps passages
-  (8, 24,000 chars) and history (6 turns), asserts every passage's institute (tenant_mismatch), generates, settles;
-  `assemble()` → paragraphs labelled `notes` (cites a passage) or `general` from citations only; refusal → friendly text.
-  `fakeTutor` quotes the best-matching sentence of up to 3 passages (content-word overlap, Hinglish stopwords).
-- `packages/core/src/ai/claude.ts`: real provider (`client.beta.messages.stream`, passages as `search_result` blocks with
-  citations, effort low (Haiku) / medium (Sonnet), Sonnet `fallbacks: 'default'` + beta `server-side-fallback-2026-07-01`,
-  `stop_reason === 'refusal'`, usage incl. cache tokens). Built from the SDK's own types via the claude-api skill.
-- Tests `tutor.test.ts`, `claude.test.ts` (recorded SSE stream through the SDK with a custom `fetch`).
-  `npx vitest run --project unit packages/core` → 37 passed, **1 FAILING**: `tutor.test.ts` "labels cited paragraphs…":
-  a cited segment that runs over a blank line also labels the NEXT paragraph as notes (overclaims). Intended fix in
-  `assemble()`: attach a segment's citations only to its first non-empty piece (`let cited = false` per segment; after
-  the first non-empty piece skip the citation loop). Not applied yet.
+DONE + TESTED in session 13 (2026-10-16):
+- `9b35ec8` core tutor green: `assemble()` attaches a segment's citations only to its first non-empty paragraph.
+  Core tutor (fake + Claude provider, metered `run(recordId)`) as described in commit `7826aeb`.
+- `33cd367` `apps/web/app/api/tutor/route.ts`: POST {subjectId, conversationId?, question, premium}; Origin host must
+  equal the request host (403 `bad_origin`); institute from host; `webMeter` = user-session `rpc ai_reserve/ai_settle`;
+  retrieve = `embed(query_embed)` → `rpc match_chunks` → document titles (RLS); NDJSON `{t:'delta'}` / `{t:'done',
+  conversationId, message}` / `{t:'error', code: quota|budget|ai_disabled|failed}`; conversation + user message +
+  assistant message saved only AFTER the answer (a blocked question is not a doubt); `private, no-store`.
+  Fake tutor tie-break prefers the fuller sentence over a heading.
+  Browser/API check (student01, dev server): cited answer, follow-up keeps the conversation, Hinglish ok, Rival canary
+  "quokka saffron lighthouse" → not-found text, 0 citations; bad Origin → 403.
+- `3515a61` `apps/web/lib/markdown.ts` safe renderer (React `createElement` only; paragraphs, lists, bold/italic, code,
+  ``` blocks, headings as bold lines; images → alt text, links → label; `$…$` shown as `<code class="math">`, KaTeX
+  deferred — shortcut comment in file). `apps/web/lib/markdown.test.ts`: renderer cases, T-SEC-19 corpus (20 payloads)
+  and T-AI-09 (20 injection passages through `tutorAnswer` with the fake provider + renderer: only allowed tags, no
+  attributes except class, no system prompt echo, citations only to sent passages). Real-model injection behaviour
+  BLOCKED (no key).
+- `7fd9b8a` UI: `app/(portal)/subjects/[id]/tutor.tsx` (client: streaming, per-paragraph chips "From your institute's
+  notes: <title>, p.N" → `/documents/<id>/file#page=N` or "General explanation", 👍/👎 (`aria-label`, `aria-pressed`),
+  Report with optional reason, "Solve step by step" (premium), New chat, blocked-reason texts), `actions.ts`
+  (`rateAnswer`, `reportAnswer`, `resolveReport` → flash `resolved`), `page.tsx` loads the user's latest chat for the
+  subject; staff see "Reported answers (n)" with Resolve (no reporter shown). `progress-view.tsx` + both progress pages
+  show doubts per subject from `tutor_activity`. CSS `.chat .question`, `.md`, `.answer-part`.
+  `assemble()` now dedupes citations per document page (+ unit test). Unit 104/104, typecheck, lint, prettier PASS.
+  Browser-verified: student asks → cited answer streams; rate persists (DB checked); report saved with reason;
+  teacher1 sees report, Resolve → "Marked as resolved." (0 open); teacher view of student01 progress →
+  "Physics: 5 doubts asked".
+UNCOMMITTED: only the PROGRESS.md handoff (this file) — committed in the handoff commit.
+NOT DONE YET: steps 5–6 of Next exact action (AC6.4 integration test, eval runner, E2E, 375 px check of the tutor
+pane with `resize_window`, ADR-026, DATABASE_DESIGN §4.4 update, full gate, PR).
 
 ### Phase 5 — AI gateway, metering, quotas (sessions 10–11) — MERGED (PR #6, `b1f0795`)
 Scope = IMPLEMENTATION_ROADMAP Phase 5; decisions in ADR-025. Prices verified 2026-10-16 (official pricing page).
@@ -203,35 +217,32 @@ Design decisions already worked out for later phases (record as ADRs when built)
 | Pilot launch (Phase 10) | Q-01 legal opinion on minors' data |
 
 ## Failed checks
-- `packages/core/src/ai/tutor.test.ts` › assemble labels test (Phase 6 WIP, fix described under In progress).
+- None known (unit 104/104 at `7fd9b8a`; pgTAP/integration/E2E/build not re-run since session 12).
 
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action
 0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout phase-6-tutor && git pull && npm ci`;
-   `docker info` (else `open -a Docker`); `supabase start`; then `supabase db reset && npm run seed:demo`. Local env files
-   as before (`apps/web/.env.local`, root `.env.local`; see Phase 4 notes).
-1. Fix the failing `assemble()` test (see Phase 6 WIP above), run `npx vitest run --project unit` and
-   `npx tsc -p packages/core --noEmit`, `npm run lint`, commit.
-2. Web: meter over the user's Supabase client (`rpc('ai_reserve'|'ai_settle')`, like `workerMeter` in
-   `apps/worker/src/ingest.ts`); streaming route `apps/web/app/api/tutor/route.ts` (POST {subjectId, conversationId?,
-   question, premium}; institute from host, member check, create conversation + user message via RLS, `tutorAnswer`
-   with retrieve = `embed(meter,'query_embed',…)` → `rpc('match_chunks')` → document titles; NDJSON lines
-   `{t:'delta'}`/`{t:'done', message}`/`{t:'error', code}`; `AiBlocked` → quota "You've used today's AI limit. It resets
-   tomorrow." / budget / ai_disabled; insert assistant message with citations, answer_labels, model, usage_record_id;
-   `cache-control: private, no-store`). Read node_modules/next/dist/docs route handler + streaming docs first (done once:
-   `01-getting-started/15-route-handlers.md`, `03-api-reference/03-file-conventions/route.md` § Streaming).
-3. Safe Markdown renderer (React elements only: paragraphs, lists, bold/italic/code; images → alt text, links → plain
-   text, raw HTML shown as text; KaTeX deferred → record in ADR-026) + T-SEC-19 XSS corpus and T-AI-09 (20 injection
-   passages) unit tests.
-4. Tutor pane client component in `/subjects/[id]` (history of latest chat, New chat, streaming, label chips + citation
-   links `/documents/<id>/file#page=N`, 👍/👎, Report, "Solve step by step"); staff "Reported answers" list with Resolve
-   in the same pane; progress page "doubts asked" from `tutor_activity`.
-5. Integration test AC6.4: 1,000 `match_chunks` queries as a Demo student (incl. Rival canary "quokka saffron
-   lighthouse") → every row `institute_id` = Demo, no canary. Demo eval runner `evals/` (recall@8 on seeded notes).
-6. E2E `e2e/tutor.spec.ts` (ask → cited answer, report → teacher sees it, Rival REST 0 rows, limit reached), browser check
-   at 375 px, ADR-026 + DATABASE_DESIGN §4.4 update, full gate `npm run check`, PR into main, CI green, merge.
+   `docker info` (else `open -a Docker`); `supabase status` (else `supabase start`); `supabase db reset && npm run seed:demo`.
+   Local env files as before (`apps/web/.env.local`, root `.env.local`).
+1. AC6.4 integration test. NOTE: CI runs `test:int` BEFORE `seed:demo`, so the test must build its own data:
+   check `supabase/test_helpers.sql` (pgTAP fixtures already create a published doc + canary chunk per institute —
+   see whether a `tests.*` helper can be reused from an `*.int.test.ts`, as `apps/worker/src/usage.int.test.ts` does
+   with `tests.make_institute`), or create two institutes + docs + chunks via SQL in `beforeAll` (chunks embedded with
+   `fakeEmbedding`). Then 1,000 `match_chunks` calls as institute A's student (own token via PostgREST, mix of
+   questions incl. B's canary phrase) → every row `institute_id` = A, no canary. Put it in
+   `apps/web/lib/retrieval.int.test.ts` (or worker dir, wherever the vitest integration project picks it up).
+2. Demo eval runner `evals/` (recall@8 on seeded notes; results JSON in `evals/results/`; AC6.1 real threshold BLOCKED).
+3. E2E `e2e/tutor.spec.ts`: student asks → cited answer chip; report → teacher sees it and resolves; Rival student REST
+   on Demo `conversations`/`messages`/`answer_reports` → 0 rows; quota: set `student_daily_messages = 0` for a fresh
+   student → "You've used today's AI limit. It resets tomorrow."; `/api/tutor` with foreign Origin → 403.
+4. Browser check of the tutor pane at 375 px (`resize_window` preset mobile, then back to desktop).
+5. Docs: ADR-026 in docs/DECISIONS.md (tutor: labels from citations, chat saved after answer, origin check, safe
+   Markdown without KaTeX, citations per page, fake tutor, premium only via button — numerical-question heuristic
+   deferred, staff see reports not chats, rerank experiment deferred until real embeddings); DATABASE_DESIGN §4.4
+   (no `deleted_at` on conversations, `answer_reports` table, `tutor_activity`, `report_answer`).
+6. Full gate `npm run check`, record evidence here, PR `phase-6-tutor` → main, CI green, merge, then Phase 8.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -257,6 +268,7 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 | 6 | 2026-10-15 | Phase 3 E2E fixed (12/12), aal from verified claims, gate green, PR #3 merged (`0417717`). Phase 7 DB (692 pgTAP) + UI built; seed WIP failing | see `git log` |
 | 7 | 2026-10-15 | PR #4 merged (`2a5f25e`). Phase 7 seed fixed, `e2e/assessments.spec.ts`, 6 real bugs fixed (test creation RLS, key save, key embeds, submit, form state, checking scroll), browser check, ADR-023, gate green | `40fc4fc` |
 | 8 | 2026-10-15 | Phase 4 DB + worker + tests green (850 pgTAP, 16 integration); institute-delete cascade bug fixed; web UI + seed written, not verified | see `git log` |
+| 13 | 2026-10-16 | Phase 6: assemble fix, streaming tutor route, safe Markdown + XSS/injection suites, tutor pane + reports + doubts, browser-verified; AC6.4/E2E/gate pending | `7fd9b8a` |
 | 9 | 2026-10-15 | Phase 4 web UI browser-verified, worker env/CI, `e2e/documents.spec.ts`, logo upload; founder pausing subscription — handoff written | see `git log` |
 | 10 | 2026-10-16 | ADR-024, Phase 4 full gate green (2 test-fixture races fixed), PR #5 merged (`cbfb62e`); Phase 5 prices verified, usage migration written (pgTAP 2 failing, WIP) | see `git log` |
 | 11 | 2026-10-16 | Phase 5: pgTAP green + `080_usage.sql`, core gateway (routing/cost/metered), worker metering, `/usage` page, platform AI switches, AC5.3 concurrency + AC5.4 API tests; 2 real bugs fixed (safeupdate kill switch, phone layout); full gate green; PR #6 opened, CI pending at handoff | `0802398` |
