@@ -13,6 +13,7 @@ Last updated: 2026-10-16
 **Phase 8 MERGED** into `main` (PR #8, squash commit `bce1046`, CI green: check + secrets, run 38848935766 — unit 111, pgTAP 1107, integration 21, E2E 24/24 against the production build, 2026-10-16).
 **Phase 9 MERGED** into `main` (PR #9, squash commit `67ed4ac`, CI green: check + secrets, run 38869056404 — pgTAP 1220, E2E 26/26 against the production build incl. T-SEC-05, 2026-10-16).
 **Phase 10 (local parts) MERGED** into `main` (PR #10, squash commit `dc7600f`, CI green: check + secrets, run 38877776627 — unit 132, pgTAP 1243, integration 23, E2E 26/26 against the production build incl. T-SEC-05, 2026-10-16).
+**R1 OCR MERGED** into `main` (PR #11, squash commit `69d3fc6`, CI green: E2E 26/26, run 38880693017, 2026-10-16).
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
@@ -36,7 +37,27 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### R1 OCR — Claude OCR provider (session 20, branch `r1-ocr`) — gate green locally, PR open
+### R1 purge of unreachable files (session 20, branch `r1-purge-files`) — gate green locally, PR #12 open, CI pending
+Scope = "Next exact action" 2b. ADR-031.
+Session 21 (2026-10-16): after `supabase db reset && npm run seed:demo` re-check `npm run test:db` → Files=14
+Tests=1256 PASS; `npm run test:int` → 26/26. Opened https://github.com/khushpal-cipher/ExamEdge_ai/pull/12.
+DONE + TESTED (2026-10-16):
+- Migration `20261025000013_purge_files.sql`: `private.purgeable(bucket, name, created)` (files > 1 day old that no
+  live / < 30-day-deleted document version points at; logos no institute uses), `private.purgeable_files()` (worker,
+  ≤ 1,000/day), storage policies `purge_select`/`purge_delete` (service account only), `purge_expired()` now also
+  hard-deletes documents past their grace whose files are gone. pgTAP `130_purge_files.sql` (13 tests: exact purgeable
+  set, owner cannot delete, worker deletes exactly that set, document waits for its files, 29-day-old delete stays);
+  allowlist in `010`; `120` expects the new `documents` count.
+- Worker: `apps/worker/src/purge.ts` (Storage API remove as the service account, then `purge_expired`) run by the daily
+  `purge` job; `workerStorage()` in `storage.ts`. Integration test `purge.int.test.ts` against the real Storage API.
+- Found by the gate: the purge test's aged files became real orphans after its institute was deleted and showed up in
+  `070`'s worker-visibility count → `070` starts from its own files only (same assertion), the test removes its files.
+- Local gate (after `supabase db reset && npm run seed:demo`, rebased on `69d3fc6`): format, lint, typecheck PASS;
+  unit 135/135; pgTAP Files=14 Tests=1256 PASS (also after the integration run); integration 26/26; build + bundle
+  scan PASS; E2E (before rebase) 25/26 — T-SEC-05 only (other session's `next dev` on :3000). CI on the PR.
+- RUNBOOKS offboarding step 4 (files now deleted automatically), DATABASE_DESIGN §4.3/§7.
+
+### R1 OCR — Claude OCR provider (session 20) — MERGED (PR #11, `69d3fc6`, CI green: E2E 26/26, run 38880693017)
 Scope = PROGRESS "Next exact action" 2a (no founder decision needed). ADR-030.
 DONE + TESTED (2026-10-16):
 - `packages/core/src/ai/ocr.ts`: provider interface (fake | anthropic), `ocrPages(meter, pages, render)` renders a
@@ -107,20 +128,22 @@ DONE + TESTED (2026-10-16, session 19):
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (after Release 1 local build, session 20)
-Everything in `main` (`dc7600f`); no open PR; `phase-10-local` is merged (can be deleted).
-0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout main && git pull && npm ci`; `docker info`
+## Next exact action (session 21)
+`main` = `69d3fc6` (OCR merged). Open work: PR #12 (`r1-purge-files`) — check its CI (E2E must be 26/26),
+fix until green, squash-merge, record the merge commit here.
+Merged branches `phase-10-local`, `r1-ocr` can be deleted.
+0. Fresh session: `cd ~/Documents/startup/examedge_ai && git fetch && npm ci`; `docker info`
    (else `open -a Docker`); `supabase status` (else `supabase start`); `supabase db reset && npm run seed:demo`.
-1. The founder already got the final summary in chat (what works / BLOCKED / real-AI steps = docs/RUNBOOKS.md §5).
+1. After 2b is merged: the founder already got the final summary in chat (what works / BLOCKED / real-AI steps = docs/RUNBOOKS.md §5).
    Ask the founder which of these to do next (all need their decision):
    - approve cloud accounts → Phase 10 cloud parts (production Supabase/Vercel/Railway, domain + TLS, prod Google
      OAuth, Sentry, spend alerts, independent backup storage, real restore drill G7, k6 load test, rollback rehearsal);
    - give an Anthropic key → switch tutor + Studio to real AI (RUNBOOKS §5) and run AC5.2 / AC6.x evals;
    - answer Q-08 (Voyage terms) and Q-01 (legal, blocks the pilot).
 2. Local work possible without any decision (new branch per task, e.g. `r1-ocr`):
-   a. ~~Claude OCR provider~~ — built on `r1-ocr` (session 20, ADR-030): merge its PR once CI is green.
-   b. Purge of soft-deleted documents (> 30 days) and replaced logos: needs Storage delete from the worker service
-      account (policy + job) — ADR-029 notes it as not built.
+   a. ~~Claude OCR provider~~ — merged (PR #11, `69d3fc6`, ADR-030).
+   b. ~~Purge of soft-deleted documents' files and replaced logos~~ — branch `r1-purge-files` (ADR-031), pushed at
+      re-checked and PR #12 opened in session 21; next: CI green → squash-merge → record merge commit.
    Each: tests + full gate (`npm run check`, local E2E `--workers=1`, T-SEC-05 fails only against another session's
    `next dev` on :3000), PR, CI green, squash-merge, PROGRESS update.
 
@@ -160,6 +183,6 @@ Everything in `main` (`dc7600f`); no open PR; `phase-10-local` is merged (can be
 | 17 | 2026-10-16 | Phase 9: studio schema + 38 pgTAP (1220 PASS), core generators + Claude structured-output provider (unit 132), web Studio pane/artifact page/quiz/progress written, first browser check OK; handoff mid-browser-check | see `git log` |
 | 18 | 2026-10-16 | Phase 9: browser check done (no bugs), Studio seed, `e2e/studio.spec.ts`, ADR-028 + DB docs, local gate (E2E 25/26, T-SEC-05 dev-only), PR #9 CI green (E2E 26/26) and merged (`67ed4ac`); branch `phase-10-local`; handoff for Phase 10 | see `git log` |
 | 19 | 2026-10-16 | Phase 10 local: upload/storage/job limits, retention purge, backup + restore drill, runbooks, README, ADR-029; local gate green (E2E 25/26, T-SEC-05 dev-only) | `b731118` |
-| 20 | 2026-10-16 | Claude OCR provider (ADR-030), NUL-render bug fixed, local gate green (E2E 25/26, T-SEC-05 dev-only); PR opened | see `git log` |
+| 20 | 2026-10-16 | Claude OCR provider (ADR-030, PR #11 merged `69d3fc6`); purge of unreachable files (ADR-031) built + gate green, pushed, PR not opened | `2dc2fc7` |
 | 15 | 2026-10-16 | Phase 8: library migration + 40 pgTAP (1104 PASS), core two-layer tutor (46 unit), web/platform editor/seed/eval written; AC8.4 library recall 0.81 FAILING (keyword AND), handoff | see `git log` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |

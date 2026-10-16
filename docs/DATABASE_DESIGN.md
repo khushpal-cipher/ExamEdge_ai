@@ -109,7 +109,7 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 
 **documents** — `subject_id`, `chapter_id` (nullable; composite FKs), `title`, `current_version_id`, `status` (`draft|published|withdrawn`), `published_at`, `withdrawn_at`, `deleted_at`, `created_by`.
 - Index `(institute_id, subject_id) where deleted_at is null`.
-- S `private.can_read_document(id)`. I/U staff. D: soft delete by staff; purge job hard-deletes after 30 days [A].
+- S `private.can_read_document(id)`. I/U staff. D: soft delete by staff; after 30 days the daily purge deletes the files (worker service account, Storage API) and then the rows (ADR-031).
 
 **document_versions** — `document_id` (composite FK), `version int`, `storage_path text unique`, `mime` (`application/pdf|image/png|image/jpeg`), `size_bytes` (≤ 50 MiB), `sha256`, `page_count`, `processing_status` (`uploading|queued|processing|ready|failed`), `error_code`, `extraction_method` (`text_layer|ocr|mixed`), `chunker_version`, `embedding_model`, `claimed_at` (worker claim; stale claims are re-run), `processed_at`; `unique(document_id, version)`.
 - Constraint: `storage_path = institute_id || '/' || document_id || '/' || id` (check). API users may only move a version to `queued` (trigger); the worker sets everything else (ADR-024).
@@ -230,6 +230,6 @@ user-editable [V] → never used for authorization.
 
 - Migrations are forward-only SQL; destructive changes use expand → backfill → contract across two releases.
 - Every migration PR runs: pgTAP suite, policy coverage test, `supabase db lint` [U: verify command], and E2E isolation tests.
-- Deletion cascade: institute → all T/S rows (FK `on delete cascade`) + storage prefix purge job + audit record kept (institute_id nulled, action retained).
+- Deletion cascade: institute → all T/S rows (FK `on delete cascade`) + daily purge of files no row points to (ADR-031) + audit record kept (institute_id nulled, action retained).
 - Student removal from institute: membership `removed` immediately (access ends); their S data retained per policy then erased (Q-06).
 - Right to erasure (DPDP) handled by an RPC that deletes a user's S data across institutes and anonymises attempts (scores kept for rank integrity if lawful — Q-01).

@@ -99,7 +99,7 @@ create temp table before on commit drop as select
 grant select on before to worker;
 
 set local role worker;
-select is(private.purge_expired(), '{"messages": 2, "conversations": 1, "usage_counters": 1}'::jsonb,
+select is(private.purge_expired(), '{"messages": 2, "conversations": 1, "usage_counters": 1, "documents": 0}'::jsonb,
   'the worker purge reports counts only');
 reset role;
 select is((select count(*) from public.messages), (select messages - 2 from before),

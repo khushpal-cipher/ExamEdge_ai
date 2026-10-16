@@ -200,8 +200,7 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
 - **Retention purge:** definer `purge_expired()` run by the worker daily at 03:00 India time (pg-boss schedule):
   messages older than 12 months (per message, so an active chat loses only its old part), chats with no messages
   left, `usage_counters` older than 35 days. Logs counts only. `activity_events` does not exist in R1, so there is
-  nothing more to purge. Soft-deleted documents' files and replaced logos are **not purged yet** (needs Storage
-  deletion from the worker account); offboarding runbook covers manual deletion.
+  nothing more to purge. Soft-deleted documents' files and replaced logos: purged since ADR-031.
 - **Backups:** `scripts/backup.ts` = `pg_dump -Fc` (PostgreSQL 17 client, `brew install postgresql@17`, must match
   the server) + a copy of every Storage object + a manifest of row counts and checksums. The drill restores as
   `supabase_admin` inside the local DB container (only it can own `auth`/`storage` objects; as `postgres` 121
@@ -229,6 +228,22 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
 - **Bug found:** the canvas binding throws on NUL characters, which garbled text layers contain; the render context
   drops them (integration test proves the document now becomes `ready`).
 - **BLOCKED:** real-key run, AC4.5 (formula accuracy on 3 real documents) and AC4.6 (cost per 100 pages).
+### ADR-031 Purge of unreachable files (2026-10-16, Accepted)
+- **Decision:** one rule in the database, `private.purgeable(bucket, name, created)`: a file older than a day is
+  purgeable when no version of a live document (or one deleted < 30 days ago) points at it, or, for logos, when no
+  institute's branding uses it. This covers deleted documents after their 30-day grace, files left by a deleted
+  institute (DATABASE_DESIGN §7) and replaced logos (ADR-024) — closing the ADR-029 gap.
+- **How:** Postgres may not delete Storage objects (`storage.protect_delete`), so the daily `purge` job lists them with
+  `private.purgeable_files()` (definer, worker role, ≤ 1,000 a day) and deletes them through the Storage API as the
+  worker service account. New storage policies `purge_select`/`purge_delete` let only a service account delete, and
+  only what `purgeable()` names, so a bug in the worker cannot delete a live file. `purge_expired()` then hard-deletes
+  documents past their grace whose files are gone (versions, chunks and audiences cascade); a document whose files
+  are still there waits for the next day.
+- **The one-day age** keeps an in-flight upload or logo change safe (the row that points at the file may commit later).
+- **Accepted:** Storage deletes with `delete … returning`, which needs a SELECT policy, so the worker account can also
+  download a purgeable file until the job deletes it (at most a day). Nobody else gains access.
+- **Not purged:** files of superseded and failed versions of live documents (they count against the institute's
+  storage limit until the document is deleted) — revisit if institutes hit `storage_full` from re-uploads.
 
 ---
 ## Review log (skeptical principal-engineer pass, 2026-10-14)

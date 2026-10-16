@@ -100,8 +100,9 @@ database and the files.
    ```
 
    All of its records are deleted with it. The audit record stays.
-4. **Delete its files:** everything under `<institute id>/` in the `documents` and `logos` storage buckets (Supabase
-   dashboard → Storage). **[U: no script for this yet]**
+4. **Its files are deleted automatically:** the worker's daily clean-up (03:00 India time) deletes every file that
+   no record points to any more, once it is a day old. To check after two days: Supabase dashboard → Storage → the
+   `documents` and `logos` buckets have no `<institute id>/` folder left.
 5. Write the date in PROGRESS.md. Copies of the data stay in old backups until those expire. How long backups are kept
    is to be agreed with the lawyer.
 
