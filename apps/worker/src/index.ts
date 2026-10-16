@@ -2,7 +2,8 @@ import { PgBoss } from 'pg-boss';
 import pg from 'pg';
 import { log } from '@examedge/core/log';
 import { ingestVersion, pendingJobs, type Job } from './ingest';
-import { workerDownloader } from './storage';
+import { purge } from './purge';
+import { workerDownloader, workerStorage } from './storage';
 
 const connectionString = process.env.WORKER_DATABASE_URL;
 if (!connectionString) throw new Error('WORKER_DATABASE_URL is required');
@@ -11,6 +12,7 @@ export const pool = new pg.Pool({ connectionString, max: 5 });
 const boss = new PgBoss({ connectionString, schema: 'pgboss', createSchema: false });
 boss.on('error', (err) => log.error('pgboss.error', { err }));
 const download = await workerDownloader();
+const storage = await workerStorage();
 
 async function heartbeat() {
   await pool.query('insert into private.worker_heartbeats default values');
@@ -27,12 +29,11 @@ await boss.start();
 await boss.createQueue('heartbeat');
 await boss.schedule('heartbeat', '* * * * *');
 await boss.work('heartbeat', heartbeat);
-// Retention (ADR-029): chats after 12 months, daily counters after 35 days. Logs counts only.
+// Retention (ADR-029, ADR-031): chats after 12 months, daily counters after 35 days, deleted documents' files after
+// 30 days, unused logos. Logs counts only.
 await boss.createQueue('purge');
 await boss.schedule('purge', '0 3 * * *', null, { tz: 'Asia/Kolkata' });
-await boss.work('purge', async () => {
-  log.info('purge.done', (await pool.query('select private.purge_expired() as n')).rows[0].n);
-});
+await boss.work('purge', async () => log.info('purge.done', await purge(pool, storage)));
 await boss.createQueue('ingest', { policy: 'stately' });
 await boss.work<Job>('ingest', async ([job]) => {
   if (job) await ingestVersion({ pool, download }, job.data);
