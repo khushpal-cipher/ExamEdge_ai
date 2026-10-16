@@ -85,10 +85,9 @@ export default async function Dashboard() {
         )}
       </section>
       <section className="card stack" aria-labelledby="next">
-        <h2 id="next">Coming next</h2>
+        <h2 id="next">Where things are</h2>
         <p className="empty">
-          Notes upload, the AI tutor and Studio appear here as they are switched on. Tests, checking and rank lists are
-          under Tests.
+          Notes, the AI tutor and Studio are inside each subject. Tests, checking and rank lists are under Tests.
         </p>
       </section>
     </>

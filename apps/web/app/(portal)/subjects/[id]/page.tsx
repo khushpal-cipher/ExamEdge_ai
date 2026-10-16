@@ -2,10 +2,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { KIND } from '@/lib/library';
 import { Markdown } from '@/lib/markdown';
+import { STUDIO_KIND } from '@/lib/studio';
 import { isUuid, requireMember } from '@/lib/tenant';
 import { Flash, type Search } from '../../flash';
 import { DOCUMENT_STATUS, VERSION_STATUS } from '../../documents/status';
 import { Upload } from '../../documents/upload';
+import { generate } from '../../studio/actions';
 import { resolveReport } from './actions';
 import { Panes } from './panes';
 import { Tutor, type ChatMessage } from './tutor';
@@ -18,6 +20,7 @@ type LibraryChapter = {
   library_topics: { id: string; name: string; position: number; library_items: { id: string; kind: string }[] }[];
 };
 type Report = { id: string; question: string; answer: string; reason: string | null; created_at: string };
+type Artifact = { id: string; owner_scope: string; kind: string; status: string; chapters: { name: string } };
 
 export default async function SubjectWorkspace(props: { params: Promise<{ id: string }>; searchParams: Search }) {
   const { institute, member, db } = await requireMember();
@@ -72,7 +75,8 @@ export default async function SubjectWorkspace(props: { params: Promise<{ id: st
   }
   const chapterName = new Map(chapters.map((c) => [c.id, c.name]));
   // RLS: a chat is readable by its owner only; staff see reported answers, never chats (ADR-015).
-  const [{ data: chat }, { data: reportRows }] = await Promise.all([
+  // RLS: students see their own artifacts and those published to their batches; staff see institute artifacts.
+  const [{ data: chat }, { data: reportRows }, { data: artifactRows }] = await Promise.all([
     db
       .from('conversations')
       .select('id, messages(id, role, content, citations, answer_labels, feedback, created_at)')
@@ -92,7 +96,35 @@ export default async function SubjectWorkspace(props: { params: Promise<{ id: st
           .is('resolved_at', null)
           .order('created_at', { ascending: false })
           .limit(50),
+    db
+      .from('generated_artifacts')
+      .select('id, owner_scope, kind, status, chapters(name)')
+      .eq('institute_id', institute.id)
+      .eq('subject_id', id)
+      .order('created_at', { ascending: false })
+      .limit(50),
   ]);
+  const artifacts = (artifactRows ?? []) as unknown as Artifact[];
+  const artifactList = (label: string, list: Artifact[]) =>
+    list.length > 0 && (
+      <>
+        <h3>{label}</h3>
+        <ul className="stack" style={{ listStyle: 'none', padding: 0, margin: 0 }} aria-label={label}>
+          {list.map((a) => (
+            <li key={a.id}>
+              <Link href={`/studio/${a.id}`}>
+                {STUDIO_KIND[a.kind]}: {a.chapters.name}
+              </Link>
+              {!student && a.status !== 'published' && (
+                <span className={`badge ${a.status === 'draft' ? 'warn' : 'bad'}`}>
+                  {a.status === 'draft' ? 'Draft' : 'Withdrawn'}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </>
+    );
   const messages = ((chat?.messages ?? []) as (ChatMessage & { created_at: string })[]).sort((a, b) =>
     a.created_at.localeCompare(b.created_at),
   );
@@ -219,16 +251,53 @@ export default async function SubjectWorkspace(props: { params: Promise<{ id: st
         studio={
           <>
             <h2>Studio</h2>
-            <div className="grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-              {['Practice quiz', 'Flashcards', 'Summary', 'Mind map'].map((t) => (
-                <div key={t} className="empty small">
-                  <b>{t}</b>
-                  <br />
-                  Coming soon
-                </div>
-              ))}
-            </div>
-            <p className="small muted">Practice quizzes help you learn. They never affect your rank.</p>
+            {student ? (
+              <>
+                {artifactList(
+                  'From your teachers',
+                  artifacts.filter((a) => a.owner_scope === 'institute'),
+                )}
+                {artifactList(
+                  'Made by you',
+                  artifacts.filter((a) => a.owner_scope === 'student'),
+                )}
+              </>
+            ) : (
+              artifactList('Study material', artifacts)
+            )}
+            {chapters.length === 0 ? (
+              <p className="empty small">Add chapters to this subject to make study material.</p>
+            ) : (
+              <form action={generate} className="stack" aria-label="Make study material">
+                <input type="hidden" name="subject_id" value={subject.id} />
+                <label className="stack small">
+                  Chapter
+                  <select name="chapter_id" required>
+                    {chapters.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="stack small">
+                  Make
+                  <select name="kind">
+                    {Object.entries(STUDIO_KIND).map(([k, label]) => (
+                      <option key={k} value={k}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button type="submit">Generate</button>
+              </form>
+            )}
+            <p className="small muted">
+              {student
+                ? "Made by AI from your teachers' notes for the chapter, just for you. Practice quizzes never affect your rank."
+                : 'Made by AI from the published notes of the chapter. Students see it only after you approve and publish it.'}
+            </p>
           </>
         }
       />

@@ -16,7 +16,7 @@ export function embeddingProvider(env = process.env) {
 // Letters with their combining marks (Devanagari matras, virama) and digits form one word.
 export const words = (text: string) => text.toLowerCase().match(/[\p{L}\p{M}\p{N}]+/gu) ?? [];
 
-function fnv1a(s: string) {
+export function fnv1a(s: string) {
   let h = 0x811c9dc5;
   for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 0x01000193);
   return h >>> 0;

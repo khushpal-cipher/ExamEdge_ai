@@ -39,7 +39,7 @@ end $$;
 create or replace function tests.make_institute(slug text) returns uuid language plpgsql as $$
 declare
   inst uuid; bx uuid; by_ uuid; sp uuid; sc uuid; m uuid; who text; s1 uuid; q uuid; t uuid; att uuid; d uuid; v uuid;
-  cv uuid; am uuid;
+  cv uuid; am uuid; ch uuid; qa uuid;
 begin
   insert into public.institutes (slug, name) values (slug, initcap(slug) || ' Classes') returning id into inst;
   insert into public.institute_domains (hostname, institute_id) values (slug || '.localhost', inst);
@@ -112,6 +112,27 @@ begin
   insert into public.answer_reports (institute_id, subject_id, message_id, reported_by, question, answer)
   select inst, sp, am, user_id, 'What is torque?', 'Torque is the turning effect of a force.'
   from public.memberships where id = s1;
+  -- Phase 9: a practice quiz published to Batch X, student1's own flashcards and one graded try of the quiz.
+  select id into ch from public.chapters where institute_id = inst and subject_id = sp;
+  insert into public.generated_artifacts (institute_id, owner_scope, kind, subject_id, chapter_id, input_hash,
+                                          prompt_version, model, content, status, approved_at)
+  values (inst, 'institute', 'quiz', sp, ch, repeat('a', 64), 'studio-v1', 'fake-studio-1',
+          '{"questions":[{"id":"q1","stem":"Torque is a ___ quantity","options":[{"id":"a","text":"vector"},
+            {"id":"b","text":"scalar"},{"id":"c","text":"unitless"},{"id":"d","text":"imaginary"}],"answer":"a",
+            "explanation":"Torque has a direction.","cites":[0]},
+            {"id":"q2","stem":"SI unit of torque","options":[{"id":"a","text":"N"},{"id":"b","text":"N m"},
+            {"id":"c","text":"J/s"},{"id":"d","text":"kg"}],"answer":"b","explanation":"Force times distance.",
+            "cites":[0]}]}', 'published', now())
+  returning id into qa;
+  insert into public.artifact_audience values (qa, bx, inst);
+  insert into public.generated_artifacts (institute_id, owner_scope, owner_user_id, kind, subject_id, chapter_id,
+                                          input_hash, prompt_version, model, content)
+  select inst, 'student', user_id, 'flashcards', sp, ch, repeat('b', 64), 'studio-v1', 'fake-studio-1',
+         jsonb_build_object('cards', jsonb_build_array(jsonb_build_object(
+           'front', 'Torque private ' || slug, 'back', 'Turning effect', 'cites', jsonb_build_array(0))))
+  from public.memberships where id = s1;
+  insert into public.practice_attempts (institute_id, user_id, artifact_id, answers, score, max_score)
+  select inst, user_id, qa, '{"q1":"a","q2":"a"}', 1, 2 from public.memberships where id = s1;
   return inst;
 end $$;
 

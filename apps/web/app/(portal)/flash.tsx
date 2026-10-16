@@ -19,6 +19,12 @@ const ERRORS: Record<string, string> = {
   document_not_ready: 'The file is still being processed. Publish it when it is ready.',
   closed: 'This test is not open right now.',
   time: 'Please enter valid times: the test must close after it opens.',
+  quota: "You've used today's AI limit. It resets tomorrow.",
+  budget: "Your institute's AI budget for this month is used up. Please tell your institute admin.",
+  ai_disabled: 'AI is switched off right now. Please try again later.',
+  no_sources: 'There are no published notes for this chapter yet, so there is nothing to make it from.',
+  refused: 'The AI could not make this from these notes. Please ask your teacher.',
+  generation_failed: 'The AI could not make this right now. Please try again.',
 };
 const OK: Record<string, string> = {
   saved: 'Saved.',
@@ -32,6 +38,9 @@ const OK: Record<string, string> = {
   published: 'Published. Students in the chosen batches can open it now.',
   withdrawn: 'Withdrawn. Students can no longer open it.',
   resolved: 'Marked as resolved.',
+  generated: 'Ready. Made from the published notes of this chapter.',
+  reused: 'This was already made from the same notes, so here it is (no AI use counted).',
+  saved_draft: 'Saved. It is a draft again until you publish it.',
 };
 
 export async function Flash({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {
