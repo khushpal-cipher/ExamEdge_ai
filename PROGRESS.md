@@ -37,8 +37,10 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### R1 purge of unreachable files (session 20, branch `r1-purge-files`, pushed `2dc2fc7`) — gate green locally, PR NOT opened yet
+### R1 purge of unreachable files (session 20, branch `r1-purge-files`) — gate green locally, PR #12 open, CI pending
 Scope = "Next exact action" 2b. ADR-031.
+Session 21 (2026-10-16): after `supabase db reset && npm run seed:demo` re-check `npm run test:db` → Files=14
+Tests=1256 PASS; `npm run test:int` → 26/26. Opened https://github.com/khushpal-cipher/ExamEdge_ai/pull/12.
 DONE + TESTED (2026-10-16):
 - Migration `20261025000013_purge_files.sql`: `private.purgeable(bucket, name, created)` (files > 1 day old that no
   live / < 30-day-deleted document version points at; logos no institute uses), `private.purgeable_files()` (worker,
@@ -127,7 +129,8 @@ DONE + TESTED (2026-10-16, session 19):
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 21)
-`main` = `69d3fc6` (OCR merged). Open work: branch `r1-purge-files` (`2dc2fc7`, pushed, no PR yet) — do step 2b FIRST.
+`main` = `69d3fc6` (OCR merged). Open work: PR #12 (`r1-purge-files`) — check its CI (E2E must be 26/26),
+fix until green, squash-merge, record the merge commit here.
 Merged branches `phase-10-local`, `r1-ocr` can be deleted.
 0. Fresh session: `cd ~/Documents/startup/examedge_ai && git fetch && npm ci`; `docker info`
    (else `open -a Docker`); `supabase status` (else `supabase start`); `supabase db reset && npm run seed:demo`.
@@ -140,10 +143,7 @@ Merged branches `phase-10-local`, `r1-ocr` can be deleted.
 2. Local work possible without any decision (new branch per task, e.g. `r1-ocr`):
    a. ~~Claude OCR provider~~ — merged (PR #11, `69d3fc6`, ADR-030).
    b. ~~Purge of soft-deleted documents' files and replaced logos~~ — branch `r1-purge-files` (ADR-031), pushed at
-      `2dc2fc7`, **PR not opened yet** (session ended). Next: `git checkout r1-purge-files && git pull`, `supabase db
-      reset && npm run seed:demo`, quick re-check (`npm run test:db && npm run test:int`), then
-      `gh pr create --base main --head r1-purge-files` (body: summary of ADR-031 + local gate evidence above), check CI
-      (E2E must be 26/26 against the production build), squash-merge, record the merge commit here.
+      re-checked and PR #12 opened in session 21; next: CI green → squash-merge → record merge commit.
    Each: tests + full gate (`npm run check`, local E2E `--workers=1`, T-SEC-05 fails only against another session's
    `next dev` on :3000), PR, CI green, squash-merge, PROGRESS update.
 
