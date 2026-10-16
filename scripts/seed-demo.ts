@@ -1,11 +1,12 @@
 // LOCAL demo data: "Demo Classes" (demo.localhost) and "Rival Academy" (rival.localhost, exists to prove isolation).
 // Run after `npm run db:reset`. All demo users sign in with "Sign in as demo user" (password: DEMO_PASSWORD).
 // Later phases extend this file (documents, practice data).
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import pg from 'pg';
 import { drain } from '../apps/worker/src/ingest';
 import type { Meter } from '../packages/core/src/ai/gateway';
 import { embedLibraryItem } from '../packages/core/src/ai/library';
+import { fakeContent, SCHEMA_VERSION, STUDIO_PROMPT_VERSION, validateArtifact } from '../packages/core/src/ai/studio';
 import { workerDownloader } from '../apps/worker/src/storage';
 import { DEMO_PASSWORD } from '../packages/core/src/demo';
 import { NOTES } from './demo-notes';
@@ -591,6 +592,81 @@ async function seedLibrary() {
   console.log(`Library: JEE Main Physics, ${JEE_PHYSICS.length} chapters, ${items} published items.`);
 }
 
+// ---------------------------------------------------------------- Studio (Phase 9)
+// Per institute: a published Physics summary of Rotational Motion (made from the processed notes the same way the
+// web does, so a teacher's "Generate summary" there is reused) and student01's own practice quiz with one try.
+async function seedStudio() {
+  for (const slug of ['demo', 'rival']) {
+    const { rows: chunks } = await db.query(
+      `select c.id, c.document_id, d.title, c.page_start, c.page_end, c.content, d.institute_id, d.subject_id,
+              d.chapter_id, ch.name as chapter
+       from public.document_chunks c join public.documents d on d.id = c.document_id
+       join public.chapters ch on ch.id = d.chapter_id join public.institutes i on i.id = d.institute_id
+       where i.slug = $1 and ch.name = 'Rotational Motion' and d.status = 'published' and d.deleted_at is null
+       order by d.title, c.chunk_index`,
+      [slug],
+    );
+    const [c0] = chunks;
+    const sources = chunks.map(({ document_id, title, page_start, page_end, content }) => ({
+      document_id,
+      title,
+      page_start,
+      page_end,
+      content,
+    }));
+    const refs = sources.map(({ content: _, ...ref }) => ref);
+    const student = users.get(`student01@${slug}.test`)!;
+    const teacher = users.get(`teacher1@${slug}.test`)!;
+    const save = async (kind: 'summary' | 'quiz', scope: string) => {
+      const hash = createHash('sha256')
+        .update(JSON.stringify([kind, c0.chapter_id, chunks.map((c) => String(c.id)).sort()]))
+        .digest('hex');
+      const content = validateArtifact(kind, fakeContent(kind, c0.chapter, sources), sources.length);
+      const published = scope === 'institute';
+      const { rows } = await db.query(
+        `insert into public.generated_artifacts (institute_id, owner_scope, owner_user_id, kind, subject_id, chapter_id,
+           source_refs, input_hash, prompt_version, model, schema_version, content, status, created_by, approved_by,
+           approved_at)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'fake-studio-1', $10, $11, $12, $13, $14, $15) returning id`,
+        [
+          c0.institute_id,
+          scope,
+          published ? null : student,
+          kind,
+          c0.subject_id,
+          c0.chapter_id,
+          JSON.stringify(refs),
+          hash,
+          STUDIO_PROMPT_VERSION,
+          SCHEMA_VERSION,
+          JSON.stringify(content),
+          published ? 'published' : 'draft',
+          published ? teacher : student,
+          published ? teacher : null,
+          published ? new Date() : null,
+        ],
+      );
+      return { id: rows[0].id as string, content };
+    };
+    const summary = await save('summary', 'institute');
+    await db.query(
+      `insert into public.artifact_audience (artifact_id, batch_id, institute_id)
+       select $1, batch_id, institute_id from public.batch_subjects where subject_id = $2`,
+      [summary.id, c0.subject_id],
+    );
+    const quiz = await save('quiz', 'student');
+    // One try: the first half answered correctly.
+    const qs = (quiz.content as { questions: { id: string; answer: string }[] }).questions;
+    const answers = Object.fromEntries(qs.slice(0, Math.ceil(qs.length / 2)).map((q) => [q.id, q.answer]));
+    await db.query(
+      `insert into public.practice_attempts (institute_id, user_id, artifact_id, answers, score, max_score)
+       values ($1, $2, $3, $4, $5, $6)`,
+      [c0.institute_id, student, quiz.id, JSON.stringify(answers), Object.keys(answers).length, qs.length],
+    );
+  }
+  console.log('Studio: a published summary and a practice try per institute.');
+}
+
 await db.connect();
 try {
   const { rowCount } = await db.query(`select 1 from public.institutes where slug in ('demo', 'rival')`);
@@ -606,6 +682,7 @@ try {
   await seedLibrary();
   await db.query('commit');
   await processDocuments();
+  await seedStudio();
   console.log(
     `Seeded demo + rival (${users.size} users). Sign in at http://demo.localhost:3000 as e.g. owner@demo.test`,
   );
