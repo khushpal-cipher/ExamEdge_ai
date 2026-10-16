@@ -9,7 +9,7 @@ Last updated: 2026-10-16
 **Phase 7 MERGED** into `main` (PR #4, squash commit `2a5f25e`, CI green: check + secrets, run 38711008739, 2026-10-15).
 **Phase 4 MERGED** into `main` (PR #5, squash commit `cbfb62e`, CI green: check + secrets, run 38795802409, 2026-10-16).
 **Phase 5 MERGED** into `main` (PR #6, squash commit `b1f0795`, CI green: check + secrets, run 38805190604, 2026-10-16).
-**Phase 6 (tutor) — in progress** on branch `phase-6-tutor`.
+**Phase 6 (tutor) — in progress** on branch `phase-6-tutor` (DB slice green, core tutor WIP; see Next exact action).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -31,6 +31,36 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
+### Phase 6 — source-grounded AI tutor (session 12) — IN PROGRESS on `phase-6-tutor`
+Scope = IMPLEMENTATION_ROADMAP Phase 6. AC plan: AC6.4 (0 cross-tenant passages in 1,000 queries) provable locally as an
+integration test; AC6.1 eval harness on demo data (real threshold BLOCKED: real embeddings + pilot golden set); AC6.2,
+AC6.3, AC6.5, AC6.6 BLOCKED (no Anthropic key / no staging / human grading).
+DONE + TESTED (commit `830b03a`, 2026-10-16):
+- Migration `20261020000008_tutor.sql`: `conversations`, `messages` (owner-only RLS, staff never read text; insert/feedback
+  only), `answer_reports` (copy made by definer `report_answer(msg, why)` when the student taps Report; staff read/resolve,
+  `reported_by` not selectable by staff), definer `tutor_activity(inst, student)` (doubt counts per subject, same callers
+  as `student_progress`), `match_chunks` now also returns `institute_id` and `similarity`. Fixtures in
+  `supabase/test_helpers.sql` (chat + report per institute), allowlist in `010` updated.
+  `supabase db reset && supabase test db` → Files=10, Tests=1064, PASS (new `090_tutor.sql`: 30 tests).
+- Dependency: `@anthropic-ai/sdk@0.131.0` in `packages/core` (`npm i -w @examedge/core @anthropic-ai/sdk@0.131.0`,
+  released 2026-09-30; planned in ADR-008).
+WIP (committed as WIP, NOT green):
+- `packages/core/src/ai/gateway.ts`: `metered()` now passes the reservation id to `run(recordId)` (stored as
+  `messages.usage_record_id`). `routing.ts`: model `fake-tutor-1` (cost 0).
+- `packages/core/src/ai/tutor.ts`: `tutorAnswer(meter, {institute, question, history, premium, retrieve}, onText)` —
+  reserves `tutor`/`tutor_premium` first, then retrieves (callback, so a blocked student never embeds), caps passages
+  (8, 24,000 chars) and history (6 turns), asserts every passage's institute (tenant_mismatch), generates, settles;
+  `assemble()` → paragraphs labelled `notes` (cites a passage) or `general` from citations only; refusal → friendly text.
+  `fakeTutor` quotes the best-matching sentence of up to 3 passages (content-word overlap, Hinglish stopwords).
+- `packages/core/src/ai/claude.ts`: real provider (`client.beta.messages.stream`, passages as `search_result` blocks with
+  citations, effort low (Haiku) / medium (Sonnet), Sonnet `fallbacks: 'default'` + beta `server-side-fallback-2026-07-01`,
+  `stop_reason === 'refusal'`, usage incl. cache tokens). Built from the SDK's own types via the claude-api skill.
+- Tests `tutor.test.ts`, `claude.test.ts` (recorded SSE stream through the SDK with a custom `fetch`).
+  `npx vitest run --project unit packages/core` → 37 passed, **1 FAILING**: `tutor.test.ts` "labels cited paragraphs…":
+  a cited segment that runs over a blank line also labels the NEXT paragraph as notes (overclaims). Intended fix in
+  `assemble()`: attach a segment's citations only to its first non-empty piece (`let cited = false` per segment; after
+  the first non-empty piece skip the citation loop). Not applied yet.
+
 ### Phase 5 — AI gateway, metering, quotas (sessions 10–11) — MERGED (PR #6, `b1f0795`)
 Scope = IMPLEMENTATION_ROADMAP Phase 5; decisions in ADR-025. Prices verified 2026-10-16 (official pricing page).
 AC status: AC5.1 ✅ (forbidden-pattern rule + grep) · AC5.2 BLOCKED (no Anthropic/Voyage key; real provider is written in
@@ -173,32 +203,35 @@ Design decisions already worked out for later phases (record as ADRs when built)
 | Pilot launch (Phase 10) | Q-01 legal opinion on minors' data |
 
 ## Failed checks
-- None open.
+- `packages/core/src/ai/tutor.test.ts` › assemble labels test (Phase 6 WIP, fix described under In progress).
 
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action
-0. If this is a fresh machine/session after a long pause: `cd ~/Documents/startup/examedge_ai && git checkout phase-5-ai-gateway
-   && git pull && npm ci && git config core.hooksPath .githooks`; `docker info` (else `open -a Docker` and wait);
-   `supabase start`; recreate the gitignored local env files if missing: `apps/web/.env.local` (NEXT_PUBLIC_SUPABASE_URL,
-   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY from `supabase status -o env`, DEMO_LOGIN_ENABLED=true) and root `.env.local`
-   (WORKER_DATABASE_URL=postgresql://worker:worker_local_only@127.0.0.1:54322/postgres, WORKER_STORAGE_EMAIL /
-   WORKER_STORAGE_PASSWORD = `LOCAL_WORKER` in `scripts/local-supabase.ts`). If tool versions changed (Node, Supabase CLI,
-   Docker), check `supabase --version` matches CI (2.121.0) or update CI to match.
-1. PR #6 `phase-5-ai-gateway` → `main` is OPEN (https://github.com/khushpal-cipher/ExamEdge_ai/pull/6, opened
-   2026-10-16; at handoff CI had 1 check passed, 1 pending, mergeable). Run `gh pr checks 6`; if a check failed, read
-   its log (`gh run view <id> --log-failed`), fix on `phase-5-ai-gateway`, push, recheck. When green:
-   `gh pr merge 6 --squash --delete-branch=false`, record the merge commit + CI run id under "Current phase" and
-   Completed, commit that PROGRESS update on `main`, push, then `git checkout main && git pull`.
-2. Phase 6 (tutor) on branch `phase-6-tutor`: state scope + AC6.1–AC6.6 first. Load the claude-api skill before any
-   Anthropic SDK code (the real provider lives only in `packages/core/src/ai/`, behind `AI_PROVIDER=anthropic`, BLOCKED
-   until a key exists). Build: conversations/messages migration + RLS + pgTAP (student-private, staff aggregates only);
-   web meter (`ai_reserve`/`ai_settle` via the user's Supabase client) for features `query_embed`, `tutor`,
-   `tutor_premium`; `match_chunks` retrieval; fake tutor answering from retrieved passages with real citations and
-   deterministic labels; streaming route handler (read node_modules/next/dist/docs route-handler docs first); Markdown
-   rendered with HTML and remote images disabled (T-SEC-19); feedback/report; Tutor pane in `/subjects/[id]`; "limit
-   reached" message on `AiBlocked`; T-AI-09 injection fixtures; E2E + browser check at 375 px.
+0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout phase-6-tutor && git pull && npm ci`;
+   `docker info` (else `open -a Docker`); `supabase start`; then `supabase db reset && npm run seed:demo`. Local env files
+   as before (`apps/web/.env.local`, root `.env.local`; see Phase 4 notes).
+1. Fix the failing `assemble()` test (see Phase 6 WIP above), run `npx vitest run --project unit` and
+   `npx tsc -p packages/core --noEmit`, `npm run lint`, commit.
+2. Web: meter over the user's Supabase client (`rpc('ai_reserve'|'ai_settle')`, like `workerMeter` in
+   `apps/worker/src/ingest.ts`); streaming route `apps/web/app/api/tutor/route.ts` (POST {subjectId, conversationId?,
+   question, premium}; institute from host, member check, create conversation + user message via RLS, `tutorAnswer`
+   with retrieve = `embed(meter,'query_embed',…)` → `rpc('match_chunks')` → document titles; NDJSON lines
+   `{t:'delta'}`/`{t:'done', message}`/`{t:'error', code}`; `AiBlocked` → quota "You've used today's AI limit. It resets
+   tomorrow." / budget / ai_disabled; insert assistant message with citations, answer_labels, model, usage_record_id;
+   `cache-control: private, no-store`). Read node_modules/next/dist/docs route handler + streaming docs first (done once:
+   `01-getting-started/15-route-handlers.md`, `03-api-reference/03-file-conventions/route.md` § Streaming).
+3. Safe Markdown renderer (React elements only: paragraphs, lists, bold/italic/code; images → alt text, links → plain
+   text, raw HTML shown as text; KaTeX deferred → record in ADR-026) + T-SEC-19 XSS corpus and T-AI-09 (20 injection
+   passages) unit tests.
+4. Tutor pane client component in `/subjects/[id]` (history of latest chat, New chat, streaming, label chips + citation
+   links `/documents/<id>/file#page=N`, 👍/👎, Report, "Solve step by step"); staff "Reported answers" list with Resolve
+   in the same pane; progress page "doubts asked" from `tutor_activity`.
+5. Integration test AC6.4: 1,000 `match_chunks` queries as a Demo student (incl. Rival canary "quokka saffron
+   lighthouse") → every row `institute_id` = Demo, no canary. Demo eval runner `evals/` (recall@8 on seeded notes).
+6. E2E `e2e/tutor.spec.ts` (ask → cited answer, report → teacher sees it, Rival REST 0 rows, limit reached), browser check
+   at 375 px, ADR-026 + DATABASE_DESIGN §4.4 update, full gate `npm run check`, PR into main, CI green, merge.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -206,6 +239,7 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 - Commands: `supabase start` / `supabase status` / `supabase test db`; scripts in root `package.json`.
 - Local Supabase: API http://127.0.0.1:54321, DB postgresql://postgres:postgres@127.0.0.1:54322/postgres (local defaults; keys via `supabase status -o env`, never commit them).
 - `@axe-core/playwright` 4.13.0 (session 5, `npm i -D`).
+- `@anthropic-ai/sdk` 0.131.0 (session 12, `npm i -w @examedge/core @anthropic-ai/sdk@0.131.0`).
 - Playwright Chromium (session 3, `npx playwright install chromium`, chromium-1243/headless-shell-1248 in ~/Library/Caches/ms-playwright).
 - Seed/ops: `npm run seed:demo`, `npm run create-institute`, `npm run audit`. Demo logins: owner@demo.test, admin@demo.test, teacher1-3@demo.test, student01-50@demo.test (same for @rival.test) via "Sign in as demo user".
 - `pdfjs-dist` 6.4.299 (session 8, `npm i -w @examedge/worker pdfjs-dist@6.4.299`; optional `@napi-rs/canvas` comes with it); `@supabase/supabase-js` added to worker deps.
@@ -226,4 +260,5 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 | 9 | 2026-10-15 | Phase 4 web UI browser-verified, worker env/CI, `e2e/documents.spec.ts`, logo upload; founder pausing subscription — handoff written | see `git log` |
 | 10 | 2026-10-16 | ADR-024, Phase 4 full gate green (2 test-fixture races fixed), PR #5 merged (`cbfb62e`); Phase 5 prices verified, usage migration written (pgTAP 2 failing, WIP) | see `git log` |
 | 11 | 2026-10-16 | Phase 5: pgTAP green + `080_usage.sql`, core gateway (routing/cost/metered), worker metering, `/usage` page, platform AI switches, AC5.3 concurrency + AC5.4 API tests; 2 real bugs fixed (safeupdate kill switch, phone layout); full gate green; PR #6 opened, CI pending at handoff | `0802398` |
+| 12 | 2026-10-16 | PR #6 merged (`b1f0795`). Phase 6: tutor schema + RLS + pgTAP (1064 PASS), Anthropic SDK 0.131.0, core tutor/fake/Claude provider + tests WIP (1 unit test failing, fix known) | see `git log` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |
