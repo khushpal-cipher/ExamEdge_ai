@@ -128,6 +128,7 @@ function Actions({ m, onRated }: { m: ChatMessage; onRated: (f: ChatMessage['fee
 export function Tutor(props: {
   subjectId: string;
   subjectName: string;
+  hasLibrary: boolean;
   conversationId: string | null;
   messages: ChatMessage[];
 }) {
@@ -212,8 +213,9 @@ export function Tutor(props: {
       <div className="stack chat" role="log" aria-label="Chat" aria-busy={busy}>
         {messages.length === 0 && !busy && (
           <p className="empty reading">
-            Ask a doubt about {props.subjectName}. Answers come from your institute&apos;s notes (with page links) and
-            the reviewed ExamEdge library; anything else is marked &quot;General explanation&quot;.
+            Ask a doubt about {props.subjectName}. Answers come from your institute&apos;s notes (with page links)
+            {props.hasLibrary && ' and the reviewed ExamEdge library'}; anything else is marked &quot;General
+            explanation&quot;.
           </p>
         )}
         {messages.map((m, i) =>

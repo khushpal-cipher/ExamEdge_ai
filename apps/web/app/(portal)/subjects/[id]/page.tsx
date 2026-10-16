@@ -159,12 +159,14 @@ export default async function SubjectWorkspace(props: { params: Promise<{ id: st
                       {c.topics.map((t) => (
                         <li key={t.id}>
                           {t.name}:{' '}
-                          {t.library_items.map((i, n) => (
-                            <span key={i.id}>
-                              {n > 0 && ' · '}
-                              <a href={`/library/${i.id}`}>{KIND[i.kind]}</a>
-                            </span>
-                          ))}
+                          {t.library_items
+                            .toSorted((a, b) => a.kind.localeCompare(b.kind))
+                            .map((i, n) => (
+                              <span key={i.id}>
+                                {n > 0 && ' · '}
+                                <a href={`/library/${i.id}`}>{KIND[i.kind]}</a>
+                              </span>
+                            ))}
                         </li>
                       ))}
                     </ul>
@@ -208,6 +210,7 @@ export default async function SubjectWorkspace(props: { params: Promise<{ id: st
               key={chat?.id ?? 'new'}
               subjectId={subject.id}
               subjectName={subject.name}
+              hasLibrary={library.length > 0}
               conversationId={chat?.id ?? null}
               messages={messages}
             />
