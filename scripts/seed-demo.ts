@@ -4,9 +4,12 @@
 import { randomUUID } from 'node:crypto';
 import pg from 'pg';
 import { drain } from '../apps/worker/src/ingest';
+import type { Meter } from '../packages/core/src/ai/gateway';
+import { embedLibraryItem } from '../packages/core/src/ai/library';
 import { workerDownloader } from '../apps/worker/src/storage';
 import { DEMO_PASSWORD } from '../packages/core/src/demo';
 import { NOTES } from './demo-notes';
+import { AUTHOR_MODEL, JEE_PHYSICS, PROVENANCE } from './library-jee-physics';
 import { ensureWorkerAccount, localSupabase, localWorkerEnv } from './local-supabase';
 import { makePdf } from './make-pdf';
 
@@ -518,6 +521,76 @@ async function seedTests(
   }
 }
 
+// ---------------------------------------------------------------- ExamEdge library (Phase 8)
+// Ops scripts run as postgres, so they write the platform usage row directly (same shape as ai_reserve_platform).
+const opsMeter: Meter = {
+  reserve: async (feature, provider, model, reserve) => {
+    const { rows } = await db.query(
+      `insert into public.usage_records (feature, provider, model, reserved_micro_usd) values ($1, $2, $3, $4)
+       returning id`,
+      [feature, provider, model, reserve],
+    );
+    return { id: rows[0].id as string, blocked: null };
+  },
+  settle: async (id, usage, cost, outcome) => {
+    await db.query(
+      `update public.usage_records set input_tokens = $2, cost_micro_usd = $3, outcome = $4, settled_at = now()
+       where id = $1`,
+      [id, usage.input_tokens ?? 0, cost, outcome],
+    );
+  },
+};
+
+// JEE Main Physics, published as "reviewed" by the demo platform admin (stand-in: no expert reviewer yet, see
+// PROVENANCE), and mapped to Demo Classes' Physics. Rival stays unmapped.
+async function seedLibrary() {
+  const one = async (sql: string, args: unknown[]) => (await db.query(sql, args)).rows[0].id as string;
+  const reviewer = users.get('platform@examedge.test')!;
+  const subject = await one(
+    `insert into public.library_subjects (exam_id, name) select id, 'Physics' from public.exams where code = 'JEE_MAIN'
+     returning id`,
+    [],
+  );
+  let items = 0;
+  for (const [ci, c] of JEE_PHYSICS.entries()) {
+    const chapter = await one(
+      'insert into public.library_chapters (subject_id, position, name) values ($1, $2, $3) returning id',
+      [subject, ci + 1, c.name],
+    );
+    for (const [ti, t] of c.topics.entries()) {
+      const topic = await one(
+        'insert into public.library_topics (chapter_id, position, name) values ($1, $2, $3) returning id',
+        [chapter, ti + 1, t.name],
+      );
+      for (const [kind, body] of [
+        ['explanation', t.explanation],
+        ['formula_sheet', t.formulas],
+      ] as const) {
+        const item = await one(
+          `insert into public.library_items (topic_id, kind, content, status, provenance, generated_by_model,
+             created_by, reviewed_by, reviewed_at, published_at)
+           values ($1, $2, $3, 'published', $4, $5, $6, $6, now(), now()) returning id`,
+          [topic, kind, JSON.stringify({ body }), PROVENANCE, AUTHOR_MODEL, reviewer],
+        );
+        const { model, chunks } = await embedLibraryItem(opsMeter, t.name, body);
+        for (const [i, ch] of chunks.entries())
+          await db.query(
+            `insert into public.library_chunks (item_id, subject_id, chunk_index, content, embedding, embedding_model)
+             values ($1, $2, $3, $4, $5, $6)`,
+            [item, subject, i, ch.content, ch.embedding, model],
+          );
+        items++;
+      }
+    }
+  }
+  await db.query(
+    `update public.subjects set library_subject_id = $1
+     where name = 'Physics' and institute_id = (select id from public.institutes where slug = 'demo')`,
+    [subject],
+  );
+  console.log(`Library: JEE Main Physics, ${JEE_PHYSICS.length} chapters, ${items} published items.`);
+}
+
 await db.connect();
 try {
   const { rowCount } = await db.query(`select 1 from public.institutes where slug in ('demo', 'rival')`);
@@ -530,6 +603,7 @@ try {
   await db.query(`insert into private.platform_admins (user_id, granted_by) values ($1, 'seed-demo')`, [
     await user('platform@examedge.test', 'Platform Admin'),
   ]);
+  await seedLibrary();
   await db.query('commit');
   await processDocuments();
   console.log(

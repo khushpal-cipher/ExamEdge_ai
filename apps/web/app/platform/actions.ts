@@ -5,6 +5,8 @@
 import { randomUUID } from 'node:crypto';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
+import { AiBlocked, type Meter } from '@examedge/core/ai/gateway';
+import { embedLibraryItem } from '@examedge/core/ai/library';
 import { log } from '@examedge/core/log';
 import { supabase } from '@/lib/supabase';
 import { currentHost, isAdminHost, isUuid, rootHost } from '@/lib/tenant';
@@ -153,4 +155,153 @@ export async function setGlobalAi(form: FormData) {
   const { error } = await db.rpc('set_ai_enabled', { enabled: form.get('enabled') === 'true' });
   if (error) log.error('platform.set_ai_enabled_failed', { code: error.code });
   redirect(error ? '/?error=ai' : '/');
+}
+
+// ---------------------------------------------------------------- ExamEdge library (ADR-027)
+// Writes run as the aal2 platform admin; RLS, the review trigger and the publish RPC enforce the workflow again.
+type DbError = { code?: string; message?: string } | null;
+
+function back(path: string, error: DbError, ok = 'saved'): never {
+  if (!error) redirect(`${path}?ok=${ok}`);
+  const code =
+    error.message === 'not_reviewed'
+      ? 'not_reviewed'
+      : ({ '23505': 'duplicate', '23514': 'invalid', '23502': 'invalid' }[error.code ?? ''] ?? 'failed');
+  if (code === 'failed') log.error('platform.library_failed', { path, code: error.code });
+  redirect(`${path}?error=${code}`);
+}
+
+const field = (form: FormData, key: string, max = 200) =>
+  String(form.get(key) ?? '')
+    .trim()
+    .slice(0, max);
+const KINDS = ['explanation', 'formula_sheet', 'worked_example'];
+
+export async function createLibrarySubject(form: FormData) {
+  const db = await requireAal2();
+  const exam = form.get('exam_id');
+  if (!isUuid(exam)) back('/library', { code: '23514' });
+  const { data, error } = await db
+    .from('library_subjects')
+    .insert({ exam_id: exam, name: field(form, 'name', 120) })
+    .select('id')
+    .single();
+  back(error ? '/library' : `/library/${data!.id}`, error);
+}
+
+export async function createLibraryChapter(form: FormData) {
+  const db = await requireAal2();
+  const subject = form.get('subject_id');
+  if (!isUuid(subject)) notFound();
+  const { count } = await db
+    .from('library_chapters')
+    .select('id', { count: 'exact', head: true })
+    .eq('subject_id', subject);
+  const { error } = await db
+    .from('library_chapters')
+    .insert({ subject_id: subject, name: field(form, 'name'), position: (count ?? 0) + 1 });
+  back(`/library/${subject}`, error);
+}
+
+export async function createLibraryTopic(form: FormData) {
+  const db = await requireAal2();
+  const [subject, chapter] = [form.get('subject_id'), form.get('chapter_id')];
+  if (!isUuid(subject) || !isUuid(chapter)) notFound();
+  const { count } = await db
+    .from('library_topics')
+    .select('id', { count: 'exact', head: true })
+    .eq('chapter_id', chapter);
+  const { error } = await db
+    .from('library_topics')
+    .insert({ chapter_id: chapter, name: field(form, 'name'), position: (count ?? 0) + 1 });
+  back(`/library/${subject}`, error);
+}
+
+// A new item is always a draft by its author (trigger); the reviewer is whoever marks it reviewed.
+export async function createLibraryItem(form: FormData) {
+  const db = await requireAal2();
+  const topic = form.get('topic_id');
+  const kind = field(form, 'kind');
+  if (!isUuid(topic) || !KINDS.includes(kind)) notFound();
+  const { data, error } = await db
+    .from('library_items')
+    .insert({
+      topic_id: topic,
+      kind,
+      content: { body: field(form, 'body', 20000) },
+      provenance: field(form, 'provenance', 1000),
+    })
+    .select('id')
+    .single();
+  if (error) back(`/library/topics/${topic}`, error);
+  back(`/library/items/${data!.id}`, null);
+}
+
+// Saving changed text sends the item back to draft (trigger): it needs a new review before students see it again.
+export async function saveLibraryItem(form: FormData) {
+  const db = await requireAal2();
+  const id = form.get('item_id');
+  const kind = field(form, 'kind');
+  if (!isUuid(id) || !KINDS.includes(kind)) notFound();
+  const { error } = await db
+    .from('library_items')
+    .update({ kind, content: { body: field(form, 'body', 20000) }, provenance: field(form, 'provenance', 1000) })
+    .eq('id', id);
+  back(`/library/items/${id}`, error);
+}
+
+const STATUS_OK: Record<string, string> = { reviewed: 'reviewed', draft: 'draft', retired: 'retired' };
+
+export async function setLibraryStatus(form: FormData) {
+  const db = await requireAal2();
+  const id = form.get('item_id');
+  const status = field(form, 'status');
+  if (!isUuid(id) || !STATUS_OK[status]) notFound();
+  const { error } = await db.from('library_items').update({ status }).eq('id', id);
+  back(`/library/items/${id}`, error, STATUS_OK[status]);
+}
+
+const platformMeter = (db: Awaited<ReturnType<typeof supabase>>): Meter => ({
+  reserve: async (feat, prov, mdl, reserve) => {
+    const { data, error } = await db.rpc('ai_reserve_platform', { feat, prov, mdl, reserve }).single();
+    if (error) throw error;
+    const r = data as { record_id: string; blocked: string | null };
+    return { id: r.record_id, blocked: r.blocked };
+  },
+  settle: async (rid, usage, cost, result) => {
+    const { error } = await db.rpc('ai_settle_platform', { rid, usage, cost, result });
+    if (error) throw error;
+  },
+});
+
+// Chunk + embed the reviewed text (metered platform call), then swap chunks and publish in one transaction.
+export async function publishLibraryItem(form: FormData) {
+  const db = await requireAal2();
+  const id = form.get('item_id');
+  if (!isUuid(id)) notFound();
+  const path = `/library/items/${id}`;
+  const { data: item } = await db
+    .from('library_items')
+    .select('status, content, library_topics(name)')
+    .eq('id', id)
+    .maybeSingle();
+  if (!item) notFound();
+  if (item.status === 'draft') back(path, { message: 'not_reviewed' });
+  let embedded;
+  try {
+    embedded = await embedLibraryItem(
+      platformMeter(db),
+      (item.library_topics as unknown as { name: string }).name,
+      (item.content as { body: string }).body,
+    );
+  } catch (e) {
+    if (e instanceof AiBlocked) redirect(`${path}?error=ai`);
+    throw e;
+  }
+  const { error } = await db.rpc('publish_library_item', {
+    item: id,
+    chunks: embedded.chunks,
+    model: embedded.model,
+  });
+  back(path, error, 'published');
 }

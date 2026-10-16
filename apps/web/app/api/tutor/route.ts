@@ -4,7 +4,7 @@
 import { z } from 'zod';
 import { embed, toVector } from '@examedge/core/ai/embed';
 import { AiBlocked, type Meter } from '@examedge/core/ai/gateway';
-import { tutorAnswer, type Passage } from '@examedge/core/ai/tutor';
+import { mergeLayers, tutorAnswer, type Passage } from '@examedge/core/ai/tutor';
 import { log } from '@examedge/core/log';
 import { supabase } from '@/lib/supabase';
 import { currentHost, currentInstitute, currentMember } from '@/lib/tenant';
@@ -35,23 +35,41 @@ const webMeter = (db: Db, inst: string): Meter => ({
   },
 });
 
-async function retrieve(db: Db, meter: Meter, subject: string, question: string): Promise<Passage[]> {
+type Subject = { id: string; library_subject_id: string | null };
+type NotesRow = Omit<Extract<Passage, { document_id: string }>, 'title'>;
+type LibraryRow = { item_id: string; topic: string; content: string; score: number };
+
+// Both layers with one query embedding: the institute's notes (RLS: published to the caller's batches) and, when the
+// subject is mapped, the ExamEdge library (RLS: published items).
+async function retrieve(db: Db, meter: Meter, subject: Subject, question: string): Promise<Passage[]> {
   const { vectors } = await embed(meter, 'query_embed', [question], 'query');
-  const { data: rows, error } = await db.rpc('match_chunks', {
-    query_embedding: toVector(vectors[0]!),
-    query_text: question,
-    subject,
-    k: 30,
-  });
-  if (error) throw error;
-  const chunks = rows as Omit<Passage, 'title'>[];
-  if (!chunks.length) return [];
-  const { data: docs } = await db
-    .from('documents')
-    .select('id, title')
-    .in('id', [...new Set(chunks.map((c) => c.document_id))]);
+  const query = { query_embedding: toVector(vectors[0]!), query_text: question };
+  const [notes, library] = await Promise.all([
+    db.rpc('match_chunks', { ...query, subject: subject.id, k: 30 }),
+    subject.library_subject_id
+      ? db.rpc('match_library_chunks', { ...query, subject: subject.library_subject_id, k: 20 })
+      : { data: [], error: null },
+  ]);
+  if (notes.error) throw notes.error;
+  if (library.error) throw library.error;
+  const chunks = notes.data as NotesRow[];
+  const { data: docs } = chunks.length
+    ? await db
+        .from('documents')
+        .select('id, title')
+        .in('id', [...new Set(chunks.map((c) => c.document_id))])
+    : { data: [] };
   const title = new Map((docs ?? []).map((d) => [d.id as string, d.title as string]));
-  return chunks.map((c) => ({ ...c, title: title.get(c.document_id) ?? 'Notes' }));
+  return mergeLayers(
+    chunks.map((c) => ({ ...c, source_kind: 'institute', title: title.get(c.document_id) ?? 'Notes' })),
+    (library.data as LibraryRow[]).map((r) => ({
+      source_kind: 'library',
+      library_item_id: r.item_id,
+      title: r.topic,
+      content: r.content,
+      score: r.score,
+    })),
+  );
 }
 
 export async function POST(req: Request) {
@@ -69,7 +87,7 @@ export async function POST(req: Request) {
   // RLS: a student only sees subjects of their own batches.
   const { data: subject } = await db
     .from('subjects')
-    .select('id')
+    .select('id, library_subject_id')
     .eq('institute_id', institute.id)
     .eq('id', subjectId)
     .maybeSingle();
@@ -109,7 +127,7 @@ export async function POST(req: Request) {
             question,
             history,
             premium,
-            retrieve: () => retrieve(db, meter, subjectId, question),
+            retrieve: () => retrieve(db, meter, subject as Subject, question),
           },
           (text) => send({ t: 'delta', text }),
         );
