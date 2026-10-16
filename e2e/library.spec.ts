@@ -104,6 +104,7 @@ test('owners map a subject to the library; teachers only see the mapping', async
   await expect(page.getByText('ExamEdge library: JEE Main · Physics')).toBeVisible();
   await expect(page.getByRole('combobox', { name: 'ExamEdge library' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Sign out' }).click();
+  await expect(page.getByLabel('Demo user email')).toBeVisible();
 
   await login(page, 'owner@demo.test');
   await page.goto(`${DEMO}/subjects`);
