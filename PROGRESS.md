@@ -11,7 +11,7 @@ Last updated: 2026-10-16
 **Phase 5 MERGED** into `main` (PR #6, squash commit `b1f0795`, CI green: check + secrets, run 38805190604, 2026-10-16).
 **Phase 6 MERGED** into `main` (PR #7, squash commit `7863900`, CI green: check + secrets, run 38841699259 — unit 104, pgTAP 1064, integration 21, E2E 22/22 against the production build, 2026-10-16).
 **Phase 8 MERGED** into `main` (PR #8, squash commit `bce1046`, CI green: check + secrets, run 38848935766 — unit 111, pgTAP 1107, integration 21, E2E 24/24 against the production build, 2026-10-16).
-**Phase 9 (Studio basics) — IN PROGRESS** on `phase-9-studio` (branched from `main` at `bce1046`; session 17). See "In progress".
+**Phase 9 (Studio basics) — local gate green, PR open** on `phase-9-studio` (branched from `main` at `bce1046`; sessions 17–18). See "In progress".
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -56,284 +56,27 @@ DONE + TESTED (2026-10-16, session 17):
   sources because citations cannot combine with structured outputs; Sonnet for summary + fallbacks, Haiku others) —
   real provider BLOCKED (no key), tested against a recorded response. `zod` added to `packages/core` deps (already in
   the workspace). `fnv1a` exported from embed.ts; `fake-studio-1` in routing.ts.
-WRITTEN, NOT YET COMMITTED AT HANDOFF → committed as WIP (see session log); typecheck, lint, unit 132/132 PASS:
-- Demo generator skips headings (sentences must end with . ? ! ।) — unit test updated.
-- Web: `apps/web/lib/meter.ts` (webMeter moved out of `api/tutor/route.ts`), `apps/web/lib/studio.ts` (+test:
-  `textFields`/`withTexts`/`fieldLabel` for the generic text editor), `app/(portal)/studio/actions.ts` (`generate`
-  with sha256 input hash over kind+chapter+chunk ids and reuse before reserving, `editArtifact`, `publishArtifact`,
-  `withdrawArtifact`, `deleteArtifact`, `submitQuiz` → rpc `submit_practice` + explanations after grading),
-  `app/(portal)/studio/[id]/page.tsx` (summary/flashcards `<details>`/mind map nested list/quiz; citation chips;
-  staff publish + edit + withdraw; student tries), `studio/[id]/quiz.tsx` (client runner, no answers sent before
-  grading), Studio pane in `subjects/[id]/page.tsx` (lists + Generate form), flash codes (quota, budget, ai_disabled,
-  no_sources, refused, generation_failed, generated, reused, saved_draft), progress pages show `practice_activity`.
-- Browser check so far (dev server via preview_start "web", after `db reset && seed:demo`): teacher1 → Physics →
-  Studio → Rotational Motion + Summary → Generate → `/studio/<id>?ok=generated`, draft badge, 1 cited section, publish
-  form lists "JEE 2027 Morning". NOT yet checked: publish → student sees it; student quiz take + score + progress page;
-  flashcards/mind map render; reuse (second Generate → "reused", no new usage row); Rival 404 on Demo artifact; 375 px.
-### Phase 8 — shared library engine + pilot seed (sessions 15–16) — MERGED (PR #8, `bce1046`)
-Scope = IMPLEMENTATION_ROADMAP Phase 8. Q-02 default **JEE Physics** (ADR-027). Reviewer = aal2 platform admin (no
-expert hired). Library items are text kinds only (explanation, formula sheet, worked example); question/flashcard kinds
-wait for Studio/generation. Opus/Batch generation BLOCKED (no key) → hand-written demo seed.
-AC plan: AC8.2 (DB check `status <> 'draft' ⇒ reviewed_by`, reviewer = the caller, edits reset to draft) and AC8.3
-(`provenance not null`) proven by pgTAP; AC8.4 recall@8 on library questions via `npm run eval`; AC8.1 PARTIAL — full
-JEE Main Physics chapter list, topics + reviewed explanation/formula sheet for the 4 demo chapters only; the rest of the
-syllabus BLOCKED (Opus generation + expert reviewer).
-DONE + TESTED (2026-10-16, session 15):
-- `5a420d4` migration `20261021000009_library.sql`: library_subjects/chapters/topics/items/chunks + RLS (read: any
-  signed-in user, items/chunks published only; write: aal2 platform admin), trigger `guard_library_item` (insert =
-  draft by caller; `reviewed` sets reviewed_by = caller, no column grant; edit of content/kind/topic → draft, version+1),
-  check `status = 'draft' or reviewed_by+reviewed_at`, kinds explanation|formula_sheet|worked_example only, HNSW on
-  library_chunks, definer `publish_library_item(item, chunks, model)` (chunk swap + publish + audit `library.publish`),
-  invoker `match_library_chunks` (hybrid RRF, `hnsw.iterative_scan = relaxed_order`), `subjects.library_subject_id`
-  (owner/admin update), platform metering: `usage_records.institute_id` nullable, feature `library_embed` (who
-  `platform`), definers `ai_reserve_platform`/`ai_settle_platform`, `ai_finish` matches null institute.
-  `010` allowlist + nullable exception for usage_records. pgTAP `100_library.sql` 40 tests.
-  `supabase db reset && supabase test db` → Files=11, Tests=1104, PASS.
-- Core (commit after `5a420d4`): `Passage`/`Citation` unions with `source_kind: 'library'`, label
-  `notes|library|general`, `mergeLayers` (top 8, ≤ 6 per layer, by fused score), Claude source `lib:<id>` / title
-  "ExamEdge library: <topic>", PROMPT_VERSION `tutor-v2`, `packages/core/src/ai/library.ts` (chunks ≤ 1,600 chars
-  headed by topic, `embedLibraryItem` metered `library_embed`). `npx vitest run --project unit packages/core` → 46/46.
-DONE + TESTED in session 16 (2026-10-16):
-- `39690b7` AC8.4 ✅ migration `20261022000010_keyword_or.sql`: invoker `private.keyword_query(q)` = OR of the
-  question's words minus English stop words (`ts_lexize('english_stem', w) = '{}'`), used by `match_chunks` and
-  `match_library_chunks` (keyword half used to AND every word, so it matched nothing for natural questions).
-  `npm run eval -- library-v2` → recall@8 1.0 (29 notes questions), **library recall@8 1.0 (21)**, cross-tenant 0,
-  p50 9 ms / p95 13 ms (`evals/results/2026-10-16-library-v2.json`; v1 = the failing 0.81 run, kept for history).
-  pgTAP `100_library.sql` 43 tests (+3: OR query, stop-word-only → null, one content word enough); its fixture now
-  deletes the seeded library inside its transaction (it clashed with `seed:demo`, duplicate "Physics").
-  `supabase test db` after `db reset && seed:demo` → Files=11, Tests=1107, PASS.
-- Web code from session 15 verified: `npm run typecheck`, `npm run lint` (+ forbidden), `npm test` 111/111 PASS.
-  Browser check (built-in browser, the dev server already on :3000 serving this checkout — Next refuses a second
-  `next dev` in the same folder): student01 Physics Sources lists 4 library chapters × 3 topics (explanation +
-  formula sheet), tutor "What is escape velocity?" → chips "ExamEdge library: Escape velocity and orbital velocity"
-  / "Kepler's laws" → `/library/<id>` page renders; 375 px: subject page and library page scrollWidth 375, nothing
-  wider; owner `/subjects` select per subject, mapping Chemistry → "Saved." and DB updated (then reverted); teacher1
-  sees "ExamEdge library: JEE Main · Physics" text, no select; Rival student01 Physics: no library section, answer
-  has no library chips. Fixes `caa070c`: items sorted by kind per topic; tutor intro mentions the library only when
-  the subject is mapped.
-- `663a7b2` `e2e/library.spec.ts` 2/2 (against the :3000 dev server, run twice, cleans up): fresh platform admin
-  enrols TOTP → `/library` → JEE Main · Physics → adds a topic under Gravitation → new explanation (draft, no Publish
-  button) → Mark as reviewed → Publish → DB: published, reviewed_by = that admin, 1 chunk → student06 asks with the
-  item's unique word → chip "ExamEdge library: <topic>" links `/library/<item>` (opens in a new tab) → item page
-  shows the text → admin edits → draft → student gets 404 at once. Owner maps Chemistry (Saved + DB), teacher has no
-  select.
-- `4d563c4` docs: ADR-027, DATABASE_DESIGN §4.1 (library tables as built) + §4.4 labels, AI_PIPELINE §4 keyword
-  half, Q-02 note.
-AC status: AC8.2 ✅ (pgTAP + E2E) · AC8.3 ✅ (pgTAP) · AC8.4 ✅ demo eval (real threshold needs real embeddings +
-pilot golden set) · AC8.1 PARTIAL (full chapter list; 12 topics with reviewed explanation + formula sheet for the 4
-demo chapters only; rest BLOCKED: Opus generation needs a key, expert reviewer not hired) · Batch-API generation
-BLOCKED (no key). Known nit (not fixed): two chips can share a label when the explanation and the formula sheet of
-one topic are both cited.
-
-### Phase 6 — source-grounded AI tutor (sessions 12–14) — MERGED (PR #7, `7863900`)
-Scope = IMPLEMENTATION_ROADMAP Phase 6. AC plan: AC6.4 (0 cross-tenant passages in 1,000 queries) provable locally as an
-integration test; AC6.1 eval harness on demo data (real threshold BLOCKED: real embeddings + pilot golden set); AC6.2,
-AC6.3, AC6.5, AC6.6 BLOCKED (no Anthropic key / no staging / human grading).
-DONE + TESTED (commit `830b03a`, 2026-10-16):
-- Migration `20261020000008_tutor.sql`: `conversations`, `messages` (owner-only RLS, staff never read text; insert/feedback
-  only), `answer_reports` (copy made by definer `report_answer(msg, why)` when the student taps Report; staff read/resolve,
-  `reported_by` not selectable by staff), definer `tutor_activity(inst, student)` (doubt counts per subject, same callers
-  as `student_progress`), `match_chunks` now also returns `institute_id` and `similarity`. Fixtures in
-  `supabase/test_helpers.sql` (chat + report per institute), allowlist in `010` updated.
-  `supabase db reset && supabase test db` → Files=10, Tests=1064, PASS (new `090_tutor.sql`: 30 tests).
-- Dependency: `@anthropic-ai/sdk@0.131.0` in `packages/core` (`npm i -w @examedge/core @anthropic-ai/sdk@0.131.0`,
-  released 2026-09-30; planned in ADR-008).
-DONE + TESTED in session 13 (2026-10-16):
-- `9b35ec8` core tutor green: `assemble()` attaches a segment's citations only to its first non-empty paragraph.
-  Core tutor (fake + Claude provider, metered `run(recordId)`) as described in commit `7826aeb`.
-- `33cd367` `apps/web/app/api/tutor/route.ts`: POST {subjectId, conversationId?, question, premium}; Origin host must
-  equal the request host (403 `bad_origin`); institute from host; `webMeter` = user-session `rpc ai_reserve/ai_settle`;
-  retrieve = `embed(query_embed)` → `rpc match_chunks` → document titles (RLS); NDJSON `{t:'delta'}` / `{t:'done',
-  conversationId, message}` / `{t:'error', code: quota|budget|ai_disabled|failed}`; conversation + user message +
-  assistant message saved only AFTER the answer (a blocked question is not a doubt); `private, no-store`.
-  Fake tutor tie-break prefers the fuller sentence over a heading.
-  Browser/API check (student01, dev server): cited answer, follow-up keeps the conversation, Hinglish ok, Rival canary
-  "quokka saffron lighthouse" → not-found text, 0 citations; bad Origin → 403.
-- `3515a61` `apps/web/lib/markdown.ts` safe renderer (React `createElement` only; paragraphs, lists, bold/italic, code,
-  ``` blocks, headings as bold lines; images → alt text, links → label; `$…$` shown as `<code class="math">`, KaTeX
-  deferred — shortcut comment in file). `apps/web/lib/markdown.test.ts`: renderer cases, T-SEC-19 corpus (20 payloads)
-  and T-AI-09 (20 injection passages through `tutorAnswer` with the fake provider + renderer: only allowed tags, no
-  attributes except class, no system prompt echo, citations only to sent passages). Real-model injection behaviour
-  BLOCKED (no key).
-- `7fd9b8a` UI: `app/(portal)/subjects/[id]/tutor.tsx` (client: streaming, per-paragraph chips "From your institute's
-  notes: <title>, p.N" → `/documents/<id>/file#page=N` or "General explanation", 👍/👎 (`aria-label`, `aria-pressed`),
-  Report with optional reason, "Solve step by step" (premium), New chat, blocked-reason texts), `actions.ts`
-  (`rateAnswer`, `reportAnswer`, `resolveReport` → flash `resolved`), `page.tsx` loads the user's latest chat for the
-  subject; staff see "Reported answers (n)" with Resolve (no reporter shown). `progress-view.tsx` + both progress pages
-  show doubts per subject from `tutor_activity`. CSS `.chat .question`, `.md`, `.answer-part`.
-  `assemble()` now dedupes citations per document page (+ unit test). Unit 104/104, typecheck, lint, prettier PASS.
-  Browser-verified: student asks → cited answer streams; rate persists (DB checked); report saved with reason;
-  teacher1 sees report, Resolve → "Marked as resolved." (0 open); teacher view of student01 progress →
-  "Physics: 5 doubts asked".
-DONE + TESTED in session 14 (2026-10-16):
-- `26c96e3` AC6.4 ✅ `apps/web/lib/retrieval.int.test.ts`: two fresh institutes (`tests.make_institute`) + 8 notes each
-  (B's carry a canary), A's student (created through the auth API — SQL-made users cannot sign in via GoTrue) calls
-  `rpc match_chunks` 1,000 times through PostgREST with A's Physics, A's Chemistry (not in batch) and B's Physics ids
-  and B's canary text → every row `institute_id` = A, no canary, non-Physics scopes empty, every A-Physics query
-  non-empty (no vacuous pass). `npx vitest run --project integration apps/web/lib/retrieval.int.test.ts` → 1 passed.
-- `b247d80` eval runner `npm run eval -- <change>` (`evals/run.ts`, golden set `evals/datasets/demo-retrieval.json`:
-  29 in-scope questions with expected document + page incl. Hinglish, 5 out of scope incl. the unpublished draft and
-  the Rival canary). Runs as student01 (JEE) / student26 (NEET, Biology) after `seed:demo`. Demo baseline
-  `evals/results/2026-10-16-demo-baseline.json`: recall@8 1.0, cross-tenant rows 0, retrieval p50 6 ms / p95 19 ms.
-  Honest note: the demo corpus is ~2 short documents per subject, so 1.0 proves the harness, not retrieval quality.
-- `c16c2bc` `e2e/tutor.spec.ts` 4/4 (against the running dev server): student05 asks → chip "From your institute's
-  notes: Rotational Motion …, p.1" linking `/documents/<id>/file#page=1`, 👍 persists, report with reason, chat
-  reloads; teacher1 sees the report (by reason) and resolves → "Marked as resolved."; privacy (own SQL fixture):
-  owner reads own message, Rival student/owner read nothing and `report_answer` fails, Demo teacher/owner read no
-  messages/conversations but see the report copy, a classmate can't read/rate; daily limit (counter set to the
-  quota for student07) → "You've used today's AI limit. It resets tomorrow.", question kept in the box, nothing
-  saved; foreign/missing Origin → 403 `bad_origin`, `private, no-store`.
-- Browser check at 375 px (built-in browser, `resize_window` mobile, then desktop): student01 Physics tutor tab,
-  cited answer with 3 note chips + 1 "General explanation", rate/report row, input refocused; `scrollWidth` 375,
-  no element wider than the viewport.
-- `b2730b8` docs: ADR-026, DATABASE_DESIGN §4.4 (answer_reports, tutor_activity, report_answer, no `deleted_at`,
-  match_chunks returns institute + similarity).
-AC status: AC6.4 ✅ · AC6.1 harness ✅ / real threshold BLOCKED (real embeddings + pilot golden set) · AC6.2, AC6.3,
-AC6.5, AC6.6 BLOCKED (Anthropic key, staging, human grading) · T-SEC-19 ✅ · T-AI-09 ✅ (demo provider; real model
-BLOCKED) · T-ISO-06 ✅ (pgTAP + AC6.4 test).
-Local gate (2026-10-16, commit `b2730b8`): `supabase db reset && npm run seed:demo && npm run check` → format, lint +
-forbidden, typecheck PASS; unit 104/104; pgTAP Files=10 Tests=1064 PASS; integration 21/21 (incl. AC6.4); build
-(+bundle scan) PASS; E2E 21 passed / 1 failed: `portals.spec.ts:142` T-SEC-05 expected `private` in Cache-Control.
-Cause: port 3000 was held by another Claude session's `next dev` (started 07:45), so Playwright reused it
-(`reuseExistingServer`) instead of `npm run start`; `next dev` sends `Cache-Control: no-store`. Checked: production
-server (`next start -p 3100`) on `demo.localhost:3100/` sends `private, no-cache, no-store, max-age=0, must-revalidate`,
-and `/api/tutor` with a foreign Origin → 403 `private, no-store`. The full E2E against the production build therefore
-runs only in CI on the PR (not weakened, not skipped). All other E2E also ran against that dev server.
-
-### Phase 5 — AI gateway, metering, quotas (sessions 10–11) — MERGED (PR #6, `b1f0795`)
-Scope = IMPLEMENTATION_ROADMAP Phase 5; decisions in ADR-025. Prices verified 2026-10-16 (official pricing page).
-AC status: AC5.1 ✅ (forbidden-pattern rule + grep) · AC5.2 BLOCKED (no Anthropic/Voyage key; real provider is written in
-Phase 6 with the claude-api skill) · AC5.3 ✅ (`usage.int.test.ts`, 100 parallel calls) · AC5.4 ✅ (pgTAP + API-path test).
-Also BLOCKED: budget alert emails (Resend) → 50/80/100 % banner on `/usage` instead; provider spend limits (no accounts).
-Deferred to Phase 10: enforcing `max_upload_bytes` / `max_storage_bytes` / `max_concurrent_jobs` (stored, not enforced).
-Built (commits `f80e65b`, `0a46349`, `cd4419c`, `6f6f03a`, `aa5dcce`):
-- Migration `20261019000007_usage.sql`: `usage_records` (reserve → settle, outcome `pending|ok|error|refused|quota_blocked`),
-  `usage_counters` (India day, students only), `institute_quotas.ai_enabled`, `private.ai_features`, `private.settings`
-  (global switch); definers `ai_reserve`/`ai_settle` (member), `ai_reserve_job`/`ai_settle_job` (worker), `ai_globally_enabled`,
-  `set_ai_enabled` (aal2, audited); public wrappers + `usage_summary(inst)`. pgTAP `080_usage.sql` (59 tests); `010` allowlist and
-  `test_helpers.sql` fixture (usage row + counter per institute) updated.
-- Core: `packages/core/src/ai/routing.ts` (model → provider + integer prices, `cost()`, Haiku long tier, batch),
-  `gateway.ts` (`Meter`, `AiBlocked`, `metered()`), `embed()` and `ocrPages()` now metered (≤ 20 pages per OCR call);
-  `gateway.test.ts` (hand-computed costs, blocked → provider never called, error → settled as error).
-- Worker: `workerMeter(pool, institute, job)` in `ingest.ts` (each reserve/settle its own short tenant transaction);
-  `AiBlocked` → `error_code = 'ai_unavailable'` (text in `apps/web/app/(portal)/documents/status.ts`).
-- Web: owner/admin `/usage` (+ nav link "AI usage"), `lib/usage.ts` (+test); platform `/platform` global switch
-  (`setGlobalAi`), institute page "AI enabled" checkbox + month spend. E2E `e2e/usage.spec.ts`, platform spec extended
-  (Gamma AI off only; never the global switch in E2E).
-
-### Phase 4 — documents (sessions 8–10) — MERGED (PR #5, `cbfb62e`)
-Scope = IMPLEMENTATION_ROADMAP Phase 4. ACs: AC4.1 fixture suite, AC4.2 no duplicate chunks, AC4.3 withdraw invisible at
-once, AC4.4 cross-tenant job, AC4.5 OCR formula review on real docs (BLOCKED: no AI key, fake OCR), AC4.6 cost per 100 pages
-(BLOCKED: fake providers cost 0; measure in Phase 5 with real keys).
-DONE + TESTED (commits `49ca6d5`, `3a427c9`):
-- Spike → **pdfjs-dist 6.4.299** (Mozilla, Apache-2.0, `npm i -w @examedge/worker pdfjs-dist@6.4.299`): extracts English,
-  Hindi (Devanagari) and formula symbols from generated PDFs; empty page → ''; corrupt/empty → InvalidPDFException.
-  Not yet recorded as ADR-024 in docs/DECISIONS.md (TODO, with the points below).
-- `scripts/make-pdf.ts`: dependency-free PDF writer (Helvetica for ASCII, Type0 + identity ToUnicode for Hindi/symbols,
-  `null` page = no text layer) for fixtures and seed.
-- Migration `20261018000006_documents.sql`: documents / document_versions (status `uploading|queued|processing|ready|failed`,
-  `claimed_at`, path check `= institute/document/version`) / document_audience / document_chunks (vector(1024), tsv, no HNSW)
-  + RLS + worker policies (`private.job_institute()`), definers `can_read_document`, `can_read_object`, `pending_jobs` (worker
-  only), guards (API users may only queue a version; publish needs a processed version; published_at/withdrawn_at stamped),
-  audit on documents/audience, `public.match_chunks` (invoker, exact cosine + keyword, RRF), storage buckets `documents`
-  (private, 50 MiB, pdf/png/jpeg) and `logos` (public, platform admin insert) + policies, branding check allows
-  `logo = '<institute_id>/<uuid>'`, `private.service_accounts` (worker storage account).
-  **Real bug fixed:** deleting an institute failed (ON DELETE RESTRICT test_questions/attempt_answers → questions). Now
-  cascade + `guard_question` refuses deleting a used question (23503 `question_used_in_test`) unless its institute is gone.
-- pgTAP `070_documents.sql` (55 tests: upload/queue/publish rules, teachers publish only to taught batches, students never
-  read versions, AC4.3, T-ISO-06 canary, T-SEC-07 DB side, T-ISO-08, worker account, cascade). Fixture in
-  `supabase/test_helpers.sql` now has a published doc + canary chunk per institute; allowlist in `010` updated.
-  `supabase db reset && supabase test db` → Files=8, Tests=850, PASS (2026-10-15).
-- Core fake AI: `packages/core/src/ai/embed.ts` (hashed bag-of-words 1024-dim, Hindi-safe words; Voyage throws BLOCKED Q-08;
-  not metered yet → Phase 5) + `embed.test.ts`; `ai/ocr.ts` (fixed demo placeholder text; real OCR in Phase 5).
-- Worker: `chunk.ts` (+test: headings, ≤800 tokens, overlap, long paragraphs), `extract.ts` (magic bytes, 50 MB, 300 pages,
-  page-quality → OCR), `ingest.ts` (atomic claim, single swap transaction, failure keeps old version, `drain()`),
-  `storage.ts` (downloads as service account, no secret key), `index.ts` (5 s `pending_jobs()` poll → pg-boss queue `ingest`,
-  policy stately, singletonKey = version id). Worker env now also needs NEXT_PUBLIC_SUPABASE_URL,
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, WORKER_STORAGE_EMAIL, WORKER_STORAGE_PASSWORD (add names to `.env.example` — TODO).
-  `scripts/local-supabase.ts`: `LOCAL_WORKER` (worker@examedge.test, local-only password), `ensureWorkerAccount`, `localWorkerEnv`.
-- Integration `apps/worker/src/ingest.int.test.ts`: 16/16 PASS (text, scanned, mixed, Hindi+formula, PNG, corrupt, wrong
-  magic, PNG-as-JPEG, 301 pages, missing file, 0-byte, AC4.2 duplicate job + reprocess, new version swap, failed version
-  keeps old, crashed worker swept, T-ISO-08). Unit 32/32, lint, typecheck PASS at `3a427c9`.
-VERIFIED in session 9 (2026-10-15):
-- Web UI (`app/(portal)/documents/*`, Sources pane): browser check on the dev server with the real worker running
-  (`npm run dev:worker`): teacher1 uploaded a PDF on Physics → signed PUT to Storage worked (no `apikey` header needed,
-  no extra select policy needed) → worker processed it → "Ready" → published to JEE 2027 Morning; student01 saw it in
-  Sources at 375 px (scrollWidth 375), file route 200 `application/pdf`; staff document page is 404 for students (by
-  design, students open `/documents/<id>/file` from Sources); withdraw → file 404 and link gone at once; owner@rival.test
-  → 404 for Demo document page and file.
-- Seed canary: already fixed in `scripts/seed-demo.ts` (sentence ≥ 50 chars). After `supabase db reset && npm run seed:demo`:
-  "Processed 18 documents, published 16"; `document_chunks like '%quokka%'` = 9, all institute `rival` (one per Rival note).
-- Env (commit `c5f5215`): `.env.example` has WORKER_STORAGE_EMAIL / WORKER_STORAGE_PASSWORD; CI exports them (local
-  worker account values); worker `dev` script reads `apps/web/.env.local` then root `.env.local`. Local root `.env.local`
-  (gitignored) holds WORKER_DATABASE_URL + WORKER_STORAGE_* local values.
-- `e2e/documents.spec.ts` (commit `6e0ec74`): upload via UI → `drain()` in-process as worker role → Ready → publish →
-  student file 200 → withdraw → 404 (AC4.3); Rival owner 404s (AC4.4 web side); raw Storage: Rival student cannot sign or
-  download a Demo path; signed URL 200 while fresh, 4xx after expiry (T-SEC-07). `npx playwright test e2e/documents.spec.ts`
-  → 2 passed.
-- Logo upload (commit `3ca1483`, ADR-022 deferral closed): `/platform/institutes/[id]` "Upload logo" (PNG/JPG/WebP ≤ 500 KB
-  so it fits the 1 MB Server Action body limit; bucket `logos` public, insert only by aal2 platform admin), path stored in
-  `branding.logo`; `updateInstitute` now keeps the logo (it used to overwrite branding with `{color}`); portal header shows
-  the logo instead of initials (`lib/brand.ts` `logoUrl`). Shortcut: replaced logos stay in the bucket (purge in Phase 10).
-  E2E platform test extended (SVG refused, PNG saved, public URL 200, logo kept after Save institute) → 1 passed. Header
-  checked in the browser with a temporary Demo logo (img loaded), then removed. Unit 32/32 PASS, web lint/typecheck PASS.
-Full gate GREEN locally on 2026-10-16 (see Completed). CI on PR #5 green (run 38795802409), merged 2026-10-16.
-
-### Phase 7 — tests, checking, ranks, progress (sessions 6–7) — MERGED (PR #4, `2a5f25e`)
-Built (branch `phase-7-tests`): migration `20261017000005_assessments.sql` (questions, question_keys, tests, test_questions,
-test_audience, test_attempts, attempt_answers, batch_standings + RLS + definer RPCs), pgTAP `060_assessments.sql`, web
-`/questions`, `/tests`, `/tests/[id]` (staff + student runner/review), `/tests/[id]/check`, CSV exports, batch rank list,
-`/students/[id]` + `/progress`, seed with released tests/ranks and "Chemistry Test 3" waiting for checking. Decisions: ADR-023.
-Session 7 bugs found by the new E2E/browser check and fixed (`4a21a8a`, `40fc4fc`):
-- nobody could create a test: `insert … returning` was refused because the read policy's `can_see_test(id)` cannot see
-  the new row → creator/manager checked inline (pgTAP regression "teacher reads back the test they just created").
-- answer keys never saved from the UI: PostgREST upsert needs UPDATE on every column, only `key` is granted → update, else insert.
-- `question_keys` embedded as a list (composite FK not one-to-one) → checking screen crashed, "No answer key" badge never
-  showed → `unique (institute_id, question_id)`.
-- Submit test never posted (second `requestSubmit()` after `preventDefault` does not re-run a form action) → `startTransition`.
-- Question form kept the previous subject after switching subject tabs → keyed by subject.
-- Checking screen jumped to the top after every save → `refresh()` in place.
-AC status: AC7.1 ✅ pgTAP grading tables · AC7.2 ✅ pgTAP + E2E (REST returns no keys) · AC7.3 ✅ pgTAP · AC7.6 ✅ pgTAP
-hand-computed fixture · AC7.7 ✅ pgTAP + E2E (release disabled) · AC7.8 ✅ pgTAP + E2E (teacher3 404 + RPC `not_allowed`) ·
-AC7.9 ✅ pgTAP + E2E (region text equal) · AC7.4 BLOCKED (needs staging/prod-sized DB; k6 in Phase 10) · AC7.5 deferred
-(AI generation after Phase 5) · practice quizzes deferred to Phase 9.
-
-### Phase 3 — portals shell (sessions 5–6) — MERGED (PR #3, `0417717`); history below kept for reference
-Built (branch `phase-3-portals`):
-- `supabase/migrations/20261016000004_portals.sql`: `institute_quotas` (default row per institute via trigger), branding check
-  (only `{"color":"#rrggbb"}`), audit trigger now also on institutes/quotas (actor_kind platform_admin when aal2 admin),
-  `create_institute(slug, name, host, owner_email)` RPC (platform admin + aal2; reserved slugs; host must be `<slug>.<domain>`;
-  returns one-time owner invite token), platform-admin update policies, guard: student membership can never become staff or reverse.
-  pgTAP `050_platform.sql`; allowlist in `010` includes `create_institute`. `supabase test db` → Files=6, Tests=394, PASS (2026-10-15).
-- Web: `app/globals.css` (tokens from `docs/share/mockups`, Poppins/Lora via next/font, sidebar → top bar < 800px),
-  `app/(portal)/` layout + pages: `/dashboard`, `/batches`, `/batches/[id]`, `/subjects`, `/people` (staff/students/invitations,
-  single + CSV invites, links shown once, revoke, role/status), `/home` (student), `/subjects/[id]` (Sources/Tutor/Studio, tabs on phone).
-  `/` redirects members to `/dashboard` or `/home`. Server actions `app/(portal)/actions.ts` (institute from host + role re-check).
-  Teachers only open batches they teach. `lib/host.ts`, `lib/brand.ts` (+test; text colour by contrast).
-- Platform admin: `proxy.ts` rewrites `admin.localhost` → `/platform` and 404s `/platform` elsewhere; `app/platform/` (demo sign-in,
-  TOTP enrol/verify → aal2, institutes list, create institute with one-time owner link, `/institutes/[id]` status/name/colour/quotas).
-  Browser-checked: MFA enrol + verify works, institutes listed.
-- E2E: `e2e/helpers.ts` (shared), `e2e/portals.spec.ts` (owner/teacher/student journeys, AC3.2 cache headers, AC3.3 axe, AC3.4,
-  cross-tenant ids, platform MFA flow), `e2e/totp.ts` (+ RFC 6238 vector test). `playwright.config.ts` testMatch `*.spec.ts`.
-  Dev dep added: `@axe-core/playwright@4.13.0` (npm). `npm run audit` NOT yet re-run after adding it.
-
-FAILING (session 6 re-run 2026-10-15 after `supabase db reset && npm run seed:demo && npm run build`): `npm run test:e2e` → 10 passed, 2 failed:
-`portals.spec.ts:36` owner AC3.1 (not yet diagnosed) and `portals.spec.ts:164` platform admin (alert 'That address is reserved.' not shown
-after creating slug `admin`, line 195). Contrast/axe and teacher select fixes now PASS. Earlier history —
-FAILING / UNVERIFIED (last run 2026-10-15, before fixes): `npm run test:e2e` → 8 passed, 4 failed: axe colour-contrast
-(white on #d97757; badge greens/reds) and a select lookup in the teacher test. Fixes applied but NOT re-run: `--on-accent` ink text
-on accent, darker `--good`/`--bad`, `brandStyle()`, selects looked up via `getByRole('combobox', { name: /^Role/ })`.
-Deferred (record in DECISIONS.md as ADR-022 when closing Phase 3): logo upload (needs Storage, Phase 4) — branding is colour only.
-
-Phase 2 AC status: all PASS (AC2.7 at DB level; TOTP UI now built in Phase 3). BLOCKED: Google OAuth, Resend (links shown once).
-
-Design decisions already worked out for later phases (record as ADRs when built):
-- Web enqueues no jobs directly: it writes domain rows (e.g. `document_versions.processing_status='queued'`); the worker polls a SECURITY DEFINER `private.pending_jobs()` every ~5 s and sends pg-boss jobs with singleton keys (also acts as the sweeper).
-- Worker reads Storage files as a dedicated non-privileged Supabase Auth user ("worker service account"); storage policy lets it read only objects whose version is `queued|processing`. No secret key in worker.
-- Worker DB role `worker` gets a local-only password in `supabase/seed.sql`; production password set by ops.
-- Invitation emails BLOCKED (no Resend account): admin sees the invite link once after creating it.
-- Demo login allowed only when `DEMO_LOGIN_ENABLED=true` AND the Supabase URL host is 127.0.0.1/localhost (unit-tested).
-- Excel export = CSV; charts = inline SVG; mind map = nested tree (no extra deps).
+DONE + TESTED (2026-10-16, session 18):
+- `278f0d5` web Studio (generate with reuse, artifact page, quiz runner, publish/edit/withdraw/delete, practice on
+  progress pages, webMeter shared).
+- Browser check (dev server, after `db reset && seed:demo`): teacher1 → Physics → Rotational Motion → Flashcards →
+  generated (draft); Generate again → `?ok=reused`, `usage_records` feature=generation stays 1; publish to JEE 2027
+  Morning → student01 sees it under "From your teachers", draft mind map not listed; mind map renders as nested list
+  with citation chips; student01 Practice quiz → 3 answered → "Your score: 2 of 10", correct/your-answer badges and
+  explanations, "Your tries" after reload, My progress "Physics · Rotational Motion: 1 practice quiz, average 20%";
+  375 px: scrollWidth 375 on quiz, flashcards and subject pages. No bugs found.
+- `6bf90eb` seed: per institute a published Rotational Motion summary (same input hash as the web, so a teacher's
+  Generate → reused) + student01's own practice quiz with one try (5/10). `e2e/studio.spec.ts` 2 tests: AC9.2 reuse
+  with usage count unchanged, publish → student sees, draft 404 for student; DB-graded quiz + `practice_attempts` row
+  + progress; AC9.4 student03/teacher1/owner@demo/owner@rival → `/studio/<id>` 404, REST select empty,
+  `submit_practice` 42501; staff list never shows a student's quiz.
+- Docs commit: ADR-028, DATABASE_DESIGN §4.4/§4.5 as built; dashboard "Coming next" text replaced (Studio is live).
+- Local gate (2026-10-16, after `supabase db reset && npm run seed:demo`): `npm run check` → format, lint +
+  forbidden, typecheck PASS; unit 132/132; pgTAP Files=12 Tests=1220 PASS; integration 21/21; build + bundle scan
+  PASS; E2E with 4 workers against the other session's `next dev` on :3000 was flaky (5 s timeouts, different tests
+  each run) → reseeded, `npx playwright test --workers=1` → 25/26, only `portals.spec.ts:142` T-SEC-05 (dev server
+  sends `no-store` without `private`, known). `npm run audit` ok; gitleaks git history clean (dir scan hits only
+  gitignored `apps/web/.env.local` and `.next/`). E2E against the production build → CI on the PR.
 
 ## Blocked
 | Item | Blocked on |
@@ -349,29 +92,18 @@ Design decisions already worked out for later phases (record as ADRs when built)
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (Phase 9, session 18)
-A. `git checkout phase-9-studio && git pull`; `supabase db reset && npm run seed:demo`; preview_start "web".
-B. Finish the browser check listed under Phase 9 "NOT yet checked" (teacher1 publish → student01 sees it under
-   "From your teachers"; student01 generates a Practice quiz, answers, score shown, try listed, My progress shows the
-   chapter; flashcards + mind map render; Generate twice → "reused" and `select count(*) from usage_records where
-   feature='generation'` unchanged; owner@rival.test → Demo `/studio/<id>` 404; 375 px scrollWidth 375). Fix findings.
-C. Seed: add one published institute artifact + a practice try to `scripts/seed-demo.ts` (practice data per
-   NEXT_SESSION_PROMPT §2).
-D. `e2e/studio.spec.ts`: teacher generate → publish → student sees; student quiz score + DB `practice_attempts` row;
-   AC9.2 reuse with usage_records count; AC9.4 classmate/Rival 404 on a student artifact; staff never see student ones.
-E. Docs: ADR-028 (studio decisions: chapter-scoped generation from published notes, sync Server Action not worker
-   — shortcut for real-provider latency, artifact_audience table instead of uuid[], statuses draft|published|withdrawn,
-   practice graded in SQL, keys readable by the student via API for their own practice (no rank impact), mind map as
-   nested list, markmap not used, library layer not used in Studio yet); DATABASE_DESIGN §4.4/§4.5 as built.
-F. Full gate (`lsof -nP -iTCP:3000 -sTCP:LISTEN` first; stop the preview so E2E uses the production build), PR,
-   CI, merge. Then step 2 below.
-0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout phase-9-studio && git pull && npm ci`;
+## Next exact action (Phase 9 → Phase 10, session 18+)
+A. Phase 9 PR into `main`: check CI (E2E on the production build), fix until green, merge; record PR number, merge
+   commit and CI run in "Current phase" and the Completed table.
+B. Then Phase 10 local parts (NEXT_SESSION_PROMPT §8): retention/backup scripts that need no cloud, enforce
+   `max_upload_bytes`/`max_concurrent_jobs` (ADR-025 deferral), runbooks (incident, key rotation, restore,
+   offboarding) as docs, README "How to run the demo" (commands + demo logins), final summary to the founder: what
+   works, what is BLOCKED and why, exact steps to switch from fake AI to real keys.
+0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout <branch> && git pull && npm ci`;
    `docker info` (else `open -a Docker`); `supabase status` (else `supabase start`); `supabase db reset && npm run seed:demo`.
-   Port 3000 may still be held by an old `next dev` (PID 86773, started 07:45, cwd apps/web) from another session.
-   Next refuses a second `next dev` in the same folder, so browser checks can use it (it serves this checkout with hot
-   reload); locally E2E then reuses it and T-SEC-05 fails (dev sends no `private`) — CI runs E2E on the production build.
-1. Phase 9 started in session 17 — continue with steps A–F above.
-2. Then Phase 10 local parts, README "How to run the demo", final summary (NEXT_SESSION_PROMPT §8).
+   Port 3000 may be held by another session's `next dev` (this checkout, hot reload): browser checks can use it;
+   locally run E2E with `--workers=1` (parallel runs time out on dev compiles) and expect T-SEC-05 to fail there —
+   CI runs E2E on the production build.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -405,5 +137,6 @@ F. Full gate (`lsof -nP -iTCP:3000 -sTCP:LISTEN` first; stop the preview so E2E 
 | 12 | 2026-10-16 | PR #6 merged (`b1f0795`). Phase 6: tutor schema + RLS + pgTAP (1064 PASS), Anthropic SDK 0.131.0, core tutor/fake/Claude provider + tests WIP (1 unit test failing, fix known) | see `git log` |
 | 16 | 2026-10-16 | Phase 8: AC8.4 fixed (OR keyword query, library recall 1.0), web verified in browser (2 UI fixes), `e2e/library.spec.ts`, ADR-027 + docs, gate, PR #8 CI green (E2E 24/24) and merged (`bce1046`); branch `phase-9-studio` | see `git log` |
 | 17 | 2026-10-16 | Phase 9: studio schema + 38 pgTAP (1220 PASS), core generators + Claude structured-output provider (unit 132), web Studio pane/artifact page/quiz/progress written, first browser check OK; handoff mid-browser-check | see `git log` |
+| 18 | 2026-10-16 | Phase 9: browser check done (no bugs), Studio seed, `e2e/studio.spec.ts`, ADR-028 + DB docs, local gate (E2E 25/26, T-SEC-05 dev-only), PR opened | see `git log` |
 | 15 | 2026-10-16 | Phase 8: library migration + 40 pgTAP (1104 PASS), core two-layer tutor (46 unit), web/platform editor/seed/eval written; AC8.4 library recall 0.81 FAILING (keyword AND), handoff | see `git log` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |
