@@ -26,6 +26,7 @@
     "secrets": "gitleaks git --no-banner --redact -v . && gitleaks dir --no-banner --redact .",
     "db:reset": "supabase db reset",
     "seed:demo": "tsx scripts/seed-demo.ts",
+    "eval": "tsx evals/run.ts",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run test:db && npm run test:int && npm run build && npm run test:e2e",
     "create-institute": "tsx scripts/create-institute.ts"
   },

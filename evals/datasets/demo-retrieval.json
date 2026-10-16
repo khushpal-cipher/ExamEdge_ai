@@ -1,0 +1,131 @@
+[
+  { "q": "What is inertia?", "subject": "Physics", "title": "Laws of Motion – class notes", "page": 1 },
+  { "q": "State Newton's second law", "subject": "Physics", "title": "Laws of Motion – class notes", "page": 1 },
+  { "q": "What is the SI unit of force?", "subject": "Physics", "title": "Laws of Motion – class notes", "page": 1 },
+  {
+    "q": "Why does a cricketer lower the hands while catching the ball?",
+    "subject": "Physics",
+    "title": "Laws of Motion – class notes",
+    "page": 1
+  },
+  { "q": "What is Newton's third law?", "subject": "Physics", "title": "Laws of Motion – class notes", "page": 2 },
+  {
+    "q": "Difference between static and kinetic friction",
+    "subject": "Physics",
+    "title": "Laws of Motion – class notes",
+    "page": 2
+  },
+  {
+    "q": "A 2 kg block is pulled with 10 N and mu is 0.2, find the acceleration",
+    "subject": "Physics",
+    "title": "Laws of Motion – class notes",
+    "page": 2
+  },
+  {
+    "q": "What is torque?",
+    "subject": "Physics",
+    "title": "Rotational Motion – torque and angular momentum",
+    "page": 1
+  },
+  {
+    "q": "Torque kya hota hai?",
+    "subject": "Physics",
+    "title": "Rotational Motion – torque and angular momentum",
+    "page": 1
+  },
+  {
+    "q": "Moment of inertia of a disc about its axis",
+    "subject": "Physics",
+    "title": "Rotational Motion – torque and angular momentum",
+    "page": 1
+  },
+  {
+    "q": "Why does a skater spin faster when she pulls in her arms?",
+    "subject": "Physics",
+    "title": "Rotational Motion – torque and angular momentum",
+    "page": 2
+  },
+  {
+    "q": "Kinetic energy of a body rolling without slipping",
+    "subject": "Physics",
+    "title": "Rotational Motion – torque and angular momentum",
+    "page": 2
+  },
+  {
+    "q": "When is angular momentum conserved?",
+    "subject": "Physics",
+    "title": "Rotational Motion – torque and angular momentum",
+    "page": 2
+  },
+  {
+    "q": "Energy of the nth orbit of hydrogen in the Bohr model",
+    "subject": "Chemistry",
+    "title": "Atomic Structure – summary",
+    "page": 1
+  },
+  {
+    "q": "What is the Pauli exclusion principle?",
+    "subject": "Chemistry",
+    "title": "Atomic Structure – summary",
+    "page": 1
+  },
+  { "q": "Name the four quantum numbers", "subject": "Chemistry", "title": "Atomic Structure – summary", "page": 1 },
+  {
+    "q": "Why is the bond angle of water 104.5 degrees?",
+    "subject": "Chemistry",
+    "title": "Chemical Bonding – VSEPR and hybridisation",
+    "page": 1
+  },
+  {
+    "q": "Hybridisation and shape of BF3",
+    "subject": "Chemistry",
+    "title": "Chemical Bonding – VSEPR and hybridisation",
+    "page": 1
+  },
+  {
+    "q": "Bond order of O2",
+    "subject": "Chemistry",
+    "title": "Chemical Bonding – VSEPR and hybridisation",
+    "page": 1
+  },
+  {
+    "q": "Formula for the roots of a quadratic equation",
+    "subject": "Maths",
+    "title": "Quadratic Equations – roots and discriminant",
+    "page": 1
+  },
+  {
+    "q": "What does the discriminant tell us?",
+    "subject": "Maths",
+    "title": "Quadratic Equations – roots and discriminant",
+    "page": 1
+  },
+  {
+    "q": "Sum and product of roots",
+    "subject": "Maths",
+    "title": "Quadratic Equations – roots and discriminant",
+    "page": 1
+  },
+  {
+    "q": "limit of sin x by x as x tends to 0",
+    "subject": "Maths",
+    "title": "Limits and Derivatives – standard results",
+    "page": 1
+  },
+  { "q": "Derivative of x^n", "subject": "Maths", "title": "Limits and Derivatives – standard results", "page": 1 },
+  { "q": "product rule kya hai", "subject": "Maths", "title": "Limits and Derivatives – standard results", "page": 1 },
+  { "q": "What do mitochondria do?", "subject": "Biology", "title": "Cell – organelles at a glance", "page": 1 },
+  {
+    "q": "Ribosomes in prokaryotes vs eukaryotes",
+    "subject": "Biology",
+    "title": "Cell – organelles at a glance",
+    "page": 1
+  },
+  { "q": "Dihybrid F2 ratio", "subject": "Biology", "title": "Genetics – Mendel's laws", "page": 1 },
+  { "q": "What is the law of segregation?", "subject": "Biology", "title": "Genetics – Mendel's laws", "page": 1 },
+  { "q": "Explain the photoelectric effect", "subject": "Physics", "title": null, "page": null },
+  { "q": "What is Le Chatelier's principle?", "subject": "Chemistry", "title": null, "page": null },
+  { "q": "Integrate x squared", "subject": "Maths", "title": null, "page": null },
+  { "q": "Value of G in Newton's law of gravitation", "subject": "Physics", "title": null, "page": null },
+  { "q": "quokka saffron lighthouse", "subject": "Physics", "title": null, "page": null }
+]
