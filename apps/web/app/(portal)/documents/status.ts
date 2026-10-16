@@ -23,5 +23,6 @@ export const ERROR_TEXT: Record<string, string> = {
   no_text: 'No text could be read from this file.',
   file_missing: 'The upload did not finish. Upload the file again.',
   ai_unavailable: 'AI processing is switched off or the monthly AI budget is used up. Ask your institute admin.',
+  ocr_refused: 'The AI declined to read the scanned pages. Check the file, or upload a typed PDF.',
   internal: 'Something went wrong while processing. Try again.',
 };

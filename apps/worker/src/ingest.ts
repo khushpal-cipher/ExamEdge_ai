@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import type pg from 'pg';
 import { embed, toVector } from '@examedge/core/ai/embed';
 import { AiBlocked, type Meter } from '@examedge/core/ai/gateway';
+import { OcrRefused } from '@examedge/core/ai/ocr';
 import { log } from '@examedge/core/log';
 import { chunkPages, CHUNKER_VERSION } from './chunk';
 import { IngestError, readPages } from './extract';
@@ -119,7 +120,14 @@ export async function ingestVersion(deps: Deps, job: Job): Promise<'ready' | 'fa
     log.info('ingest.ready', { version_id: job.version_id, chunks: chunks.length, method });
     return 'ready';
   } catch (e) {
-    const code = e instanceof IngestError ? e.code : e instanceof AiBlocked ? 'ai_unavailable' : 'internal';
+    const code =
+      e instanceof IngestError
+        ? e.code
+        : e instanceof AiBlocked
+          ? 'ai_unavailable'
+          : e instanceof OcrRefused
+            ? 'ocr_refused'
+            : 'internal';
     if (code === 'internal') log.error('ingest.failed', { version_id: job.version_id, err: e });
     await inTenant(deps.pool, job.institute_id, (c) =>
       c.query(

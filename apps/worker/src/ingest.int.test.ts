@@ -160,6 +160,13 @@ describe('AC4.1 fixture files', () => {
     expect(text).toContain('KE = ½ I ω²');
   });
 
+  it('garbled text layer with NUL characters → rendered and OCRed, not a crash', async () => {
+    const doc = await newDocument('Garbled');
+    const v = await addVersion(doc, makePdf([english(1)[0]!, ['\u0000\u0001'.repeat(40)]]));
+    expect(await ingest(v)).toBe('ready');
+    expect(await version(v)).toMatchObject({ extraction_method: 'mixed', page_count: 2 });
+  });
+
   it('a photo (PNG) → OCR as one page', async () => {
     const doc = await newDocument('Photo');
     const v = await addVersion(doc, PNG, 'image/png');
@@ -171,6 +178,7 @@ describe('AC4.1 fixture files', () => {
     ['corrupt PDF', Buffer.from('%PDF-1.7\n1 0 obj garbage'), 'application/pdf', 'corrupt_file'],
     ['wrong magic bytes', Buffer.from('<html>not a pdf</html>'), 'application/pdf', 'wrong_file_type'],
     ['PNG bytes declared as JPEG', PNG, 'image/jpeg', 'wrong_file_type'],
+    ['corrupt PNG', PNG.subarray(0, 20), 'image/png', 'corrupt_file'],
     ['301 pages', makePdf(Array(301).fill(['x'])), 'application/pdf', 'too_many_pages'],
     ['file never uploaded', null, 'application/pdf', 'file_missing'],
   ])('%s → failed (%s)', async (_name, bytes, mime, code) => {

@@ -211,6 +211,25 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
   Writing them found that `AI_PROVIDER=anthropic` covers the tutor and Studio only: Claude OCR (`ocr.ts`) and the
   Voyage client (`embed.ts`, Q-08) are not written, so the worker must stay on fake AI until they are.
 
+### ADR-030 Claude OCR provider (2026-10-16, Accepted)
+- **Decision:** `AI_PROVIDER=anthropic` now also switches OCR to Claude Haiku 5.5 (`claudeOcr` in
+  `packages/core/src/ai/claude.ts`), closing the gap ADR-029 found. The worker renders each page that needs OCR
+  (no/garbled text layer) and each photo to a **JPEG with the long edge ≤ 2,000 px** (`@napi-rs/canvas`, already
+  installed with pdfjs-dist, now a declared worker dependency) and sends ≤ 20 labelled images per call (`Page N:` +
+  image), streamed, effort `low`, `max_tokens` = 4,000 per page. The answer is split on `<page n="N">…</page>`; a
+  missing page is empty, a page cut off by `max_tokens` keeps what was written.
+- **Why images, not PDF document blocks:** a document block bills every page of the file, but only the pages that need
+  OCR should be paid for; per-page images keep each call ≤ 20 pages (< 100K tokens, R-08) and ≤ 20 images also avoids
+  the API's stricter size rule for requests with more than 20 images [V 2026-10-16, vision docs]. 2,000 px ≈ 3,700
+  visual tokens per A4 page (limit 4,784 at 2,576 px); JPEG q85 keeps a 20-page request well under 32 MB [E].
+- **Rendering happens inside the reservation:** pages are rendered only after `ai_reserve_job` passed, so a blocked
+  institute costs no rendering, and only one batch of images is in memory at a time.
+- **Refusal:** Haiku has no server-side fallback; a refused batch is settled as `refused` (billed) and the version
+  fails with `ocr_refused` (shown to staff). Text in images is treated as content to copy, never instructions.
+- **Bug found:** the canvas binding throws on NUL characters, which garbled text layers contain; the render context
+  drops them (integration test proves the document now becomes `ready`).
+- **BLOCKED:** real-key run, AC4.5 (formula accuracy on 3 real documents) and AC4.6 (cost per 100 pages).
+
 ---
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
