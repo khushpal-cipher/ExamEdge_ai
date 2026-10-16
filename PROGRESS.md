@@ -12,8 +12,8 @@ Last updated: 2026-10-16
 **Phase 6 MERGED** into `main` (PR #7, squash commit `7863900`, CI green: check + secrets, run 38841699259 — unit 104, pgTAP 1064, integration 21, E2E 22/22 against the production build, 2026-10-16).
 **Phase 8 MERGED** into `main` (PR #8, squash commit `bce1046`, CI green: check + secrets, run 38848935766 — unit 111, pgTAP 1107, integration 21, E2E 24/24 against the production build, 2026-10-16).
 **Phase 9 MERGED** into `main` (PR #9, squash commit `67ed4ac`, CI green: check + secrets, run 38869056404 — pgTAP 1220, E2E 26/26 against the production build incl. T-SEC-05, 2026-10-16).
-**Phase 10 (local parts) — BUILT, local gate green** on `phase-10-local` (from `67ed4ac`); PR into `main` + CI next.
-Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
+**Phase 10 (local parts) MERGED** into `main` (PR #10, squash commit `dc7600f`, CI green: check + secrets, run 38877776627 — unit 132, pgTAP 1243, integration 23, E2E 26/26 against the production build incl. T-SEC-05, 2026-10-16).
+**Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -36,7 +36,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### Phase 10 — local parts (session 19) — BUILT, local gate green, PR pending
+### Phase 10 — local parts (session 19) — MERGED (PR #10, `dc7600f`)
 Scope (ADR-029) = roadmap Phase 10 minus everything that needs a cloud account. ACs proven locally: per-institute
 `max_upload_bytes` / `max_storage_bytes` / `max_concurrent_jobs` enforced (ADR-025 deferral closed); retention purge;
 local backup + restore rehearsal (T-OPS-16 locally; G7 itself BLOCKED); runbooks; README demo guide.
@@ -67,6 +67,8 @@ DONE + TESTED (2026-10-16, session 19):
   `no-store` without `private`, known). Production build checked by hand: `next start -p 3100` →
   `Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate`. `npm run audit` ok; gitleaks history clean.
   E2E against the production build → CI on the PR.
+- `cd7f1fc` RUNBOOKS.md rewritten in plain simple English at the founder's request (same steps); `726a279` README
+  link fixed for the new §5 heading. CI on the final commit green (run 38877776627, E2E 26/26); merged `dc7600f`.
 
 ## Blocked
 | Item | Blocked on |
@@ -84,15 +86,23 @@ DONE + TESTED (2026-10-16, session 19):
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (Phase 10 local parts, PR)
-1. `git checkout phase-10-local && git pull`; open the PR into `main` (title "Phase 10: local hardening — limits,
-   retention, backups, runbooks"), bind it, read CI (check + secrets). Fix until green, then `gh pr merge <n> --squash`.
-2. Update PROGRESS.md (merge commit, CI run id, E2E count) and push `main`.
-3. Release 1 local build is then complete. Give the founder the final summary (NEXT_SESSION_PROMPT §8): what works,
-   what is BLOCKED and why (table above), exact steps to switch to real keys (RUNBOOKS §5, incl. the OCR/Voyage gap).
-4. Next build work needs founder decisions: approve cloud accounts (Phase 10 cloud parts), Anthropic key, Q-01, Q-08.
-   Without them, the useful local work left is: Claude OCR provider tested against a recorded response; purge of
-   soft-deleted document files and replaced logos (ADR-029).
+## Next exact action (after Release 1 local build, session 20)
+Everything in `main` (`dc7600f`); no open PR; `phase-10-local` is merged (can be deleted).
+0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout main && git pull && npm ci`; `docker info`
+   (else `open -a Docker`); `supabase status` (else `supabase start`); `supabase db reset && npm run seed:demo`.
+1. The founder already got the final summary in chat (what works / BLOCKED / real-AI steps = docs/RUNBOOKS.md §5).
+   Ask the founder which of these to do next (all need their decision):
+   - approve cloud accounts → Phase 10 cloud parts (production Supabase/Vercel/Railway, domain + TLS, prod Google
+     OAuth, Sentry, spend alerts, independent backup storage, real restore drill G7, k6 load test, rollback rehearsal);
+   - give an Anthropic key → switch tutor + Studio to real AI (RUNBOOKS §5) and run AC5.2 / AC6.x evals;
+   - answer Q-08 (Voyage terms) and Q-01 (legal, blocks the pilot).
+2. Local work possible without any decision (new branch per task, e.g. `r1-ocr`):
+   a. Claude OCR provider in `packages/core/src/ai/ocr.ts` (Haiku, PDF/image input, ≤ 20-page batches, metered as
+      `ingest_ocr`), tested against a recorded response like `claude.test.ts` — use the claude-api skill first.
+   b. Purge of soft-deleted documents (> 30 days) and replaced logos: needs Storage delete from the worker service
+      account (policy + job) — ADR-029 notes it as not built.
+   Each: tests + full gate (`npm run check`, local E2E `--workers=1`, T-SEC-05 fails only against another session's
+   `next dev` on :3000), PR, CI green, squash-merge, PROGRESS update.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
