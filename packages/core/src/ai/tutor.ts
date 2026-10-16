@@ -62,21 +62,22 @@ export function tutorProvider(premium: boolean, env = process.env): TutorProvide
   throw new Error(`AI provider "${p}" is not available`);
 }
 
-// Turns segments into paragraphs (split on blank lines) and numbers the cited passages in order of first use.
+// Turns segments into paragraphs (split on blank lines) and numbers the cited pages in order of first use.
 export function assemble(segments: Segment[], passages: Passage[]) {
   const citations: Citation[] = [];
-  const index = new Map<number, number>();
+  const index = new Map<string, number>(); // one citation per document page, even when two chunks share it
   const cite = (passage: number, cited_text: string) => {
     const p = passages[passage];
     if (!p) return null; // a citation to a passage we did not send cannot be shown
-    if (!index.has(passage)) {
+    const key = `${p.document_id}#${p.page_start}`;
+    if (!index.has(key)) {
       const { document_id, title, page_start, page_end } = p;
       index.set(
-        passage,
+        key,
         citations.push({ source_kind: 'institute', document_id, title, page_start, page_end, cited_text }) - 1,
       );
     }
-    return index.get(passage)!;
+    return index.get(key)!;
   };
   const paragraphs: { text: string; citations: number[] }[] = [{ text: '', citations: [] }];
   for (const s of segments) {

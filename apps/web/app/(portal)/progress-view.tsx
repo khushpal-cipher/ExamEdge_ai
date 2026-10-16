@@ -101,7 +101,10 @@ function Bar({ value }: { value: number | null }) {
   );
 }
 
-export function ProgressView({ p, staff }: { p: Progress; staff: boolean }) {
+// Doubts asked per subject (private.tutor_activity): counts only, never the text of the chat (ADR-015).
+export type Doubts = { subject: string; doubts: number; last_at: string }[];
+
+export function ProgressView({ p, staff, doubts }: { p: Progress; staff: boolean; doubts: Doubts }) {
   const latest = p.tests.filter((t) => !t.missed).at(-1);
   return (
     <>
@@ -289,9 +292,18 @@ export function ProgressView({ p, staff }: { p: Progress; staff: boolean }) {
 
       <section className="card stack" aria-labelledby="practice">
         <h2 id="practice">Self practice and study activity</h2>
-        <p className="empty">
-          Practice quizzes, notes opened and doubts asked appear here once Studio and the AI tutor are switched on.
-        </p>
+        {doubts.length ? (
+          <ul aria-label="Doubts asked to the AI tutor">
+            {doubts.map((d) => (
+              <li key={d.subject}>
+                {d.subject}: {d.doubts} {d.doubts === 1 ? 'doubt' : 'doubts'} asked, last on {formatTime(d.last_at)}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="muted">No doubts asked to the AI tutor yet.</p>
+        )}
+        <p className="empty small">Practice quizzes and notes opened appear here once Studio is switched on.</p>
       </section>
     </>
   );

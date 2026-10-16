@@ -31,6 +31,7 @@ const OK: Record<string, string> = {
   queued: 'Queued for processing.',
   published: 'Published. Students in the chosen batches can open it now.',
   withdrawn: 'Withdrawn. Students can no longer open it.',
+  resolved: 'Marked as resolved.',
 };
 
 export async function Flash({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {

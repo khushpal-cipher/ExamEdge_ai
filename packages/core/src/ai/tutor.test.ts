@@ -62,6 +62,22 @@ describe('assemble (labels come from citations, never from the model)', () => {
     expect(out.content).toBe('Torque is the turning effect. Unit N m.\n\nIn general, rotation needs a lever arm.');
     expect(out.notFound).toBe(false);
   });
+  it('cites a page once when two passages come from it', () => {
+    const out = assemble(
+      [
+        {
+          text: 'A.',
+          cites: [
+            { passage: 0, cited_text: 'a' },
+            { passage: 1, cited_text: 'b' },
+          ],
+        },
+      ],
+      [ROTATION, passage('Second chunk of page 4.')],
+    );
+    expect(out.citations).toHaveLength(1);
+    expect(out.paragraphs[0]!.citations).toEqual([0]);
+  });
   it('ignores a citation to a passage that was never sent, and reports "not found" without citations', () => {
     const out = assemble([{ text: 'Something.', cites: [{ passage: 7, cited_text: 'x' }] }], [ROTATION]);
     expect(out.paragraphs).toEqual([{ text: 'Something.', label: 'general', citations: [] }]);

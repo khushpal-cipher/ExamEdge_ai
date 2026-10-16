@@ -1,12 +1,16 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Markdown } from '@/lib/markdown';
 import { isUuid, requireMember } from '@/lib/tenant';
 import { Flash, type Search } from '../../flash';
 import { DOCUMENT_STATUS, VERSION_STATUS } from '../../documents/status';
 import { Upload } from '../../documents/upload';
+import { resolveReport } from './actions';
 import { Panes } from './panes';
+import { Tutor, type ChatMessage } from './tutor';
 
 type Doc = { id: string; title: string; status: string; chapter_id: string | null };
+type Report = { id: string; question: string; answer: string; reason: string | null; created_at: string };
 
 export default async function SubjectWorkspace(props: { params: Promise<{ id: string }>; searchParams: Search }) {
   const { institute, member, db } = await requireMember();
@@ -48,6 +52,32 @@ export default async function SubjectWorkspace(props: { params: Promise<{ id: st
     for (const v of versions ?? []) latest.set(v.document_id as string, v.processing_status as string);
   }
   const chapterName = new Map(chapters.map((c) => [c.id, c.name]));
+  // RLS: a chat is readable by its owner only; staff see reported answers, never chats (ADR-015).
+  const [{ data: chat }, { data: reportRows }] = await Promise.all([
+    db
+      .from('conversations')
+      .select('id, messages(id, role, content, citations, answer_labels, feedback, created_at)')
+      .eq('institute_id', institute.id)
+      .eq('subject_id', id)
+      .eq('user_id', member.userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    student
+      ? Promise.resolve({ data: [] })
+      : db
+          .from('answer_reports')
+          .select('id, question, answer, reason, created_at')
+          .eq('institute_id', institute.id)
+          .eq('subject_id', id)
+          .is('resolved_at', null)
+          .order('created_at', { ascending: false })
+          .limit(50),
+  ]);
+  const messages = ((chat?.messages ?? []) as (ChatMessage & { created_at: string })[]).sort((a, b) =>
+    a.created_at.localeCompare(b.created_at),
+  );
+  const reports = (reportRows ?? []) as Report[];
   return (
     <>
       <div className="top">
@@ -109,20 +139,35 @@ export default async function SubjectWorkspace(props: { params: Promise<{ id: st
         }
         tutor={
           <>
-            <h2>AI tutor · {subject.name}</h2>
-            <p className="empty reading">
-              The tutor answers from your institute&apos;s notes with page citations. It is switched on in a later
-              release.
-            </p>
-            <form className="row" aria-label="Ask a doubt">
-              <label className="sr-only" htmlFor="doubt">
-                Your doubt
-              </label>
-              <input id="doubt" disabled placeholder={`Ask a doubt about ${subject.name}…`} style={{ flex: 1 }} />
-              <button type="submit" className="primary" disabled>
-                Ask
-              </button>
-            </form>
+            {!student && (
+              <details open={reports.length > 0}>
+                <summary>Reported answers ({reports.length})</summary>
+                {reports.length === 0 && <p className="muted small">No open reports for this subject.</p>}
+                <ul className="stack" style={{ listStyle: 'none', padding: 0 }} aria-label="Reported answers">
+                  {reports.map((r) => (
+                    <li key={r.id} className="card stack">
+                      <p className="small muted">Question</p>
+                      <p>{r.question}</p>
+                      <p className="small muted">Answer</p>
+                      <Markdown text={r.answer} />
+                      {r.reason && <p className="small">Student&apos;s note: {r.reason}</p>}
+                      <form action={resolveReport}>
+                        <input type="hidden" name="report_id" value={r.id} />
+                        <input type="hidden" name="subject_id" value={subject.id} />
+                        <button type="submit">Resolve</button>
+                      </form>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+            <Tutor
+              key={chat?.id ?? 'new'}
+              subjectId={subject.id}
+              subjectName={subject.name}
+              conversationId={chat?.id ?? null}
+              messages={messages}
+            />
           </>
         }
         studio={
