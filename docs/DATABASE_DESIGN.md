@@ -138,9 +138,12 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 
 `match_chunks(query_embedding, query_text, subject, k)` (invoker) returns `institute_id` and `similarity` with each chunk so the tutor can assert the tenant (TH-06) and evals can record scores.
 
-**generated_artifacts** (T or S) — `owner_scope` (`institute|student`), `owner_user_id` (required iff student), `kind` (`summary|study_guide|flashcards|quiz|mind_map|table|report|slides|infographic|audio|video`), `subject_id`, `chapter_id`, `source_refs jsonb`, `input_hash`, `prompt_version`, `model`, `schema_version`, `content jsonb`, `asset_path`, `status` (`generating|draft|approved|published|withdrawn|failed`), `approved_by`, `approved_at`, `audience_batch_ids uuid[]` (published institute artifacts only).
-- Partial unique `(institute_id, kind, input_hash, prompt_version) where owner_scope='institute'` → generate once, reuse.
-- S: institute scope → staff all, students only `published` and audience match; student scope → owner only. Writes: staff (institute scope) / owner student via quota-checked RPC (student scope) / worker.
+**generated_artifacts** (T or S, as built in Phase 9, ADR-028) — `owner_scope` (`institute|student`), `owner_user_id` (set by trigger iff student), `kind` (`summary|flashcards|mind_map|quiz`; more kinds in R2/R3), `subject_id`, `chapter_id` (3-column composite FK `(institute_id, subject_id, chapter_id)` → chapters), `source_refs jsonb` (`[{document_id, title, page_start, page_end}]`, cited by index in `content`), `input_hash` (sha256 hex), `prompt_version`, `model`, `schema_version`, `content jsonb` (≤ 200 KB), `status` (`draft|published|withdrawn`), `usage_record_id`, `created_by`, `approved_by`, `approved_at`. Checks: student scope ⇔ owner set; student artifacts stay `draft`; `published` ⇒ `approved_at`.
+- Partial unique `(institute_id, kind, input_hash, prompt_version) where owner_scope='institute'` and `(institute_id, owner_user_id, kind, input_hash, prompt_version) where owner_scope='student'` → generate once, reuse.
+- Trigger `guard_artifact`: insert = `draft` with owner/creator from `auth.uid()`; a content edit → `draft`; publishing needs ≥ 1 audience row and stamps the approver.
+- S: student scope → owner only; institute scope → staff of the institute, students only `published` with an audience batch they belong to (`private.can_read_artifact`). I: students (student scope, on a readable subject) / staff (institute scope). U (`content`, `status`) / D: staff (institute scope), owner student (own rows).
+
+**artifact_audience** (T) — pk `(artifact_id, batch_id)`, `institute_id`, composite FKs to artifact and batch (replaces the planned `audience_batch_ids uuid[]`). Staff of the institute; teachers only batches they teach; audited.
 
 ### 4.5 Assessments
 
@@ -167,7 +170,7 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 - I/U via `save_answer` RPC only: checks caller owns attempt, `status='in_progress'`, `now() < deadline_at` (DB clock), question belongs to the test. Students cannot set `is_correct/marks_awarded` (column privileges).
 - Objective answers (single/multi/numerical) are marked automatically. Written answers are marked **only by a teacher** of that batch (or admin) via `grade_answer` RPC: `0 ≤ marks ≤ max` (half marks allowed), optional comment, audited. Changing marks after release recalculates both ranks.
 
-**practice_attempts** (S) — `user_id`, `artifact_id` (student or published quiz), `score`, `max_score`, `answers jsonb`, `started_at`, `completed_at`. Owner only; staff get counts/averages via aggregate function.
+**practice_attempts** (S) — `user_id`, `artifact_id` (composite FK; the student's own or a published quiz), `answers jsonb` (`{question id: option id}`, only the quiz's ids), `score`, `max_score`, `completed_at`. No insert grant: written only by definer `submit_practice(art, answers)`, which grades in SQL and returns the per-question result. S owner only; staff get counts/averages per chapter via `practice_activity(inst, student)` (definer, same callers as `student_progress`). Never counts for rank.
 
 **batch_standings** (T) — pk `(batch_id, user_id)`, `institute_id`, `average_percentage numeric(5,2)`, `total_marks`, `total_max_marks`, `tests_counted`, `tests_missed`, `overall_rank`, `updated_at`. Recomputed by the release job whenever a test's results are released or regraded. S: staff of the batch; students see their own row and the batch rank list.
 
