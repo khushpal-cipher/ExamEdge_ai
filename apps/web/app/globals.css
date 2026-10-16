@@ -418,3 +418,33 @@ th {
     display: none;
   }
 }
+
+/* AI tutor */
+.chat .question {
+  margin: 0 0 0 auto;
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--soft);
+  overflow-wrap: anywhere;
+}
+.md {
+  font-family: var(--font-read), Georgia, serif;
+  overflow-wrap: anywhere;
+}
+.md > :first-child {
+  margin-top: 0;
+}
+.md > :last-child {
+  margin-bottom: 0;
+}
+.md pre {
+  overflow-x: auto;
+  background: var(--soft);
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+.answer-part .badge {
+  margin: 0 6px 4px 0;
+  text-decoration: none;
+}

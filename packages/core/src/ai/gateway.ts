@@ -25,14 +25,14 @@ export class AiBlocked extends Error {
 export async function metered<T>(
   meter: Meter,
   call: { feature: string; model: Model; worstCase: Usage },
-  run: () => Promise<{ value: T; usage: Usage; outcome?: Outcome }>,
+  run: (recordId: string) => Promise<{ value: T; usage: Usage; outcome?: Outcome }>,
 ) {
   const { provider } = MODELS[call.model];
   const r = await meter.reserve(call.feature, provider, call.model, cost(call.model, call.worstCase));
   if (r.blocked) throw new AiBlocked(r.blocked);
   let out;
   try {
-    out = await run();
+    out = await run(r.id);
   } catch (e) {
     await meter.settle(r.id, {}, 0, 'error');
     throw e;
