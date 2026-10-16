@@ -93,17 +93,32 @@ DONE + TESTED (2026-10-16, session 18):
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (Phase 9 → Phase 10, session 18+)
-A. Phase 9 merged (PR #9, `67ed4ac`). Work continues on `phase-10-local`.
-B. Phase 10 local parts (NEXT_SESSION_PROMPT §8): retention/backup scripts that need no cloud, enforce
-   `max_upload_bytes`/`max_concurrent_jobs` (ADR-025 deferral), runbooks (incident, key rotation, restore,
-   offboarding) as docs, README "How to run the demo" (commands + demo logins), final summary to the founder: what
-   works, what is BLOCKED and why, exact steps to switch from fake AI to real keys.
-0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout <branch> && git pull && npm ci`;
+## Next exact action (Phase 10 local parts, session 19)
+Phases 1–9 are merged into `main` (last: PR #9, `67ed4ac`). Branch `phase-10-local` exists (from `67ed4ac`, pushed);
+nothing of Phase 10 is written yet.
+0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout phase-10-local && git pull && npm ci`;
    `docker info` (else `open -a Docker`); `supabase status` (else `supabase start`); `supabase db reset && npm run seed:demo`.
-   Port 3000 may be held by another session's `next dev` (this checkout, hot reload): browser checks can use it;
-   locally run E2E with `--workers=1` (parallel runs time out on dev compiles) and expect T-SEC-05 to fail there —
-   CI runs E2E on the production build.
+   Port 3000 may be held by another session's `next dev` (this checkout, hot reload): browser checks can use it
+   (open http://demo.localhost:3000 with preview_start `{url}`); locally run E2E with `--workers=1` (parallel runs
+   time out on dev compiles) and expect T-SEC-05 to fail there — CI runs E2E on the production build.
+1. State Phase 10 local scope + ACs (roadmap Phase 10 minus cloud items; cloud items = BLOCKED on founder approval:
+   production Supabase/Vercel/Railway, domain/TLS, prod OAuth, Sentry/spend alerts, restore drill G7, legal Q-01 G8).
+   Plan with model/effort annotation per the founder's CLAUDE.md rule.
+2. Build, smallest first, commit after each green task:
+   a. Enforce per-institute `max_upload_bytes` (document upload ticket) and `max_concurrent_jobs` (worker) — deferred
+      in ADR-025; pgTAP/unit/integration tests.
+   b. Retention job for conversations/messages (12 months, ADR-026 / DATABASE_DESIGN §4.4) if small; else BLOCKED note.
+   c. Local backup script (`pg_dump` + storage copy to a local folder) and a local restore rehearsal into a scratch DB
+      (evidence only; the real G7 drill stays BLOCKED until production exists).
+   d. Runbooks in `docs/RUNBOOKS.md`: incident, key rotation, restore, institute offboarding, switching fake → real AI.
+   e. README.md "How to run the demo" (commands + demo logins: owner@demo.test, admin@demo.test, teacher1-3@demo.test,
+      student01-50@demo.test, same @rival.test, platform@examedge.test with TOTP) .
+3. Full gate (`npm run check`, E2E `--workers=1` locally), PR into `main`, CI green, merge.
+4. Final summary to the founder in simple English (NEXT_SESSION_PROMPT §8): what works, what is BLOCKED and why,
+   exact steps to switch from fake AI to real keys (AI_PROVIDER=anthropic, EMBEDDINGS_PROVIDER=voyage, key names in
+   `.env.example`).
+Note: GitHub auto-merge is disabled for this repo (Settings → General → "Allow auto-merge"); merge with
+`gh pr merge <n> --squash` once CI is green.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -137,6 +152,6 @@ B. Phase 10 local parts (NEXT_SESSION_PROMPT §8): retention/backup scripts that
 | 12 | 2026-10-16 | PR #6 merged (`b1f0795`). Phase 6: tutor schema + RLS + pgTAP (1064 PASS), Anthropic SDK 0.131.0, core tutor/fake/Claude provider + tests WIP (1 unit test failing, fix known) | see `git log` |
 | 16 | 2026-10-16 | Phase 8: AC8.4 fixed (OR keyword query, library recall 1.0), web verified in browser (2 UI fixes), `e2e/library.spec.ts`, ADR-027 + docs, gate, PR #8 CI green (E2E 24/24) and merged (`bce1046`); branch `phase-9-studio` | see `git log` |
 | 17 | 2026-10-16 | Phase 9: studio schema + 38 pgTAP (1220 PASS), core generators + Claude structured-output provider (unit 132), web Studio pane/artifact page/quiz/progress written, first browser check OK; handoff mid-browser-check | see `git log` |
-| 18 | 2026-10-16 | Phase 9: browser check done (no bugs), Studio seed, `e2e/studio.spec.ts`, ADR-028 + DB docs, local gate (E2E 25/26, T-SEC-05 dev-only), PR #9 CI green (E2E 26/26) and merged (`67ed4ac`); branch `phase-10-local` | see `git log` |
+| 18 | 2026-10-16 | Phase 9: browser check done (no bugs), Studio seed, `e2e/studio.spec.ts`, ADR-028 + DB docs, local gate (E2E 25/26, T-SEC-05 dev-only), PR #9 CI green (E2E 26/26) and merged (`67ed4ac`); branch `phase-10-local`; handoff for Phase 10 | see `git log` |
 | 15 | 2026-10-16 | Phase 8: library migration + 40 pgTAP (1104 PASS), core two-layer tutor (46 unit), web/platform editor/seed/eval written; AC8.4 library recall 0.81 FAILING (keyword AND), handoff | see `git log` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |
