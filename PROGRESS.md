@@ -10,7 +10,8 @@ Last updated: 2026-10-16
 **Phase 4 MERGED** into `main` (PR #5, squash commit `cbfb62e`, CI green: check + secrets, run 38795802409, 2026-10-16).
 **Phase 5 MERGED** into `main` (PR #6, squash commit `b1f0795`, CI green: check + secrets, run 38805190604, 2026-10-16).
 **Phase 6 MERGED** into `main` (PR #7, squash commit `7863900`, CI green: check + secrets, run 38841699259 — unit 104, pgTAP 1064, integration 21, E2E 22/22 against the production build, 2026-10-16).
-**Phase 8 (library) — local gate green except T-SEC-05 (dev-server reuse, see Failed checks); PR into main opened** from `phase-8-library`.
+**Phase 8 MERGED** into `main` (PR #8, squash commit `bce1046`, CI green: check + secrets, run 38848935766 — unit 111, pgTAP 1107, integration 21, E2E 24/24 against the production build, 2026-10-16).
+**Phase 9 (Studio basics) — NOT STARTED** on `phase-9-studio` (branched from `main` at `bce1046`).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -33,7 +34,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### Phase 8 — shared library engine + pilot seed (session 15) — IN PROGRESS on `phase-8-library`
+### Phase 8 — shared library engine + pilot seed (sessions 15–16) — MERGED (PR #8, `bce1046`)
 Scope = IMPLEMENTATION_ROADMAP Phase 8. Q-02 default **JEE Physics** (ADR-027). Reviewer = aal2 platform admin (no
 expert hired). Library items are text kinds only (explanation, formula sheet, worked example); question/flashcard kinds
 wait for Studio/generation. Opus/Batch generation BLOCKED (no key) → hand-written demo seed.
@@ -313,14 +314,21 @@ Design decisions already worked out for later phases (record as ADRs when built)
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action
-0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout phase-8-library && git pull && npm ci`;
+0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout phase-9-studio && git pull && npm ci`;
    `docker info` (else `open -a Docker`); `supabase status` (else `supabase start`); `supabase db reset && npm run seed:demo`.
-   Port 3000 may still be held by an old `next dev` (PID 86773, started 07:45, cwd apps/web) from another session;
-   Next refuses a second `next dev` in the same folder, so browser checks used it (it serves this checkout).
-1. Phase 8 PR into main: check CI (full E2E against the production build there); fix until green; squash-merge; record
-   PR number, merge commit and CI run in PROGRESS "Current phase".
-2. Then Phase 9 (Studio basics, IMPLEMENTATION_ROADMAP Phase 9) on a new branch `phase-9-studio` from main: state scope +
-   ACs (AC9.1–AC9.4), practice quizzes deferred from Phase 7 belong here (ADR-023).
+   Port 3000 may still be held by an old `next dev` (PID 86773, started 07:45, cwd apps/web) from another session.
+   Next refuses a second `next dev` in the same folder, so browser checks can use it (it serves this checkout with hot
+   reload); locally E2E then reuses it and T-SEC-05 fails (dev sends no `private`) — CI runs E2E on the production build.
+1. Start Phase 9 (Studio basics, IMPLEMENTATION_ROADMAP Phase 9): state scope + ACs first — AC9.1 every artifact
+   validates against its schema, AC9.2 identical institute request reuses the artifact (no provider call), AC9.3
+   citations per section, AC9.4 student artifacts private to owner (T-ISO-01 extended). Also in scope: student
+   practice quizzes deferred from Phase 7 (ADR-023; never count for rank). Tables: `generated_artifacts` (DATABASE_DESIGN
+   §4.4) + `practice_attempts` (§4.5), RLS + pgTAP first; fake-provider generators (summary/study guide, flashcards,
+   mind map, practice quiz) through the gateway with metering (`student_daily_generations` counter); teacher approval
+   for institute scope; Studio pane in `apps/web/app/(portal)/subjects/[id]/` (currently "Coming soon").
+   Check the markmap licence [U] before using it, or render the mind map as a nested tree (no new dependency, PROGRESS
+   design note).
+2. Then Phase 10 local parts, README "How to run the demo", final summary (NEXT_SESSION_PROMPT §8).
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -352,6 +360,6 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 | 10 | 2026-10-16 | ADR-024, Phase 4 full gate green (2 test-fixture races fixed), PR #5 merged (`cbfb62e`); Phase 5 prices verified, usage migration written (pgTAP 2 failing, WIP) | see `git log` |
 | 11 | 2026-10-16 | Phase 5: pgTAP green + `080_usage.sql`, core gateway (routing/cost/metered), worker metering, `/usage` page, platform AI switches, AC5.3 concurrency + AC5.4 API tests; 2 real bugs fixed (safeupdate kill switch, phone layout); full gate green; PR #6 opened, CI pending at handoff | `0802398` |
 | 12 | 2026-10-16 | PR #6 merged (`b1f0795`). Phase 6: tutor schema + RLS + pgTAP (1064 PASS), Anthropic SDK 0.131.0, core tutor/fake/Claude provider + tests WIP (1 unit test failing, fix known) | see `git log` |
-| 16 | 2026-10-16 | Phase 8: AC8.4 fixed (OR keyword query, library recall 1.0), web verified in browser (2 UI fixes), `e2e/library.spec.ts`, ADR-027 + docs, local gate (T-SEC-05 dev-reuse only), PR opened | see `git log` |
+| 16 | 2026-10-16 | Phase 8: AC8.4 fixed (OR keyword query, library recall 1.0), web verified in browser (2 UI fixes), `e2e/library.spec.ts`, ADR-027 + docs, gate, PR #8 CI green (E2E 24/24) and merged (`bce1046`); branch `phase-9-studio` | see `git log` |
 | 15 | 2026-10-16 | Phase 8: library migration + 40 pgTAP (1104 PASS), core two-layer tutor (46 unit), web/platform editor/seed/eval written; AC8.4 library recall 0.81 FAILING (keyword AND), handoff | see `git log` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |
