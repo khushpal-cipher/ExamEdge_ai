@@ -27,6 +27,12 @@ await boss.start();
 await boss.createQueue('heartbeat');
 await boss.schedule('heartbeat', '* * * * *');
 await boss.work('heartbeat', heartbeat);
+// Retention (ADR-029): chats after 12 months, daily counters after 35 days. Logs counts only.
+await boss.createQueue('purge');
+await boss.schedule('purge', '0 3 * * *', null, { tz: 'Asia/Kolkata' });
+await boss.work('purge', async () => {
+  log.info('purge.done', (await pool.query('select private.purge_expired() as n')).rows[0].n);
+});
 await boss.createQueue('ingest', { policy: 'stately' });
 await boss.work<Job>('ingest', async ([job]) => {
   if (job) await ingestVersion({ pool, download }, job.data);

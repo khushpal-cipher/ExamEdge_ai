@@ -21,6 +21,7 @@ export async function startUpload(form: FormData): Promise<UploadTicket> {
   if (!(size > 0 && size <= MAX_BYTES)) return { error: 'The file must be between 1 byte and 50 MB.' };
 
   let documentId = form.get('document_id');
+  const isNew = !isUuid(documentId);
   if (!isUuid(documentId)) {
     const subject = form.get('subject_id');
     const chapter = form.get('chapter_id');
@@ -54,6 +55,10 @@ export async function startUpload(form: FormData): Promise<UploadTicket> {
     mime,
     size_bytes: size,
   });
+  // A refused first version must not leave an empty document behind.
+  if (error && isNew) await db.from('documents').update({ deleted_at: new Date().toISOString() }).eq('id', documentId);
+  if (error?.message === 'file_too_large') return { error: 'The file is larger than your institute’s upload limit.' };
+  if (error?.message === 'storage_full') return { error: 'Your institute’s storage is full. Ask your admin.' };
   if (error) return { error: 'Could not start the upload.' };
   const { data: signed, error: signError } = await db.storage.from('documents').createSignedUploadUrl(path);
   if (signError) return { error: 'Could not start the upload.' };

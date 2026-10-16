@@ -48,21 +48,26 @@ export const workerMeter = (pool: pg.Pool, institute: string, job: string): Mete
 });
 
 export async function ingestVersion(deps: Deps, job: Job): Promise<'ready' | 'failed' | 'skipped'> {
-  const { rows } = await inTenant(deps.pool, job.institute_id, (c) =>
-    c.query(
+  const rows = await inTenant(deps.pool, job.institute_id, async (c) => {
+    // The institute's max_concurrent_jobs; when full the version stays queued and the next poll sends it again.
+    if (!(await c.query('select private.job_slot_free() as free')).rows[0].free) return [];
+    const claim = await c.query(
       `update public.document_versions set processing_status = 'processing', claimed_at = now()
        where id = $1 and (processing_status = 'queued'
          or (processing_status = 'processing' and claimed_at < now() - interval '30 minutes'))
-       returning document_id, version, storage_path, mime`,
+       returning document_id, version, storage_path, mime, size_bytes`,
       [job.version_id],
-    ),
-  );
+    );
+    return claim.rows;
+  });
   const v = rows[0];
-  if (!v) return 'skipped'; // already handled, or not a version of this institute
+  if (!v) return 'skipped'; // already handled, not a version of this institute, or no free job slot
   try {
     const bytes = await deps.download(v.storage_path).catch(() => {
       throw new IngestError('file_missing');
     });
+    // The upload limit was checked against the declared size; the real file must not be bigger.
+    if (bytes.length > Number(v.size_bytes)) throw new IngestError('too_large');
     const meter = workerMeter(deps.pool, job.institute_id, job.version_id);
     const { pages, method } = await readPages(bytes, v.mime, meter);
     const chunks = chunkPages(pages);
@@ -133,8 +138,14 @@ export async function pendingJobs(pool: pg.Pool): Promise<Job[]> {
   return (await pool.query('select institute_id, version_id from private.pending_jobs()')).rows;
 }
 
+// Until nothing is waiting: pending_jobs hands out only max_concurrent_jobs per institute at a time.
 export async function drain(deps: Deps) {
-  const jobs = await pendingJobs(deps.pool);
-  for (const job of jobs) await ingestVersion(deps, job);
-  return jobs.length;
+  let done = 0;
+  for (let jobs = await pendingJobs(deps.pool); jobs.length; jobs = await pendingJobs(deps.pool)) {
+    const results = [];
+    for (const job of jobs) results.push(await ingestVersion(deps, job));
+    done += jobs.length;
+    if (results.every((r) => r === 'skipped')) break; // another worker holds the slots
+  }
+  return done;
 }

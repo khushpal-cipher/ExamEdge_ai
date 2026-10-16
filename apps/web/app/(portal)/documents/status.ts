@@ -16,7 +16,7 @@ export const DOCUMENT_STATUS: Record<string, [label: string, tone: string]> = {
 // error_code values written by the worker (apps/worker/src/extract.ts, ingest.ts).
 export const ERROR_TEXT: Record<string, string> = {
   empty_file: 'The file is empty.',
-  too_large: 'The file is larger than 50 MB.',
+  too_large: 'The file is larger than the size given when the upload started.',
   wrong_file_type: 'The file is not a real PDF, PNG or JPG.',
   corrupt_file: 'The PDF is damaged and cannot be read.',
   too_many_pages: 'The PDF has more than 300 pages. Split it and upload the parts.',
