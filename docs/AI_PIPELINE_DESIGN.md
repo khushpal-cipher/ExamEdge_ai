@@ -65,8 +65,8 @@ worker (tenant transaction):
 1. **Identity & membership** — user JWT; institute from host; RLS enforces membership (never a prompt).
 2. **Scope** — subject from the page; optional chapter filter chosen by the student; library subject from `subjects.library_subject_id`.
 3. **Retrieve institute material** — `match_chunks(query_embedding, query_text, subject_id, k=30)`:
-   readable published documents for the student's batches → exact cosine top-30 + keyword (`websearch_to_tsquery('simple', …)`) top-30 → reciprocal rank fusion.
-4. **Retrieve library material** — published `library_chunks` for the mapped subject (HNSW + iterative scan [V]) top-20.
+   readable published documents for the student's batches → exact cosine top-30 + keyword (OR of the question's content words, English stop words dropped — `private.keyword_query`, ADR-027) top-30 → reciprocal rank fusion.
+4. **Retrieve library material** — published `library_chunks` for the mapped subject (HNSW + iterative scan [V], same keyword half) top-20 (`match_library_chunks`, ADR-027).
 5. **Rerank** — top-8 overall, at most 6 from either layer (keeps both voices) [R]. Keep rerank only if eval recall@8 improves ≥ 5 points.
 6. **Generate** — system prompt (versioned) states: answer for exam level X; prefer institute material for "what was taught";
    label each paragraph; say when material is missing; flag disagreements. Passages sent as `search_result` blocks:
