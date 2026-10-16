@@ -98,16 +98,23 @@ describe('fake providers go through the gateway', () => {
 
   it('OCR meters one call per 20 pages', async () => {
     const { meter, calls } = fakeMeter();
+    const rendered: number[] = [];
     const { texts } = await ocrPages(
       meter,
       Array.from({ length: 41 }, (_, i) => i + 1),
+      async (page) => (rendered.push(page), { page, mime: 'image/jpeg', data: '' }),
     );
+    expect(rendered).toHaveLength(41);
     expect(texts).toHaveLength(41);
     expect(calls.filter((c) => c[0] === 'reserve')).toHaveLength(3);
     expect(calls.filter((c) => c[0] === 'settle').map((c) => (c[2] as { units: number }).units)).toEqual([20, 20, 1]);
   });
 
   it('blocked OCR stops before any text is produced', async () => {
-    await expect(ocrPages(fakeMeter('ai_disabled').meter, [1])).rejects.toMatchObject({ reason: 'ai_disabled' });
+    const render = vi.fn();
+    await expect(ocrPages(fakeMeter('ai_disabled').meter, [1], render)).rejects.toMatchObject({
+      reason: 'ai_disabled',
+    });
+    expect(render).not.toHaveBeenCalled();
   });
 });

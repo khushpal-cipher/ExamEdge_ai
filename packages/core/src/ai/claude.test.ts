@@ -2,7 +2,9 @@
 // (search_result blocks, citations, effort, fallbacks) and the mapping of citations back to passages are checked.
 import Anthropic from '@anthropic-ai/sdk';
 import { describe, expect, it } from 'vitest';
-import { claudeTutor } from './claude';
+import { claudeOcr, claudeTutor, splitPages } from './claude';
+import type { Meter } from './gateway';
+import { ocrPages, OcrRefused, type PageImage } from './ocr';
 import { assemble, type Passage } from './tutor';
 
 const passages: Passage[] = [
@@ -108,5 +110,74 @@ describe('claudeTutor (recorded stream)', () => {
     await claudeTutor('claude-haiku-5-5', sdk).generate({ ...input, passages: [library] }, () => {});
     const content = (requests[0]!.body.messages as { content: object[] }[])[0]!.content;
     expect(content[0]).toMatchObject({ type: 'search_result', source: 'lib:L1', title: 'ExamEdge library: Torque' });
+  });
+});
+
+function ocrClient(text: string, stopReason = 'end_turn') {
+  const requests: Record<string, unknown>[] = [];
+  const usage = { input_tokens: 7400, output_tokens: 90, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 };
+  const body = sse([
+    {
+      type: 'message_start',
+      message: {
+        id: 'msg_2',
+        type: 'message',
+        role: 'assistant',
+        model: 'claude-haiku-5-5',
+        content: [],
+        stop_reason: null,
+        stop_sequence: null,
+        usage: { ...usage, output_tokens: 1 },
+      },
+    },
+    { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } },
+    { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text } },
+    { type: 'content_block_stop', index: 0 },
+    { type: 'message_delta', delta: { stop_reason: stopReason, stop_sequence: null }, usage },
+    { type: 'message_stop' },
+  ]);
+  const fetch = async (_url: string | URL | Request, init?: RequestInit) => {
+    requests.push(JSON.parse(String(init?.body)));
+    return new Response(body, { headers: { 'content-type': 'text/event-stream' } });
+  };
+  return { requests, sdk: new Anthropic({ apiKey: 'test-key', fetch, maxRetries: 0 }) };
+}
+
+const images: PageImage[] = [
+  { page: 3, mime: 'image/jpeg', data: 'AAAA' },
+  { page: 7, mime: 'image/jpeg', data: 'BBBB' },
+];
+
+describe('claudeOcr (recorded stream)', () => {
+  it('sends labelled page images to Haiku and splits the answer per page', async () => {
+    const { sdk, requests } = ocrClient('<page n="3">\n# Torque\n$\\tau = r F$\n</page>\n<page n="7">Half a pa');
+    const r = await claudeOcr(sdk).read(images);
+
+    const body = requests[0]!;
+    expect(body).toMatchObject({ model: 'claude-haiku-5-5', max_tokens: 8000, output_config: { effort: 'low' } });
+    const content = (body.messages as { content: { type: string; text?: string; source?: unknown }[] }[])[0]!.content;
+    expect(content.map((c) => c.type)).toEqual(['text', 'image', 'text', 'image', 'text']);
+    expect(content[0]!.text).toBe('Page 3:');
+    expect(content[3]!.source).toEqual({ type: 'base64', media_type: 'image/jpeg', data: 'BBBB' });
+
+    // A page cut off by max_tokens keeps what was written.
+    expect(r).toMatchObject({ refused: false, texts: ['# Torque\n$\\tau = r F$', 'Half a pa'] });
+    expect(r.usage).toMatchObject({ input_tokens: 7400, output_tokens: 90 });
+  });
+
+  it('a missing page is empty, never another page', () => {
+    expect(splitPages('<page n="9">x</page>', [1, 9])).toEqual(['', 'x']);
+  });
+
+  it('a refusal settles as refused (billed) and fails the batch', async () => {
+    const settled: unknown[] = [];
+    const meter: Meter = {
+      reserve: async () => ({ id: 'r1', blocked: null }),
+      settle: async (...a) => void settled.push(a),
+    };
+    const { sdk } = ocrClient('', 'refusal');
+    const render = async (page: number): Promise<PageImage> => ({ page, mime: 'image/jpeg', data: 'AAAA' });
+    await expect(ocrPages(meter, [1], render, claudeOcr(sdk))).rejects.toBeInstanceOf(OcrRefused);
+    expect(settled).toEqual([['r1', expect.objectContaining({ input_tokens: 7400, units: 1 }), 785, 'refused']]);
   });
 });

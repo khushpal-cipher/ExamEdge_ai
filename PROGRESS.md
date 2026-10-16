@@ -36,6 +36,27 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
+### R1 OCR — Claude OCR provider (session 20, branch `r1-ocr`) — gate green locally, PR open
+Scope = PROGRESS "Next exact action" 2a (no founder decision needed). ADR-030.
+DONE + TESTED (2026-10-16):
+- `packages/core/src/ai/ocr.ts`: provider interface (fake | anthropic), `ocrPages(meter, pages, render)` renders a
+  batch only after its reservation; `OcrRefused` → worker error code `ocr_refused` (staff text added).
+- `packages/core/src/ai/claude.ts` `claudeOcr`: Haiku 5.5, ≤ 20 labelled base64 JPEG pages per streamed call, effort
+  low, max_tokens 4,000/page, `<page n>` split. Request shape checked against the official vision docs (2026-10-16).
+  Unit tests against a recorded stream: request shape, per-page split incl. truncated page, refusal settled as
+  `refused` with its real cost (785 µ$) and batch failed.
+- `apps/worker/src/extract.ts`: pages needing OCR and photos rendered to JPEG ≤ 2,000 px (`@napi-rs/canvas` 1.0.11,
+  already in the lockfile via pdfjs-dist, now declared: `npm i -w @examedge/worker @napi-rs/canvas@1.0.11`).
+  Real bug found while testing: the canvas binding throws on NUL characters (garbled text layers) → the document failed
+  as `internal`; fixed (NULs dropped before drawing). New integration tests: NUL text layer → `ready` (proved failing
+  without the fix), corrupt PNG → `corrupt_file`.
+- Local gate (after `supabase db reset && npm run seed:demo`): format, lint + forbidden, typecheck PASS; unit 135/135;
+  pgTAP Files=13 Tests=1243 PASS; integration 25/25; build + bundle scan PASS; `npx playwright test --workers=1` 25/26 —
+  only `portals.spec.ts:142` T-SEC-05 (another session's `next dev` holds :3000, known). E2E against the production
+  build → CI on the PR.
+- RUNBOOKS §5: OCR is now "ready, needs only an Anthropic key"; worker gets the same key.
+BLOCKED: real-key OCR run, AC4.5 (formula accuracy on 3 real docs), AC4.6 (cost per 100 pages).
+
 ### Phase 10 — local parts (session 19) — MERGED (PR #10, `dc7600f`)
 Scope (ADR-029) = roadmap Phase 10 minus everything that needs a cloud account. ACs proven locally: per-institute
 `max_upload_bytes` / `max_storage_bytes` / `max_concurrent_jobs` enforced (ADR-025 deferral closed); retention purge;
@@ -97,8 +118,7 @@ Everything in `main` (`dc7600f`); no open PR; `phase-10-local` is merged (can be
    - give an Anthropic key → switch tutor + Studio to real AI (RUNBOOKS §5) and run AC5.2 / AC6.x evals;
    - answer Q-08 (Voyage terms) and Q-01 (legal, blocks the pilot).
 2. Local work possible without any decision (new branch per task, e.g. `r1-ocr`):
-   a. Claude OCR provider in `packages/core/src/ai/ocr.ts` (Haiku, PDF/image input, ≤ 20-page batches, metered as
-      `ingest_ocr`), tested against a recorded response like `claude.test.ts` — use the claude-api skill first.
+   a. ~~Claude OCR provider~~ — built on `r1-ocr` (session 20, ADR-030): merge its PR once CI is green.
    b. Purge of soft-deleted documents (> 30 days) and replaced logos: needs Storage delete from the worker service
       account (policy + job) — ADR-029 notes it as not built.
    Each: tests + full gate (`npm run check`, local E2E `--workers=1`, T-SEC-05 fails only against another session's
@@ -114,6 +134,7 @@ Everything in `main` (`dc7600f`); no open PR; `phase-10-local` is merged (can be
 - Playwright Chromium (session 3, `npx playwright install chromium`, chromium-1243/headless-shell-1248 in ~/Library/Caches/ms-playwright).
 - Seed/ops: `npm run seed:demo`, `npm run create-institute`, `npm run audit`. Demo logins: owner@demo.test, admin@demo.test, teacher1-3@demo.test, student01-50@demo.test (same for @rival.test) via "Sign in as demo user".
 - `pdfjs-dist` 6.4.299 (session 8, `npm i -w @examedge/worker pdfjs-dist@6.4.299`; optional `@napi-rs/canvas` comes with it); `@supabase/supabase-js` added to worker deps.
+- `@napi-rs/canvas` 1.0.11 declared in worker deps (session 20; was already installed with pdfjs-dist).
 - PostgreSQL 17 client tools (session 19, `brew install postgresql@17`, pg_dump 17.11) for `npm run backup` (server is 17).
 - Tools installed by Claude: Docker Desktop 4.95.0 (`brew install --cask docker-desktop`), Supabase CLI 2.121.0 and gitleaks 8.30.1 (`brew install supabase/tap/supabase gitleaks`).
 
@@ -139,5 +160,6 @@ Everything in `main` (`dc7600f`); no open PR; `phase-10-local` is merged (can be
 | 17 | 2026-10-16 | Phase 9: studio schema + 38 pgTAP (1220 PASS), core generators + Claude structured-output provider (unit 132), web Studio pane/artifact page/quiz/progress written, first browser check OK; handoff mid-browser-check | see `git log` |
 | 18 | 2026-10-16 | Phase 9: browser check done (no bugs), Studio seed, `e2e/studio.spec.ts`, ADR-028 + DB docs, local gate (E2E 25/26, T-SEC-05 dev-only), PR #9 CI green (E2E 26/26) and merged (`67ed4ac`); branch `phase-10-local`; handoff for Phase 10 | see `git log` |
 | 19 | 2026-10-16 | Phase 10 local: upload/storage/job limits, retention purge, backup + restore drill, runbooks, README, ADR-029; local gate green (E2E 25/26, T-SEC-05 dev-only) | `b731118` |
+| 20 | 2026-10-16 | Claude OCR provider (ADR-030), NUL-render bug fixed, local gate green (E2E 25/26, T-SEC-05 dev-only); PR opened | see `git log` |
 | 15 | 2026-10-16 | Phase 8: library migration + 40 pgTAP (1104 PASS), core two-layer tutor (46 unit), web/platform editor/seed/eval written; AC8.4 library recall 0.81 FAILING (keyword AND), handoff | see `git log` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |
