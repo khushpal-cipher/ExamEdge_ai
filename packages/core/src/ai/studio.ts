@@ -186,7 +186,8 @@ function sentencesOf(sources: Source[]) {
     s.content
       .split(/(?<=[.?!।])\s+|\n+/)
       .map((t) => t.trim())
-      .filter((t) => t.length >= 20 && /\p{L}/u.test(t) && !seen.has(t) && seen.add(t))
+      // Headings (no closing punctuation) are not sentences.
+      .filter((t) => t.length >= 20 && /\p{L}/u.test(t) && /[.?!।]$/.test(t) && !seen.has(t) && seen.add(t))
       .map((t) => ({ text: t, src, title: s.title })),
   );
 }

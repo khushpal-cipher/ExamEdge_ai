@@ -103,8 +103,20 @@ function Bar({ value }: { value: number | null }) {
 
 // Doubts asked per subject (private.tutor_activity): counts only, never the text of the chat (ADR-015).
 export type Doubts = { subject: string; doubts: number; last_at: string }[];
+// Practice quizzes per chapter (private.practice_activity); they never count for rank.
+export type Practice = { subject: string; chapter: string; quizzes: number; average: number; last_at: string }[];
 
-export function ProgressView({ p, staff, doubts }: { p: Progress; staff: boolean; doubts: Doubts }) {
+export function ProgressView({
+  p,
+  staff,
+  doubts,
+  practice,
+}: {
+  p: Progress;
+  staff: boolean;
+  doubts: Doubts;
+  practice: Practice;
+}) {
   const latest = p.tests.filter((t) => !t.missed).at(-1);
   return (
     <>
@@ -303,7 +315,19 @@ export function ProgressView({ p, staff, doubts }: { p: Progress; staff: boolean
         ) : (
           <p className="muted">No doubts asked to the AI tutor yet.</p>
         )}
-        <p className="empty small">Practice quizzes and notes opened appear here once Studio is switched on.</p>
+        {practice.length ? (
+          <ul aria-label="Practice quizzes">
+            {practice.map((q) => (
+              <li key={`${q.subject}/${q.chapter}`}>
+                {q.subject} · {q.chapter}: {q.quizzes} practice {q.quizzes === 1 ? 'quiz' : 'quizzes'}, average{' '}
+                {Number(q.average).toFixed(0)}%, last on {formatTime(q.last_at)}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="muted">No practice quizzes taken yet.</p>
+        )}
+        <p className="small muted">Practice quizzes help with learning. They never affect rank.</p>
       </section>
     </>
   );

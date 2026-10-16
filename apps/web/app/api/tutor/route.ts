@@ -6,6 +6,7 @@ import { embed, toVector } from '@examedge/core/ai/embed';
 import { AiBlocked, type Meter } from '@examedge/core/ai/gateway';
 import { mergeLayers, tutorAnswer, type Passage } from '@examedge/core/ai/tutor';
 import { log } from '@examedge/core/log';
+import { webMeter } from '@/lib/meter';
 import { supabase } from '@/lib/supabase';
 import { currentHost, currentInstitute, currentMember } from '@/lib/tenant';
 import { hostname } from '@/lib/host';
@@ -21,19 +22,6 @@ const Body = z.object({
 });
 
 type Db = Awaited<ReturnType<typeof supabase>>;
-
-const webMeter = (db: Db, inst: string): Meter => ({
-  reserve: async (feat, prov, mdl, reserve) => {
-    const { data, error } = await db.rpc('ai_reserve', { inst, feat, prov, mdl, reserve }).single();
-    if (error) throw error;
-    const r = data as { record_id: string; blocked: string | null };
-    return { id: r.record_id, blocked: r.blocked };
-  },
-  settle: async (rid, usage, cost, result) => {
-    const { error } = await db.rpc('ai_settle', { inst, rid, usage, cost, result });
-    if (error) throw error;
-  },
-});
 
 type Subject = { id: string; library_subject_id: string | null };
 type NotesRow = Omit<Extract<Passage, { document_id: string }>, 'title'>;

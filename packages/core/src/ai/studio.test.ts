@@ -21,7 +21,7 @@ const sources: Source[] = [
     page_start: 1,
     page_end: 1,
     content:
-      'Rotational Motion\nTorque is the turning effect of a force about an axis. Torque equals r × F and is measured in newton metre. ' +
+      'Chapter 7 Rotational Motion\n7.1 Torque\nTorque is the turning effect of a force about an axis. Torque equals r × F and is measured in newton metre. ' +
       'Moment of inertia measures how mass is distributed about the rotation axis. Angular momentum is conserved when no external torque acts.',
   },
   {
