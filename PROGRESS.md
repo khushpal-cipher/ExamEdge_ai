@@ -9,7 +9,8 @@ Last updated: 2026-10-16
 **Phase 7 MERGED** into `main` (PR #4, squash commit `2a5f25e`, CI green: check + secrets, run 38711008739, 2026-10-15).
 **Phase 4 MERGED** into `main` (PR #5, squash commit `cbfb62e`, CI green: check + secrets, run 38795802409, 2026-10-16).
 **Phase 5 MERGED** into `main` (PR #6, squash commit `b1f0795`, CI green: check + secrets, run 38805190604, 2026-10-16).
-**Phase 6 (tutor) — local gate green except 1 E2E that ran against the wrong server (see below); PR into `main` opened, CI decides.**
+**Phase 6 MERGED** into `main` (PR #7, squash commit `7863900`, CI green: check + secrets, run 38841699259 — unit 104, pgTAP 1064, integration 21, E2E 22/22 against the production build, 2026-10-16).
+**Phase 8 (library) — NOT STARTED**; branch `phase-8-library` created from `main` at `7863900`.
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -31,7 +32,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### Phase 6 — source-grounded AI tutor (sessions 12–13) — IN PROGRESS on `phase-6-tutor`
+### Phase 6 — source-grounded AI tutor (sessions 12–14) — MERGED (PR #7, `7863900`)
 Scope = IMPLEMENTATION_ROADMAP Phase 6. AC plan: AC6.4 (0 cross-tenant passages in 1,000 queries) provable locally as an
 integration test; AC6.1 eval harness on demo data (real threshold BLOCKED: real embeddings + pilot golden set); AC6.2,
 AC6.3, AC6.5, AC6.6 BLOCKED (no Anthropic key / no staging / human grading).
@@ -248,21 +249,28 @@ Design decisions already worked out for later phases (record as ADRs when built)
 | Pilot launch (Phase 10) | Q-01 legal opinion on minors' data |
 
 ## Failed checks
-- Local only: `e2e/portals.spec.ts:142` (T-SEC-05) fails when Playwright reuses a `next dev` server on :3000 (dev sends
-  `Cache-Control: no-store`); passes against the production build. Run the local E2E only with port 3000 free.
+- None. Note: locally, `e2e/portals.spec.ts:142` (T-SEC-05) fails if Playwright reuses a `next dev` already running on
+  :3000 (dev sends `Cache-Control: no-store` without `private`). Before `npm run check`, make sure port 3000 is free
+  (`lsof -nP -iTCP:3000 -sTCP:LISTEN`); if another session's dev server holds it, rely on CI for E2E and say so.
 
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action
-0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout phase-6-tutor && git pull && npm ci`;
+0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout phase-8-library && git pull && npm ci`;
    `docker info` (else `open -a Docker`); `supabase status` (else `supabase start`); `supabase db reset && npm run seed:demo`.
-1. PR `phase-6-tutor` → `main` (opened in session 14): check CI (`gh pr checks`); the E2E job there runs against the
-   production build (`npm run start`) — the decisive run for `portals.spec.ts:142` and `e2e/tutor.spec.ts`. Fix until
-   green (never weaken a test), then squash-merge, `git checkout main && git pull`, record the merge commit above.
-2. Start Phase 8 (shared library engine) on branch `phase-8-library`: state scope + ACs (IMPLEMENTATION_ROADMAP
-   Phase 8); Q-02 (pilot exam/subject) and the reviewer are founder decisions → use the documented default (one exam ×
-   one subject seed, JEE Physics) and record it in DECISIONS.md, or ask the founder if no default exists.
+   Local env files as before (`apps/web/.env.local`, root `.env.local`).
+1. Start Phase 8 (shared library engine + pilot seed, IMPLEMENTATION_ROADMAP Phase 8). First state scope + ACs
+   (AC8.1–AC8.4) in PROGRESS.md. Q-02 default = **JEE Physics** (RISKS_AND_OPEN_QUESTIONS Q-02 [A]) — use it and record
+   it in DECISIONS.md (ADR-027). Expert reviewer is not hired → reviewer = platform admin role in the UI for now;
+   "nothing publishes without a reviewer" (AC8.2) is enforced by the DB check `status='published' ⇒ reviewed_by`.
+   Opus/Batch generation is BLOCKED (no key) → library content generated by the fake provider + a small hand-written
+   seed for JEE Physics chapters that match the demo notes (Laws of Motion, Rotational Motion, Gravitation, Units).
+2. Order: migration (library_subjects/chapters/topics/items/chunks per DATABASE_DESIGN §4.1, RLS, HNSW on
+   library_chunks, `subjects.library_subject_id`, `match_library_chunks`), pgTAP (`100_library.sql` + allowlist in `010`),
+   tutor merges both layers (≤ 6 per layer in top 8, "ExamEdge library" label, `lib:` source), platform-admin library
+   editor (draft → reviewed → published), institute subject mapping UI, seed, eval golden set extended with library
+   questions (AC8.4), E2E, 375 px check, ADR-027, full gate, PR → CI green → merge, then Phase 9.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -289,7 +297,7 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 | 7 | 2026-10-15 | PR #4 merged (`2a5f25e`). Phase 7 seed fixed, `e2e/assessments.spec.ts`, 6 real bugs fixed (test creation RLS, key save, key embeds, submit, form state, checking scroll), browser check, ADR-023, gate green | `40fc4fc` |
 | 8 | 2026-10-15 | Phase 4 DB + worker + tests green (850 pgTAP, 16 integration); institute-delete cascade bug fixed; web UI + seed written, not verified | see `git log` |
 | 13 | 2026-10-16 | Phase 6: assemble fix, streaming tutor route, safe Markdown + XSS/injection suites, tutor pane + reports + doubts, browser-verified; AC6.4/E2E/gate pending | `7fd9b8a` |
-| 14 | 2026-10-16 | Phase 6: AC6.4 isolation test, eval runner, tutor E2E, 375 px check, ADR-026, gate (1 E2E env-caused), PR | see `git log` |
+| 14 | 2026-10-16 | Phase 6: AC6.4 isolation test, eval runner, tutor E2E, 375 px check, ADR-026, gate, PR #7 CI green and merged (`7863900`); branch `phase-8-library` | see `git log` |
 | 9 | 2026-10-15 | Phase 4 web UI browser-verified, worker env/CI, `e2e/documents.spec.ts`, logo upload; founder pausing subscription — handoff written | see `git log` |
 | 10 | 2026-10-16 | ADR-024, Phase 4 full gate green (2 test-fixture races fixed), PR #5 merged (`cbfb62e`); Phase 5 prices verified, usage migration written (pgTAP 2 failing, WIP) | see `git log` |
 | 11 | 2026-10-16 | Phase 5: pgTAP green + `080_usage.sql`, core gateway (routing/cost/metered), worker metering, `/usage` page, platform AI switches, AC5.3 concurrency + AC5.4 API tests; 2 real bugs fixed (safeupdate kill switch, phone layout); full gate green; PR #6 opened, CI pending at handoff | `0802398` |
