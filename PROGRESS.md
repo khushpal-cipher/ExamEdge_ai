@@ -12,7 +12,8 @@ Last updated: 2026-10-16
 **Phase 6 MERGED** into `main` (PR #7, squash commit `7863900`, CI green: check + secrets, run 38841699259 — unit 104, pgTAP 1064, integration 21, E2E 22/22 against the production build, 2026-10-16).
 **Phase 8 MERGED** into `main` (PR #8, squash commit `bce1046`, CI green: check + secrets, run 38848935766 — unit 111, pgTAP 1107, integration 21, E2E 24/24 against the production build, 2026-10-16).
 **Phase 9 MERGED** into `main` (PR #9, squash commit `67ed4ac`, CI green: check + secrets, run 38869056404 — pgTAP 1220, E2E 26/26 against the production build incl. T-SEC-05, 2026-10-16).
-**Phase 10 (local parts) — NEXT** on `phase-10-local` (branched from `main` at `67ed4ac`).
+**Phase 10 (local parts) — BUILT, local gate green** on `phase-10-local` (from `67ed4ac`); PR into `main` + CI next.
+Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -35,55 +36,45 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### Phase 9 — Studio basics (sessions 17–18) — MERGED (PR #9, `67ed4ac`)
-Scope = IMPLEMENTATION_ROADMAP Phase 9 + student practice quizzes deferred from Phase 7 (ADR-023). ACs: AC9.1 every
-artifact validates against its schema · AC9.2 identical institute request reuses the artifact (no provider call) ·
-AC9.3 citations per section · AC9.4 student artifacts private to owner (T-ISO-01 extended).
-DONE + TESTED (2026-10-16, session 17):
-- `c36462f` migration `20261023000011_studio.sql`: `chapters` + `unique (institute_id, subject_id, id)`;
-  `generated_artifacts` (owner_scope institute|student, kinds summary|flashcards|mind_map|quiz, chapter required via
-  3-column composite FK, source_refs, input_hash, prompt_version, content jsonb, status draft|published|withdrawn,
-  partial unique indexes for reuse per institute / per student), `artifact_audience` (composite FKs, audited; teachers
-  only taught batches), `practice_attempts` (no insert grant; written only by definer `submit_practice`, which grades
-  in SQL and keeps only the quiz's question ids); trigger `guard_artifact` (insert = draft by caller, owner_user_id
-  stamped; content edit → draft; publish needs an audience, stamps approver); definers `can_read_artifact`,
-  `submit_practice`, `practice_activity` (same callers as tutor_activity) + allowlist in `010`; fixtures in
-  `supabase/test_helpers.sql`; pgTAP `110_studio.sql` 38 tests. `supabase db reset && supabase test db` → Files=12,
-  Tests=1220, PASS.
-- `0fa08bd` core `packages/core/src/ai/studio.ts`: zod schemas (non-recursive, also the Claude structured-output
-  schema), `validateArtifact` (citations < sources, quiz ids/answer, mind map ≤ 60 nodes), demo generators
-  (deterministic; quiz = fill-in-the-blank), `generateArtifact` metered as feature `generation` (counter
-  `generations`), `claudeStudio` in `claude.ts` (`client.beta.messages.parse` + `betaZodOutputFormat`, numbered
-  sources because citations cannot combine with structured outputs; Sonnet for summary + fallbacks, Haiku others) —
-  real provider BLOCKED (no key), tested against a recorded response. `zod` added to `packages/core` deps (already in
-  the workspace). `fnv1a` exported from embed.ts; `fake-studio-1` in routing.ts.
-DONE + TESTED (2026-10-16, session 18):
-- `278f0d5` web Studio (generate with reuse, artifact page, quiz runner, publish/edit/withdraw/delete, practice on
-  progress pages, webMeter shared).
-- Browser check (dev server, after `db reset && seed:demo`): teacher1 → Physics → Rotational Motion → Flashcards →
-  generated (draft); Generate again → `?ok=reused`, `usage_records` feature=generation stays 1; publish to JEE 2027
-  Morning → student01 sees it under "From your teachers", draft mind map not listed; mind map renders as nested list
-  with citation chips; student01 Practice quiz → 3 answered → "Your score: 2 of 10", correct/your-answer badges and
-  explanations, "Your tries" after reload, My progress "Physics · Rotational Motion: 1 practice quiz, average 20%";
-  375 px: scrollWidth 375 on quiz, flashcards and subject pages. No bugs found.
-- `6bf90eb` seed: per institute a published Rotational Motion summary (same input hash as the web, so a teacher's
-  Generate → reused) + student01's own practice quiz with one try (5/10). `e2e/studio.spec.ts` 2 tests: AC9.2 reuse
-  with usage count unchanged, publish → student sees, draft 404 for student; DB-graded quiz + `practice_attempts` row
-  + progress; AC9.4 student03/teacher1/owner@demo/owner@rival → `/studio/<id>` 404, REST select empty,
-  `submit_practice` 42501; staff list never shows a student's quiz.
-- Docs commit: ADR-028, DATABASE_DESIGN §4.4/§4.5 as built; dashboard "Coming next" text replaced (Studio is live).
-- Local gate (2026-10-16, after `supabase db reset && npm run seed:demo`): `npm run check` → format, lint +
-  forbidden, typecheck PASS; unit 132/132; pgTAP Files=12 Tests=1220 PASS; integration 21/21; build + bundle scan
-  PASS; E2E with 4 workers against the other session's `next dev` on :3000 was flaky (5 s timeouts, different tests
-  each run) → reseeded, `npx playwright test --workers=1` → 25/26, only `portals.spec.ts:142` T-SEC-05 (dev server
-  sends `no-store` without `private`, known). `npm run audit` ok; gitleaks git history clean (dir scan hits only
-  gitignored `apps/web/.env.local` and `.next/`). E2E against the production build → CI on the PR.
+### Phase 10 — local parts (session 19) — BUILT, local gate green, PR pending
+Scope (ADR-029) = roadmap Phase 10 minus everything that needs a cloud account. ACs proven locally: per-institute
+`max_upload_bytes` / `max_storage_bytes` / `max_concurrent_jobs` enforced (ADR-025 deferral closed); retention purge;
+local backup + restore rehearsal (T-OPS-16 locally; G7 itself BLOCKED); runbooks; README demo guide.
+DONE + TESTED (2026-10-16, session 19):
+- `4e2dfd9` migration `20261024000012_limits_retention.sql`: trigger `guard_upload` (definer; `file_too_large`,
+  `storage_full`, advisory lock per institute), `pending_jobs` hands out ≤ max_concurrent_jobs per institute,
+  `job_slot_free()` (worker, strict claim check), `purge_expired()` (messages > 12 months, empty old chats,
+  usage_counters > 35 days; counts only). Worker: claim checks the slot, fails a file larger than declared
+  (`too_large`), `drain` loops until nothing waits, daily `purge` at 03:00 IST (pg-boss schedule, tz Asia/Kolkata).
+  Web: upload shows the limit messages and soft-deletes the empty new document. pgTAP `120_limits_retention.sql`
+  (23 tests) + allowlist in `010`; worker integration tests for both limits (19/19).
+  Runtime: worker started against the local stack, a sent `purge` job logged `purge.done` with counts only; schedule
+  row `purge|0 3 * * *|Asia/Kolkata`. Seed processed all 18 documents through the per-institute limit.
+  Browser (other session's `next dev` on :3000, hot reload): demo `max_upload_bytes` = 1000, teacher1 uploads a 2 KB
+  PDF → alert "The file is larger than your institute’s upload limit."; the new document row is soft-deleted; limit restored.
+- `1d2fe37` `scripts/backup.ts` (`npm run backup`, `npm run restore-drill -- <dir>`): `pg_dump -Fc` (PostgreSQL 17
+  client) + every Storage object + manifest (row counts, checksums); drill restores as `supabase_admin` in the DB
+  container into `restore_drill`, compares counts and checksums, exits 1 on a difference. Run: `Backup …: 81 tables,
+  37 files`; drill: `81 tables / 3617 rows compared, 37 files checked, 18 document checksums matched the restored rows,
+  1.5 s`, exit 0; with one backed-up file altered → exit 1 naming the file. `backups/` gitignored.
+- `b731118` `docs/RUNBOOKS.md` (incident, key rotation, backup/restore, offboarding, fake → real AI, rollback),
+  `README.md` (how to run the demo + logins), ADR-029, DATABASE_DESIGN §4.4/§4.6 as built, master plan link.
+  Found while writing: `AI_PROVIDER=anthropic` covers tutor + Studio only; Claude OCR (`packages/core/src/ai/ocr.ts`)
+  and the Voyage client (`embed.ts`, Q-08) are not written → worker must stay on fake AI (RUNBOOKS §5).
+- Local gate (2026-10-16, after `supabase db reset && npm run seed:demo`): format, lint + forbidden, typecheck PASS;
+  unit 132/132; pgTAP Files=13 Tests=1243 PASS; integration 23/23; build + bundle scan PASS; `npx playwright test
+  --workers=1` 25/26 — only `portals.spec.ts:142` T-SEC-05 (the other session's `next dev` holds :3000, sends
+  `no-store` without `private`, known). Production build checked by hand: `next start -p 3100` →
+  `Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate`. `npm run audit` ok; gitleaks history clean.
+  E2E against the production build → CI on the PR.
 
 ## Blocked
 | Item | Blocked on |
 |---|---|
 | Embedding real institute documents (Phase 4) | Q-08 Voyage data-use terms |
-| Pilot launch (Phase 10) | Q-01 legal opinion on minors' data |
+| Pilot launch (Phase 10) | Q-01 legal opinion on minors' data (G8, AC10.4) |
+| Phase 10 cloud parts | Founder approval for accounts: production Supabase/Vercel/Railway, domain + wildcard TLS, prod Google OAuth, Sentry + spend alerts, independent backup storage; then the real restore drill (G7, AC10.2), k6 load test (AC10.3, AC7.4), rollback rehearsal (AC10.5) |
+| Real AI | Anthropic key (tutor + Studio ready); Claude OCR not written; Voyage client not written (Q-08) — RUNBOOKS §5 |
 
 ## Failed checks
 - None. Note: locally, `e2e/portals.spec.ts:142` (T-SEC-05) fails if Playwright reuses a `next dev` already running on
@@ -93,32 +84,15 @@ DONE + TESTED (2026-10-16, session 18):
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (Phase 10 local parts, session 19)
-Phases 1–9 are merged into `main` (last: PR #9, `67ed4ac`). Branch `phase-10-local` exists (from `67ed4ac`, pushed);
-nothing of Phase 10 is written yet.
-0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout phase-10-local && git pull && npm ci`;
-   `docker info` (else `open -a Docker`); `supabase status` (else `supabase start`); `supabase db reset && npm run seed:demo`.
-   Port 3000 may be held by another session's `next dev` (this checkout, hot reload): browser checks can use it
-   (open http://demo.localhost:3000 with preview_start `{url}`); locally run E2E with `--workers=1` (parallel runs
-   time out on dev compiles) and expect T-SEC-05 to fail there — CI runs E2E on the production build.
-1. State Phase 10 local scope + ACs (roadmap Phase 10 minus cloud items; cloud items = BLOCKED on founder approval:
-   production Supabase/Vercel/Railway, domain/TLS, prod OAuth, Sentry/spend alerts, restore drill G7, legal Q-01 G8).
-   Plan with model/effort annotation per the founder's CLAUDE.md rule.
-2. Build, smallest first, commit after each green task:
-   a. Enforce per-institute `max_upload_bytes` (document upload ticket) and `max_concurrent_jobs` (worker) — deferred
-      in ADR-025; pgTAP/unit/integration tests.
-   b. Retention job for conversations/messages (12 months, ADR-026 / DATABASE_DESIGN §4.4) if small; else BLOCKED note.
-   c. Local backup script (`pg_dump` + storage copy to a local folder) and a local restore rehearsal into a scratch DB
-      (evidence only; the real G7 drill stays BLOCKED until production exists).
-   d. Runbooks in `docs/RUNBOOKS.md`: incident, key rotation, restore, institute offboarding, switching fake → real AI.
-   e. README.md "How to run the demo" (commands + demo logins: owner@demo.test, admin@demo.test, teacher1-3@demo.test,
-      student01-50@demo.test, same @rival.test, platform@examedge.test with TOTP) .
-3. Full gate (`npm run check`, E2E `--workers=1` locally), PR into `main`, CI green, merge.
-4. Final summary to the founder in simple English (NEXT_SESSION_PROMPT §8): what works, what is BLOCKED and why,
-   exact steps to switch from fake AI to real keys (AI_PROVIDER=anthropic, EMBEDDINGS_PROVIDER=voyage, key names in
-   `.env.example`).
-Note: GitHub auto-merge is disabled for this repo (Settings → General → "Allow auto-merge"); merge with
-`gh pr merge <n> --squash` once CI is green.
+## Next exact action (Phase 10 local parts, PR)
+1. `git checkout phase-10-local && git pull`; open the PR into `main` (title "Phase 10: local hardening — limits,
+   retention, backups, runbooks"), bind it, read CI (check + secrets). Fix until green, then `gh pr merge <n> --squash`.
+2. Update PROGRESS.md (merge commit, CI run id, E2E count) and push `main`.
+3. Release 1 local build is then complete. Give the founder the final summary (NEXT_SESSION_PROMPT §8): what works,
+   what is BLOCKED and why (table above), exact steps to switch to real keys (RUNBOOKS §5, incl. the OCR/Voyage gap).
+4. Next build work needs founder decisions: approve cloud accounts (Phase 10 cloud parts), Anthropic key, Q-01, Q-08.
+   Without them, the useful local work left is: Claude OCR provider tested against a recorded response; purge of
+   soft-deleted document files and replaced logos (ADR-029).
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -130,6 +104,7 @@ Note: GitHub auto-merge is disabled for this repo (Settings → General → "All
 - Playwright Chromium (session 3, `npx playwright install chromium`, chromium-1243/headless-shell-1248 in ~/Library/Caches/ms-playwright).
 - Seed/ops: `npm run seed:demo`, `npm run create-institute`, `npm run audit`. Demo logins: owner@demo.test, admin@demo.test, teacher1-3@demo.test, student01-50@demo.test (same for @rival.test) via "Sign in as demo user".
 - `pdfjs-dist` 6.4.299 (session 8, `npm i -w @examedge/worker pdfjs-dist@6.4.299`; optional `@napi-rs/canvas` comes with it); `@supabase/supabase-js` added to worker deps.
+- PostgreSQL 17 client tools (session 19, `brew install postgresql@17`, pg_dump 17.11) for `npm run backup` (server is 17).
 - Tools installed by Claude: Docker Desktop 4.95.0 (`brew install --cask docker-desktop`), Supabase CLI 2.121.0 and gitleaks 8.30.1 (`brew install supabase/tap/supabase gitleaks`).
 
 ## Known regressions
@@ -153,5 +128,6 @@ Note: GitHub auto-merge is disabled for this repo (Settings → General → "All
 | 16 | 2026-10-16 | Phase 8: AC8.4 fixed (OR keyword query, library recall 1.0), web verified in browser (2 UI fixes), `e2e/library.spec.ts`, ADR-027 + docs, gate, PR #8 CI green (E2E 24/24) and merged (`bce1046`); branch `phase-9-studio` | see `git log` |
 | 17 | 2026-10-16 | Phase 9: studio schema + 38 pgTAP (1220 PASS), core generators + Claude structured-output provider (unit 132), web Studio pane/artifact page/quiz/progress written, first browser check OK; handoff mid-browser-check | see `git log` |
 | 18 | 2026-10-16 | Phase 9: browser check done (no bugs), Studio seed, `e2e/studio.spec.ts`, ADR-028 + DB docs, local gate (E2E 25/26, T-SEC-05 dev-only), PR #9 CI green (E2E 26/26) and merged (`67ed4ac`); branch `phase-10-local`; handoff for Phase 10 | see `git log` |
+| 19 | 2026-10-16 | Phase 10 local: upload/storage/job limits, retention purge, backup + restore drill, runbooks, README, ADR-029; local gate green (E2E 25/26, T-SEC-05 dev-only) | `b731118` |
 | 15 | 2026-10-16 | Phase 8: library migration + 40 pgTAP (1104 PASS), core two-layer tutor (46 unit), web/platform editor/seed/eval written; AC8.4 library recall 0.81 FAILING (keyword AND), handoff | see `git log` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |
