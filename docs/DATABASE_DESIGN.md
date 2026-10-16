@@ -126,11 +126,16 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 
 ### 4.4 AI conversations and generated content
 
-**conversations** (S) — `user_id`, `subject_id` (composite FK), `title`, `created_at`, `deleted_at`. Index `(institute_id, user_id, created_at desc)`.
-- S/I/U/D owner student only. Staff: none (aggregates via `private.institute_tutor_stats()`), pending Q-03.
+**conversations** (S) — `user_id`, `subject_id` (composite FK), `title`, `created_at` (no `deleted_at`: a deleted chat is gone; ADR-026). Index `(institute_id, user_id, created_at desc)`.
+- S/I/D owner (any active member; insert only on a subject the caller can read). Staff: none — counts per subject via `tutor_activity(inst, student)` (definer, same callers as `student_progress`), pending Q-03.
 
-**messages** (S) — `conversation_id` (composite FK), `role` (`user|assistant`), `content`, `citations jsonb` (list of `{source_kind, document_id|library_item_id, page_start, page_end, cited_text}`), `answer_labels jsonb`, `model`, `usage_record_id`, `feedback` (`up|down|null`), `created_at`.
-- S/I owner student (assistant rows inserted by server in user context). Retention 12 months then deleted [A, Q-06].
+**messages** (S) — `conversation_id` (composite FK), `role` (`user|assistant`), `content`, `citations jsonb` (list of `{source_kind, document_id|library_item_id, title, page_start, page_end, cited_text}`), `answer_labels jsonb` (`[{label: notes|general, citations: [index]}]` per paragraph), `model`, `usage_record_id`, `feedback` (`up|down|null`), `created_at`.
+- S/I owner (rows written by the server in the user's session after the answer is complete); U `feedback` only. Retention 12 months then deleted [A, Q-06].
+
+**answer_reports** (T) — `subject_id` (composite FK), `message_id` (unique; composite FK, `on delete set null`), `reported_by`, `question`, `answer`, `citations`, `reason` (≤ 500), `created_at`, `resolved_at`, `resolved_by`.
+- Written only by definer `report_answer(msg, why)` (caller must own the conversation): a copy, so it survives the chat being deleted. S/U(`resolved_at`, `resolved_by`) staff of the institute; `reported_by` has no column grant (staff never see who reported). Students: none.
+
+`match_chunks(query_embedding, query_text, subject, k)` (invoker) returns `institute_id` and `similarity` with each chunk so the tutor can assert the tenant (TH-06) and evals can record scores.
 
 **generated_artifacts** (T or S) — `owner_scope` (`institute|student`), `owner_user_id` (required iff student), `kind` (`summary|study_guide|flashcards|quiz|mind_map|table|report|slides|infographic|audio|video`), `subject_id`, `chapter_id`, `source_refs jsonb`, `input_hash`, `prompt_version`, `model`, `schema_version`, `content jsonb`, `asset_path`, `status` (`generating|draft|approved|published|withdrawn|failed`), `approved_by`, `approved_at`, `audience_batch_ids uuid[]` (published institute artifacts only).
 - Partial unique `(institute_id, kind, input_hash, prompt_version) where owner_scope='institute'` → generate once, reuse.
