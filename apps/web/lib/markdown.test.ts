@@ -104,6 +104,6 @@ describe('T-AI-09 injection passages', () => {
     );
     inert(render(out.content));
     expect(out.content).not.toContain(SYSTEM_PROMPT.slice(0, 40));
-    for (const c of out.citations) expect(c.document_id).toBe('d1');
+    for (const c of out.citations) expect(c).toMatchObject({ source_kind: 'institute', document_id: 'd1' });
   });
 });
