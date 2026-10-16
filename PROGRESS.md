@@ -37,7 +37,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### R1 purge of unreachable files (session 20, branch `r1-purge-files`) — gate green locally, PR open
+### R1 purge of unreachable files (session 20, branch `r1-purge-files`, pushed `2dc2fc7`) — gate green locally, PR NOT opened yet
 Scope = "Next exact action" 2b. ADR-031.
 DONE + TESTED (2026-10-16):
 - Migration `20261025000013_purge_files.sql`: `private.purgeable(bucket, name, created)` (files > 1 day old that no
@@ -126,11 +126,12 @@ DONE + TESTED (2026-10-16, session 19):
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (after Release 1 local build, session 20)
-Everything in `main` (`dc7600f`); no open PR; `phase-10-local` is merged (can be deleted).
-0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout main && git pull && npm ci`; `docker info`
+## Next exact action (session 21)
+`main` = `69d3fc6` (OCR merged). Open work: branch `r1-purge-files` (`2dc2fc7`, pushed, no PR yet) — do step 2b FIRST.
+Merged branches `phase-10-local`, `r1-ocr` can be deleted.
+0. Fresh session: `cd ~/Documents/startup/examedge_ai && git fetch && npm ci`; `docker info`
    (else `open -a Docker`); `supabase status` (else `supabase start`); `supabase db reset && npm run seed:demo`.
-1. The founder already got the final summary in chat (what works / BLOCKED / real-AI steps = docs/RUNBOOKS.md §5).
+1. After 2b is merged: the founder already got the final summary in chat (what works / BLOCKED / real-AI steps = docs/RUNBOOKS.md §5).
    Ask the founder which of these to do next (all need their decision):
    - approve cloud accounts → Phase 10 cloud parts (production Supabase/Vercel/Railway, domain + TLS, prod Google
      OAuth, Sentry, spend alerts, independent backup storage, real restore drill G7, k6 load test, rollback rehearsal);
@@ -138,8 +139,11 @@ Everything in `main` (`dc7600f`); no open PR; `phase-10-local` is merged (can be
    - answer Q-08 (Voyage terms) and Q-01 (legal, blocks the pilot).
 2. Local work possible without any decision (new branch per task, e.g. `r1-ocr`):
    a. ~~Claude OCR provider~~ — merged (PR #11, `69d3fc6`, ADR-030).
-   b. ~~Purge of soft-deleted documents' files and replaced logos~~ — branch `r1-purge-files` (ADR-031): merge its PR
-      once CI is green.
+   b. ~~Purge of soft-deleted documents' files and replaced logos~~ — branch `r1-purge-files` (ADR-031), pushed at
+      `2dc2fc7`, **PR not opened yet** (session ended). Next: `git checkout r1-purge-files && git pull`, `supabase db
+      reset && npm run seed:demo`, quick re-check (`npm run test:db && npm run test:int`), then
+      `gh pr create --base main --head r1-purge-files` (body: summary of ADR-031 + local gate evidence above), check CI
+      (E2E must be 26/26 against the production build), squash-merge, record the merge commit here.
    Each: tests + full gate (`npm run check`, local E2E `--workers=1`, T-SEC-05 fails only against another session's
    `next dev` on :3000), PR, CI green, squash-merge, PROGRESS update.
 
@@ -179,6 +183,6 @@ Everything in `main` (`dc7600f`); no open PR; `phase-10-local` is merged (can be
 | 17 | 2026-10-16 | Phase 9: studio schema + 38 pgTAP (1220 PASS), core generators + Claude structured-output provider (unit 132), web Studio pane/artifact page/quiz/progress written, first browser check OK; handoff mid-browser-check | see `git log` |
 | 18 | 2026-10-16 | Phase 9: browser check done (no bugs), Studio seed, `e2e/studio.spec.ts`, ADR-028 + DB docs, local gate (E2E 25/26, T-SEC-05 dev-only), PR #9 CI green (E2E 26/26) and merged (`67ed4ac`); branch `phase-10-local`; handoff for Phase 10 | see `git log` |
 | 19 | 2026-10-16 | Phase 10 local: upload/storage/job limits, retention purge, backup + restore drill, runbooks, README, ADR-029; local gate green (E2E 25/26, T-SEC-05 dev-only) | `b731118` |
-| 20 | 2026-10-16 | Claude OCR provider (ADR-030, PR #11 merged `69d3fc6`); purge of unreachable files (ADR-031), PR opened | see `git log` |
+| 20 | 2026-10-16 | Claude OCR provider (ADR-030, PR #11 merged `69d3fc6`); purge of unreachable files (ADR-031) built + gate green, pushed, PR not opened | `2dc2fc7` |
 | 15 | 2026-10-16 | Phase 8: library migration + 40 pgTAP (1104 PASS), core two-layer tutor (46 unit), web/platform editor/seed/eval written; AC8.4 library recall 0.81 FAILING (keyword AND), handoff | see `git log` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |
