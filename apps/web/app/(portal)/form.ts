@@ -10,6 +10,7 @@ export const text = (form: FormData, key: string, max = 120) =>
 // Database exceptions raised by name in the migrations; each has a message in flash.tsx.
 const NAMED = [
   'question_in_use',
+  'question_not_verified',
   'test_has_no_questions',
   'test_has_no_batches',
   'test_question_not_ready',

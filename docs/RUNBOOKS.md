@@ -116,6 +116,7 @@ the limits. The settings are `AI_PROVIDER=fake` and `EMBEDDINGS_PROVIDER=fake`.
 | Tutor answers (Haiku; Sonnet for "Solve step by step") | **Yes** — needs only an Anthropic key |
 | Studio: summary (Sonnet), flashcards, mind map, quiz (Haiku) | **Yes** — needs only an Anthropic key |
 | Reading scanned pages and photos (OCR, Haiku, in the worker) | **Yes** — needs only an Anthropic key |
+| Question bank: AI-made questions (Opus writes, Sonnet checks) | **Yes** — needs only an Anthropic key |
 | Finding the right paragraphs (Voyage search) | **No** — not written yet, waiting for the Voyage data terms answer (Q-08) |
 
 **Steps** (on the live site, after you approve the accounts and the cost):
@@ -124,7 +125,7 @@ the limits. The settings are `AI_PROVIDER=fake` and `EMBEDDINGS_PROVIDER=fake`.
    - Keep `EMBEDDINGS_PROVIDER=fake` until the Voyage part is written.
    - On the worker (Railway), set the same `AI_PROVIDER=anthropic` and `ANTHROPIC_API_KEY=<key>` so scanned pages
      and photos are read by Claude.
-3. Redeploy. On a test institute, ask the tutor one question, make one summary and upload one scanned page (a phone
+3. Redeploy. On a test institute, ask the tutor one question, make one summary, make 5 AI questions on the question bank and upload one scanned page (a phone
    photo of handwritten notes). The `/usage` page should show `anthropic` with a real cost, and the uploaded page's
    text should match the photo (check formulas by eye: that is AC4.5).
 4. Compare the prices in `packages/core/src/ai/routing.ts` with the provider's price page. Our cost count should be

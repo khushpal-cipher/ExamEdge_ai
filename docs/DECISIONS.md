@@ -127,7 +127,7 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
 - **Students read no questions, keys or answers directly** — only through `get_attempt_questions` / `get_attempt_review` (after release). Score and rank stay null until release. Students see their own `batch_standings` row only; teachers see their batches.
 - **PostgREST shape:** `question_keys` has `unique (institute_id, question_id)` so the composite FK is one-to-one and embeds return one object. The `tests` read policy checks owner/admin/creator inline because `can_see_test(id)` cannot see a row inside its own `insert … returning`.
 - **Times are entered and shown in India time** (shortcut in `lib/assess.ts`; per-institute timezone later).
-- **Deferred:** student practice quizzes → Phase 9 (Studio); AI question generation + dual-solve (AC7.5) → after Phase 5; AC7.4 (500 concurrent starts, p95 < 2 s) → BLOCKED until a staging/prod-sized database exists (a laptop run would not prove the target; measured with k6 in Phase 10, AC10.3).
+- **Deferred:** student practice quizzes → Phase 9 (Studio); AI question generation + dual-solve (AC7.5) → after Phase 5 (built: ADR-032); AC7.4 (500 concurrent starts, p95 < 2 s) → BLOCKED until a staging/prod-sized database exists (a laptop run would not prove the target; measured with k6 in Phase 10, AC10.3).
 
 ### ADR-024 Phase 4 refinements: documents and ingestion (2026-10-16, Accepted)
 - **Text extraction: `pdfjs-dist` 6.4.299** (Mozilla, Apache-2.0) in the worker, picked in the Phase 4 spike: it extracts English, Hindi (Devanagari) and formula symbols from generated PDFs, returns `''` for image-only pages and throws `InvalidPDFException` on corrupt/empty files. Test PDFs come from the dependency-free `scripts/make-pdf.ts`.
@@ -244,6 +244,33 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
   download a purgeable file until the job deletes it (at most a day). Nobody else gains access.
 - **Not purged:** files of superseded and failed versions of live documents (they count against the institute's
   storage limit until the document is deleted) — revisit if institutes hit `storage_full` from re-uploads.
+
+### ADR-032 AI-made bank questions with a blind second solve (2026-10-16, Accepted)
+- **Closes the AC7.5 deferral (ADR-023).** A teacher picks a chapter, a type (MCQ one correct, MCQ more than one
+  correct, numerical; written questions are not generated — they have no answer to check), a count (1–20) and a
+  difficulty on the question bank. The chapter's published notes (`apps/web/lib/notes.ts`, shared with Studio) are
+  the only source.
+- **Two models, two metered calls** (`packages/core/src/ai/questions.ts`): Opus 5.5 writes the questions with their
+  keys and citations; Sonnet 5.5 solves them **without the key or the explanation**. Both use structured output, effort
+  `medium` (set explicitly: it is Opus 5.5's default), `max_tokens` 16,000 (thinking is always on) and the server-side
+  fallback (`fallbacks: "default"`). New AI feature `question_gen` (≤ 1 USD reserved per call, no student counter);
+  `ai_reserve` refuses it to anyone but owner/admin/teacher, so a student token cannot spend the budget on it.
+- **Agreement = the second answer would be marked correct** against the key (same option set; a number within
+  `tolerance_abs`, which must be > 0). A question with a broken shape (options not a–d, a single with two keys, a
+  citation to a source that was not sent, …) is dropped, not the whole batch. If the solve fails or is refused the
+  questions are kept as `unverified`.
+- **Approval in the database:** a trigger stores every `origin = 'ai'` question as `draft`, refuses `approved` while
+  `verification` is `unverified` or `dual_solve_disagree` (`question_not_verified`), and lets `verification` change
+  only to `teacher_verified`, so nobody can mark a question as AI-checked by hand. A matched draft is approved with one
+  click; a flagged or unchecked one shows the second answer next to the key and is approved when the teacher saves it
+  (→ `teacher_verified`). Scheduling already refused tests with unapproved questions (`test_question_not_ready`).
+- **Stored in one transaction** by `add_ai_questions` (invoker: RLS and column grants apply, staff of the host's
+  institute only); the second answer goes in `question_keys.second_solve` (staff only, like the key).
+- **Synchronous Server Action** like Studio (ADR-028). shortcut: a real Opus write + Sonnet solve of 20 questions may
+  take 1–2 minutes; move to a pg-boss job with a "generating" state when the real provider is switched on.
+- **Demo mode:** fill-in-the-blank / which-words / fill-in-the-number questions from the notes' sentences, solved by
+  looking them up in the notes; every fourth answer is changed on purpose so the "answers differ" path is visible.
+- **BLOCKED:** real-provider quality (agreement rate, teacher rejection rate — AI_PIPELINE §5), cost per question.
 
 ---
 ## Review log (skeptical principal-engineer pass, 2026-10-14)

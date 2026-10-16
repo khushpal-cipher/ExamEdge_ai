@@ -15,6 +15,9 @@ const ERRORS: Record<string, string> = {
   unmarked_answers: 'Some written answers are not checked yet. Check them all before releasing results.',
   invalid_marks: 'Marks must be whole or half marks between 0 and the maximum.',
   invalid_key: 'The answer key does not match the options.',
+  question_not_verified:
+    'The two AI answers to this question differ, or the second check did not run. Open it, fix it if needed and save it.',
+  no_questions: 'The AI could not make usable questions from these notes. Try another chapter or question type.',
   document_no_batches: 'Choose at least one batch.',
   document_not_ready: 'The file is still being processed. Publish it when it is ready.',
   closed: 'This test is not open right now.',
@@ -41,6 +44,8 @@ const OK: Record<string, string> = {
   generated: 'Ready. Made from the published notes of this chapter.',
   reused: 'This was already made from the same notes, so here it is (no AI use counted).',
   saved_draft: 'Saved. It is a draft again until you publish it.',
+  questions_made: 'AI questions added below as drafts. Check each one and approve it before using it in a test.',
+  approved: 'Approved. It can now be added to tests.',
 };
 
 export async function Flash({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {

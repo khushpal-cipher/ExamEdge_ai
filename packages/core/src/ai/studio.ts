@@ -173,14 +173,14 @@ const STOP = new Set(
     'they this those through under until very were what when where which while will with would your'
   ).split(' '),
 );
-const keyWords = (s: string) =>
+export const keyWords = (s: string) =>
   [...new Set(words(s))].filter((w) => w.length >= 5 && !STOP.has(w) && /^\p{L}[\p{L}\p{M}]*$/u.test(w));
 const short = (s: string, n: number) => {
   const w = s.replace(/[.?!।]+$/, '').split(/\s+/);
   return w.length > n ? `${w.slice(0, n).join(' ')} …` : w.join(' ');
 };
 
-function sentencesOf(sources: Source[]) {
+export function sentencesOf(sources: Source[]) {
   const seen = new Set<string>();
   return sources.flatMap((s, src) =>
     s.content

@@ -14,10 +14,10 @@ import {
   StudioError,
   validateArtifact,
   type Kind,
-  type Source,
 } from '@examedge/core/ai/studio';
 import { log } from '@examedge/core/log';
 import { webMeter } from '@/lib/meter';
+import { chapterNotes } from '@/lib/notes';
 import { textFields, withTexts } from '@/lib/studio';
 import { isUuid, requireMember, STAFF } from '@/lib/tenant';
 import { done } from '../form';
@@ -44,37 +44,11 @@ export async function generate(form: FormData) {
     .maybeSingle();
   if (!ch) back(here, 'denied');
   // RLS: students read only notes published to their batches; generation uses published notes for staff too.
-  const { data: docs } = await db
-    .from('documents')
-    .select('id, title')
-    .eq('institute_id', institute.id)
-    .eq('chapter_id', chapter)
-    .eq('status', 'published')
-    .is('deleted_at', null)
-    .order('title');
-  const title = new Map((docs ?? []).map((d) => [d.id as string, d.title as string]));
-  const { data: chunks } = title.size
-    ? await db
-        .from('document_chunks')
-        .select('id, document_id, page_start, page_end, content, chunk_index')
-        .eq('institute_id', institute.id)
-        .in('document_id', [...title.keys()])
-        .order('chunk_index')
-    : { data: [] };
-  const rows = (chunks ?? []).sort(
-    (a, b) => title.get(a.document_id)!.localeCompare(title.get(b.document_id)!) || a.chunk_index - b.chunk_index,
-  );
-  if (!rows.length) back(here, 'no_sources');
-  const sources: Source[] = rows.map((c) => ({
-    document_id: c.document_id,
-    title: title.get(c.document_id)!,
-    page_start: c.page_start,
-    page_end: c.page_end,
-    content: c.content,
-  }));
+  const { ids, sources } = await chapterNotes(db, institute.id, chapter as string);
+  if (!sources.length) back(here, 'no_sources');
   // Same kind, chapter and notes (chunk ids change when a note is replaced) → same artifact (AC9.2).
   const inputHash = createHash('sha256')
-    .update(JSON.stringify([kind, chapter, rows.map((c) => String(c.id)).sort()]))
+    .update(JSON.stringify([kind, chapter, [...ids].sort()]))
     .digest('hex');
   const scope = student ? 'student' : 'institute';
   const existing = async () => {
