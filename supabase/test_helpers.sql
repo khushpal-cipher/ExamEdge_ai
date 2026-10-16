@@ -39,6 +39,7 @@ end $$;
 create or replace function tests.make_institute(slug text) returns uuid language plpgsql as $$
 declare
   inst uuid; bx uuid; by_ uuid; sp uuid; sc uuid; m uuid; who text; s1 uuid; q uuid; t uuid; att uuid; d uuid; v uuid;
+  cv uuid; am uuid;
 begin
   insert into public.institutes (slug, name) values (slug, initcap(slug) || ' Classes') returning id into inst;
   insert into public.institute_domains (hostname, institute_id) values (slug || '.localhost', inst);
@@ -101,6 +102,16 @@ begin
   select inst, user_id, 'tutor', 'fake', 'fake', 'messages', 100, 0, 'ok', now() from public.memberships where id = s1;
   insert into public.usage_counters (institute_id, user_id, day, counter_key, value)
   select inst, user_id, (now() at time zone 'Asia/Kolkata')::date, 'messages', 1 from public.memberships where id = s1;
+  -- Phase 6: student1's Physics chat (one question, one answer) and a report of that answer.
+  insert into public.conversations (institute_id, user_id, subject_id, title)
+  select inst, user_id, sp, 'What is torque?' from public.memberships where id = s1 returning id into cv;
+  insert into public.messages (institute_id, conversation_id, role, content, created_at)
+  values (inst, cv, 'user', 'What is torque? private ' || slug, now() - interval '1 minute');
+  insert into public.messages (institute_id, conversation_id, role, content, model)
+  values (inst, cv, 'assistant', 'Torque is the turning effect of a force.', 'fake-tutor-1') returning id into am;
+  insert into public.answer_reports (institute_id, subject_id, message_id, reported_by, question, answer)
+  select inst, sp, am, user_id, 'What is torque?', 'Torque is the turning effect of a force.'
+  from public.memberships where id = s1;
   return inst;
 end $$;
 
