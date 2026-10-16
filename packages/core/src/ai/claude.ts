@@ -27,8 +27,12 @@ export function claudeTutor(model: ClaudeModel, client = new Anthropic({ maxRetr
             content: [
               ...passages.map((p) => ({
                 type: 'search_result' as const,
-                source: `inst:${p.document_id}#p${p.page_start}`,
-                title: `Your notes: ${p.title}, p.${p.page_start}`,
+                ...(p.source_kind === 'library'
+                  ? { source: `lib:${p.library_item_id}`, title: `ExamEdge library: ${p.title}` }
+                  : {
+                      source: `inst:${p.document_id}#p${p.page_start}`,
+                      title: `Your notes: ${p.title}, p.${p.page_start}`,
+                    }),
                 content: [{ type: 'text' as const, text: p.content }],
                 citations: { enabled: true },
               })),

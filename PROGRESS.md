@@ -9,7 +9,8 @@ Last updated: 2026-10-16
 **Phase 7 MERGED** into `main` (PR #4, squash commit `2a5f25e`, CI green: check + secrets, run 38711008739, 2026-10-15).
 **Phase 4 MERGED** into `main` (PR #5, squash commit `cbfb62e`, CI green: check + secrets, run 38795802409, 2026-10-16).
 **Phase 5 MERGED** into `main` (PR #6, squash commit `b1f0795`, CI green: check + secrets, run 38805190604, 2026-10-16).
-**Phase 6 (tutor) — local gate green except 1 E2E that ran against the wrong server (see below); PR into `main` opened, CI decides.**
+**Phase 6 MERGED** into `main` (PR #7, squash commit `7863900`, CI green: check + secrets, run 38841699259 — unit 104, pgTAP 1064, integration 21, E2E 22/22 against the production build, 2026-10-16).
+**Phase 8 (library) — local gate green except T-SEC-05 (dev-server reuse, see Failed checks); PR into main opened** from `phase-8-library`.
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -25,13 +26,69 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Docker + tools installed | Docker Desktop 4.95.0 (engine 29.8.2) via `brew install --cask docker-desktop`; Supabase CLI 2.121.0 + gitleaks 8.30.1 via `brew install supabase/tap/supabase gitleaks` |
 | 2026-10-15 | Phase 1 partial: git init, workspaces, local Supabase | `git init -b main`, branch `phase-1-foundations`; npm workspaces installed (versions below); `supabase start` OK; `supabase test db` → `000_smoke.sql .. ok`, Files=1, Tests=4, PASS |
 | 2026-10-14 | Consistency check | All relative links resolve; every ADR, Q, test (T-*) and gate (G1–G8) ID referenced is defined; no secret-like strings in files |
+| 2026-10-16 | Phase 8 local gate | After `supabase db reset && npm run seed:demo`: `npm run check` → format, lint + forbidden, typecheck PASS; unit 111/111; pgTAP Files=11 Tests=1107 PASS; integration 21/21; build (+bundle scan) PASS; E2E 22/24 → mapping test race fixed (wait for sign-out), rerun `npm run test:e2e` 23/24: only `portals.spec.ts:142` T-SEC-05, because Playwright reused another session's `next dev` on :3000 (`reuseExistingServer`). Production build checked by hand: `next start -p 3100`, `demo.localhost:3100/` and `/library/<id>` → `Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate`. Full E2E against the production build runs in CI on the PR. |
 | 2026-10-16 | Phase 5 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 46/46, pgTAP Files=9 Tests=959 PASS, integration 20/20, build (+bundle scan), E2E 18/18 (commit `aa5dcce`). `npm run audit` → ok. AC5.1: `scripts/check-forbidden.ts` rule `provider-sdk-outside-gateway` passes and `grep -rnE "@anthropic-ai/sdk|voyageai|openai" apps packages scripts` finds only the rule itself and its test. AC5.3: `apps/worker/src/usage.int.test.ts` — 100 parallel `rpc('ai_reserve')` with a student token and limit 40 → exactly 40 ok / 60 `quota`, counter = 40; 100 parallel worker reservations of 30 µ$ with 1,000 µ$ left → exactly 33 ok, 990 reserved. AC5.4: pgTAP `080_usage.sql` (global, institute and suspended switches) + integration test (aal2 platform admin flips `set_ai_enabled` through PostgREST → next worker reservation `ai_disabled` → back on). Browser check (dev server): owner@demo.test `/usage` desktop + 375 px; teacher/student `/usage` 404 (E2E); platform admin global switch off/on with audit rows. Two real bugs found and fixed: (1) `set_ai_enabled` failed with SQLSTATE 21000 because Supabase's `safeupdate` refuses an UPDATE without WHERE in PostgREST sessions (pgTAP cannot load it) → `where id` + API-path test that failed before the fix; (2) staff pages were 667 px wide at 375 px (non-wrapping nav widened the `1fr` grid column) → `minmax(0, 1fr)`, nav scrolls. ADR-025. |
 | 2026-10-16 | Phase 4 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 32/32, pgTAP Files=8 Tests=850 PASS, integration 16/16, build (+bundle scan), E2E 16/16 (commit `ca4b542`). `npm run audit` → ok. Two test fixes found by the gate (no assertion weakened): pgTAP `070` storage fixture inserted objects the seed had already uploaded (duplicate key after seeding) → skips existing objects; platform E2E picked the logo while the "Save limits" redirect was still in flight (re-render emptied the required file input, no POST in the trace) → waits for the POST, reloads, checks the saved value. ADR-024 added; DATABASE_DESIGN §4.3 updated (uploading status, claimed_at, path check, service_accounts). |
 | 2026-10-15 | Phase 7 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 21/21, pgTAP Files=7 Tests=693 PASS, build (+bundle scan), E2E 14/14 incl. `e2e/assessments.spec.ts` (commit `40fc4fc`). `npm run audit` → ok. Browser check (session 7, dev server): teacher1 checked all 22 written answers of "Chemistry Test 3" with names hidden and released (ranks with time tie-break, equal score+time share a rank); student01 started "Physics Practice Test" at 375 px (scrollWidth 375, autosave "Saved"), review + My progress at 375 px; owner JEE rank list, sort links, CSV `private, no-store`; owner@rival.test → 404 for Demo test/check/export, batch export and a real Demo student id. |
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### Phase 6 — source-grounded AI tutor (sessions 12–13) — IN PROGRESS on `phase-6-tutor`
+### Phase 8 — shared library engine + pilot seed (session 15) — IN PROGRESS on `phase-8-library`
+Scope = IMPLEMENTATION_ROADMAP Phase 8. Q-02 default **JEE Physics** (ADR-027). Reviewer = aal2 platform admin (no
+expert hired). Library items are text kinds only (explanation, formula sheet, worked example); question/flashcard kinds
+wait for Studio/generation. Opus/Batch generation BLOCKED (no key) → hand-written demo seed.
+AC plan: AC8.2 (DB check `status <> 'draft' ⇒ reviewed_by`, reviewer = the caller, edits reset to draft) and AC8.3
+(`provenance not null`) proven by pgTAP; AC8.4 recall@8 on library questions via `npm run eval`; AC8.1 PARTIAL — full
+JEE Main Physics chapter list, topics + reviewed explanation/formula sheet for the 4 demo chapters only; the rest of the
+syllabus BLOCKED (Opus generation + expert reviewer).
+DONE + TESTED (2026-10-16, session 15):
+- `5a420d4` migration `20261021000009_library.sql`: library_subjects/chapters/topics/items/chunks + RLS (read: any
+  signed-in user, items/chunks published only; write: aal2 platform admin), trigger `guard_library_item` (insert =
+  draft by caller; `reviewed` sets reviewed_by = caller, no column grant; edit of content/kind/topic → draft, version+1),
+  check `status = 'draft' or reviewed_by+reviewed_at`, kinds explanation|formula_sheet|worked_example only, HNSW on
+  library_chunks, definer `publish_library_item(item, chunks, model)` (chunk swap + publish + audit `library.publish`),
+  invoker `match_library_chunks` (hybrid RRF, `hnsw.iterative_scan = relaxed_order`), `subjects.library_subject_id`
+  (owner/admin update), platform metering: `usage_records.institute_id` nullable, feature `library_embed` (who
+  `platform`), definers `ai_reserve_platform`/`ai_settle_platform`, `ai_finish` matches null institute.
+  `010` allowlist + nullable exception for usage_records. pgTAP `100_library.sql` 40 tests.
+  `supabase db reset && supabase test db` → Files=11, Tests=1104, PASS.
+- Core (commit after `5a420d4`): `Passage`/`Citation` unions with `source_kind: 'library'`, label
+  `notes|library|general`, `mergeLayers` (top 8, ≤ 6 per layer, by fused score), Claude source `lib:<id>` / title
+  "ExamEdge library: <topic>", PROMPT_VERSION `tutor-v2`, `packages/core/src/ai/library.ts` (chunks ≤ 1,600 chars
+  headed by topic, `embedLibraryItem` metered `library_embed`). `npx vitest run --project unit packages/core` → 46/46.
+DONE + TESTED in session 16 (2026-10-16):
+- `39690b7` AC8.4 ✅ migration `20261022000010_keyword_or.sql`: invoker `private.keyword_query(q)` = OR of the
+  question's words minus English stop words (`ts_lexize('english_stem', w) = '{}'`), used by `match_chunks` and
+  `match_library_chunks` (keyword half used to AND every word, so it matched nothing for natural questions).
+  `npm run eval -- library-v2` → recall@8 1.0 (29 notes questions), **library recall@8 1.0 (21)**, cross-tenant 0,
+  p50 9 ms / p95 13 ms (`evals/results/2026-10-16-library-v2.json`; v1 = the failing 0.81 run, kept for history).
+  pgTAP `100_library.sql` 43 tests (+3: OR query, stop-word-only → null, one content word enough); its fixture now
+  deletes the seeded library inside its transaction (it clashed with `seed:demo`, duplicate "Physics").
+  `supabase test db` after `db reset && seed:demo` → Files=11, Tests=1107, PASS.
+- Web code from session 15 verified: `npm run typecheck`, `npm run lint` (+ forbidden), `npm test` 111/111 PASS.
+  Browser check (built-in browser, the dev server already on :3000 serving this checkout — Next refuses a second
+  `next dev` in the same folder): student01 Physics Sources lists 4 library chapters × 3 topics (explanation +
+  formula sheet), tutor "What is escape velocity?" → chips "ExamEdge library: Escape velocity and orbital velocity"
+  / "Kepler's laws" → `/library/<id>` page renders; 375 px: subject page and library page scrollWidth 375, nothing
+  wider; owner `/subjects` select per subject, mapping Chemistry → "Saved." and DB updated (then reverted); teacher1
+  sees "ExamEdge library: JEE Main · Physics" text, no select; Rival student01 Physics: no library section, answer
+  has no library chips. Fixes `caa070c`: items sorted by kind per topic; tutor intro mentions the library only when
+  the subject is mapped.
+- `663a7b2` `e2e/library.spec.ts` 2/2 (against the :3000 dev server, run twice, cleans up): fresh platform admin
+  enrols TOTP → `/library` → JEE Main · Physics → adds a topic under Gravitation → new explanation (draft, no Publish
+  button) → Mark as reviewed → Publish → DB: published, reviewed_by = that admin, 1 chunk → student06 asks with the
+  item's unique word → chip "ExamEdge library: <topic>" links `/library/<item>` (opens in a new tab) → item page
+  shows the text → admin edits → draft → student gets 404 at once. Owner maps Chemistry (Saved + DB), teacher has no
+  select.
+- `4d563c4` docs: ADR-027, DATABASE_DESIGN §4.1 (library tables as built) + §4.4 labels, AI_PIPELINE §4 keyword
+  half, Q-02 note.
+AC status: AC8.2 ✅ (pgTAP + E2E) · AC8.3 ✅ (pgTAP) · AC8.4 ✅ demo eval (real threshold needs real embeddings +
+pilot golden set) · AC8.1 PARTIAL (full chapter list; 12 topics with reviewed explanation + formula sheet for the 4
+demo chapters only; rest BLOCKED: Opus generation needs a key, expert reviewer not hired) · Batch-API generation
+BLOCKED (no key). Known nit (not fixed): two chips can share a label when the explanation and the formula sheet of
+one topic are both cited.
+
+### Phase 6 — source-grounded AI tutor (sessions 12–14) — MERGED (PR #7, `7863900`)
 Scope = IMPLEMENTATION_ROADMAP Phase 6. AC plan: AC6.4 (0 cross-tenant passages in 1,000 queries) provable locally as an
 integration test; AC6.1 eval harness on demo data (real threshold BLOCKED: real embeddings + pilot golden set); AC6.2,
 AC6.3, AC6.5, AC6.6 BLOCKED (no Anthropic key / no staging / human grading).
@@ -248,21 +305,22 @@ Design decisions already worked out for later phases (record as ADRs when built)
 | Pilot launch (Phase 10) | Q-01 legal opinion on minors' data |
 
 ## Failed checks
-- Local only: `e2e/portals.spec.ts:142` (T-SEC-05) fails when Playwright reuses a `next dev` server on :3000 (dev sends
-  `Cache-Control: no-store`); passes against the production build. Run the local E2E only with port 3000 free.
+- None. Note: locally, `e2e/portals.spec.ts:142` (T-SEC-05) fails if Playwright reuses a `next dev` already running on
+  :3000 (dev sends `Cache-Control: no-store` without `private`). Before `npm run check`, make sure port 3000 is free
+  (`lsof -nP -iTCP:3000 -sTCP:LISTEN`); if another session's dev server holds it, rely on CI for E2E and say so.
 
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action
-0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout phase-6-tutor && git pull && npm ci`;
+0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout phase-8-library && git pull && npm ci`;
    `docker info` (else `open -a Docker`); `supabase status` (else `supabase start`); `supabase db reset && npm run seed:demo`.
-1. PR `phase-6-tutor` → `main` (opened in session 14): check CI (`gh pr checks`); the E2E job there runs against the
-   production build (`npm run start`) — the decisive run for `portals.spec.ts:142` and `e2e/tutor.spec.ts`. Fix until
-   green (never weaken a test), then squash-merge, `git checkout main && git pull`, record the merge commit above.
-2. Start Phase 8 (shared library engine) on branch `phase-8-library`: state scope + ACs (IMPLEMENTATION_ROADMAP
-   Phase 8); Q-02 (pilot exam/subject) and the reviewer are founder decisions → use the documented default (one exam ×
-   one subject seed, JEE Physics) and record it in DECISIONS.md, or ask the founder if no default exists.
+   Port 3000 may still be held by an old `next dev` (PID 86773, started 07:45, cwd apps/web) from another session;
+   Next refuses a second `next dev` in the same folder, so browser checks used it (it serves this checkout).
+1. Phase 8 PR into main: check CI (full E2E against the production build there); fix until green; squash-merge; record
+   PR number, merge commit and CI run in PROGRESS "Current phase".
+2. Then Phase 9 (Studio basics, IMPLEMENTATION_ROADMAP Phase 9) on a new branch `phase-9-studio` from main: state scope +
+   ACs (AC9.1–AC9.4), practice quizzes deferred from Phase 7 belong here (ADR-023).
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -289,9 +347,11 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 | 7 | 2026-10-15 | PR #4 merged (`2a5f25e`). Phase 7 seed fixed, `e2e/assessments.spec.ts`, 6 real bugs fixed (test creation RLS, key save, key embeds, submit, form state, checking scroll), browser check, ADR-023, gate green | `40fc4fc` |
 | 8 | 2026-10-15 | Phase 4 DB + worker + tests green (850 pgTAP, 16 integration); institute-delete cascade bug fixed; web UI + seed written, not verified | see `git log` |
 | 13 | 2026-10-16 | Phase 6: assemble fix, streaming tutor route, safe Markdown + XSS/injection suites, tutor pane + reports + doubts, browser-verified; AC6.4/E2E/gate pending | `7fd9b8a` |
-| 14 | 2026-10-16 | Phase 6: AC6.4 isolation test, eval runner, tutor E2E, 375 px check, ADR-026, gate (1 E2E env-caused), PR | see `git log` |
+| 14 | 2026-10-16 | Phase 6: AC6.4 isolation test, eval runner, tutor E2E, 375 px check, ADR-026, gate, PR #7 CI green and merged (`7863900`); branch `phase-8-library` | see `git log` |
 | 9 | 2026-10-15 | Phase 4 web UI browser-verified, worker env/CI, `e2e/documents.spec.ts`, logo upload; founder pausing subscription — handoff written | see `git log` |
 | 10 | 2026-10-16 | ADR-024, Phase 4 full gate green (2 test-fixture races fixed), PR #5 merged (`cbfb62e`); Phase 5 prices verified, usage migration written (pgTAP 2 failing, WIP) | see `git log` |
 | 11 | 2026-10-16 | Phase 5: pgTAP green + `080_usage.sql`, core gateway (routing/cost/metered), worker metering, `/usage` page, platform AI switches, AC5.3 concurrency + AC5.4 API tests; 2 real bugs fixed (safeupdate kill switch, phone layout); full gate green; PR #6 opened, CI pending at handoff | `0802398` |
 | 12 | 2026-10-16 | PR #6 merged (`b1f0795`). Phase 6: tutor schema + RLS + pgTAP (1064 PASS), Anthropic SDK 0.131.0, core tutor/fake/Claude provider + tests WIP (1 unit test failing, fix known) | see `git log` |
+| 16 | 2026-10-16 | Phase 8: AC8.4 fixed (OR keyword query, library recall 1.0), web verified in browser (2 UI fixes), `e2e/library.spec.ts`, ADR-027 + docs, local gate (T-SEC-05 dev-reuse only), PR opened | see `git log` |
+| 15 | 2026-10-16 | Phase 8: library migration + 40 pgTAP (1104 PASS), core two-layer tutor (46 unit), web/platform editor/seed/eval written; AC8.4 library recall 0.81 FAILING (keyword AND), handoff | see `git log` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |

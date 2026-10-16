@@ -10,7 +10,7 @@ export type ChatMessage = {
   role: 'user' | 'assistant';
   content: string;
   citations: Citation[];
-  answer_labels: { label: 'notes' | 'general'; citations: number[] }[];
+  answer_labels: { label: 'notes' | 'library' | 'general'; citations: number[] }[];
   feedback?: 'up' | 'down' | null;
 };
 
@@ -33,18 +33,30 @@ function Answer({ m }: { m: ChatMessage }) {
           <div key={i} className="answer-part">
             <Markdown text={text} />
             <p className="small">
-              {label?.label === 'notes' && cited.length ? (
-                cited.map((c, j) => (
-                  <a
-                    key={j}
-                    className="badge good"
-                    href={`/documents/${c.document_id}/file#page=${c.page_start}`}
-                    target="_blank"
-                    rel="noopener"
-                  >
-                    From your institute&apos;s notes: {c.title}, p.{c.page_start}
-                  </a>
-                ))
+              {label && label.label !== 'general' && cited.length ? (
+                cited.map((c, j) =>
+                  c.source_kind === 'library' ? (
+                    <a
+                      key={j}
+                      className="badge warn"
+                      href={`/library/${c.library_item_id}`}
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      ExamEdge library: {c.title}
+                    </a>
+                  ) : (
+                    <a
+                      key={j}
+                      className="badge good"
+                      href={`/documents/${c.document_id}/file#page=${c.page_start}`}
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      From your institute&apos;s notes: {c.title}, p.{c.page_start}
+                    </a>
+                  ),
+                )
               ) : (
                 <span className="badge">General explanation</span>
               )}
@@ -116,6 +128,7 @@ function Actions({ m, onRated }: { m: ChatMessage; onRated: (f: ChatMessage['fee
 export function Tutor(props: {
   subjectId: string;
   subjectName: string;
+  hasLibrary: boolean;
   conversationId: string | null;
   messages: ChatMessage[];
 }) {
@@ -200,8 +213,9 @@ export function Tutor(props: {
       <div className="stack chat" role="log" aria-label="Chat" aria-busy={busy}>
         {messages.length === 0 && !busy && (
           <p className="empty reading">
-            Ask a doubt about {props.subjectName}. Answers come from your institute&apos;s notes with page links;
-            anything else is marked &quot;General explanation&quot;.
+            Ask a doubt about {props.subjectName}. Answers come from your institute&apos;s notes (with page links)
+            {props.hasLibrary && ' and the reviewed ExamEdge library'}; anything else is marked &quot;General
+            explanation&quot;.
           </p>
         )}
         {messages.map((m, i) =>

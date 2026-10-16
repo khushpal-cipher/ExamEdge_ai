@@ -70,13 +70,14 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 - `library_subjects(exam_id, name, unique(exam_id,name))`, `library_chapters(subject_id, position, name, unique(subject_id,name))`, `library_topics(chapter_id, position, name)`.
 - S all authenticated. Writes platform admin / library editors.
 
-**library_items** — `topic_id`, `kind` (`explanation|formula_sheet|worked_example|question|flashcard_set`), `content jsonb` (schema-validated per kind), `status` (`draft|reviewed|published|retired`), `version int`, `provenance text not null` (how produced + rights basis), `generated_by_model`, `reviewed_by`, `reviewed_at`.
-- Constraint: `status='published'` requires `reviewed_by is not null` (check constraint).
-- S authenticated where `status='published'`; staff of library team all. Never written from tenant data (ADR-010).
+**library_items** — `topic_id`, `kind` (`explanation|formula_sheet|worked_example` in R1; `question|flashcard_set` later), `content jsonb` (`{body}` Markdown), `status` (`draft|reviewed|published|retired`), `version int`, `provenance text not null` (how produced + rights basis), `generated_by_model`, `created_by`, `reviewed_by`, `reviewed_at`, `published_at`.
+- Check: `status = 'draft'` or (`reviewed_by` and `reviewed_at` not null). Trigger `guard_library_item`: an API insert is always a draft by the caller; `reviewed` stamps the caller as reviewer; editing content/kind/topic returns the item to draft with `version + 1` (ADR-027).
+- S authenticated where `status='published'`; aal2 platform admin all. I/U aal2 platform admin. Publishing only via definer `publish_library_item(item, chunks, model)` (refuses drafts, swaps chunks, audits). Never written from tenant data (ADR-010).
 
-**library_chunks** — `item_id`, `content`, `tsv tsvector generated`, `embedding vector(1024)`, `embedding_model`, `chunk_index`.
-- Indexes: GIN(tsv); HNSW (cosine) is acceptable here because the library is one shared, non-tenant corpus [R].
-- S authenticated when parent item published.
+**library_chunks** — `item_id`, `subject_id` (denormalised library subject, retrieval filter), `chunk_index`, `content`, `tsv tsvector generated`, `embedding vector(1024)`, `embedding_model`.
+- Indexes: GIN(tsv); HNSW (cosine) — acceptable because the library is one shared, non-tenant corpus [R].
+- S authenticated when the parent item is published. Retrieval via `match_library_chunks(query_embedding, query_text, subject, k)` (invoker, hybrid + RRF, iterative HNSW scan). Keyword half of both retrieval functions = `private.keyword_query(q)` (OR of content words).
+- Platform AI usage (embedding library items) is metered in `usage_records` with `institute_id null` (feature `library_embed`), readable by platform admins only.
 
 ### 4.2 Tenant core
 
@@ -129,7 +130,7 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 **conversations** (S) — `user_id`, `subject_id` (composite FK), `title`, `created_at` (no `deleted_at`: a deleted chat is gone; ADR-026). Index `(institute_id, user_id, created_at desc)`.
 - S/I/D owner (any active member; insert only on a subject the caller can read). Staff: none — counts per subject via `tutor_activity(inst, student)` (definer, same callers as `student_progress`), pending Q-03.
 
-**messages** (S) — `conversation_id` (composite FK), `role` (`user|assistant`), `content`, `citations jsonb` (list of `{source_kind, document_id|library_item_id, title, page_start, page_end, cited_text}`), `answer_labels jsonb` (`[{label: notes|general, citations: [index]}]` per paragraph), `model`, `usage_record_id`, `feedback` (`up|down|null`), `created_at`.
+**messages** (S) — `conversation_id` (composite FK), `role` (`user|assistant`), `content`, `citations jsonb` (list of `{source_kind, document_id|library_item_id, title, page_start, page_end, cited_text}`), `answer_labels jsonb` (`[{label: notes|library|general, citations: [index]}]` per paragraph), `model`, `usage_record_id`, `feedback` (`up|down|null`), `created_at`.
 - S/I owner (rows written by the server in the user's session after the answer is complete); U `feedback` only. Retention 12 months then deleted [A, Q-06].
 
 **answer_reports** (T) — `subject_id` (composite FK), `message_id` (unique; composite FK, `on delete set null`), `reported_by`, `question`, `answer`, `citations`, `reason` (≤ 500), `created_at`, `resolved_at`, `resolved_by`.

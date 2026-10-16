@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { KIND } from '@/lib/library';
 import { Markdown } from '@/lib/markdown';
 import { isUuid, requireMember } from '@/lib/tenant';
 import { Flash, type Search } from '../../flash';
@@ -10,6 +11,12 @@ import { Panes } from './panes';
 import { Tutor, type ChatMessage } from './tutor';
 
 type Doc = { id: string; title: string; status: string; chapter_id: string | null };
+type LibraryChapter = {
+  id: string;
+  name: string;
+  position: number;
+  library_topics: { id: string; name: string; position: number; library_items: { id: string; kind: string }[] }[];
+};
 type Report = { id: string; question: string; answer: string; reason: string | null; created_at: string };
 
 export default async function SubjectWorkspace(props: { params: Promise<{ id: string }>; searchParams: Search }) {
@@ -19,11 +26,23 @@ export default async function SubjectWorkspace(props: { params: Promise<{ id: st
   // RLS: staff see every subject of the institute; students only subjects of their own batches.
   const { data: subject } = await db
     .from('subjects')
-    .select('id, name, chapters(id, name, position)')
+    .select('id, name, library_subject_id, chapters(id, name, position)')
     .eq('institute_id', institute.id)
     .eq('id', id)
     .maybeSingle();
   if (!subject) notFound();
+  // ExamEdge library for the mapped subject: published items only (RLS); topics without one are hidden.
+  const { data: libRows } = subject.library_subject_id
+    ? await db
+        .from('library_chapters')
+        .select('id, name, position, library_topics(id, name, position, library_items(id, kind))')
+        .eq('subject_id', subject.library_subject_id)
+    : { data: [] };
+  const byPosition = (a: { position: number }, b: { position: number }) => a.position - b.position;
+  const library = ((libRows ?? []) as LibraryChapter[])
+    .map((c) => ({ ...c, topics: c.library_topics.filter((t) => t.library_items.length).sort(byPosition) }))
+    .filter((c) => c.topics.length)
+    .sort(byPosition);
   const chapters = [...(subject.chapters as { id: string; name: string; position: number }[])].sort(
     (a, b) => a.position - b.position,
   );
@@ -129,6 +148,32 @@ export default async function SubjectWorkspace(props: { params: Promise<{ id: st
                 );
               })}
             </ul>
+            {library.length > 0 && (
+              <>
+                <h3>ExamEdge library</h3>
+                <p className="small muted">Reviewed reference material for this subject. The tutor uses it too.</p>
+                {library.map((c) => (
+                  <details key={c.id}>
+                    <summary>{c.name}</summary>
+                    <ul className="stack small" aria-label={`Library: ${c.name}`}>
+                      {c.topics.map((t) => (
+                        <li key={t.id}>
+                          {t.name}:{' '}
+                          {t.library_items
+                            .toSorted((a, b) => a.kind.localeCompare(b.kind))
+                            .map((i, n) => (
+                              <span key={i.id}>
+                                {n > 0 && ' · '}
+                                <a href={`/library/${i.id}`}>{KIND[i.kind]}</a>
+                              </span>
+                            ))}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                ))}
+              </>
+            )}
             {!student && (
               <details>
                 <summary>Upload notes</summary>
@@ -165,6 +210,7 @@ export default async function SubjectWorkspace(props: { params: Promise<{ id: st
               key={chat?.id ?? 'new'}
               subjectId={subject.id}
               subjectName={subject.name}
+              hasLibrary={library.length > 0}
               conversationId={chat?.id ?? null}
               messages={messages}
             />
