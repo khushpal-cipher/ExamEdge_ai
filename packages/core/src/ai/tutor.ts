@@ -80,11 +80,13 @@ export function assemble(segments: Segment[], passages: Passage[]) {
   };
   const paragraphs: { text: string; citations: number[] }[] = [{ text: '', citations: [] }];
   for (const s of segments) {
+    let cited = false; // a segment's citations belong to its first non-empty piece, not to later paragraphs
     s.text.split(/\n\s*\n/).forEach((piece, n) => {
       if (n > 0) paragraphs.push({ text: '', citations: [] });
       const p = paragraphs.at(-1)!;
       p.text += piece;
-      if (!piece.trim()) return;
+      if (cited || !piece.trim()) return;
+      cited = true;
       for (const c of s.cites) {
         const i = cite(c.passage, c.cited_text);
         if (i !== null && !p.citations.includes(i)) p.citations.push(i);
