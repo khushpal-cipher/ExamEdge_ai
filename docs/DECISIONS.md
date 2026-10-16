@@ -240,6 +240,8 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
   documents past their grace whose files are gone (versions, chunks and audiences cascade); a document whose files
   are still there waits for the next day.
 - **The one-day age** keeps an in-flight upload or logo change safe (the row that points at the file may commit later).
+- **Accepted:** Storage deletes with `delete … returning`, which needs a SELECT policy, so the worker account can also
+  download a purgeable file until the job deletes it (at most a day). Nobody else gains access.
 - **Not purged:** files of superseded and failed versions of live documents (they count against the institute's
   storage limit until the document is deleted) — revisit if institutes hit `storage_full` from re-uploads.
 

@@ -18,7 +18,11 @@ create temp table ids on commit drop as
 create temp table new_doc (id uuid, v uuid, path text) on commit drop;
 grant select on ids, new_doc to authenticated, worker;
 
--- Files the policies are checked against (inserted as postgres, as the Storage API does after an upload).
+-- Files the policies are checked against (inserted as postgres, as the Storage API does after an upload). Files left
+-- in the local database by other runs are removed first: old orphans are purgeable, so the worker may see them.
+select set_config('storage.allow_delete_query', 'true', true);
+delete from storage.objects;
+select set_config('storage.allow_delete_query', 'false', true);
 insert into storage.objects (bucket_id, name) select 'documents', v.storage_path from public.document_versions v
   where not exists (select 1 from storage.objects o where o.bucket_id = 'documents' and o.name = v.storage_path);
 

@@ -12,6 +12,7 @@ const workerEnv = localWorkerEnv(env);
 const slug = `prg${Date.now() % 1e9}`;
 let inst: string;
 let pool: pg.Pool;
+const created: Record<string, string[]> = { documents: [], logos: [] };
 
 // A ready document with one uploaded file, its object made two days old (purge never takes newer files).
 async function document(title: string) {
@@ -29,6 +30,7 @@ async function document(title: string) {
      values ($1, $2, $3, 1, $4, 'application/pdf', 4)`,
     [v, inst, doc, path],
   );
+  created.documents!.push(path);
   const { error } = await admin.storage
     .from('documents')
     .upload(path, Buffer.from('%PDF'), { contentType: 'application/pdf' });
@@ -48,6 +50,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  // Leave no aged files behind: once the institute is gone they would be purgeable orphans in the local database.
+  for (const [bucket, names] of Object.entries(created)) await admin.storage.from(bucket).remove(names);
   await db.query('delete from public.institutes where slug = $1', [slug]);
   await pool?.end();
   await db.end();
@@ -61,6 +65,7 @@ it('purges deleted documents after 30 days and unused logos, keeps everything el
   await db.query(`update public.documents set deleted_at = now() - interval '7 days' where id = $1`, [recent.doc]);
   const [oldLogo, logo] = [`${inst}/${randomUUID()}`, `${inst}/${randomUUID()}`];
   for (const name of [oldLogo, logo]) {
+    created.logos!.push(name);
     const { error } = await admin.storage.from('logos').upload(name, Buffer.from('png'), { contentType: 'image/png' });
     if (error) throw error;
   }
