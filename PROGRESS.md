@@ -15,7 +15,8 @@ Last updated: 2026-10-16
 **Phase 10 (local parts) MERGED** into `main` (PR #10, squash commit `dc7600f`, CI green: check + secrets, run 38877776627 — unit 132, pgTAP 1243, integration 23, E2E 26/26 against the production build incl. T-SEC-05, 2026-10-16).
 **R1 OCR MERGED** into `main` (PR #11, squash commit `69d3fc6`, CI green: E2E 26/26, run 38880693017, 2026-10-16).
 **R1 file purge MERGED** into `main` (PR #12, squash commit `6f343a0`, CI green: run 38896124282 — unit 135, pgTAP 1256, integration 26, E2E 26/26 against the production build, 2026-10-16).
-**Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
+**R1 AI bank questions MERGED** into `main` (PR #13, squash commit `b6f2ded`, CI green: run 38936700856 — pgTAP 1276, E2E 27/27 against the production build, 2026-10-16).
+**Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -38,7 +39,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### R1 AI-made bank questions + blind second solve (session 21, branch `r1-question-gen`) — gate green, PR open
+### R1 AI-made bank questions + blind second solve (session 21) — MERGED (PR #13, `b6f2ded`, CI green run 38936700856)
 Scope = roadmap Phase 7 task "AI generation with dual-solve" / AC7.5, deferred in ADR-023 and never built (found
 while listing what is left). ADR-032. No founder decision needed.
 DONE + TESTED (2026-10-16, commit `fa25f32`):
@@ -153,25 +154,26 @@ DONE + TESTED (2026-10-16, session 19):
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 21)
-`main` = `6f343a0` (purge merged). Open work: branch `r1-question-gen` (AC7.5, ADR-032) — PR into main, CI green
-(E2E 27/27), squash-merge, record the merge commit here. After that no local R1 work is known to be left.
-Merged branches `phase-10-local`, `r1-ocr`, `r1-purge-files` can be deleted.
-Repo setting "Allow auto-merge" turned on by the founder (2026-10-16).
-0. Fresh session: `cd ~/Documents/startup/examedge_ai && git fetch && npm ci`; `docker info`
+## Next exact action (session 22)
+`main` = `b6f2ded` (AI bank questions merged, PR #13). No open branch, no open PR. No local Release 1 work is known
+to be left: every Release 1 feature in HOW_IT_WORKS.md is built and tested in demo mode.
+Merged branches `phase-10-local`, `r1-ocr`, `r1-purge-files`, `r1-question-gen` can be deleted.
+Repo setting "Allow auto-merge" is on (founder, 2026-10-16), but `main` has no required status checks, so GitHub
+refuses auto-merge ("unstable"/"clean" status). Open question to the founder: make `check` + `secrets` required on
+`main` (repo setting → needs their yes), or keep merging by hand after CI is green.
+0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout main && git pull && npm ci`; `docker info`
    (else `open -a Docker`); `supabase status` (else `supabase start`); `supabase db reset && npm run seed:demo`.
-1. After 2b is merged: the founder already got the final summary in chat (what works / BLOCKED / real-AI steps = docs/RUNBOOKS.md §5).
-   Ask the founder which of these to do next (all need their decision):
+1. Tell the founder in simple English that Release 1 is fully built locally, then ask which to do next (all need
+   their decision; nothing else is waiting):
    - approve cloud accounts → Phase 10 cloud parts (production Supabase/Vercel/Railway, domain + TLS, prod Google
-     OAuth, Sentry, spend alerts, independent backup storage, real restore drill G7, k6 load test, rollback rehearsal);
-   - give an Anthropic key → switch tutor + Studio to real AI (RUNBOOKS §5) and run AC5.2 / AC6.x evals;
-   - answer Q-08 (Voyage terms) and Q-01 (legal, blocks the pilot).
-2. Local work possible without any decision (new branch per task, e.g. `r1-ocr`):
-   a. ~~Claude OCR provider~~ — merged (PR #11, `69d3fc6`, ADR-030).
-   b. ~~Purge of soft-deleted documents' files and replaced logos~~ — branch `r1-purge-files` (ADR-031), pushed at
-      merged (PR #12, `6f343a0`, session 21).
-   Each: tests + full gate (`npm run check`, local E2E `--workers=1`, T-SEC-05 fails only against another session's
-   `next dev` on :3000), PR, CI green, squash-merge, PROGRESS update.
+     OAuth, Sentry, spend alerts, independent backup storage, real restore drill G7, k6 load test AC7.4/AC10.3,
+     rollback rehearsal AC10.5, staging AC1.4–1.6);
+   - give an Anthropic key → switch tutor, Studio, OCR and AI bank questions to real AI (RUNBOOKS §5) and run the
+     BLOCKED checks: AC4.5/AC4.6 (OCR), AC5.2 (cost ±2 %), AC6.1–6.6 (tutor evals), AI question agreement rate;
+   - answer Q-08 (Voyage terms → write the Voyage client) and Q-01 (legal, blocks the pilot);
+   - a subject expert reviewer for real library content (AC8.1).
+2. Any new local task: new branch, tests + full gate (`npm run check` with port 3000 free, so E2E runs against the
+   production build), PR, CI green, squash-merge, PROGRESS update.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
