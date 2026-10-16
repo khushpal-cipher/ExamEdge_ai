@@ -2,9 +2,11 @@
 -- writes; nothing publishes without a reviewer (AC8.2); provenance is required (AC8.3); platform AI calls are metered.
 begin;
 select tests.setup();
-select plan(40);
+select plan(43);
 
 insert into private.platform_admins (user_id, granted_by) values (tests.create_user('root@examedge.test'), 'test');
+-- The demo seed's library (if seeded) would clash with the fixture names and counts; rolled back at the end.
+delete from public.library_subjects;
 
 -- A one-hot 1024-dim vector, so each test chunk has a known nearest query.
 create function pg_temp.vec(i int) returns extensions.vector language sql as $$
@@ -52,6 +54,9 @@ select is((select count(*) from public.match_library_chunks(pg_temp.vec(1), 'esc
   0::bigint, 'retrieval stays inside the requested library subject');
 select is((select topic from public.match_library_chunks(pg_temp.vec(1), 'escape', (select subject from lib))),
   'Escape velocity', 'retrieval names the topic for the citation');
+-- fused score above one rank-1 hit = the keyword half ranked it too ("speed" is not in the text; the old AND query missed)
+select ok((select score > 1.0 / 61 from public.match_library_chunks(pg_temp.vec(1), 'what is the escape speed',
+  (select subject from lib))), 'one matching content word is enough for the keyword half');
 select throws_ok($$ insert into public.library_items (topic_id, kind, content, provenance)
   select topic, 'explanation', '{"body": "x"}', 'student wrote this' from lib $$, '42501', null,
   'student cannot add library items');
@@ -154,6 +159,11 @@ select is((select blocked from public.ai_reserve_platform('library_embed', 'fake
 select tests.login('owner@alpha.test');
 select is((select count(*) from public.usage_records where institute_id is null), 0::bigint,
   'institute owners never see platform usage');
+
+-- AC8.4 keyword half: OR of content words, stop words dropped (ADR-027)
+select is(private.keyword_query('What is the dimensional formula of Planck''s constant?')::text,
+  '''constant'' | ''dimensional'' | ''formula'' | ''planck''', 'keyword query ORs the content words');
+select is(private.keyword_query('what is the'), null, 'a stop-word-only question has no keyword query');
 
 select * from finish();
 rollback;
