@@ -1,9 +1,11 @@
-// Real providers (tutor, Studio, OCR): Claude through the official SDK (ADR-008). Used only when AI_PROVIDER=anthropic and
+// Real providers (tutor, Studio, OCR, bank questions): Claude through the official SDK (ADR-008). Used only when AI_PROVIDER=anthropic and
 // ANTHROPIC_API_KEY is set — BLOCKED until the founder creates a key; tested against a recorded stream (claude.test.ts).
 // Passages go in as search_result blocks with citations on, so every citation names the passage it came from.
 import Anthropic from '@anthropic-ai/sdk';
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
+import type { z } from 'zod';
 import { PAGE_OUT, type OcrProvider } from './ocr';
+import { DRAFT_SCHEMA, solveMessage, SOLVE_SCHEMA, writeMessage, type QuestionProvider } from './questions';
 import type { StudioInput, StudioOutput, StudioProvider } from './studio';
 import type { Generation, TutorInput, TutorProvider } from './tutor';
 
@@ -164,5 +166,47 @@ export function claudeStudio(model: ClaudeModel, client = new Anthropic({ maxRet
         },
       };
     },
+  };
+}
+
+// Bank questions (ADR-032): Opus writes, Sonnet solves blind; both return structured JSON, run at effort medium (the
+// Opus 5.5 default, set explicitly) and may hand a declined request to the server-defined fallback. Thinking is
+// always on for both, so max_tokens leaves room for it. BLOCKED like the tutor (no key); tested against a recorded reply.
+export function claudeQuestions(client = new Anthropic({ maxRetries: 1 })): QuestionProvider {
+  const maxOutput = 16_000;
+  const call = async (
+    model: 'claude-opus-5-5' | 'claude-sonnet-5-5',
+    system: string,
+    content: string,
+    schema: z.ZodType,
+  ) => {
+    const msg = await client.beta.messages.parse({
+      model,
+      max_tokens: maxOutput,
+      system,
+      output_config: { effort: 'medium', format: betaZodOutputFormat(schema) },
+      betas: ['server-side-fallback-2026-07-01'],
+      fallbacks: 'default' as const,
+      messages: [{ role: 'user', content }],
+    });
+    return {
+      content: msg.parsed_output,
+      refused: msg.stop_reason === 'refusal',
+      usage: {
+        input_tokens: msg.usage.input_tokens,
+        output_tokens: msg.usage.output_tokens,
+        cache_read_tokens: msg.usage.cache_read_input_tokens ?? 0,
+        cache_write_tokens: msg.usage.cache_creation_input_tokens ?? 0,
+      },
+    };
+  };
+  return {
+    author: 'claude-opus-5-5',
+    solver: 'claude-sonnet-5-5',
+    maxOutput,
+    write: ({ chapter, sources, system }) =>
+      call('claude-opus-5-5', system, writeMessage(chapter, sources), DRAFT_SCHEMA),
+    solve: ({ questions, sources, system }) =>
+      call('claude-sonnet-5-5', system, solveMessage(questions, sources), SOLVE_SCHEMA),
   };
 }

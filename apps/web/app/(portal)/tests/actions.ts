@@ -68,6 +68,16 @@ export async function saveQuestion(form: FormData) {
       ? { error: updateError }
       : await db.from('question_keys').insert({ question_id: questionId, institute_id: institute.id, key });
   if (error) done(`/questions/${questionId}`, error);
+  // A teacher saving an AI-made question has checked it: it is approved and counts as teacher-verified (ADR-032).
+  if (isUuid(id)) {
+    const { error: reviewError } = await db
+      .from('questions')
+      .update({ status: 'approved', verification: 'teacher_verified' })
+      .eq('institute_id', institute.id)
+      .eq('id', questionId)
+      .eq('origin', 'ai');
+    if (reviewError) done(`/questions/${questionId}`, reviewError);
+  }
   done(back);
 }
 

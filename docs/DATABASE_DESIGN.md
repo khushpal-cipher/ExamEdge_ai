@@ -149,9 +149,10 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 
 **questions** (T) — `subject_id`, `chapter_id`, `type` (`single|multi|numerical|written`; written = theory answer typed by the student, checked by a teacher), `stem` (Markdown + LaTeX), `options jsonb` (`[{id, text}]`), `explanation`, `difficulty`, `origin` (`teacher|ai|library`), `verification` (`unverified|dual_solve_agree|dual_solve_disagree|teacher_verified`), `status` (`draft|approved|retired`), `created_by`.
 - Trigger: no UPDATE of `stem/options` once referenced by a non-draft test (edit = new question) — preserves grading integrity.
+- Trigger `review` (ADR-032): `origin = 'ai'` rows are inserted as `draft`; `approved` is refused while `verification` is `unverified` or `dual_solve_disagree`; `verification` can only change to `teacher_verified`. AI questions are stored with their keys by `add_ai_questions(inst, subject, chapter, items)` (invoker, one transaction).
 - S staff. Students **never** select questions directly; they get stems/options through `get_attempt_questions(attempt_id)` RPC.
 
-**question_keys** (T) — pk `question_id`, `institute_id`, `key jsonb` (`{correct:[optionIds]}`, `{value, tolerance_abs|tolerance_pct, unit}`, or for written questions `{model_answer, max_marks}` — the teacher's reference answer, a guide only, never auto-graded).
+**question_keys** (T) — pk `question_id`, `institute_id`, `key jsonb` (`{correct:[optionIds]}`, `{value, tolerance_abs|tolerance_pct, unit}`, or for written questions `{model_answer, max_marks}` — the teacher's reference answer, a guide only, never auto-graded), `second_solve jsonb` (AI questions: the blind second answer, `{correct}` or `{value}`; null if it did not run).
 - Separate table so no student-visible policy can ever expose keys. S/I/U staff only. Students: none, ever. Post-release answers shown via `get_attempt_review(attempt_id)` RPC that checks `results_release_at <= now()`.
 
 **tests** (T) — `title`, `opens_at`, `closes_at`, `duration_seconds`, `marking jsonb` (default marks/negative), `shuffle_questions bool`, `results_release_at`, `status` (`draft|scheduled|closed|grading|results_released|cancelled`), `created_by`.
