@@ -9,7 +9,7 @@ Last updated: 2026-10-16
 **Phase 7 MERGED** into `main` (PR #4, squash commit `2a5f25e`, CI green: check + secrets, run 38711008739, 2026-10-15).
 **Phase 4 MERGED** into `main` (PR #5, squash commit `cbfb62e`, CI green: check + secrets, run 38795802409, 2026-10-16).
 **Phase 5 MERGED** into `main` (PR #6, squash commit `b1f0795`, CI green: check + secrets, run 38805190604, 2026-10-16).
-**Phase 6 (tutor) — in progress** on branch `phase-6-tutor` (DB slice green, core tutor WIP; see Next exact action).
+**Phase 6 (tutor) — local gate green except 1 E2E that ran against the wrong server (see below); PR into `main` opened, CI decides.**
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
@@ -71,9 +71,40 @@ DONE + TESTED in session 13 (2026-10-16):
   Browser-verified: student asks → cited answer streams; rate persists (DB checked); report saved with reason;
   teacher1 sees report, Resolve → "Marked as resolved." (0 open); teacher view of student01 progress →
   "Physics: 5 doubts asked".
-UNCOMMITTED: only the PROGRESS.md handoff (this file) — committed in the handoff commit.
-NOT DONE YET: steps 5–6 of Next exact action (AC6.4 integration test, eval runner, E2E, 375 px check of the tutor
-pane with `resize_window`, ADR-026, DATABASE_DESIGN §4.4 update, full gate, PR).
+DONE + TESTED in session 14 (2026-10-16):
+- `26c96e3` AC6.4 ✅ `apps/web/lib/retrieval.int.test.ts`: two fresh institutes (`tests.make_institute`) + 8 notes each
+  (B's carry a canary), A's student (created through the auth API — SQL-made users cannot sign in via GoTrue) calls
+  `rpc match_chunks` 1,000 times through PostgREST with A's Physics, A's Chemistry (not in batch) and B's Physics ids
+  and B's canary text → every row `institute_id` = A, no canary, non-Physics scopes empty, every A-Physics query
+  non-empty (no vacuous pass). `npx vitest run --project integration apps/web/lib/retrieval.int.test.ts` → 1 passed.
+- `b247d80` eval runner `npm run eval -- <change>` (`evals/run.ts`, golden set `evals/datasets/demo-retrieval.json`:
+  29 in-scope questions with expected document + page incl. Hinglish, 5 out of scope incl. the unpublished draft and
+  the Rival canary). Runs as student01 (JEE) / student26 (NEET, Biology) after `seed:demo`. Demo baseline
+  `evals/results/2026-10-16-demo-baseline.json`: recall@8 1.0, cross-tenant rows 0, retrieval p50 6 ms / p95 19 ms.
+  Honest note: the demo corpus is ~2 short documents per subject, so 1.0 proves the harness, not retrieval quality.
+- `c16c2bc` `e2e/tutor.spec.ts` 4/4 (against the running dev server): student05 asks → chip "From your institute's
+  notes: Rotational Motion …, p.1" linking `/documents/<id>/file#page=1`, 👍 persists, report with reason, chat
+  reloads; teacher1 sees the report (by reason) and resolves → "Marked as resolved."; privacy (own SQL fixture):
+  owner reads own message, Rival student/owner read nothing and `report_answer` fails, Demo teacher/owner read no
+  messages/conversations but see the report copy, a classmate can't read/rate; daily limit (counter set to the
+  quota for student07) → "You've used today's AI limit. It resets tomorrow.", question kept in the box, nothing
+  saved; foreign/missing Origin → 403 `bad_origin`, `private, no-store`.
+- Browser check at 375 px (built-in browser, `resize_window` mobile, then desktop): student01 Physics tutor tab,
+  cited answer with 3 note chips + 1 "General explanation", rate/report row, input refocused; `scrollWidth` 375,
+  no element wider than the viewport.
+- `b2730b8` docs: ADR-026, DATABASE_DESIGN §4.4 (answer_reports, tutor_activity, report_answer, no `deleted_at`,
+  match_chunks returns institute + similarity).
+AC status: AC6.4 ✅ · AC6.1 harness ✅ / real threshold BLOCKED (real embeddings + pilot golden set) · AC6.2, AC6.3,
+AC6.5, AC6.6 BLOCKED (Anthropic key, staging, human grading) · T-SEC-19 ✅ · T-AI-09 ✅ (demo provider; real model
+BLOCKED) · T-ISO-06 ✅ (pgTAP + AC6.4 test).
+Local gate (2026-10-16, commit `b2730b8`): `supabase db reset && npm run seed:demo && npm run check` → format, lint +
+forbidden, typecheck PASS; unit 104/104; pgTAP Files=10 Tests=1064 PASS; integration 21/21 (incl. AC6.4); build
+(+bundle scan) PASS; E2E 21 passed / 1 failed: `portals.spec.ts:142` T-SEC-05 expected `private` in Cache-Control.
+Cause: port 3000 was held by another Claude session's `next dev` (started 07:45), so Playwright reused it
+(`reuseExistingServer`) instead of `npm run start`; `next dev` sends `Cache-Control: no-store`. Checked: production
+server (`next start -p 3100`) on `demo.localhost:3100/` sends `private, no-cache, no-store, max-age=0, must-revalidate`,
+and `/api/tutor` with a foreign Origin → 403 `private, no-store`. The full E2E against the production build therefore
+runs only in CI on the PR (not weakened, not skipped). All other E2E also ran against that dev server.
 
 ### Phase 5 — AI gateway, metering, quotas (sessions 10–11) — MERGED (PR #6, `b1f0795`)
 Scope = IMPLEMENTATION_ROADMAP Phase 5; decisions in ADR-025. Prices verified 2026-10-16 (official pricing page).
@@ -217,7 +248,8 @@ Design decisions already worked out for later phases (record as ADRs when built)
 | Pilot launch (Phase 10) | Q-01 legal opinion on minors' data |
 
 ## Failed checks
-- None known (unit 104/104 at `7fd9b8a`; pgTAP/integration/E2E/build not re-run since session 12).
+- Local only: `e2e/portals.spec.ts:142` (T-SEC-05) fails when Playwright reuses a `next dev` server on :3000 (dev sends
+  `Cache-Control: no-store`); passes against the production build. Run the local E2E only with port 3000 free.
 
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
@@ -225,24 +257,12 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 ## Next exact action
 0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout phase-6-tutor && git pull && npm ci`;
    `docker info` (else `open -a Docker`); `supabase status` (else `supabase start`); `supabase db reset && npm run seed:demo`.
-   Local env files as before (`apps/web/.env.local`, root `.env.local`).
-1. AC6.4 integration test. NOTE: CI runs `test:int` BEFORE `seed:demo`, so the test must build its own data:
-   check `supabase/test_helpers.sql` (pgTAP fixtures already create a published doc + canary chunk per institute —
-   see whether a `tests.*` helper can be reused from an `*.int.test.ts`, as `apps/worker/src/usage.int.test.ts` does
-   with `tests.make_institute`), or create two institutes + docs + chunks via SQL in `beforeAll` (chunks embedded with
-   `fakeEmbedding`). Then 1,000 `match_chunks` calls as institute A's student (own token via PostgREST, mix of
-   questions incl. B's canary phrase) → every row `institute_id` = A, no canary. Put it in
-   `apps/web/lib/retrieval.int.test.ts` (or worker dir, wherever the vitest integration project picks it up).
-2. Demo eval runner `evals/` (recall@8 on seeded notes; results JSON in `evals/results/`; AC6.1 real threshold BLOCKED).
-3. E2E `e2e/tutor.spec.ts`: student asks → cited answer chip; report → teacher sees it and resolves; Rival student REST
-   on Demo `conversations`/`messages`/`answer_reports` → 0 rows; quota: set `student_daily_messages = 0` for a fresh
-   student → "You've used today's AI limit. It resets tomorrow."; `/api/tutor` with foreign Origin → 403.
-4. Browser check of the tutor pane at 375 px (`resize_window` preset mobile, then back to desktop).
-5. Docs: ADR-026 in docs/DECISIONS.md (tutor: labels from citations, chat saved after answer, origin check, safe
-   Markdown without KaTeX, citations per page, fake tutor, premium only via button — numerical-question heuristic
-   deferred, staff see reports not chats, rerank experiment deferred until real embeddings); DATABASE_DESIGN §4.4
-   (no `deleted_at` on conversations, `answer_reports` table, `tutor_activity`, `report_answer`).
-6. Full gate `npm run check`, record evidence here, PR `phase-6-tutor` → main, CI green, merge, then Phase 8.
+1. PR `phase-6-tutor` → `main` (opened in session 14): check CI (`gh pr checks`); the E2E job there runs against the
+   production build (`npm run start`) — the decisive run for `portals.spec.ts:142` and `e2e/tutor.spec.ts`. Fix until
+   green (never weaken a test), then squash-merge, `git checkout main && git pull`, record the merge commit above.
+2. Start Phase 8 (shared library engine) on branch `phase-8-library`: state scope + ACs (IMPLEMENTATION_ROADMAP
+   Phase 8); Q-02 (pilot exam/subject) and the reviewer are founder decisions → use the documented default (one exam ×
+   one subject seed, JEE Physics) and record it in DECISIONS.md, or ask the founder if no default exists.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -269,6 +289,7 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 | 7 | 2026-10-15 | PR #4 merged (`2a5f25e`). Phase 7 seed fixed, `e2e/assessments.spec.ts`, 6 real bugs fixed (test creation RLS, key save, key embeds, submit, form state, checking scroll), browser check, ADR-023, gate green | `40fc4fc` |
 | 8 | 2026-10-15 | Phase 4 DB + worker + tests green (850 pgTAP, 16 integration); institute-delete cascade bug fixed; web UI + seed written, not verified | see `git log` |
 | 13 | 2026-10-16 | Phase 6: assemble fix, streaming tutor route, safe Markdown + XSS/injection suites, tutor pane + reports + doubts, browser-verified; AC6.4/E2E/gate pending | `7fd9b8a` |
+| 14 | 2026-10-16 | Phase 6: AC6.4 isolation test, eval runner, tutor E2E, 375 px check, ADR-026, gate (1 E2E env-caused), PR | see `git log` |
 | 9 | 2026-10-15 | Phase 4 web UI browser-verified, worker env/CI, `e2e/documents.spec.ts`, logo upload; founder pausing subscription — handoff written | see `git log` |
 | 10 | 2026-10-16 | ADR-024, Phase 4 full gate green (2 test-fixture races fixed), PR #5 merged (`cbfb62e`); Phase 5 prices verified, usage migration written (pgTAP 2 failing, WIP) | see `git log` |
 | 11 | 2026-10-16 | Phase 5: pgTAP green + `080_usage.sql`, core gateway (routing/cost/metered), worker metering, `/usage` page, platform AI switches, AC5.3 concurrency + AC5.4 API tests; 2 real bugs fixed (safeupdate kill switch, phone layout); full gate green; PR #6 opened, CI pending at handoff | `0802398` |
