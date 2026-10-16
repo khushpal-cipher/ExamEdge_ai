@@ -250,3 +250,29 @@ describe('versions, idempotency and failures', () => {
     expect(await ingest(bv, otherInst)).toBe('ready');
   });
 });
+
+describe('per-institute limits (ADR-029)', () => {
+  it('a file bigger than the size declared at upload start fails as too_large', async () => {
+    const doc = await newDocument('Declared small');
+    const v = await addVersion(doc, makePdf(english(1)));
+    await db.query('update public.document_versions set size_bytes = 10 where id = $1', [v]);
+    expect(await ingest(v)).toBe('failed');
+    expect(await version(v)).toMatchObject({ processing_status: 'failed', error_code: 'too_large' });
+  });
+
+  it('max_concurrent_jobs: a job waits (stays queued) while the institute has no free slot', async () => {
+    const doc = await newDocument('Concurrency');
+    const running = await addVersion(doc, makePdf(english(1)));
+    const waiting = await addVersion(doc, makePdf(english(1)));
+    await db.query('update public.institute_quotas set max_concurrent_jobs = 1 where institute_id = $1', [inst]);
+    await db.query(
+      `update public.document_versions set processing_status = 'processing', claimed_at = now() where id = $1`,
+      [running],
+    );
+    expect(await ingest(waiting)).toBe('skipped');
+    expect(await version(waiting)).toMatchObject({ processing_status: 'queued', claimed_at: null });
+    await db.query('update public.institute_quotas set max_concurrent_jobs = 2 where institute_id = $1', [inst]);
+    expect(await ingest(waiting)).toBe('ready');
+    await db.query(`update public.document_versions set processing_status = 'failed' where id = $1`, [running]);
+  });
+});
