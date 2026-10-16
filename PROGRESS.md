@@ -32,6 +32,15 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
+### Phase 8 — shared library engine + pilot seed (session 15) — IN PROGRESS on `phase-8-library`
+Scope = IMPLEMENTATION_ROADMAP Phase 8. Q-02 default **JEE Physics** (ADR-027). Reviewer = aal2 platform admin (no
+expert hired). Library items are text kinds only (explanation, formula sheet, worked example); question/flashcard kinds
+wait for Studio/generation. Opus/Batch generation BLOCKED (no key) → hand-written demo seed.
+AC plan: AC8.2 (DB check `status <> 'draft' ⇒ reviewed_by`, reviewer = the caller, edits reset to draft) and AC8.3
+(`provenance not null`) proven by pgTAP; AC8.4 recall@8 on library questions via `npm run eval`; AC8.1 PARTIAL — full
+JEE Main Physics chapter list, topics + reviewed explanation/formula sheet for the 4 demo chapters only; the rest of the
+syllabus BLOCKED (Opus generation + expert reviewer).
+
 ### Phase 6 — source-grounded AI tutor (sessions 12–14) — MERGED (PR #7, `7863900`)
 Scope = IMPLEMENTATION_ROADMAP Phase 6. AC plan: AC6.4 (0 cross-tenant passages in 1,000 queries) provable locally as an
 integration test; AC6.1 eval harness on demo data (real threshold BLOCKED: real embeddings + pilot golden set); AC6.2,
