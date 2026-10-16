@@ -55,4 +55,4 @@ Backup and restore rehearsal (local): `npm run backup`, then `npm run restore-dr
 
 ## Real AI providers
 
-Not switched on yet (no keys). What is ready, what is missing and the exact steps: [docs/RUNBOOKS.md §5](docs/RUNBOOKS.md#5-switching-from-demo-fake-ai-to-real-providers).
+Not switched on yet (no keys). What is ready, what is missing and the exact steps: [docs/RUNBOOKS.md §5](docs/RUNBOOKS.md#5-switching-from-fake-ai-to-real-ai).
