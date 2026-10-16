@@ -181,7 +181,7 @@ function bestSentence(content: string, q: Set<string>) {
   let score = -1;
   for (const s of sentences) {
     const n = [...contentWords(s)].filter((w) => q.has(w)).length;
-    if (n > score) [best, score] = [s, n];
+    if (n > score || (n === score && s.length > best.length)) [best, score] = [s, n]; // ties: the fuller sentence, not a heading
   }
   return best.trim();
 }
