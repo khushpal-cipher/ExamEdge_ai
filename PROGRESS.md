@@ -38,6 +38,30 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
+### R1 AI-made bank questions + blind second solve (session 21, branch `r1-question-gen`) — gate green, PR open
+Scope = roadmap Phase 7 task "AI generation with dual-solve" / AC7.5, deferred in ADR-023 and never built (found
+while listing what is left). ADR-032. No founder decision needed.
+DONE + TESTED (2026-10-16, commit `fa25f32`):
+- Migration `20261026000014_question_generation.sql`: AI feature `question_gen` (≤ 1 USD/call; `ai_reserve` refuses
+  it to students), trigger `review` on questions (AI rows forced to `draft`; `approved` refused while `unverified` /
+  `dual_solve_disagree` → `question_not_verified`; verification may only change to `teacher_verified`),
+  `question_keys.second_solve`, invoker RPC `add_ai_questions` (one transaction). pgTAP `140_question_generation.sql`
+  (20 tests).
+- Core `packages/core/src/ai/questions.ts`: Opus writes, Sonnet solves blind (`claudeQuestions` in `claude.ts`:
+  structured output, effort medium, `fallbacks: "default"`, max_tokens 16,000 — checked with the claude-api skill);
+  demo provider; 16 unit tests incl. a recorded-reply test of the request shape (blind: key not sent to the solver).
+- Web: question bank "Make questions with AI" form, AI badges, Approve (matched drafts only); edit page shows the
+  second answer vs the key, saving approves as `teacher_verified`. `apps/web/lib/notes.ts` shared with Studio.
+  `e2e/question-gen.spec.ts`.
+- Browser check (dev server, teacher1@demo.test): no-notes chapter → "no published notes" alert; Rotational Motion
+  10 MCQs → 10 drafts (7 match, 3 differ), flagged one shows "answered A, but the key says D" and no Approve, Save →
+  `approved/teacher_verified`; matched one Approve → `approved/dual_solve_agree`; Laws of Motion numerical → 3
+  questions; 2 `usage_records` per generation; 375 px: no sideways scroll; owner@rival.test → 404 on a Demo question.
+- Local gate (after `supabase db reset && npm run seed:demo`, port 3000 free): `npm run check` exit 0 — format, lint +
+  forbidden, typecheck PASS; unit 151/151; pgTAP Files=15 Tests=1276 PASS; integration 26/26; build + bundle scan
+  PASS; E2E 27/27 against the production build (incl. T-SEC-05).
+BLOCKED: real-provider quality (agreement rate, teacher rejection rate), cost per question (no key).
+
 ### R1 purge of unreachable files (session 20) — MERGED (PR #12, `6f343a0`, CI green run 38896124282)
 Scope = "Next exact action" 2b. ADR-031.
 Session 21 (2026-10-16): after `supabase db reset && npm run seed:demo` re-check `npm run test:db` → Files=14
@@ -119,7 +143,7 @@ DONE + TESTED (2026-10-16, session 19):
 | Embedding real institute documents (Phase 4) | Q-08 Voyage data-use terms |
 | Pilot launch (Phase 10) | Q-01 legal opinion on minors' data (G8, AC10.4) |
 | Phase 10 cloud parts | Founder approval for accounts: production Supabase/Vercel/Railway, domain + wildcard TLS, prod Google OAuth, Sentry + spend alerts, independent backup storage; then the real restore drill (G7, AC10.2), k6 load test (AC10.3, AC7.4), rollback rehearsal (AC10.5) |
-| Real AI | Anthropic key (tutor + Studio ready); Claude OCR not written; Voyage client not written (Q-08) — RUNBOOKS §5 |
+| Real AI | Anthropic key (tutor, Studio, OCR and AI bank questions ready); Voyage client not written (Q-08) — RUNBOOKS §5 |
 
 ## Failed checks
 - None. Note: locally, `e2e/portals.spec.ts:142` (T-SEC-05) fails if Playwright reuses a `next dev` already running on
@@ -130,7 +154,8 @@ DONE + TESTED (2026-10-16, session 19):
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 21)
-`main` = `6f343a0` (purge merged). No open local work; all local R1 tasks are done.
+`main` = `6f343a0` (purge merged). Open work: branch `r1-question-gen` (AC7.5, ADR-032) — PR into main, CI green
+(E2E 27/27), squash-merge, record the merge commit here. After that no local R1 work is known to be left.
 Merged branches `phase-10-local`, `r1-ocr`, `r1-purge-files` can be deleted.
 Repo setting "Allow auto-merge" turned on by the founder (2026-10-16).
 0. Fresh session: `cd ~/Documents/startup/examedge_ai && git fetch && npm ci`; `docker info`
@@ -185,6 +210,6 @@ Repo setting "Allow auto-merge" turned on by the founder (2026-10-16).
 | 18 | 2026-10-16 | Phase 9: browser check done (no bugs), Studio seed, `e2e/studio.spec.ts`, ADR-028 + DB docs, local gate (E2E 25/26, T-SEC-05 dev-only), PR #9 CI green (E2E 26/26) and merged (`67ed4ac`); branch `phase-10-local`; handoff for Phase 10 | see `git log` |
 | 19 | 2026-10-16 | Phase 10 local: upload/storage/job limits, retention purge, backup + restore drill, runbooks, README, ADR-029; local gate green (E2E 25/26, T-SEC-05 dev-only) | `b731118` |
 | 20 | 2026-10-16 | Claude OCR provider (ADR-030, PR #11 merged `69d3fc6`); purge of unreachable files (ADR-031) built + gate green, pushed, PR not opened | `2dc2fc7` |
-| 21 | 2026-10-16 | Purge re-checked (pgTAP 1256, integration 26), PR #12 CI green (E2E 26/26) and merged (`6f343a0`) | see `git log` |
+| 21 | 2026-10-16 | Purge re-checked, PR #12 merged (`6f343a0`). Found AC7.5 never built → AI bank questions + blind second solve (ADR-032), gate green (E2E 27/27) | `fa25f32` |
 | 15 | 2026-10-16 | Phase 8: library migration + 40 pgTAP (1104 PASS), core two-layer tutor (46 unit), web/platform editor/seed/eval written; AC8.4 library recall 0.81 FAILING (keyword AND), handoff | see `git log` |
 | 3 | 2026-10-15 | Phase 1: web skeleton (build OK), pg-boss schema + worker heartbeat (ran OK), logger, lint/format/test configs, forbidden-pattern check (lint OK), bundle scan, gitleaks hook, CI workflow, .env.example. Full gate NOT yet run; nothing pushed before the WIP commit. | see `git log` |
