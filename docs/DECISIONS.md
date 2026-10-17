@@ -311,6 +311,19 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
   (R-06). Batch validation is strict: one rejected address fails its chunk of 100 (shortcut noted in `lib/email.ts`).
 - Google OAuth consent screen is in **Testing** mode: only listed test users can sign in until it is published.
 
+### ADR-036 Platform admin sends a new owner invitation (2026-10-17, Accepted)
+- **Why:** founder testing: an owner email typed wrong, or a lost/expired owner link, could only be fixed with SQL.
+  New scope beyond the roadmap, asked for by the founder.
+- **Rule:** `public.reinvite_owner(inst, owner_email)` (SECURITY DEFINER in `private`) needs an aal2 platform admin and
+  is refused (`has_owner`) once the institute has an active owner. It revokes every pending owner invitation (old
+  links stop working) and creates a new one, returning the raw token once (only its hash is stored). The audit
+  trigger on invitations records both. The web action emails the link like "Create institute" and shows it once.
+- The platform admin still cannot read memberships or invitations (TH-15), so the form is always shown and the
+  database answers "already joined".
+- Address minimum stays 3 characters (founder, 2026-10-17); the create form now says so and the browser explains a
+  too-short address.
+- Tests: pgTAP `160_reinvite_owner.sql`; platform E2E (refused for Demo Classes, replaces Gamma's link).
+
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
 | # | Issue found | Resolution |

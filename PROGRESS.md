@@ -22,6 +22,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-17 | Platform: send a new owner invitation (ADR-036) + clearer address-length hint | `reinvite_owner` RPC (aal2, refused once an owner joined, revokes old owner links). `supabase migration up` (no reset) then `npx supabase test db` → Files=17 Tests=1303 PASS (new `160_reinvite_owner.sql`); `npx playwright test e2e/portals.spec.ts -g "platform admin needs MFA"` passed (against the running `next dev`); format, lint, typecheck PASS; unit 154/154. Address minimum stays 3 (founder). Build + full E2E → CI on the PR. |
 | 2026-10-17 | Google sign-in + invitation emails (ADR-035) | Founder created Google Cloud OAuth client + Resend key (gitignored root `.env`, `apps/web/.env.local`). Unit 154/154 (`apps/web/lib/email.test.ts`); E2E portals + isolation 12/12 against a local production build; headless click reached accounts.google.com with the real client id. CI failed twice on the new Google E2E (Playwright cannot intercept a redirect target, so CI hit real Google with the placeholder client) → test now stops at Supabase `/auth/v1/authorize` and reads its Location; CI 2/2 green on `3c605e7`; PR #17 merged (`0006d1c`). **Unverified:** a full real Google sign-in and a delivered email (founder to try). Resend sends only to the account owner until a domain is verified; Google consent screen in Testing (test users only). |
 | 2026-10-17 | Platform: delete an institute created by mistake (ADR-033) | `delete_institute` RPC (aal2, typed address, refused with any membership). `supabase migration up` then `npm run test:db` → Files=16 Tests=1288 PASS (new `150_delete_institute.sql`); platform E2E (refused for Demo + wrong confirmation, deletes its test institute) passed; format, lint, typecheck PASS; CI 2/2; PR #15 merged (`65ce7de`). |
 | 2026-10-17 | Local demo sign-in creates unknown accounts (ADR-034) | `signInDemo` signs up on `invalid_credentials` (still localhost-only via `demoLoginAllowed`). E2E `isolation.spec.ts` invitation test without pre-created account: failed without the change, passed with it; unit 151/151; format, lint, typecheck PASS; CI 2/2; PR #16 merged. |
@@ -160,7 +161,7 @@ DONE + TESTED (2026-10-16, session 19):
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 23)
+## Next exact action (session 23, updated)
 `main` = `e5ac8f3`. No open branch, no open PR. Session 22 (2026-10-17) was founder hands-on testing; merged on the way:
 PR #14 (new institute shows in list), #15 delete institute (ADR-033), #16 local demo sign-in creates unknown accounts
 (ADR-034), #17 Google sign-in + invitation emails (ADR-035). All CI green.
@@ -183,9 +184,8 @@ For the full gate without a reset, rely on CI and say so.
    (a) invite their Resend sign-up email from V4 Classes → People: email arrives ("emailed" badge);
    (b) open it in a private window → Continue with Google → Accept invitation (that Gmail must be a Google OAuth
    test user). Fix whatever fails; record evidence here.
-2. Offered to the founder, not yet decided (ask, do not build unasked):
-   - "Send new owner invitation" on the platform institute page (wrong owner email / lost link; today only SQL);
-   - clearer "too short" message for 1–2 character web addresses; allowing 2-character addresses is a product decision.
+2. Done in session 23: "Send new owner invitation" (ADR-036) and the clearer address hint; minimum stays 3
+   characters (founder decision 2026-10-17).
 3. Still needs founder decisions/accounts (see Blocked): domain + Resend domain verification (emails to anyone, set
    `EMAIL_FROM`), publish the Google consent screen, Phase 10 cloud parts, Anthropic key, Q-08, Q-01.
 4. Any new local task: new branch, tests, `supabase migration up` (no reset), PR, CI green, squash-merge, PROGRESS.

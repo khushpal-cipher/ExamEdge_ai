@@ -258,11 +258,32 @@ test('platform admin needs MFA, then manages institutes (AC2.7, Phase 3 platform
   // Delete: refused for an institute people joined and for a wrong confirmation; works for Gamma (nobody joined).
   await page.goto(`${ADMIN}/`);
   await page.getByRole('link', { name: 'Demo Classes' }).click();
+  // New owner invitation: refused once the owner joined; for Gamma it replaces the old link (ADR-036).
+  // Wait for the page: the list page's create form has an "Owner email" field too.
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Demo Classes');
+  await page.getByLabel('Owner email').fill(`new-${tag}@demo.test`);
+  await page.getByRole('button', { name: 'Send new owner invitation' }).click();
+  await expect(page.locator('form').getByRole('alert')).toContainText('already joined');
   await page.getByLabel('Type demo to confirm').fill('demo');
   await page.getByRole('button', { name: 'Delete institute' }).click();
   await expect(page.locator('main').getByRole('alert')).toContainText('people have already joined');
   await page.goto(`${ADMIN}/`);
   await page.getByRole('link', { name: `Gamma ${tag}` }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(`Gamma ${tag}`);
+  await page.getByLabel('Owner email').fill(`right-${tag}@gamma.test`);
+  await page.getByRole('button', { name: 'Send new owner invitation' }).click();
+  await expect(page.getByLabel('Owner invitation link')).toHaveValue(
+    new RegExp(`^http://gamma-${tag}\\.localhost:3000/invite/[0-9a-f]{64}$`),
+  );
+  const { rows: invites } = await sql(
+    `select v.email, v.revoked_at is not null as revoked from public.invitations v
+     join public.institutes i on i.id = v.institute_id where i.slug = $1 order by v.created_at`,
+    [`gamma-${tag}`],
+  );
+  expect(invites).toEqual([
+    { email: `owner-${tag}@gamma.test`, revoked: true },
+    { email: `right-${tag}@gamma.test`, revoked: false },
+  ]);
   await page.getByLabel(`Type gamma-${tag} to confirm`).fill('gamma');
   await page.getByRole('button', { name: 'Delete institute' }).click();
   await expect(page.locator('main').getByRole('alert')).toContainText('did not match');
