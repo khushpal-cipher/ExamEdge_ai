@@ -174,7 +174,9 @@ Each item: what the founder wants → how it is today → build notes.
 - A2 **Subject → Topic → Subtopic; the topic is the working place** (founder answer, 2026-10-17). The teacher adds a
   main topic to a subject (Maths → Probability) and subtopics inside it (Conditional probability, Bayes theorem).
   The topic page has tabs like Vedam's class page (Session | Attendance | Assignment), here: **Subtopics | Smart
-  Study**. Subtopics tab = each subtopic with its notes (uploaded + AI notes). **Smart Study** tab (founder's chosen
+  Study**. Subtopics tab = each subtopic with its notes (uploaded + AI notes). **Teachers upload notes inside a
+  subtopic, never on the topic itself** (founder, 2026-10-17); a student clicks the topic and sees all its resources
+  (every subtopic's notes, grouped by subtopic). **Smart Study** tab (founder's chosen
   name) = the AI for that whole topic: **one AI tab per main topic; the AI picks the relevant subtopics itself**
   (retrieval over all notes of the topic's subtopics; no subtopic picker).
   Today: one subject page (Sources / AI tutor / Studio); chapters are flat labels; AI picks a chapter in a form.
@@ -182,7 +184,7 @@ Each item: what the founder wants → how it is today → build notes.
   subtopic/topic.
 - A3 **"Upload notes" easy to find.** Today a small collapsed `<details>` at the bottom of Sources
   (`subjects/[id]/page.tsx`); on narrow screens the page opens on the AI tutor tab (`panes.tsx`). Build: a clear
-  button at the top of the chapter's notes; teachers see only subjects of batches they teach (Neha Gupta, NEET
+  button inside each subtopic; teachers see only subjects of batches they teach (Neha Gupta, NEET
   teacher, opened "maths", which no batch of hers studies → upload works but nothing to publish to).
 
 **B. Teacher AI = only these two features** (replaces today's teacher AI set; both inside a chapter, A2)
@@ -208,7 +210,8 @@ Each item: what the founder wants → how it is today → build notes.
   read-only for him (no new tests), but **he can still use Smart Study / the AI tutor on his old notes** (founder
   answer); next year's juniors join a new batch, so his view stays "his
   time" without date filters. Promotion tool for the owner: "move these students from Class 9 2025 → Class 10 2026".
-- C2 **Contest (tests) page.** A "Tests" menu item listing **every** test the institute conducted for his batch:
+- C2 **Contest page in the student sidebar.** A "Contest" item in the student portal's sidebar menu (next to Home /
+  My progress) listing **every** test the institute conducted for his batch:
   upcoming, live (Start), finished, results (marks, rank).
   Today: home shows only upcoming tests; released tests appear on My progress.
 - C3 **Student practice quiz only per chapter** (founder: "the quiz he creates should be on the specific subject
