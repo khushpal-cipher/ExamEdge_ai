@@ -201,6 +201,7 @@ test('platform admin needs MFA, then manages institutes (AC2.7, Phase 3 platform
   await expect(page.getByLabel('Owner invitation link')).toHaveValue(
     new RegExp(`^http://gamma-${tag}\\.localhost:3000/invite/[0-9a-f]{64}$`),
   );
+  await expect(page.getByRole('link', { name: `Gamma ${tag}` })).toBeVisible(); // list updates without a reload
   // React resets the form after a successful action, so fill every field again.
   await page.getByLabel('Institute name').fill(`Delta ${tag}`);
   await page.getByLabel('Web address (subdomain)').fill('admin');

@@ -3,6 +3,7 @@
 // Platform admin Server Functions. They only work on the admin host with an MFA (aal2) session, and the database
 // re-checks private.is_platform_admin() (which itself requires aal2) in every policy and RPC (AC2.7, TH-15).
 import { randomUUID } from 'node:crypto';
+import { refresh } from 'next/cache';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { AiBlocked, type Meter } from '@examedge/core/ai/gateway';
@@ -74,6 +75,7 @@ export async function createInstitute(_prev: CreateState, form: FormData): Promi
   // Same scheme and port as the admin host the founder is using.
   const origin = new URL((await headers()).get('origin') ?? `https://admin.${rootHost()}`);
   origin.hostname = host;
+  refresh(); // show the new institute in the list without losing the one-time link in the form state
   return { link: `${origin.origin}/invite/${token}` };
 }
 
