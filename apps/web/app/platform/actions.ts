@@ -50,8 +50,8 @@ export async function verifyTotp(form: FormData) {
 export type CreateState = { link: string; emailed: boolean } | { error: string } | null;
 const CREATE_ERRORS: Record<string, string> = {
   slug_reserved: 'That address is reserved.',
-  slug_invalid: 'Use 3–40 lowercase letters, digits or hyphens.',
-  host_mismatch: 'Use 3–40 lowercase letters, digits or hyphens.',
+  slug_invalid: 'The address must be 3–40 characters: lowercase letters, digits or hyphens.',
+  host_mismatch: 'The address must be 3–40 characters: lowercase letters, digits or hyphens.',
 };
 
 export async function createInstitute(_prev: CreateState, form: FormData): Promise<CreateState> {
@@ -77,12 +77,40 @@ export async function createInstitute(_prev: CreateState, form: FormData): Promi
     log.error('platform.create_institute_failed', { code: error.code });
     return { error: 'Could not create the institute.' };
   }
-  // Same scheme and port as the admin host the founder is using.
-  const origin = new URL((await headers()).get('origin') ?? `https://admin.${rootHost()}`);
-  origin.hostname = host;
-  const link = `${origin.origin}/invite/${token}`;
+  const link = await inviteLink(host, token);
   const sent = await sendInvites(name, [{ email, link, role: 'owner' }]);
   refresh(); // show the new institute in the list without losing the one-time link in the form state
+  return { link, emailed: sent.has(email) };
+}
+
+// Same scheme and port as the admin host the founder is using.
+async function inviteLink(host: string, token: string) {
+  const origin = new URL((await headers()).get('origin') ?? `https://admin.${rootHost()}`);
+  origin.hostname = host;
+  return `${origin.origin}/invite/${token}`;
+}
+
+// New owner invitation (wrong email, lost or expired link): the RPC revokes the old pending owner links and is
+// refused once an owner has joined (ADR-036).
+export async function reinviteOwner(_prev: CreateState, form: FormData): Promise<CreateState> {
+  const db = await requireAal2();
+  const id = form.get('institute_id');
+  if (!isUuid(id)) notFound();
+  const email = String(form.get('owner_email') ?? '')
+    .trim()
+    .toLowerCase();
+  const { data: token, error } = await db.rpc('reinvite_owner', { inst: id, owner_email: email });
+  if (error) {
+    if (error.message === 'has_owner')
+      return { error: 'The owner has already joined, so no new invitation is needed.' };
+    if (error.code === '23514') return { error: 'Please check the owner email.' };
+    if (error.code === '23505') return { error: 'That email already has a pending invitation to this institute.' };
+    log.error('platform.reinvite_owner_failed', { code: error.code });
+    return { error: 'Could not send a new invitation.' };
+  }
+  const { data: inst } = await db.from('institutes').select('slug, name').eq('id', id).single();
+  const link = await inviteLink(`${inst!.slug}.${rootHost()}`, token);
+  const sent = await sendInvites(inst!.name, [{ email, link, role: 'owner' }]);
   return { link, emailed: sent.has(email) };
 }
 

@@ -5,6 +5,7 @@ import { isUuid, rootHost } from '@/lib/tenant';
 import { logoUrl } from '@/lib/brand';
 import { monthUsage, usd } from '@/lib/usage';
 import { deleteInstitute, updateInstitute, updateQuotas, uploadLogo } from '../../actions';
+import { ReinviteOwner } from './reinvite-form';
 
 const MB = 1024 * 1024;
 const ERRORS: Record<string, string> = {
@@ -173,6 +174,14 @@ export default async function InstituteAdmin({
           </div>
         </form>
         <p className="small muted">The AI gateway checks these limits before every AI call.</p>
+      </section>
+      <section className="card stack" aria-labelledby="owner">
+        <h2 id="owner">Owner invitation</h2>
+        <p className="small muted">
+          Wrong owner email, or the link was lost or expired? Send a new one. Earlier owner links stop working. Not
+          needed once the owner has joined.
+        </p>
+        <ReinviteOwner instituteId={inst.id} />
       </section>
       <section className="card stack" aria-labelledby="delete">
         <h2 id="delete">Delete institute</h2>

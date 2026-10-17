@@ -14,7 +14,15 @@ export function CreateInstitute({ root }: { root: string }) {
         </label>
         <label>
           Web address (subdomain)
-          <input name="slug" required pattern="[a-z0-9-]{3,40}" placeholder="sharma" />
+          <input
+            name="slug"
+            required
+            minLength={3}
+            maxLength={40}
+            pattern="[a-z0-9-]{3,40}"
+            title="3–40 characters: lowercase letters, digits or hyphens"
+            placeholder="sharma"
+          />
         </label>
         <label>
           Owner email
@@ -24,7 +32,9 @@ export function CreateInstitute({ root }: { root: string }) {
           Create institute
         </button>
       </div>
-      <p className="small muted">The address becomes &lt;subdomain&gt;.{root}.</p>
+      <p className="small muted">
+        The address becomes &lt;subdomain&gt;.{root}: at least 3 characters (lowercase letters, digits or hyphens).
+      </p>
       {state && 'error' in state && (
         <p role="alert" className="alert">
           {state.error}
