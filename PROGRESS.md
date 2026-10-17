@@ -16,12 +16,18 @@ Last updated: 2026-10-17
 **R1 OCR MERGED** into `main` (PR #11, squash commit `69d3fc6`, CI green: E2E 26/26, run 38880693017, 2026-10-16).
 **R1 file purge MERGED** into `main` (PR #12, squash commit `6f343a0`, CI green: run 38896124282 — unit 135, pgTAP 1256, integration 26, E2E 26/26 against the production build, 2026-10-16).
 **R1 AI bank questions MERGED** into `main` (PR #13, squash commit `b6f2ded`, CI green: run 38936700856 — pgTAP 1276, E2E 27/27 against the production build, 2026-10-16).
+**R1.1 step 1 MERGED** (PR #19, squash `f6e4841`, CI green, 2026-10-17): ADR-037–041 + spec docs.
+**R1.1 step 2 MERGED** (PR #20, squash `17459e5`, CI green check + secrets, 2026-10-17): ExamEdge library removed.
+**R1.1 step 3 IN PROGRESS** on branch `r11-structure` (pushed, no PR yet): DB part done, app part NOT started.
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-17 | R1.1 step 3 DB part (ADR-038, ADR-040), branch `r11-structure` commit `58de935` — NOT merged | Migration `20261030000018_structure.sql`: `subjects.batch_id not null` (composite FK, unique per batch; a subject linked to several batches copied once per extra batch with its topics; migration stops if content was published to several batches of one subject or an unlinked subject has content), `batch_subjects` dropped, `has_subject` = in the subject's batch (current or past), new `subtopics` (RLS like chapters), `documents.chapter_id` + `subtopic_id` `not null` (3-column FKs, "General" topic/subtopic backfill, no-action FKs so a topic/subtopic with notes cannot be deleted), AFTER-insert trigger `guard_audience_batch` (document/artifact audience = subject's batch, `audience_not_subject_batch`), `batch_members.left_at` (owner/admin update policy), `compute_standings` ignores tests opened after leaving, `start_attempt` refuses `not_current_member` (resume still works). Dry run in a rolled-back transaction, then `supabase migration up` on the founder DB (newtown `physics` → one per batch). Fixtures `supabase/test_helpers.sql` (reloaded with `psql -f`) + `070` updated, new `170_structure.sql` (24 tests). `npm run test:db` → Files=17 Tests=1285 PASS. Found + fixed: a BEFORE trigger answered 23514 before RLS in the isolation matrix → AFTER trigger. |
+| 2026-10-17 | R1.1 step 2: ExamEdge library removed (ADR-037) | Migration `20261029000017_remove_library.sql` (tables, `match_library_chunks`, `publish_library_item`, platform metering dropped; `usage_records.institute_id` not null again — deleted the 24 fake `library_embed` rows, cost 0). Tutor `tutor-v3`, notes only. Local: lint, typecheck, unit 147/147, pgTAP Files=16 Tests=1260 PASS, integration 26/26, build + bundle scan PASS; E2E not run locally (no demo seed in founder DB) → CI run 39035496214 check + secrets green; PR #20 merged `17459e5`. |
+| 2026-10-17 | R1.1 step 1: ADR-037…041, HOW_IT_WORKS, DATABASE_DESIGN, master plan, AI_PIPELINE, ARCHITECTURE | PR #19 CI green, merged `f6e4841`. |
 | 2026-10-17 | Platform: send a new owner invitation (ADR-036) + clearer address-length hint | `reinvite_owner` RPC (aal2, refused once an owner joined, revokes old owner links). `supabase migration up` (no reset) then `npx supabase test db` → Files=17 Tests=1303 PASS (new `160_reinvite_owner.sql`); `npx playwright test e2e/portals.spec.ts -g "platform admin needs MFA"` passed (against the running `next dev`); format, lint, typecheck PASS; unit 154/154. Address minimum stays 3 (founder). CI green (run 39019308579: check + secrets, incl. build and full E2E against the production build); PR #18 squash-merged (`5fc5051`). |
 | 2026-10-17 | Google sign-in + invitation emails (ADR-035) | Founder created Google Cloud OAuth client + Resend key (gitignored root `.env`, `apps/web/.env.local`). Unit 154/154 (`apps/web/lib/email.test.ts`); E2E portals + isolation 12/12 against a local production build; headless click reached accounts.google.com with the real client id. CI failed twice on the new Google E2E (Playwright cannot intercept a redirect target, so CI hit real Google with the placeholder client) → test now stops at Supabase `/auth/v1/authorize` and reads its Location; CI 2/2 green on `3c605e7`; PR #17 merged (`0006d1c`). **Unverified:** a full real Google sign-in and a delivered email (founder to try). Resend sends only to the account owner until a domain is verified; Google consent screen in Testing (test users only). |
 | 2026-10-17 | Platform: delete an institute created by mistake (ADR-033) | `delete_institute` RPC (aal2, typed address, refused with any membership). `supabase migration up` then `npm run test:db` → Files=16 Tests=1288 PASS (new `150_delete_institute.sql`); platform E2E (refused for Demo + wrong confirmation, deletes its test institute) passed; format, lint, typecheck PASS; CI 2/2; PR #15 merged (`65ce7de`). |
@@ -45,11 +51,19 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 
 ## In progress
 ### R1.1 founder change list (session 27, 2026-10-17) — build order in "Next exact action"
-- Step 1 DONE (branch `r11-docs`): ADR-037 (remove library, reverses ADR-010/027), ADR-038 (subjects in batches,
-  Topic = `chapters`, new `subtopics`, notes only in a subtopic, topic page Subtopics | Smart Study), ADR-039 (teacher
-  AI = AI notes stored as Markdown documents + AI test into a draft test), ADR-040 (`batch_members.left_at`, promotion,
-  switcher, Contest page), ADR-041 (platform tokens + cost per institute; bill waits for the formula). HOW_IT_WORKS,
-  DATABASE_DESIGN, PROJECT_MASTER_PLAN updated. AI_PIPELINE_DESIGN is updated with steps 2 and 5.
+- Step 1 MERGED (#19), step 2 MERGED (#20). Step 3 DB part committed on `r11-structure` (`58de935`, pushed).
+- **WARNING — local DB is ahead of `main`'s code:** migrations 17 (library removal, matches main) and **18 (structure,
+  only on `r11-structure`) are applied to the founder's local DB.** Until the app part of step 3 is built, code on
+  `main` (and the `next dev` the founder may have on :3000) breaks where it uses `batch_subjects` (batch page subject
+  ticks, document audience picker, Studio publish) and on upload (documents now need `chapter_id` + `subtopic_id`).
+  Backup taken before migration 18: `backups/2026-10-17T13-13-25-392Z` (gitignored; `npm run restore-drill` reads it).
+- Decision taken while building (record in ADR-038 when step 3 merges): teachers' "only subjects of batches they
+  teach" is a **UI filter**, not RLS — subjects stay readable by all staff (TH-03: teachers see institute notes by
+  design; avoids null embeds on staff pages). ADR-038 updated to say so (session 27 handoff commit).
+- Plan change: steps 3 and 4 are built together on `r11-structure` (the app cannot stay green between them).
+- Incident (session 27): `docs/FOUNDER_TEST_GUIDE.md` was committed and pushed by mistake in the first push of branch
+  `r11-remove-library`; removed within a minute (amend + force-push, before any PR). The old commit may still be
+  reachable on GitHub by its SHA. Now listed in `.git/info/exclude` (local only) so `git add -A` skips it.
 
 ### R1 AI-made bank questions + blind second solve (session 21) — MERGED (PR #13, `b6f2ded`, CI green run 38936700856)
 Scope = roadmap Phase 7 task "AI generation with dual-solve" / AC7.5, deferred in ADR-023 and never built (found
@@ -168,7 +182,7 @@ DONE + TESTED (2026-10-16, session 19):
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 26)
+## Next exact action (session 28)
 **Founder's change list "R1.1" (session 26, 2026-10-17) — APPROVED: the founder said start building (session 27).**
 The founder collects every finding first; then one plan, one branch per group, everything fixed together.
 Each item: what the founder wants → how it is today → build notes.
@@ -263,20 +277,33 @@ institute's ₹ bill (D1) and hiding `/usage` from owners wait for the founder's
 7. D2 tokens + real cost per institute on the platform table (D1 bill + commission wait for the formula) → opus · medium · Why: money; RLS so owners see only the charge.
 8. Full gate (TEST_STRATEGY §6), browser check per role at 375 px, PR, CI, merge → sonnet · medium.
 Steps 3–7 depend on step 1; step 4 depends on step 3 — re-verify step 3's RLS tests before starting 4.
-Founder asked how a teacher uploads notes (answered: Subjects → open subject → "Upload notes" → document page →
-tick batches → Publish; needs the worker running to leave "Processing").
-newtown state (session 26): batches `jee 2027` (maths: 2 chapters, physics: 0) and `neet 2027` (physics); 0 documents,
-0 tests — so students see empty subjects until a teacher uploads/publishes notes or schedules a test.
-
-**Start here (session 27): build R1.1 above, step 1 first.** One branch per build step (e.g. `r11-remove-library`),
-PR + CI green + squash-merge each. New migrations: `supabase migration up` only (never reset: founder data in
-`newtown`/`vedam`; migrate their subjects/chapters, do not drop them). No code changed in sessions 25–26.
-1. Ask the founder what they found while testing; fix reported bugs (branch, tests, PR, CI green, merge).
-2. Two founder items wait for their **"go"** (do NOT start before): (a) AI tokens + cost per institute in the
-   platform "All institutes" table; (b) delete the ExamEdge library feature (details below).
-3. `docs/FOUNDER_TEST_GUIDE.md` (step-by-step test guide for the three portals) is **untracked on purpose** —
-   founder said "don't push the guide yet". Never commit it without their yes.
-4. Still unverified: accepting an invitation through Google sign-in.
+**Start here (session 28): finish step 3 + 4 on branch `r11-structure`** (`git checkout r11-structure && git pull`).
+Steps 1–2 are merged; do not redo them. The DB part of step 3 is done and applied locally (see "In progress").
+App part to build now (files found with `git grep batch_subjects`, `chapter_id`):
+1. `apps/web/app/(portal)/actions.ts` (`setBatchSubjects` uses `batch_subjects`; `createSubject` needs `batch_id`) and
+   `batches/[id]/page.tsx`: the batch page lists and adds its subjects (A1); add owner/admin "Move students to another
+   batch" (insert into the new batch + set `left_at` on the old row, C1). `subjects/page.tsx`: drop the institute-wide
+   list or group by batch; teachers see only batches they teach (UI filter).
+2. `subjects/[id]/page.tsx` → lists topics (`chapters`) linking to a new `/topics/[id]` page with tabs
+   **Subtopics | Smart Study** (A2): subtopic add/rename/delete, notes grouped by subtopic, "Upload notes" button
+   inside each subtopic (A3; `documents/upload.tsx` + `documents/actions.ts` must send `chapter_id` + `subtopic_id`).
+   Smart Study = tutor + Studio for the topic: new migration adds `conversations.chapter_id` and a topic filter to
+   `match_chunks`; `api/tutor/route.ts` takes the topic; Studio already works per chapter (C3). Teachers get no
+   tutor/Studio (that is step 5, ADR-039 — keep them for now if simpler, but students must have them in the topic).
+3. `documents/[id]/page.tsx:46` and `studio/[id]/page.tsx:81` read `batch_subjects` for the audience picker →
+   audience = the subject's batch only (trigger enforces it).
+4. `scripts/seed-demo.ts` (lines ~110–175, ~581: subjects per batch, subtopics, documents with chapter + subtopic),
+   `apps/worker/src/ingest.int.test.ts:38` and `purge.int.test.ts:21` (document inserts need chapter + subtopic),
+   E2E specs that tick subjects on batches or upload notes (`e2e/portals.spec.ts`, `documents.spec.ts`,
+   `studio.spec.ts`, `question-gen.spec.ts`, `tutor` spec) — update, never weaken.
+5. Gate: format, lint, typecheck, unit, `npm run test:db`, `npm run test:int`, build; E2E runs in CI (local DB has
+   founder data and no demo seed — do not seed or reset without asking). Browser check on newtown
+   (http://newtown.localhost:3000, demo users below) as owner, teacher, student at 375 px. Then PR, CI green, merge.
+6. Then steps 5 (B1 AI notes, B2 AI test), 6 (C2 Contest page + C1 batch switcher if not done in 4), 7 (D2 platform
+   tokens + cost), 8 (full gate) from the build order above.
+Standing items: `docs/FOUNDER_TEST_GUIDE.md` stays untracked (never commit it without the founder's yes). Still
+unverified: accepting an invitation through Google sign-in. Founder's earlier "wait for go" items (usage column,
+library removal) are now part of the approved R1.1 list.
 
 **Local DB now (do NOT reset or delete without asking):** institutes `newtown` (owner = founder's Gmail
 `khushalsinghchouhan4@gmail.com`; batches `jee 2027`, `neet 2027`) and `vedam` (owner `vedam@gmail.com`, joined;
@@ -394,6 +421,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 27 | 2026-10-17 | R1.1 step 1 (ADRs, #19) and step 2 (library removed, #20) merged; step 3 DB part (subjects in batches, subtopics, batch history, pgTAP 1285) on `r11-structure`, applied to the local DB; app part next. Founder guide pushed by mistake and removed at once | `58de935` (branch) |
 | 26 | 2026-10-17 | No code. Founder change list R1.1 written, questions answered, approved for building (groups A–E, 8-step build order); worker started; both newtown students signed in | see `git log` |
 | 25 | 2026-10-17 | Founder: no new features (will test the whole flow themself); email/Google checks not tried yet; leftover E2E rows (3 batches, 2 subjects, 3 gamma institutes) deleted from the local DB with their yes | see `git log` |
 | 24 | 2026-10-17 | Read-only check of local state (real Google sign-in works; allen owner had joined). Read-only audit of the three portals + browser check of each role and isolation (no code changed); open question: aggregate counts on the platform institute page | see `git log` |
