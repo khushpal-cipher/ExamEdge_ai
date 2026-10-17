@@ -18,13 +18,14 @@ Last updated: 2026-10-17
 **R1 AI bank questions MERGED** into `main` (PR #13, squash commit `b6f2ded`, CI green: run 38936700856 — pgTAP 1276, E2E 27/27 against the production build, 2026-10-16).
 **R1.1 step 1 MERGED** (PR #19, squash `f6e4841`, CI green, 2026-10-17): ADR-037–041 + spec docs.
 **R1.1 step 2 MERGED** (PR #20, squash `17459e5`, CI green check + secrets, 2026-10-17): ExamEdge library removed.
-**R1.1 step 3 IN PROGRESS** on branch `r11-structure` (pushed, no PR yet): DB part done, app part NOT started.
+**R1.1 steps 3+4 BUILT** on branch `r11-structure` (DB + app, commit `debaaae`, pushed); PR + CI (E2E) next.
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-17 | R1.1 steps 3+4 app part (ADR-038, ADR-040), branch `r11-structure` commit `debaaae` — NOT merged | Migration `20261031000019_topic_scope.sql` (`conversations.chapter_id`, `match_chunks(..., topic)`, invoker `move_students`), applied with `supabase migration up`; new pgTAP `180_topic_scope.sql`. Web: batch create form takes subjects (comma-separated) + "Add subject" and "Move students to another batch" on the batch page; Subjects = per batch (teachers: own batches); subject page = topic list (+ reported answers); new `/topics/<id>` with tabs Subtopics (notes per subtopic, "Upload notes" inside each subtopic) and Smart Study (topic tutor + study tools); audience pickers read the subject's batch; question bank labels "Physics · JEE 2027 Morning". Seed, worker int fixtures, E2E specs (portals, documents, tutor, studio, question-gen, assessments) updated. Local: format, lint + forbidden, typecheck PASS; unit 147/147; `npm run test:db` Files=18 Tests=1298 PASS; `npm run test:int` 26/26; `npm run build` + bundle scan PASS. **E2E NOT run locally** (founder DB, no demo seed) → CI. Browser (production build `next start -p 3001`, newtown, 375 px): student Riya home → maths → probability topic, both tabs, scrollWidth 375; teacher.jee Subjects shows only jee 2027, added + deleted a temporary subtopic, Upload form opens inside it; teacher.neet → maths subject 404 (founder finding A3 fixed); no server errors. Owner pages not clicked in the browser (founder's Google account) — covered by E2E `portals.spec.ts` in CI. |
 | 2026-10-17 | R1.1 step 3 DB part (ADR-038, ADR-040), branch `r11-structure` commit `58de935` — NOT merged | Migration `20261030000018_structure.sql`: `subjects.batch_id not null` (composite FK, unique per batch; a subject linked to several batches copied once per extra batch with its topics; migration stops if content was published to several batches of one subject or an unlinked subject has content), `batch_subjects` dropped, `has_subject` = in the subject's batch (current or past), new `subtopics` (RLS like chapters), `documents.chapter_id` + `subtopic_id` `not null` (3-column FKs, "General" topic/subtopic backfill, no-action FKs so a topic/subtopic with notes cannot be deleted), AFTER-insert trigger `guard_audience_batch` (document/artifact audience = subject's batch, `audience_not_subject_batch`), `batch_members.left_at` (owner/admin update policy), `compute_standings` ignores tests opened after leaving, `start_attempt` refuses `not_current_member` (resume still works). Dry run in a rolled-back transaction, then `supabase migration up` on the founder DB (newtown `physics` → one per batch). Fixtures `supabase/test_helpers.sql` (reloaded with `psql -f`) + `070` updated, new `170_structure.sql` (24 tests). `npm run test:db` → Files=17 Tests=1285 PASS. Found + fixed: a BEFORE trigger answered 23514 before RLS in the isolation matrix → AFTER trigger. |
 | 2026-10-17 | R1.1 step 2: ExamEdge library removed (ADR-037) | Migration `20261029000017_remove_library.sql` (tables, `match_library_chunks`, `publish_library_item`, platform metering dropped; `usage_records.institute_id` not null again — deleted the 24 fake `library_embed` rows, cost 0). Tutor `tutor-v3`, notes only. Local: lint, typecheck, unit 147/147, pgTAP Files=16 Tests=1260 PASS, integration 26/26, build + bundle scan PASS; E2E not run locally (no demo seed in founder DB) → CI run 39035496214 check + secrets green; PR #20 merged `17459e5`. |
 | 2026-10-17 | R1.1 step 1: ADR-037…041, HOW_IT_WORKS, DATABASE_DESIGN, master plan, AI_PIPELINE, ARCHITECTURE | PR #19 CI green, merged `f6e4841`. |
@@ -52,8 +53,8 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 ## In progress
 ### R1.1 founder change list (session 27, 2026-10-17) — build order in "Next exact action"
 - Step 1 MERGED (#19), step 2 MERGED (#20). Step 3 DB part committed on `r11-structure` (`58de935`, pushed).
-- **WARNING — local DB is ahead of `main`'s code:** migrations 17 (library removal, matches main) and **18 (structure,
-  only on `r11-structure`) are applied to the founder's local DB.** Until the app part of step 3 is built, code on
+- **WARNING — local DB is ahead of `main`'s code:** migrations 17 (library removal, matches main) and **18 + 19
+  (structure, topic scope; only on `r11-structure`) are applied to the founder's local DB.** Until the app part of step 3 is built, code on
   `main` (and the `next dev` the founder may have on :3000) breaks where it uses `batch_subjects` (batch page subject
   ticks, document audience picker, Studio publish) and on upload (documents now need `chapter_id` + `subtopic_id`).
   Backup taken before migration 18: `backups/2026-10-17T13-13-25-392Z` (gitignored; `npm run restore-drill` reads it).
@@ -277,7 +278,11 @@ institute's ₹ bill (D1) and hiding `/usage` from owners wait for the founder's
 7. D2 tokens + real cost per institute on the platform table (D1 bill + commission wait for the formula) → opus · medium · Why: money; RLS so owners see only the charge.
 8. Full gate (TEST_STRATEGY §6), browser check per role at 375 px, PR, CI, merge → sonnet · medium.
 Steps 3–7 depend on step 1; step 4 depends on step 3 — re-verify step 3's RLS tests before starting 4.
-**Start here (session 28): finish step 3 + 4 on branch `r11-structure`** (`git checkout r11-structure && git pull`).
+**Status (session 28): steps 3 + 4 are built and committed on `r11-structure` (`debaaae`).** Next: open the PR, get
+CI green (its E2E is the first run of the updated specs), merge; then steps 5 (B1 AI notes, B2 AI test), 6 (C2 Contest
+page + C1 batch switcher), 7 (D2 platform tokens + cost), 8. Teachers still have the tutor/Studio on the topic page
+until step 5 removes them (ADR-039). The list below is the step 3/4 work list, kept for reference (done).
+**(Done) step 3 + 4 on branch `r11-structure`** (`git checkout r11-structure && git pull`).
 Steps 1–2 are merged; do not redo them. The DB part of step 3 is done and applied locally (see "In progress").
 App part to build now (files found with `git grep batch_subjects`, `chapter_id`):
 1. `apps/web/app/(portal)/actions.ts` (`setBatchSubjects` uses `batch_subjects`; `createSubject` needs `batch_id`) and
@@ -406,6 +411,7 @@ For the full gate without a reset, rely on CI and say so.
 - Roadmap and acceptance criteria: `docs/IMPLEMENTATION_ROADMAP.md`
 - Commands: `supabase start` / `supabase status` / `supabase test db`; scripts in root `package.json`.
 - Local Supabase: API http://127.0.0.1:54321, DB postgresql://postgres:postgres@127.0.0.1:54322/postgres (local defaults; keys via `supabase status -o env`, never commit them).
+- Preview config `web-prod-3001` in `.claude/launch.json` (session 28): `next start -p 3001` on the last build, for browser checks while another session's `next dev` holds :3000.
 - `@axe-core/playwright` 4.13.0 (session 5, `npm i -D`).
 - `@anthropic-ai/sdk` 0.131.0 (session 12, `npm i -w @examedge/core @anthropic-ai/sdk@0.131.0`).
 - Playwright Chromium (session 3, `npx playwright install chromium`, chromium-1243/headless-shell-1248 in ~/Library/Caches/ms-playwright).
@@ -421,6 +427,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 28 | 2026-10-17 | R1.1 steps 3+4 app part: migration 19 (topic chats/retrieval, move_students), batch page subjects + promotion, topic page Subtopics / Smart Study, seed/E2E updated; local gate green except E2E (CI) | `debaaae` (branch) |
 | 27 | 2026-10-17 | R1.1 step 1 (ADRs, #19) and step 2 (library removed, #20) merged; step 3 DB part (subjects in batches, subtopics, batch history, pgTAP 1285) on `r11-structure`, applied to the local DB; app part next. Founder guide pushed by mistake and removed at once | `58de935` (branch) |
 | 26 | 2026-10-17 | No code. Founder change list R1.1 written, questions answered, approved for building (groups A–E, 8-step build order); worker started; both newtown students signed in | see `git log` |
 | 25 | 2026-10-17 | Founder: no new features (will test the whole flow themself); email/Google checks not tried yet; leftover E2E rows (3 batches, 2 subjects, 3 gamma institutes) deleted from the local DB with their yes | see `git log` |
