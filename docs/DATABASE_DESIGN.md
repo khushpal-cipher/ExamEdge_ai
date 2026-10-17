@@ -7,7 +7,7 @@ Source of truth after Phase 1 = SQL migrations in `supabase/migrations/`. This d
 
 | Class | Meaning | Examples | Who can read |
 |---|---|---|---|
-| **G — Global/platform** | Owned by ExamEdge, shared by all institutes, read-only to tenants | exams, library_* , institutes (own row only) | Any authenticated user (published rows); writes = platform admins / library worker |
+| **G — Global/platform** | Owned by ExamEdge, shared by all institutes, read-only to tenants | exams, institutes (own row only) | Any authenticated user; writes = platform admins |
 | **T — Tenant** | Owned by one institute | batches, subjects, documents, tests | Members of that institute per role |
 | **S — Student-private (inside a tenant)** | Owned by one student within one institute | conversations, messages, practice_attempts, student-scope artifacts | That student; staff see **aggregates only** by default (open question Q-03) |
 | **O — Operational** | Metering, audit, jobs | usage_records, audit_events, pg-boss schema | Platform admins; institute owners/admins see their own institute's rows |
@@ -66,18 +66,8 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 
 **exams** — `code text unique` (`JEE_MAIN`, `NEET_UG`…), `name`. S all authenticated. Writes platform admin.
 
-**library_subjects / library_chapters / library_topics** — tree Exam → Subject → Chapter → Topic.
-- `library_subjects(exam_id, name, unique(exam_id,name))`, `library_chapters(subject_id, position, name, unique(subject_id,name))`, `library_topics(chapter_id, position, name)`.
-- S all authenticated. Writes platform admin / library editors.
-
-**library_items** — `topic_id`, `kind` (`explanation|formula_sheet|worked_example` in R1; `question|flashcard_set` later), `content jsonb` (`{body}` Markdown), `status` (`draft|reviewed|published|retired`), `version int`, `provenance text not null` (how produced + rights basis), `generated_by_model`, `created_by`, `reviewed_by`, `reviewed_at`, `published_at`.
-- Check: `status = 'draft'` or (`reviewed_by` and `reviewed_at` not null). Trigger `guard_library_item`: an API insert is always a draft by the caller; `reviewed` stamps the caller as reviewer; editing content/kind/topic returns the item to draft with `version + 1` (ADR-027).
-- S authenticated where `status='published'`; aal2 platform admin all. I/U aal2 platform admin. Publishing only via definer `publish_library_item(item, chunks, model)` (refuses drafts, swaps chunks, audits). Never written from tenant data (ADR-010).
-
-**library_chunks** — `item_id`, `subject_id` (denormalised library subject, retrieval filter), `chunk_index`, `content`, `tsv tsvector generated`, `embedding vector(1024)`, `embedding_model`.
-- Indexes: GIN(tsv); HNSW (cosine) — acceptable because the library is one shared, non-tenant corpus [R].
-- S authenticated when the parent item is published. Retrieval via `match_library_chunks(query_embedding, query_text, subject, k)` (invoker, hybrid + RRF, iterative HNSW scan). Keyword half of both retrieval functions = `private.keyword_query(q)` (OR of content words).
-- Platform AI usage (embedding library items) is metered in `usage_records` with `institute_id null` (feature `library_embed`), readable by platform admins only.
+**Library tables — removed in R1.1 (ADR-037).** `library_subjects/chapters/topics/items/chunks`, `match_library_chunks`,
+`publish_library_item` and platform metering (`library_embed`) are dropped; ExamEdge shares no content with institutes.
 
 ### 4.2 Tenant core
 
@@ -96,26 +86,26 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 **batches** (T) — `name`, `academic_year`, `exam_id → exams` (nullable), `archived_at`; `unique(institute_id, name, academic_year)`, `unique(institute_id,id)`.
 - S staff; S students in batch. I/U/D admin/owner.
 
-**batch_members** (T) — pk `(batch_id, membership_id)`, `institute_id`, `batch_role` (`teacher|student`). Composite FKs to `batches(institute_id,id)` and `memberships(institute_id,id)`. Index `(membership_id)`.
+**batch_members** (T) — pk `(batch_id, membership_id)`, `institute_id`, `batch_role` (`teacher|student`), `left_at` (R1.1, ADR-040: null = current; set when a student is promoted to a new batch — the row is kept so the student still sees their own year read-only; `start_attempt` refuses tests of a left batch). Composite FKs to `batches(institute_id,id)` and `memberships(institute_id,id)`. Index `(membership_id)`.
 - Check: `batch_role='student'` requires membership role `student` (trigger) — prevents a student being made a batch teacher.
 - S staff of institute; S own rows. I/D admin/owner (teachers for students in own batches [R]).
 
-**subjects** (T) — `name`, `library_subject_id` (nullable → library_subjects); `unique(institute_id,name)`, `unique(institute_id,id)`.
-**batch_subjects** (T) — pk `(batch_id, subject_id)`, composite FKs. Which subjects a batch studies.
-**chapters** (T) — `subject_id` (composite FK), `name`, `position`, `library_chapter_id` (nullable).
-- Access for all three: S staff; S students whose batches include the subject. Writes admin/owner/teacher [R].
+**subjects** (T) — `batch_id` (composite FK → batches, R1.1 ADR-038), `name`; `unique(institute_id, batch_id, name)`, `unique(institute_id,id)`. A subject belongs to exactly one batch (`batch_subjects` dropped in R1.1).
+**chapters** (T) — shown as **Topic** in the UI (DB name kept, ADR-038). `subject_id` (composite FK), `name`, `position`; `unique(institute_id, subject_id, id)`.
+**subtopics** (T, R1.1) — `subject_id`, `chapter_id` (3-column composite FK → chapters), `name`, `position`; `unique(institute_id, chapter_id, id)`. Notes are uploaded into a subtopic, never onto a topic.
+- Access for all three: S owner/admin all; teachers subjects of batches they teach; students subjects of batches they are or were in (`private.has_subject`). Writes: subjects owner/admin; topics/subtopics owner/admin/teacher [R].
 
 ### 4.3 Documents and retrieval (T)
 
-**documents** — `subject_id`, `chapter_id` (nullable; composite FKs), `title`, `current_version_id`, `status` (`draft|published|withdrawn`), `published_at`, `withdrawn_at`, `deleted_at`, `created_by`.
+**documents** — `subject_id`, `chapter_id`, `subtopic_id` (R1.1: both `not null`, composite FKs; ADR-038), `title`, `current_version_id`, `status` (`draft|published|withdrawn`), `published_at`, `withdrawn_at`, `deleted_at`, `created_by`.
 - Index `(institute_id, subject_id) where deleted_at is null`.
 - S `private.can_read_document(id)`. I/U staff. D: soft delete by staff; after 30 days the daily purge deletes the files (worker service account, Storage API) and then the rows (ADR-031).
 
-**document_versions** — `document_id` (composite FK), `version int`, `storage_path text unique`, `mime` (`application/pdf|image/png|image/jpeg`), `size_bytes` (≤ 50 MiB), `sha256`, `page_count`, `processing_status` (`uploading|queued|processing|ready|failed`), `error_code`, `extraction_method` (`text_layer|ocr|mixed`), `chunker_version`, `embedding_model`, `claimed_at` (worker claim; stale claims are re-run), `processed_at`; `unique(document_id, version)`.
+**document_versions** — `document_id` (composite FK), `version int`, `storage_path text unique`, `mime` (`application/pdf|image/png|image/jpeg|text/markdown`; Markdown = AI notes, ADR-039), `size_bytes` (≤ 50 MiB), `sha256`, `page_count`, `processing_status` (`uploading|queued|processing|ready|failed`), `error_code`, `extraction_method` (`text_layer|ocr|mixed`), `chunker_version`, `embedding_model`, `claimed_at` (worker claim; stale claims are re-run), `processed_at`; `unique(document_id, version)`.
 - Constraint: `storage_path = institute_id || '/' || document_id || '/' || id` (check). API users may only move a version to `queued` (trigger); the worker sets everything else (ADR-024).
 - S staff. Students never see versions directly (they read the current published version via signed URL RPC).
 
-**document_audience** — pk `(document_id, batch_id)`, `institute_id`, composite FKs. Which batches see a published document.
+**document_audience** — pk `(document_id, batch_id)`, `institute_id`, composite FKs. Which batches see a published document; R1.1: only the subject's own batch (trigger).
 
 **document_chunks** — `document_id`, `document_version_id` (composite FKs), `subject_id` (denormalised for filtering; trigger keeps in sync), `chunk_index`, `page_start`, `page_end`, `heading_path`, `content`, `tsv tsvector generated always as (to_tsvector('simple', content))`, `embedding vector(1024)`, `token_count`.
 - `unique (document_version_id, chunk_index)`; btree `(institute_id, subject_id, document_id)`; GIN `(tsv)`.
@@ -127,10 +117,10 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 
 ### 4.4 AI conversations and generated content
 
-**conversations** (S) — `user_id`, `subject_id` (composite FK), `title`, `created_at` (no `deleted_at`: a deleted chat is gone; ADR-026). Index `(institute_id, user_id, created_at desc)`.
+**conversations** (S) — `user_id`, `subject_id`, `chapter_id` (R1.1: Smart Study chats are per topic; composite FKs), `title`, `created_at` (no `deleted_at`: a deleted chat is gone; ADR-026). Index `(institute_id, user_id, created_at desc)`.
 - S/I/D owner (any active member; insert only on a subject the caller can read). Staff: none — counts per subject via `tutor_activity(inst, student)` (definer, same callers as `student_progress`), pending Q-03.
 
-**messages** (S) — `conversation_id` (composite FK), `role` (`user|assistant`), `content`, `citations jsonb` (list of `{source_kind, document_id|library_item_id, title, page_start, page_end, cited_text}`), `answer_labels jsonb` (`[{label: notes|library|general, citations: [index]}]` per paragraph), `model`, `usage_record_id`, `feedback` (`up|down|null`), `created_at`.
+**messages** (S) — `conversation_id` (composite FK), `role` (`user|assistant`), `content`, `citations jsonb` (list of `{source_kind, document_id, title, page_start, page_end, cited_text}`), `answer_labels jsonb` (`[{label: notes|general, citations: [index]}]` per paragraph; old rows may say `library`, ADR-037), `model`, `usage_record_id`, `feedback` (`up|down|null`), `created_at`.
 - S/I owner (rows written by the server in the user's session after the answer is complete); U `feedback` only. Retention 12 months then deleted daily by `purge_expired()` (chats left empty go too) [A, Q-06].
 
 **answer_reports** (T) — `subject_id` (composite FK), `message_id` (unique; composite FK, `on delete set null`), `reported_by`, `question`, `answer`, `citations`, `reason` (≤ 500), `created_at`, `resolved_at`, `resolved_by`.
@@ -218,7 +208,6 @@ Ranking rules (ADR-012, ADR-016) — **two ranks, both from institute-conducted 
 | `anon` | Unauthenticated requests | Yes | Can call only `resolve_institute` |
 | `authenticated` | Web app with user JWT | Yes | All request paths |
 | `worker` (custom, `NOBYPASSRLS`) | Worker via direct/pooler connection | Yes, policies `to worker using (institute_id = private.job_institute())` | Tenant context set per transaction with `set_config(..., true)` |
-| `library_worker` (custom) | Library generation jobs | Yes (library tables only) | No grants on tenant tables |
 | `service_role` / secret key | **Ops scripts only** (create institute, break-glass) | **Bypasses RLS** [V] | Not present in Vercel or worker env (ADR-005) |
 | `postgres` | Migrations in CI | Bypasses | CI only, protected environment |
 

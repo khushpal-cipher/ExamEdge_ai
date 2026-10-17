@@ -324,6 +324,90 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
   too-short address.
 - Tests: pgTAP `160_reinvite_owner.sql`; platform E2E (refused for Demo Classes, replaces Gamma's link).
 
+---
+## Release 1.1 — founder change list (approved 2026-10-17, PROGRESS.md "Next exact action" groups A–E)
+These override older text in HOW_IT_WORKS, DATABASE_DESIGN and AI_PIPELINE_DESIGN. Each is built on its own branch
+in the order of PROGRESS.md; the "Built" line is filled in when it merges.
+
+### ADR-037 Remove the ExamEdge library (R1.1 group E; reverses ADR-010 and ADR-027)
+- **Decision:** ExamEdge shares no content with institutes. Drop the library tables (`library_subjects`,
+  `library_chapters`, `library_topics`, `library_items`, `library_chunks`), `subjects.library_subject_id`,
+  `chapters.library_chapter_id`, `match_library_chunks`, `publish_library_item`, the platform metering path
+  (`ai_reserve_platform` / `ai_settle_platform`, feature `library_embed`), the platform library pages, the
+  subject → library link, the library on student pages and in the tutor. Tutor = the institute's notes + labelled
+  "General explanation" only (prompt `tutor-v3`).
+- **Why:** founder decision (2026-10-17): no shared content; it also confused testing (both newtown subjects were
+  linked to "JEE Main Physics", so its chapters showed under Sources).
+- **Kept:** `exams` (batches reference it). Old chat messages may still carry `library` labels/citations; they are
+  shown as plain text without a link (no rewrite of stored chats).
+- **Built:** —
+
+### ADR-038 Subjects inside batches; Subject → Topic → Subtopic (R1.1 groups A1–A3)
+- **Subject belongs to one batch.** `subjects.batch_id not null`, composite FK `(institute_id, batch_id)` → batches,
+  `unique (institute_id, batch_id, name)` replaces `unique (institute_id, name)`; `batch_subjects` is dropped. The
+  owner types a batch's subjects on the batch page; there is no institute-wide Subjects list any more.
+  Students read a subject when they are (or were, ADR-040) in its batch (`private.has_subject`).
+- **Migration of existing rows:** a subject linked to several batches is copied once per extra batch (its topics too);
+  the original row keeps all content (documents, questions, artifacts, chats) and its first batch. An unlinked subject
+  is deleted if empty; if it has content the migration stops (manual decision). Founder's local data: newtown
+  `physics` (jee 2027 + neet 2027) becomes two subjects; nothing else changes.
+- **Topic = the existing `chapters` table** (UI says "Topic"; the DB name stays). Renaming would break stored SQL
+  function bodies and every query for no behaviour change.
+- **New `subtopics`** (`institute_id`, `subject_id`, `chapter_id`, `name`, `position`), composite FK
+  `(institute_id, subject_id, chapter_id)` → chapters, RLS like chapters (staff write; students of the subject read).
+- **Notes live in a subtopic.** `documents.chapter_id` and new `documents.subtopic_id` become `not null`, FK
+  `(institute_id, chapter_id, subtopic_id)` → subtopics. Existing documents without one get a "General" subtopic
+  (and a "General" topic if they had no chapter). A document's audience may only be its subject's batch (trigger),
+  so "Publish" means "publish to this batch".
+- **Topic page** `/topics/<id>`, tabs **Subtopics | Smart Study**. Subtopics: each subtopic with its notes (uploaded
+  + AI notes) and, for staff, an "Upload notes" button inside the subtopic (A3). Smart Study: the AI for the whole
+  topic — retrieval over the published notes of all its subtopics (`match_chunks` gets a topic filter; no subtopic
+  picker), tutor chats are scoped to the topic (`conversations.chapter_id`), Studio tools (summary, flashcards, mind
+  map, practice quiz) are made from the topic's notes (C3: practice is per topic and never counts for rank).
+- **Teachers see only subjects of batches they teach** (`subjects` read policy: owner/admin all, teacher via
+  `teaches_batch(batch_id)`), so nobody uploads into a subject no batch of theirs studies (founder finding A3).
+- **Built:** —
+
+### ADR-039 Teacher AI = AI notes + AI test (R1.1 group B)
+- **Teachers lose** Studio, the staff AI tutor and the question-bank "Make questions with AI" form. The database
+  refuses the student AI features (`tutor`, `tutor_premium`, `generation`) to staff, so the budget cannot be spent on
+  them through the API. **Students keep** tutor, summary, flashcards, mind map and practice quiz (Smart Study).
+- **B1 AI notes (inside a subtopic):** the teacher types an explanation → the AI (Sonnet 5.5, new staff-only feature
+  `notes_gen`) writes detailed Markdown notes → the teacher edits → Save stores them as a **document** whose version is
+  a Markdown file (`text/markdown`) in the same private bucket. The worker processes it like a PDF (text → chunks →
+  embeddings), so Publish / Withdraw / audience / retrieval / tutor citations all reuse the existing path. The note
+  opens as an in-app page (safe Markdown renderer); "Download as PDF" = the browser's print dialog with print CSS
+  (no PDF library). Editing = a new version.
+- **B2 AI test (inside a topic):** the teacher asks for a quiz (MCQ), theory (written) questions or a mix, a count and
+  a difficulty → questions are made from the topic's published notes (ADR-032 pipeline; MCQ/numerical keep the blind
+  second solve) and put into a **new draft test**; the teacher reviews/edits each question and schedules the test
+  (scheduling already refuses unapproved questions). Written questions get a model answer and max marks; they cannot
+  be second-solved, so they stay `unverified` until the teacher saves them (`teacher_verified`).
+- **Built:** —
+
+### ADR-040 Batch history and Contest page (R1.1 group C)
+- **Past membership:** `batch_members.left_at timestamptz` (null = current). Promotion tool for owner/admin on the
+  batch page: "move these students to <batch>" adds them to the new batch and sets `left_at` on the old one in one
+  transaction; nothing is deleted. One batch per class per year (batches already carry `academic_year`), so an old
+  batch only ever holds that year's content — the student's "own time" needs no date filters.
+- **Past batch = same pages, read-only for tests:** `start_attempt` refuses a test of a batch the student has left
+  (`not_current_member`); notes, results, progress and Smart Study (tutor + Studio on the old notes) keep working
+  (founder answer Q4).
+- **Batch switcher** in the student portal header (like Vedam's semester dropdown): current batch first, then past
+  batches; the choice is kept in a cookie and only selects among the student's own batches (RLS decides).
+- **Contest page** (`/contests`, student sidebar next to Home / My progress): every institute test of the selected
+  batch — upcoming, live (Start), finished (waiting for results), results (marks, test rank). Practice quizzes never
+  appear there.
+- **Built:** —
+
+### ADR-041 AI use per institute for the platform; the institute's bill waits (R1.1 group D)
+- **Now (D2 part 1):** the platform "All institutes" table shows each institute's AI use this month (India time):
+  tokens (input + output) and real cost, from `usage_records` (platform admins already read every row; counts only,
+  no student data, TH-15). One invoker SQL function aggregates it.
+- **Waits for the founder's formula:** the per-institute commission field, the institute's "This month's AI charge:
+  ₹X" (D1) and hiding the owner's `/usage` page. The owner keeps today's usage page until then.
+- **Built:** —
+
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
 | # | Issue found | Resolution |

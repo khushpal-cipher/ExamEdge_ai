@@ -44,6 +44,13 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
+### R1.1 founder change list (session 27, 2026-10-17) — build order in "Next exact action"
+- Step 1 DONE (branch `r11-docs`): ADR-037 (remove library, reverses ADR-010/027), ADR-038 (subjects in batches,
+  Topic = `chapters`, new `subtopics`, notes only in a subtopic, topic page Subtopics | Smart Study), ADR-039 (teacher
+  AI = AI notes stored as Markdown documents + AI test into a draft test), ADR-040 (`batch_members.left_at`, promotion,
+  switcher, Contest page), ADR-041 (platform tokens + cost per institute; bill waits for the formula). HOW_IT_WORKS,
+  DATABASE_DESIGN, PROJECT_MASTER_PLAN updated. AI_PIPELINE_DESIGN is updated with steps 2 and 5.
+
 ### R1 AI-made bank questions + blind second solve (session 21) — MERGED (PR #13, `b6f2ded`, CI green run 38936700856)
 Scope = roadmap Phase 7 task "AI generation with dual-solve" / AC7.5, deferred in ADR-023 and never built (found
 while listing what is left). ADR-032. No founder decision needed.
