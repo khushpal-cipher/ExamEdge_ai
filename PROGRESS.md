@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-16
+Last updated: 2026-10-17
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -22,7 +22,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
-| 2026-10-17 | Platform: send a new owner invitation (ADR-036) + clearer address-length hint | `reinvite_owner` RPC (aal2, refused once an owner joined, revokes old owner links). `supabase migration up` (no reset) then `npx supabase test db` → Files=17 Tests=1303 PASS (new `160_reinvite_owner.sql`); `npx playwright test e2e/portals.spec.ts -g "platform admin needs MFA"` passed (against the running `next dev`); format, lint, typecheck PASS; unit 154/154. Address minimum stays 3 (founder). Build + full E2E → CI on the PR. |
+| 2026-10-17 | Platform: send a new owner invitation (ADR-036) + clearer address-length hint | `reinvite_owner` RPC (aal2, refused once an owner joined, revokes old owner links). `supabase migration up` (no reset) then `npx supabase test db` → Files=17 Tests=1303 PASS (new `160_reinvite_owner.sql`); `npx playwright test e2e/portals.spec.ts -g "platform admin needs MFA"` passed (against the running `next dev`); format, lint, typecheck PASS; unit 154/154. Address minimum stays 3 (founder). CI green (run 39019308579: check + secrets, incl. build and full E2E against the production build); PR #18 squash-merged (`5fc5051`). |
 | 2026-10-17 | Google sign-in + invitation emails (ADR-035) | Founder created Google Cloud OAuth client + Resend key (gitignored root `.env`, `apps/web/.env.local`). Unit 154/154 (`apps/web/lib/email.test.ts`); E2E portals + isolation 12/12 against a local production build; headless click reached accounts.google.com with the real client id. CI failed twice on the new Google E2E (Playwright cannot intercept a redirect target, so CI hit real Google with the placeholder client) → test now stops at Supabase `/auth/v1/authorize` and reads its Location; CI 2/2 green on `3c605e7`; PR #17 merged (`0006d1c`). **Unverified:** a full real Google sign-in and a delivered email (founder to try). Resend sends only to the account owner until a domain is verified; Google consent screen in Testing (test users only). |
 | 2026-10-17 | Platform: delete an institute created by mistake (ADR-033) | `delete_institute` RPC (aal2, typed address, refused with any membership). `supabase migration up` then `npm run test:db` → Files=16 Tests=1288 PASS (new `150_delete_institute.sql`); platform E2E (refused for Demo + wrong confirmation, deletes its test institute) passed; format, lint, typecheck PASS; CI 2/2; PR #15 merged (`65ce7de`). |
 | 2026-10-17 | Local demo sign-in creates unknown accounts (ADR-034) | `signInDemo` signs up on `invalid_credentials` (still localhost-only via `demoLoginAllowed`). E2E `isolation.spec.ts` invitation test without pre-created account: failed without the change, passed with it; unit 151/151; format, lint, typecheck PASS; CI 2/2; PR #16 merged. |
@@ -161,10 +161,10 @@ DONE + TESTED (2026-10-16, session 19):
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 23, updated)
-`main` = `e5ac8f3`. No open branch, no open PR. Session 22 (2026-10-17) was founder hands-on testing; merged on the way:
-PR #14 (new institute shows in list), #15 delete institute (ADR-033), #16 local demo sign-in creates unknown accounts
-(ADR-034), #17 Google sign-in + invitation emails (ADR-035). All CI green.
+## Next exact action (session 24)
+`main` = `5fc5051` (+ this PROGRESS commit). No open branch, no open PR. Session 23 (2026-10-17): PR #18 merged —
+platform "Send new owner invitation" (ADR-036, `reinvite_owner`, migration `20261028000016`) + create form explains
+the 3-character address minimum (founder kept the minimum at 3). Applied locally with `supabase migration up` (no reset).
 
 **Local state the founder is using — do NOT run `supabase db reset` / `npm run db:reset` without asking first** (it
 wipes their test data): institutes `v4classes` (owner v4classes@gmail.com accepted; teacher khushpal@gmail.com invited),
@@ -180,12 +180,12 @@ For the full gate without a reset, rely on CI and say so.
    (else `open -a Docker`); `supabase status` (else `supabase start`). Dev server and worker stop when a session ends:
    start the web with preview_start `web`; worker = `npm run dev:worker` with the local env from
    `scripts/local-supabase.ts` `localWorkerEnv` (WORKER_DATABASE_URL, WORKER_STORAGE_EMAIL/PASSWORD, NEXT_PUBLIC_*).
-1. Ask the founder how their two pending checks went (UNVERIFIED, need their Google account/inbox):
+1. Ask the founder how their two pending checks went (UNVERIFIED; in session 23 they had not tried yet):
    (a) invite their Resend sign-up email from V4 Classes → People: email arrives ("emailed" badge);
    (b) open it in a private window → Continue with Google → Accept invitation (that Gmail must be a Google OAuth
    test user). Fix whatever fails; record evidence here.
-2. Done in session 23: "Send new owner invitation" (ADR-036) and the clearer address hint; minimum stays 3
-   characters (founder decision 2026-10-17).
+2. Founder can now fix `sharma` / `allen` owner emails from admin.localhost:3000 → institute → "Owner invitation"
+   (ask whether it worked for them; not yet tried by the founder). No other offered feature is pending.
 3. Still needs founder decisions/accounts (see Blocked): domain + Resend domain verification (emails to anyone, set
    `EMAIL_FROM`), publish the Google consent screen, Phase 10 cloud parts, Anthropic key, Q-08, Q-01.
 4. Any new local task: new branch, tests, `supabase migration up` (no reset), PR, CI green, squash-merge, PROGRESS.
@@ -210,6 +210,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 23 | 2026-10-17 | Founder chose: build "Send new owner invitation", keep 3-character address minimum. ADR-036, pgTAP 1303, PR #18 CI green and merged | `5fc5051` |
 | 22 | 2026-10-17 | Founder hands-on testing. Merged #14 institute list refresh, #15 delete institute (ADR-033), #16 local demo accounts (ADR-034), #17 Google sign-in + invitation emails (ADR-035); CI green each | `e5ac8f3` |
 | 1–2 | 2026-10-14/15 | Planning docs, founder decisions, tools, git init, workspaces, local Supabase init + pgTAP smoke | `5d26fc7` |
 | 4 | 2026-10-15 | Phase 1 gate green, CI audit gate, PR #1 merged (`913ec7f`). Phase 2 built: tenancy schema + RLS, 334 pgTAP, web tenant/sign-in/invite, demo seed, 6 E2E; local gate green; PR not yet opened | see `git log` |
