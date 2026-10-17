@@ -278,8 +278,19 @@ institute's ₹ bill (D1) and hiding `/usage` from owners wait for the founder's
 7. D2 tokens + real cost per institute on the platform table (D1 bill + commission wait for the formula) → opus · medium · Why: money; RLS so owners see only the charge.
 8. Full gate (TEST_STRATEGY §6), browser check per role at 375 px, PR, CI, merge → sonnet · medium.
 Steps 3–7 depend on step 1; step 4 depends on step 3 — re-verify step 3's RLS tests before starting 4.
-**Status (session 28): steps 3 + 4 are built and committed on `r11-structure` (`debaaae`).** Next: open the PR, get
-CI green (its E2E is the first run of the updated specs), merge; then steps 5 (B1 AI notes, B2 AI test), 6 (C2 Contest
+**Status (session 28 handoff): steps 3 + 4 built on `r11-structure`; PR #21 open
+(https://github.com/khushpal-cipher/ExamEdge_ai/pull/21), Auto-fix on, NOT merged.** First CI run (39051354988)
+failed only at `format:check` on `.claude/launch.json` (fixed in the handoff commit), so **E2E has not run yet**.
+**Next exact action (session 29):** `git checkout r11-structure && git pull`; read PR #21's CI (`gh pr checks 21`);
+if E2E fails, fix the specs/app (never weaken a test) — likeliest spots: `e2e/portals.spec.ts` owner test (new batch
+→ subjects → topic → subtopic flow), `tutor.spec.ts`/`studio.spec.ts` (Smart Study tab), `assessments.spec.ts`
+(question bank label "Physics · JEE 2027 Morning"); push until green; squash-merge; record CI run + merge hash here.
+**R1.1 progress (8 build steps):** 1 ADRs ✅ merged · 2 library removed ✅ merged · 3 DB structure ✅ built (PR #21)
+· 4 topic page / upload / topic-only practice ✅ built (PR #21) · 5 AI notes + AI test ⬜ · 6 Contest page + batch
+switcher ⬜ (promotion tool already built) · 7 platform tokens + cost ⬜ · 8 full gate + per-role browser check ⬜.
+≈ 4 of 8 steps done (half); by founder groups: E done, A done (pending merge), C half (history + promotion yes,
+switcher + Contest no), B and D not started.
+After merge: steps 5 (B1 AI notes, B2 AI test), 6 (C2 Contest
 page + C1 batch switcher), 7 (D2 platform tokens + cost), 8. Teachers still have the tutor/Studio on the topic page
 until step 5 removes them (ADR-039). The list below is the step 3/4 work list, kept for reference (done).
 **(Done) step 3 + 4 on branch `r11-structure`** (`git checkout r11-structure && git pull`).
