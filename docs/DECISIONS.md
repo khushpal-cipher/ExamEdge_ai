@@ -366,8 +366,9 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
   topic — retrieval over the published notes of all its subtopics (`match_chunks` gets a topic filter; no subtopic
   picker), tutor chats are scoped to the topic (`conversations.chapter_id`), Studio tools (summary, flashcards, mind
   map, practice quiz) are made from the topic's notes (C3: practice is per topic and never counts for rank).
-- **Teachers see only subjects of batches they teach** (`subjects` read policy: owner/admin all, teacher via
-  `teaches_batch(batch_id)`), so nobody uploads into a subject no batch of theirs studies (founder finding A3).
+- **Teachers see only subjects of batches they teach** in the portal (a UI filter), so nobody uploads into a subject
+  no batch of theirs studies (founder finding A3). RLS still lets all staff read subjects: teachers read all institute
+  notes by design (TH-03), and staff pages embed subject names.
 - **Built:** —
 
 ### ADR-039 Teacher AI = AI notes + AI test (R1.1 group B)
