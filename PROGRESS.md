@@ -162,7 +162,27 @@ DONE + TESTED (2026-10-16, session 19):
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 26)
-**Start here.** No code changed in session 25. The founder is testing the app by hand from a clean local DB.
+**Founder's change list (session 26, 2026-10-17) — COLLECT ONLY, build nothing until the founder says "fix all".**
+The founder is collecting every finding first; all items get fixed together at the end (one plan, then build).
+1. **Teacher AI = only two features** (product decision, replaces today's teacher AI set):
+   (a) **AI notes:** teacher explains a topic to the AI (typed) → AI writes a detailed notes PDF → teacher reviews/edits
+   → publishes to chosen batches → students of that batch see it like uploaded notes (and the tutor can use it).
+   (b) **AI test:** teacher asks the AI for a quiz, theory (written) questions, or a mix → reviews → schedules the test.
+   Today: AI bank questions make MCQ/numerical only, not written (ADR-032); Studio (summary/flashcards/mind map/quiz)
+   is also open to staff. To decide when building: does Studio stay for students only? (ask the founder then).
+2. **Subjects inside batches:** create subjects by typing names on the batch itself (e.g. "Class 10" → Science, Maths,
+   Social Studies), instead of a separate Subjects page + linking. Today subjects are institute-wide and linked to
+   batches via `batch_subjects` (DATABASE_DESIGN §4.2).
+3. **Student batch history:** a student who moved from "Class 9" to "Class 10" should see both batches (past and
+   current) in the student portal. Today a student can belong to several batches; there is no "past batch" view.
+4. (earlier, still waiting) AI tokens + cost per institute in the platform "All institutes" table.
+5. (earlier, still waiting) delete the ExamEdge library feature (details below).
+Founder asked how a teacher uploads notes (answered: Subjects → open subject → "Upload notes" → document page →
+tick batches → Publish; needs the worker running to leave "Processing").
+newtown state (session 26): batches `jee 2027` (maths: 2 chapters, physics: 0) and `neet 2027` (physics); 0 documents,
+0 tests — so students see empty subjects until a teacher uploads/publishes notes or schedules a test.
+
+**Start here.** No code changed in session 25 or 26. The founder is testing the app by hand from a clean local DB.
 1. Ask the founder what they found while testing; fix reported bugs (branch, tests, PR, CI green, merge).
 2. Two founder items wait for their **"go"** (do NOT start before): (a) AI tokens + cost per institute in the
    platform "All institutes" table; (b) delete the ExamEdge library feature (details below).
@@ -286,6 +306,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 26 | 2026-10-17 | No code. Founder change list started (teacher AI = AI notes + AI tests only; subjects inside batches; student batch history); worker started; both newtown students (JEE, NEET) signed in and saw their batch + subjects | see `git log` |
 | 25 | 2026-10-17 | Founder: no new features (will test the whole flow themself); email/Google checks not tried yet; leftover E2E rows (3 batches, 2 subjects, 3 gamma institutes) deleted from the local DB with their yes | see `git log` |
 | 24 | 2026-10-17 | Read-only check of local state (real Google sign-in works; allen owner had joined). Read-only audit of the three portals + browser check of each role and isolation (no code changed); open question: aggregate counts on the platform institute page | see `git log` |
 | 23 | 2026-10-17 | Founder chose: build "Send new owner invitation", keep 3-character address minimum. ADR-036, pgTAP 1303, PR #18 CI green and merged | `5fc5051` |
