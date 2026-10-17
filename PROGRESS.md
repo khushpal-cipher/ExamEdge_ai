@@ -162,6 +162,41 @@ DONE + TESTED (2026-10-16, session 19):
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 26)
+**Start here.** No code changed in session 25. The founder is testing the app by hand from a clean local DB.
+1. Ask the founder what they found while testing; fix reported bugs (branch, tests, PR, CI green, merge).
+2. Two founder items wait for their **"go"** (do NOT start before): (a) AI tokens + cost per institute in the
+   platform "All institutes" table; (b) delete the ExamEdge library feature (details below).
+3. `docs/FOUNDER_TEST_GUIDE.md` (step-by-step test guide for the three portals) is **untracked on purpose** —
+   founder said "don't push the guide yet". Never commit it without their yes.
+4. Still unverified: accepting an invitation through Google sign-in.
+
+**Local DB now (do NOT reset or delete without asking):** institutes `newtown` (owner = founder's Gmail
+`khushalsinghchouhan4@gmail.com`; batches `jee 2027`, `neet 2027`) and `vedam` (owner `vedam@gmail.com`, joined;
+created by the founder). Demo people added to newtown in session 25 (direct memberships via a scratch script using
+`scripts/local-supabase.ts`, demo password, "Sign in as demo user" at http://newtown.localhost:3000):
+`student1@newtown.test` (Riya Sharma, student, jee 2027), `teacher.jee@newtown.test` (teacher, jee 2027),
+`teacher.neet@newtown.test` (teacher, neet 2027), `student2@newtown.test` (Aman Singh, student, neet 2027).
+All 5 old institutes (demo, rival, sharma, v4classes, allen) were deleted with the founder's yes; their 27 Storage
+files remain until the worker's daily purge. The sample data needs `npm run seed:demo` (ask first). E2E tests
+create leftover rows when run locally. Founder's TOTP was reset (they re-enrol on next admin sign-in).
+Worker start (local values): `WORKER_DATABASE_URL=postgresql://worker:worker_local_only@127.0.0.1:54322/postgres
+WORKER_STORAGE_EMAIL=worker@examedge.test WORKER_STORAGE_PASSWORD=examedge-worker-local npm run dev:worker`.
+
+**Verified by the founder (2026-10-17):** the owner invitation email for `newtown` was delivered to their Resend
+account Gmail, but in **Spam** (test sender `onboarding@resend.dev`; a verified domain + `EMAIL_FROM` should fix it).
+Still unverified: accepting an invitation through Google.
+**Founder request (2026-10-17), NOT started — build only when they say go:** on the platform admin page
+(admin.localhost → Institutes, "All institutes" table) show each institute's AI use: tokens used (input + output)
+and cost this month. Platform admins can already read every `usage_records` row (DATABASE_DESIGN §4.6), so no new
+data access is needed; counts only, no student data (TH-15).
+**Founder decision (2026-10-17), NOT started:** delete the ExamEdge library feature — they will not share any content
+with institutes. Remove the platform library pages, the subject → library link, the library on student subject pages
+and library retrieval in the tutor (tutor = institute notes + general explanation only); drop the library tables with
+a new migration; update tests, seed, HOW_IT_WORKS, AI_PIPELINE_DESIGN, DATABASE_DESIGN, and add an ADR that reverses
+ADR-010/ADR-027. Build together with the usage column when the founder says go. Also untracked and uncommitted:
+`docs/FOUNDER_TEST_GUIDE.md` (founder said don't push yet). Local only: founder's lost TOTP factor was deleted from
+`auth.mfa_factors` with their yes, so they will enrol a new one on the next admin sign-in.
+
 **Session 25 (2026-10-17), no code changed.** Founder answers: (a) **no new features** — "I don't want anything
 already added on, I will test it myself by creating the whole simulation" → the aggregate-counts question is closed
 (not built); wait for the founder's own test findings and fix what they report. (b) The two email/Google checks
@@ -198,6 +233,8 @@ tests, documents; no personal data) on the platform institute page? Product deci
 `main` = `5fc5051` (+ PROGRESS commits). No open branch, no open PR. Session 23 (2026-10-17): PR #18 merged —
 platform "Send new owner invitation" (ADR-036, `reinvite_owner`, migration `20261028000016`) + create form explains
 the 3-character address minimum (founder kept the minimum at 3). Applied locally with `supabase migration up` (no reset).
+
+**2026-10-17 (session 25), founder's yes: ALL 5 local institutes deleted** (`demo`, `rival`, `sharma`, `v4classes`, `allen`; one checked `psql` transaction, `institutes` count now 0). Sign-in accounts kept; 27 Storage files remain until the worker's daily purge (ADR-031). Restore sample data only with `npm run seed:demo` (ask first). The paragraph below is now history.
 
 **Local state the founder is using — do NOT run `supabase db reset` / `npm run db:reset` without asking first** (it
 wipes their test data): institutes `v4classes` (owner v4classes@gmail.com accepted; teacher khushpal@gmail.com invited),
