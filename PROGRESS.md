@@ -168,8 +168,10 @@ the 3-character address minimum (founder kept the minimum at 3). Applied locally
 
 **Local state the founder is using — do NOT run `supabase db reset` / `npm run db:reset` without asking first** (it
 wipes their test data): institutes `v4classes` (owner v4classes@gmail.com accepted; teacher khushpal@gmail.com invited),
-`sharma` (owner sharma@gmail.com, not accepted), `allen` (owner allen@gmail.com, not accepted); founder platform admin
-`khushalsinghchouhan4@gmail.com` (TOTP enrolled). New migrations: apply with `supabase migration up` (keeps data).
+`sharma` (owner sharma@gmail.com, not accepted), `allen` (owner allen@gmail.com, **accepted** 2026-10-17 09:13 IST via
+local email sign-in); founder platform admin `khushalsinghchouhan4@gmail.com` (TOTP enrolled; **signed in with real
+Google** 2026-10-17 10:18 IST — `auth.identities` provider `google`, checked in session 24). New migrations: apply with
+`supabase migration up` (keeps data).
 For the full gate without a reset, rely on CI and say so.
 
 **Founder keys (never print, never commit):** root `.env` = `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID/SECRET` (read by
@@ -184,8 +186,11 @@ For the full gate without a reset, rely on CI and say so.
    (a) invite their Resend sign-up email from V4 Classes → People: email arrives ("emailed" badge);
    (b) open it in a private window → Continue with Google → Accept invitation (that Gmail must be a Google OAuth
    test user). Fix whatever fails; record evidence here.
-2. Founder can now fix `sharma` / `allen` owner emails from admin.localhost:3000 → institute → "Owner invitation"
-   (ask whether it worked for them; not yet tried by the founder). No other offered feature is pending.
+   Session 24 DB check: Google sign-in itself works (platform admin's account, 10:18 IST); no invitation has been
+   accepted through Google yet (the v4classes teacher invite is still pending); delivery of an email not checkable
+   from here.
+2. Founder can now fix the `sharma` owner email from admin.localhost:3000 → institute → "Owner invitation"
+   (`allen` no longer needs it: its owner joined). No other offered feature is pending.
 3. Still needs founder decisions/accounts (see Blocked): domain + Resend domain verification (emails to anyone, set
    `EMAIL_FROM`), publish the Google consent screen, Phase 10 cloud parts, Anthropic key, Q-08, Q-01.
 4. Any new local task: new branch, tests, `supabase migration up` (no reset), PR, CI green, squash-merge, PROGRESS.
@@ -210,6 +215,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 24 | 2026-10-17 | Read-only check of local state: platform admin signed in with real Google; allen owner had joined (PROGRESS was stale); asked founder about pending checks | see `git log` |
 | 23 | 2026-10-17 | Founder chose: build "Send new owner invitation", keep 3-character address minimum. ADR-036, pgTAP 1303, PR #18 CI green and merged | `5fc5051` |
 | 22 | 2026-10-17 | Founder hands-on testing. Merged #14 institute list refresh, #15 delete institute (ADR-033), #16 local demo accounts (ADR-034), #17 Google sign-in + invitation emails (ADR-035); CI green each | `e5ac8f3` |
 | 1–2 | 2026-10-14/15 | Planning docs, founder decisions, tools, git init, workspaces, local Supabase init + pgTAP smoke | `5d26fc7` |
