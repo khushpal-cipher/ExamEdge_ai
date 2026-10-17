@@ -23,8 +23,8 @@ This is the entry point. Details live in one place each — this file summarises
 
 ## 1. Vision
 An AI learning platform where each coaching institute gets its own branded, isolated space. Teachers organise
-material, tests and AI-generated study content. Students get a subject-by-subject tutor that answers from their institute's notes
-**and** from a reviewed ExamEdge library, without uploading anything themselves, with clear citations. Inspired by NotebookLM;
+material, tests and AI-generated study content. Students get a topic-by-topic tutor ("Smart Study") that answers from their institute's notes
+(the ExamEdge library was removed in R1.1, ADR-037), without uploading anything themselves, with clear citations. Inspired by NotebookLM;
 built independently (NotebookLM has no API we rely on).
 
 ## 2. Architecture in one paragraph
@@ -42,8 +42,8 @@ content. The design can move a large institute to its own database ("cell") late
 | Platform admin: institutes, subdomains, branding, quotas, usage | ✅ (institute creation via ops script + admin UI) | Self-serve onboarding | Custom domains, enterprise cells, SSO |
 | Staff: batches, subjects, chapters, invitations, roles | ✅ | Join codes with approval | Custom roles |
 | Documents: PDF + images, OCR, publish/withdraw per batch | ✅ | DOCX/PPTX | — |
-| AI tutor with citations + labels | ✅ (institute + general; library from Phase 8) | Personalised hints from mastery | Web search (current affairs) |
-| Shared library | Engine + 1 exam × 1 subject seed | More subjects | More exams/languages |
+| AI tutor with citations + labels | ✅ (institute + general; topic-scoped "Smart Study" in R1.1) | Personalised hints from mastery | Web search (current affairs) |
+| Shared library | Removed in R1.1 (ADR-037) | — | — |
 | Tests: MCQ single/multi, numerical, written (theory); auto marking + teacher checking; test rank + overall rank; student progress page | ✅ | Optional AI-suggested marks for theory answers | — |
 | Student practice quizzes, flashcards, summaries, mind maps | ✅ | Tables/reports | Slides, infographics |
 | Analytics | Basic (attempts, scores, usage counts) | Teacher dashboards, recommendations | — |
