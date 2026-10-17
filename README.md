@@ -25,7 +25,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<PUBLISHABLE_KEY>
 DEMO_LOGIN_ENABLED=true
 ```
 
-Then `npm run dev` and open **http://demo.localhost:3000**. Type a demo email and press **Sign in as demo user**
+Then `npm run dev` and open **http://demo.localhost:3000**. Type a demo email (or any new email: a local account is created for it) and press **Sign in as demo user**
 (works only against a local Supabase; it can never be switched on in production).
 
 | Who | Email | Try |

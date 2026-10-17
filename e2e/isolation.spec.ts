@@ -1,7 +1,6 @@
 // T-E2E-ISO-01, T-SEC-04, AC2.4/AC2.5 end to end. Needs `npm run seed:demo` (Demo Classes + Rival Academy).
 import { expect, test } from '@playwright/test';
-import { DEMO_PASSWORD } from '../packages/core/src/demo';
-import { admin, demoSignIn, env, instituteId, signedIn } from './helpers';
+import { demoSignIn, env, instituteId, signedIn } from './helpers';
 
 test('unknown host is a 404 and never shows an institute (T-SEC-04)', async ({ page }) => {
   const res = await page.goto('http://unknown-institute.localhost:3000/');
@@ -48,9 +47,8 @@ test('private schema is not exposed through the Data API', async () => {
 
 test('invitation link: wrong account is rejected, invited account joins once (AC2.4)', async ({ page }) => {
   const demo = await instituteId('demo.localhost');
+  // No account yet: the local demo sign-in creates it, like a first Google sign-in.
   const email = `newkid${Date.now()}@demo.test`;
-  const { error } = await admin.auth.admin.createUser({ email, password: DEMO_PASSWORD, email_confirm: true });
-  expect(error).toBeNull();
   const owner = await signedIn('owner@demo.test');
   const { data: batch } = await owner.from('batches').select('id').eq('name', 'JEE 2027 Morning').single();
   const { data: token, error: inviteError } = await owner.rpc('create_invitation', {

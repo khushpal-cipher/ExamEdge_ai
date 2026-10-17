@@ -9,12 +9,16 @@ export async function signInDemo(form: FormData) {
   if (!demoLoginAllowed(process.env)) throw new Error('Demo sign-in is disabled');
   const next = safeNext(form.get('next'));
   const db = await supabase();
-  const { error } = await db.auth.signInWithPassword({
-    email: String(form.get('email') ?? '')
-      .trim()
-      .toLowerCase(),
-    password: DEMO_PASSWORD,
-  });
+  const email = String(form.get('email') ?? '')
+    .trim()
+    .toLowerCase();
+  let { error } = await db.auth.signInWithPassword({ email, password: DEMO_PASSWORD });
+  // Local stack only: an unknown email gets an account, like a first Google sign-in. Membership still comes only
+  // from accepting an invitation, so a new account sees nothing until then.
+  if (error?.code === 'invalid_credentials') {
+    const { data, error: signUpError } = await db.auth.signUp({ email, password: DEMO_PASSWORD });
+    error = signUpError ?? (data.session ? null : error);
+  }
   if (error) redirect(`${next}${next.includes('?') ? '&' : '?'}error=signin`);
   redirect(next);
 }
