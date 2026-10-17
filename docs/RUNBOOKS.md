@@ -87,6 +87,8 @@ database and the files.
 
 ## 4. When an institute leaves
 
+Created by mistake and nobody has joined yet? Use **Delete institute** on its page in the platform admin instead (ADR-033).
+
 1. The platform admin sets the institute's status to **offboarding**. Its people can still sign in to download their data.
 2. **Giving them their data:**
    - **Ready now:** owners and admins can download rank lists and test results with the CSV buttons.

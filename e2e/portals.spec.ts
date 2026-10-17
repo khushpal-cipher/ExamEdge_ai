@@ -254,4 +254,21 @@ test('platform admin needs MFA, then manages institutes (AC2.7, Phase 3 platform
   const res = await page.goto(`http://gamma-${tag}.localhost:3000/`);
   expect(res?.status()).toBe(200);
   await expect(page.getByText('This institute is currently suspended.')).toBeVisible();
+
+  // Delete: refused for an institute people joined and for a wrong confirmation; works for Gamma (nobody joined).
+  await page.goto(`${ADMIN}/`);
+  await page.getByRole('link', { name: 'Demo Classes' }).click();
+  await page.getByLabel('Type demo to confirm').fill('demo');
+  await page.getByRole('button', { name: 'Delete institute' }).click();
+  await expect(page.locator('main').getByRole('alert')).toContainText('people have already joined');
+  await page.goto(`${ADMIN}/`);
+  await page.getByRole('link', { name: `Gamma ${tag}` }).click();
+  await page.getByLabel(`Type gamma-${tag} to confirm`).fill('gamma');
+  await page.getByRole('button', { name: 'Delete institute' }).click();
+  await expect(page.locator('main').getByRole('alert')).toContainText('did not match');
+  await page.getByLabel(`Type gamma-${tag} to confirm`).fill(`gamma-${tag}`);
+  await page.getByRole('button', { name: 'Delete institute' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Institutes');
+  await expect(page.getByRole('link', { name: `Gamma ${tag}` })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Demo Classes' })).toBeVisible();
 });

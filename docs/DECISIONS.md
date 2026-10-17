@@ -273,6 +273,16 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
 - **BLOCKED:** real-provider quality (agreement rate, teacher rejection rate — AI_PIPELINE §5), cost per question.
 
 ---
+### ADR-033 Platform admin deletes an institute created by mistake (2026-10-17, Accepted)
+- **Why:** founder testing found no way to undo an institute created with a wrong owner email or address; the only
+  path was SQL as `postgres` (RUNBOOKS offboarding). New scope beyond the roadmap, asked for by the founder.
+- **Rule:** `public.delete_institute(inst, confirm_slug)` (SECURITY DEFINER in `private`) needs an aal2 platform admin,
+  the institute's address typed exactly, and **no membership rows** (any role or state). Institutes people joined keep
+  the suspend → offboarding → SQL path, so the button can never destroy tenant data.
+- Cascades remove host, quotas and invitations; the audit trigger keeps an `institutes.delete` row
+  (`actor_kind = platform_admin`); a logo file is removed by the daily purge (ADR-031).
+- Tests: pgTAP `150_delete_institute.sql`; platform E2E deletes its test institute and is refused for Demo Classes.
+
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
 | # | Issue found | Resolution |

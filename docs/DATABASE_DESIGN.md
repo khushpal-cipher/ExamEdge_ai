@@ -52,7 +52,7 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 
 **institutes** (G-ish: one row per tenant, read by own members)
 - Purpose: the tenant. Columns: `slug citext unique` (subdomain; `^[a-z0-9-]{3,40}$`), `name`, `status` (`pilot|active|suspended|offboarding`), `cell text default 'main'`, `branding jsonb` (logo path, primary colour), `created_at`.
-- Deletion: offboarding → export → hard delete after 30-day grace [A, Q-07]. `suspended` blocks all member access in `has_role`.
+- Deletion: offboarding → export → hard delete after 30-day grace [A, Q-07]. An institute nobody has joined can be deleted at once from the platform admin (`delete_institute`, ADR-033). `suspended` blocks all member access in `has_role`.
 - Access: S own institute (any active member) / platform admin all. I/U/D platform admin only (via RPC).
 
 **institute_domains**

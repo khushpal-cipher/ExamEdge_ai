@@ -4,9 +4,14 @@ import { supabase } from '@/lib/supabase';
 import { isUuid, rootHost } from '@/lib/tenant';
 import { logoUrl } from '@/lib/brand';
 import { monthUsage, usd } from '@/lib/usage';
-import { updateInstitute, updateQuotas, uploadLogo } from '../../actions';
+import { deleteInstitute, updateInstitute, updateQuotas, uploadLogo } from '../../actions';
 
 const MB = 1024 * 1024;
+const ERRORS: Record<string, string> = {
+  logo: 'Choose a PNG, JPG or WebP logo up to 500 KB.',
+  confirm_mismatch: 'Not deleted: the typed address did not match.',
+  has_members: 'Not deleted: people have already joined. Suspend it instead, then follow the offboarding runbook.',
+};
 
 export default async function InstituteAdmin({
   params,
@@ -46,7 +51,7 @@ export default async function InstituteAdmin({
       </div>
       {error && (
         <p role="alert" className="alert">
-          {error === 'logo' ? 'Choose a PNG, JPG or WebP logo up to 500 KB.' : 'Please check the values and try again.'}
+          {ERRORS[error] ?? 'Please check the values and try again.'}
         </p>
       )}
       {ok && (
@@ -168,6 +173,21 @@ export default async function InstituteAdmin({
           </div>
         </form>
         <p className="small muted">The AI gateway checks these limits before every AI call.</p>
+      </section>
+      <section className="card stack" aria-labelledby="delete">
+        <h2 id="delete">Delete institute</h2>
+        <p className="small muted">
+          For an institute created by mistake (wrong owner email or address). Works only while nobody has joined; it
+          cannot be undone.
+        </p>
+        <form action={deleteInstitute} className="inline">
+          <input type="hidden" name="institute_id" value={inst.id} />
+          <label>
+            Type {inst.slug} to confirm
+            <input name="confirm_slug" required autoComplete="off" />
+          </label>
+          <button type="submit">Delete institute</button>
+        </form>
       </section>
     </>
   );
