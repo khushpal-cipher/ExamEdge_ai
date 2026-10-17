@@ -9,10 +9,12 @@ import {
   generateQuestions,
   keyOf,
   QTYPES,
+  QUESTION_PROMPT_VERSION,
   QuestionError,
   secondOf,
   validDraft,
   type Draft,
+  type GenType,
   type QuestionProvider,
 } from './questions';
 import type { Source } from './studio';
@@ -48,7 +50,7 @@ function fakeMeter(blocked: string | null = null) {
   return { meter, calls };
 }
 
-const req = (type: (typeof QTYPES)[number], count = 10) => ({
+const req = (type: GenType, count = 10) => ({
   type,
   count,
   difficulty: 'medium',
@@ -67,6 +69,7 @@ const mcq = (over: Partial<Draft> = {}): Draft => ({
   correct: ['a'],
   value: null,
   tolerance: null,
+  model_answer: null,
   explanation: 'No external torque → L is constant.',
   cites: [0],
   ...over,
@@ -81,11 +84,30 @@ const numerical = (over: Partial<Draft> = {}): Draft => ({
   ...over,
 });
 
+const written = (over: Partial<Draft> = {}): Draft => ({
+  ...mcq(),
+  stem: 'Explain why angular momentum is conserved without external torque.',
+  options: [],
+  correct: [],
+  model_answer: 'Torque is the rate of change of angular momentum, so zero torque keeps L constant.',
+  ...over,
+});
+
 describe('question rules (AC7.5)', () => {
   it('accepts well-formed questions of each type', () => {
     expect(validDraft('single', mcq(), 2)).toBe(true);
     expect(validDraft('multi', mcq({ correct: ['a', 'c'] }), 2)).toBe(true);
     expect(validDraft('numerical', numerical(), 2)).toBe(true);
+    expect(validDraft('written', written(), 2)).toBe(true);
+  });
+
+  it('written questions need a model answer and nothing to auto-mark', () => {
+    expect(validDraft('written', written({ model_answer: '  ' }), 2)).toBe(false);
+    expect(validDraft('written', written({ model_answer: null }), 2)).toBe(false);
+    expect(validDraft('written', written({ options: mcq().options }), 2)).toBe(false);
+    expect(validDraft('written', written({ correct: ['a'] }), 2)).toBe(false);
+    expect(validDraft('written', written({ value: 3 }), 2)).toBe(false);
+    expect(validDraft('single', mcq({ model_answer: 'x' }), 2)).toBe(false); // objective types carry no model answer
   });
 
   it('drops questions the bank cannot use', () => {
@@ -119,6 +141,9 @@ describe('question rules (AC7.5)', () => {
     expect(secondOf('numerical', { n: 1, correct: [], value: 9.7 })).toEqual({ value: 9.7 });
     expect(secondOf('multi', { n: 1, correct: ['b'], value: null })).toEqual({ correct: ['b'] });
     expect(secondOf('single', null)).toBeNull();
+    expect(keyOf('written', written())).toEqual({ model_answer: written().model_answer });
+    expect(secondOf('written', { n: 1, correct: [], value: null })).toBeNull();
+    expect(QUESTION_PROMPT_VERSION).toBe('questions-v2');
   });
 });
 
@@ -142,6 +167,21 @@ describe('generateQuestions with the demo provider', () => {
     ]);
     expect(calls[0]!.slice(2, 4)).toEqual(['fake', 'fake-questions-1']);
     expect(calls[1]![4]).toBe('ok');
+  });
+
+  it('written: one metered call, no blind solve, every question unverified with its model answer', async () => {
+    const { meter, calls } = fakeMeter();
+    const { questions, solved } = await generateQuestions(meter, req('written', 3));
+    expect(solved).toBe(false);
+    expect(questions).toHaveLength(3);
+    for (const q of questions) {
+      expect(validDraft('written', q, sources.length)).toBe(true);
+      expect(q).toMatchObject({ verification: 'unverified', second: null });
+    }
+    expect(calls.map((c) => [c[0], c[1]])).toEqual([
+      ['reserve', 'question_gen'],
+      ['settle', 'r1'],
+    ]);
   });
 
   it('numerical demo questions come from numbers in the notes', async () => {
