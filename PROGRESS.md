@@ -161,7 +161,17 @@ DONE + TESTED (2026-10-16, session 19):
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 25)
+## Next exact action (session 26)
+**Session 25 (2026-10-17), no code changed.** Founder answers: (a) **no new features** — "I don't want anything
+already added on, I will test it myself by creating the whole simulation" → the aggregate-counts question is closed
+(not built); wait for the founder's own test findings and fix what they report. (b) The two email/Google checks
+(item 1 below) are **not tried yet** — still UNVERIFIED. (c) Leftover E2E rows removed with the founder's yes: one
+`psql` transaction as `postgres` (aborts unless the counts match) deleted Demo batches `Commerce mvbx3jqy`,
+`Commerce mvbx4px9`, `Commerce mvc3qbpz`, subjects `Economics mvbx3jqy`, `Economics mvbx4px9` (no members, documents,
+tests or questions) and suspended institutes `gamma-mvc5sira/taw0/ucpx` (no memberships) → `deleted batches=3
+subjects=2 institutes=3`; `demo`, `rival`, `sharma`, `v4classes`, `allen` untouched. Their 3 logo files go with the
+worker's daily purge (ADR-031) once the worker runs. Note: running the E2E suite locally creates such rows again.
+
 **Session 24 (2026-10-17), no code changed.** Founder asked for a read-only audit of "the three portals" (their prompt
 said Flutter; there is no Flutter project on this Mac — this Next.js app is the one). Explained: platform admin
 (admin.localhost:3000), staff portal and student portal (same institute address, role decides; `lib/tenant.ts`
@@ -217,8 +227,7 @@ For the full gate without a reset, rely on CI and say so.
 3. Still needs founder decisions/accounts (see Blocked): domain + Resend domain verification (emails to anyone, set
    `EMAIL_FROM`), publish the Google consent screen, Phase 10 cloud parts, Anthropic key, Q-08, Q-01.
 4. Any new local task: new branch, tests, `supabase migration up` (no reset), PR, CI green, squash-merge, PROGRESS.
-5. Ask whether the founder wants the leftover E2E rows (Commerce/Economics `mvbx…`, `gamma-…` institutes) removed
-   from the local DB; never delete without a yes.
+5. Done in session 25 (leftover E2E rows removed). Before any new deletion of local data, ask first.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -240,6 +249,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 25 | 2026-10-17 | Founder: no new features (will test the whole flow themself); email/Google checks not tried yet; leftover E2E rows (3 batches, 2 subjects, 3 gamma institutes) deleted from the local DB with their yes | see `git log` |
 | 24 | 2026-10-17 | Read-only check of local state (real Google sign-in works; allen owner had joined). Read-only audit of the three portals + browser check of each role and isolation (no code changed); open question: aggregate counts on the platform institute page | see `git log` |
 | 23 | 2026-10-17 | Founder chose: build "Send new owner invitation", keep 3-character address minimum. ADR-036, pgTAP 1303, PR #18 CI green and merged | `5fc5051` |
 | 22 | 2026-10-17 | Founder hands-on testing. Merged #14 institute list refresh, #15 delete institute (ADR-033), #16 local demo accounts (ADR-034), #17 Google sign-in + invitation emails (ADR-035); CI green each | `e5ac8f3` |
