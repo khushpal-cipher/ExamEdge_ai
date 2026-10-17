@@ -83,8 +83,8 @@ test('Continue with Google starts Google sign-in and comes back to the same inst
   await page.goto('http://demo.localhost:3000/');
   await page.getByRole('button', { name: 'Continue with Google' }).click();
   await page.waitForURL(/accounts\.google\.com/);
-  const google = new URL(page.url());
-  expect(google.searchParams.get('redirect_uri')).toMatch(/^http:\/\/127\.0\.0\.1:54321\/auth\/v1\/callback$/);
+  // Whole URL in the assertion so a CI failure shows where the browser actually landed.
+  expect(decodeURIComponent(page.url())).toContain('redirect_uri=http://127.0.0.1:54321/auth/v1/callback');
   const cookies = await page.context().cookies('http://demo.localhost:3000');
   expect(cookies.some((c) => c.name.endsWith('-code-verifier'))).toBe(true);
   // A bad or missing code goes back to the same institute's sign-in, never to another host.
