@@ -16,11 +16,12 @@ export default async function QuestionBank({
   const { subject: wanted } = await searchParams;
   const { data: subjects } = await db
     .from('subjects')
-    .select('id, name, chapters(id, name, position)')
+    .select('id, name, batches(name), chapters(id, name, position)')
     .eq('institute_id', institute.id)
     .order('name');
   const list = (subjects ?? []).map((s) => ({
     ...s,
+    name: `${s.name} · ${(s.batches as unknown as { name: string }).name}`,
     chapters: [...(s.chapters ?? [])].sort((a, b) => a.position - b.position),
   }));
   const subject = list.find((s) => s.id === wanted) ?? list[0];

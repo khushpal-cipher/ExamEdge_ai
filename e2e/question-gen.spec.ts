@@ -2,7 +2,7 @@
 // answers match can be approved; a flagged one cannot (in the UI or through the API) until the teacher checks and
 // saves it. Students and another institute can neither store questions nor reach them. Needs `npm run seed:demo`.
 import { expect, test, type Page } from '@playwright/test';
-import { demoSignIn, signedIn, sql } from './helpers';
+import { demoSignIn, demoTopic, signedIn, sql } from './helpers';
 
 const DEMO = 'http://demo.localhost:3000';
 const RIVAL = 'http://rival.localhost:3000';
@@ -16,10 +16,8 @@ async function login(page: Page, email: string, base = DEMO) {
 const one = async (query: string, params: unknown[] = []) => (await sql(query, params)).rows[0];
 
 test('AI questions are drafts; a flagged one is approved only after a teacher saves it', async ({ browser }) => {
-  const { id: subject, inst } = await one(
-    `select s.id, i.id as inst from subjects s join institutes i on i.id = s.institute_id
-     where i.slug = 'demo' and s.name = 'Physics'`,
-  );
+  const { subject } = await demoTopic('Physics');
+  const { id: inst } = await one(`select id from institutes where slug = 'demo'`);
   const { start } = await one('select now() as start');
   const teacher = await (await browser.newContext()).newPage();
   await login(teacher, 'teacher1@demo.test');

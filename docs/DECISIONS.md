@@ -368,8 +368,12 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
   map, practice quiz) are made from the topic's notes (C3: practice is per topic and never counts for rank).
 - **Teachers see only subjects of batches they teach** in the portal (a UI filter), so nobody uploads into a subject
   no batch of theirs studies (founder finding A3). RLS still lets all staff read subjects: teachers read all institute
-  notes by design (TH-03), and staff pages embed subject names.
-- **Built:** —
+  notes by design (TH-03), and staff pages embed subject names. The filter is applied on the Subjects list and on the
+  subject and topic pages (a teacher of another batch gets 404).
+- **Subject names repeat per batch**, so staff pickers (question bank) label a subject "Physics · JEE 2027 Morning".
+- **Built:** migrations `20261030000018_structure.sql` (tables, RLS, backfill) and `20261031000019_topic_scope.sql`
+  (`conversations.chapter_id`, `match_chunks(..., topic)`); batch page subjects, Subjects list per batch, subject page =
+  topic list, `/topics/<id>` (Subtopics | Smart Study), upload inside a subtopic; branch `r11-structure`.
 
 ### ADR-039 Teacher AI = AI notes + AI test (R1.1 group B)
 - **Teachers lose** Studio, the staff AI tutor and the question-bank "Make questions with AI" form. The database
@@ -398,6 +402,9 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
   (founder answer Q4).
 - **Batch switcher** in the student portal header (like Vedam's semester dropdown): current batch first, then past
   batches; the choice is kept in a cookie and only selects among the student's own batches (RLS decides).
+- **Built so far:** `batch_members.left_at`, `start_attempt` refusal, standings (migration 18); promotion =
+  invoker RPC `move_students(from, to, members)` (migration 19, one statement, RLS: owner/admin) behind "Move students
+  to another batch" on the batch page. The batch switcher and the Contest page are not built yet.
 - **Contest page** (`/contests`, student sidebar next to Home / My progress): every institute test of the selected
   batch — upcoming, live (Start), finished (waiting for results), results (marks, test rank). Practice quizzes never
   appear there.

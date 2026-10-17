@@ -9,6 +9,8 @@ select * from no_plan();
 create temp table ids on commit drop as
   select i.slug, i.id as inst,
          (select id from public.subjects s where s.institute_id = i.id and s.name = 'Physics') as physics,
+         (select id from public.subtopics t where t.institute_id = i.id and t.name = 'Torque') as torque,
+         (select chapter_id from public.subtopics t where t.institute_id = i.id and t.name = 'Torque') as rotation,
          (select id from public.batches b where b.institute_id = i.id and b.name = 'Batch X') as bx,
          (select id from public.batches b where b.institute_id = i.id and b.name = 'Batch Y') as by_,
          (select id from public.documents d where d.institute_id = i.id and d.title = 'Physics notes') as notes,
@@ -29,8 +31,8 @@ insert into storage.objects (bucket_id, name) select 'documents', v.storage_path
 -- ---------------------------------------------------------------- teacher uploads (alpha)
 select tests.login('teacher1@alpha.test');
 select lives_ok($$
-  insert into public.documents (institute_id, subject_id, title)
-  select inst, physics, 'Teacher notes' from ids where slug = 'alpha' $$,
+  insert into public.documents (institute_id, subject_id, chapter_id, subtopic_id, title)
+  select inst, physics, rotation, torque, 'Teacher notes' from ids where slug = 'alpha' $$,
   'teacher creates a document (insert … returning sees the new row)');
 select tests.logout();
 insert into new_doc select id, gen_random_uuid() from public.documents where title = 'Teacher notes';
@@ -62,6 +64,11 @@ select throws_ok($$ update public.documents set status = 'published' where id = 
 select throws_ok($$ insert into public.document_audience (document_id, batch_id, institute_id)
   select n.id, i.by_, i.inst from ids i, new_doc n where i.slug = 'alpha' $$,
   '42501', null, 'teacher1 cannot publish to Batch Y (does not teach it)');
+select tests.login('owner@alpha.test');
+select throws_ok($$ insert into public.document_audience (document_id, batch_id, institute_id)
+  select n.id, i.by_, i.inst from ids i, new_doc n where i.slug = 'alpha' $$,
+  '23514', 'audience_not_subject_batch', 'notes go only to their subject''s batch (owner, Batch Y)');
+select tests.login('teacher1@alpha.test');
 select lives_ok($$ insert into public.document_audience (document_id, batch_id, institute_id)
   select n.id, i.bx, i.inst from ids i, new_doc n where i.slug = 'alpha' $$,
   'teacher1 adds Batch X (teaches it) to the audience');
@@ -128,8 +135,8 @@ select is((select count(*) from public.document_audience), 0::bigint, 'students 
 select is((select count(*) from public.document_chunks), 1::bigint, 'student1 reads chunks of the published notes');
 select is((select count(*) from storage.objects where bucket_id = 'documents'), 1::bigint,
   'student1 may sign/download the current file of the published notes only');
-select throws_ok($$ insert into public.documents (institute_id, subject_id, title)
-  select inst, physics, 'Mine' from ids where slug = 'alpha' $$, '42501', null, 'students cannot create documents');
+select throws_ok($$ insert into public.documents (institute_id, subject_id, chapter_id, subtopic_id, title)
+  select inst, physics, rotation, torque, 'Mine' from ids where slug = 'alpha' $$, '42501', null, 'students cannot create documents');
 select is(tests.affected($$ update public.documents set status = 'withdrawn' $$), 0::bigint,
   'students cannot withdraw documents');
 select throws_ok($$ insert into storage.objects (bucket_id, name) select 'documents', path from new_doc $$,

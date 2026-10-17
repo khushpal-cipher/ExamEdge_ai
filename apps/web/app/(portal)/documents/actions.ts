@@ -25,11 +25,14 @@ export async function startUpload(form: FormData): Promise<UploadTicket> {
   if (!isUuid(documentId)) {
     const subject = form.get('subject_id');
     const chapter = form.get('chapter_id');
+    const subtopic = form.get('subtopic_id');
     const title = text(form, 'title', 200);
-    if (!isUuid(subject) || !title) return { error: 'Give the notes a title.' };
+    if (!isUuid(subject) || !isUuid(chapter) || !isUuid(subtopic)) return { error: 'Open a subtopic to upload notes.' };
+    if (!title) return { error: 'Give the notes a title.' };
+    // The 3-column FKs refuse a subtopic of another topic or subject (ADR-038).
     const { data, error } = await db
       .from('documents')
-      .insert({ institute_id: institute.id, subject_id: subject, chapter_id: isUuid(chapter) ? chapter : null, title })
+      .insert({ institute_id: institute.id, subject_id: subject, chapter_id: chapter, subtopic_id: subtopic, title })
       .select('id')
       .single();
     if (error) return { error: 'Could not create the document.' };
@@ -155,7 +158,7 @@ export async function deleteDocument(form: FormData) {
     .update({ deleted_at: new Date().toISOString(), status: 'withdrawn' })
     .eq('institute_id', institute.id)
     .eq('id', doc)
-    .select('subject_id')
+    .select('chapter_id')
     .single();
   if (error) done(`/documents/${doc}`, error);
   const { error: chunkError } = await db
@@ -163,5 +166,5 @@ export async function deleteDocument(form: FormData) {
     .delete()
     .eq('institute_id', institute.id)
     .eq('document_id', doc);
-  done(`/subjects/${data!.subject_id}`, chunkError, 'deleted');
+  done(`/topics/${data!.chapter_id}`, chunkError, 'deleted');
 }

@@ -4,11 +4,9 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { confirmUpload, startUpload } from './actions';
 
-type Chapter = { id: string; name: string };
-
-// New notes (subjectId + chapters) or a new version of an existing document (documentId). The file goes straight
+// New notes inside a subtopic (ADR-038) or a new version of an existing document (documentId). The file goes straight
 // from the browser to Storage through a signed upload URL, so large PDFs never pass through the web server.
-export function Upload(props: { subjectId?: string; chapters?: Chapter[]; documentId?: string }) {
+export function Upload(props: { subjectId?: string; chapterId?: string; subtopicId?: string; documentId?: string }) {
   const router = useRouter();
   const [state, setState] = useState<{ busy?: boolean; error?: string }>({});
 
@@ -41,20 +39,11 @@ export function Upload(props: { subjectId?: string; chapters?: Chapter[]; docume
       ) : (
         <>
           <input type="hidden" name="subject_id" value={props.subjectId} />
+          <input type="hidden" name="chapter_id" value={props.chapterId} />
+          <input type="hidden" name="subtopic_id" value={props.subtopicId} />
           <label>
             Title
-            <input name="title" required maxLength={200} placeholder="Rotational Motion – class notes" />
-          </label>
-          <label>
-            Chapter
-            <select name="chapter_id" defaultValue="">
-              <option value="">No chapter</option>
-              {(props.chapters ?? []).map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            <input name="title" required maxLength={200} placeholder="Torque – class notes" />
           </label>
         </>
       )}

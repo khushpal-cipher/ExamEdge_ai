@@ -42,11 +42,12 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
         .eq('document_id', id)
         .order('version', { ascending: false }),
       db.from('document_audience').select('batch_id').eq('institute_id', institute.id).eq('document_id', id),
+      // Notes are published to their subject's own batch only (ADR-038; a trigger enforces it).
       db
-        .from('batch_subjects')
+        .from('subjects')
         .select('batches(id, name, archived_at)')
         .eq('institute_id', institute.id)
-        .eq('subject_id', doc.subject_id),
+        .eq('id', doc.subject_id),
       // Teachers may publish only to batches they teach (the database enforces it too).
       member.role === 'teacher'
         ? db.from('batch_members').select('batch_id').eq('membership_id', member.id).eq('batch_role', 'teacher')
@@ -68,7 +69,7 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
       <div className="top">
         <div>
           <p className="small">
-            <Link href={`/subjects/${doc.subject_id}`}>{subject?.name ?? 'Subject'}</Link>
+            <Link href={`/topics/${doc.chapter_id}`}>{subject?.name ?? 'Subject'}</Link>
           </p>
           <h1>{doc.title}</h1>
           <p>
@@ -90,7 +91,7 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
         <h2 id="who">Who can see it</h2>
         {!doc.current_version_id && <p className="muted">You can publish once the file has been processed.</p>}
         {batches.length === 0 ? (
-          <p className="empty">No batch you can publish to studies this subject.</p>
+          <p className="empty">This subject&apos;s batch is archived or is not one you teach.</p>
         ) : (
           <form action={publishDocument} className="stack">
             <input type="hidden" name="document_id" value={id} />

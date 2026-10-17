@@ -29,9 +29,9 @@ export async function generate(form: FormData) {
   const subject = form.get('subject_id');
   const chapter = form.get('chapter_id');
   const kind = form.get('kind') as Kind;
-  if (!isUuid(subject)) redirect('/');
-  const here = `/subjects/${subject}`;
-  if (!isUuid(chapter) || !KINDS.includes(kind)) back(here, 'invalid');
+  if (!isUuid(subject) || !isUuid(chapter)) redirect('/');
+  const here = `/topics/${chapter}`;
+  if (!KINDS.includes(kind)) back(here, 'invalid');
   const student = member.role === 'student';
 
   // RLS: the chapter is visible only if its subject is (students: subjects of their batches).

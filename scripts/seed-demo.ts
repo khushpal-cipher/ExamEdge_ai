@@ -104,21 +104,11 @@ async function seedInstitute(slug: string, name: string) {
     const fullName = `${FIRST[(n * 7 + slug.length) % FIRST.length]} ${LAST[(n * 3 + slug.length) % LAST.length]}`;
     students[n] = await member(inst, `student${String(n).padStart(2, '0')}@${slug}.test`, fullName, 'student');
   }
+  // Each batch has its own subjects (ADR-038). The demo content (notes, questions, Studio) lives in the first batch
+  // that studies a subject, like the R1.1 migration did; later batches get the same topics, empty.
   const subjects = new Map<string, string>();
   const chapters = new Map<string, string>();
-  for (const s of Object.keys(CHAPTERS)) {
-    const sid = await one('insert into public.subjects (institute_id, name) values ($1, $2) returning id', [inst, s]);
-    subjects.set(s, sid);
-    for (const [i, c] of CHAPTERS[s]!.entries()) {
-      chapters.set(
-        c,
-        await one(
-          'insert into public.chapters (institute_id, subject_id, name, position) values ($1, $2, $3, $4) returning id',
-          [inst, sid, c, i + 1],
-        ),
-      );
-    }
-  }
+  const subtopics = new Map<string, string>(); // topic id → its "Class notes" subtopic
   const batches: { id: string; students: number[] }[] = [];
   for (const p of PLAN) {
     const bid = await one(
@@ -127,7 +117,27 @@ async function seedInstitute(slug: string, name: string) {
       [inst, p.batch, p.exam],
     );
     for (const s of p.subjects) {
-      await db.query('insert into public.batch_subjects values ($1, $2, $3)', [bid, subjects.get(s), inst]);
+      const sid = await one(
+        'insert into public.subjects (institute_id, batch_id, name) values ($1, $2, $3) returning id',
+        [inst, bid, s],
+      );
+      const first = !subjects.has(s);
+      if (first) subjects.set(s, sid);
+      for (const [i, c] of CHAPTERS[s]!.entries()) {
+        const cid = await one(
+          'insert into public.chapters (institute_id, subject_id, name, position) values ($1, $2, $3, $4) returning id',
+          [inst, sid, c, i + 1],
+        );
+        const stid = await one(
+          `insert into public.subtopics (institute_id, subject_id, chapter_id, name) values ($1, $2, $3, 'Class notes')
+           returning id`,
+          [inst, sid, cid],
+        );
+        if (first) {
+          chapters.set(c, cid);
+          subtopics.set(cid, stid);
+        }
+      }
     }
     for (const t of p.teachers)
       await db.query(`insert into public.batch_members values ($1, $2, $3, 'teacher')`, [bid, teachers[t], inst]);
@@ -144,21 +154,28 @@ async function seedInstitute(slug: string, name: string) {
     inst,
   ]);
   await seedTests(inst, slug, subjects, chapters, batches, students);
-  await seedDocuments(inst, slug, subjects, chapters);
+  await seedDocuments(inst, slug, subjects, chapters, subtopics);
   return inst;
 }
 
 // Notes for every subject, queued for the worker; the files are uploaded and processed after the commit. Each
-// document's audience = every batch that studies its subject. Rival's notes carry a canary phrase (leak detection).
-async function seedDocuments(inst: string, slug: string, subjects: Map<string, string>, chapters: Map<string, string>) {
+// document's audience = its subject's batch. Rival's notes carry a canary phrase (leak detection).
+async function seedDocuments(
+  inst: string,
+  slug: string,
+  subjects: Map<string, string>,
+  chapters: Map<string, string>,
+  subtopics: Map<string, string>,
+) {
   for (const n of NOTES) {
     const pages =
       slug === 'rival'
         ? [...n.pages, ['Rival canary: quokka saffron lighthouse. This sentence exists only in Rival Academy notes.']]
         : n.pages;
     const { rows } = await db.query(
-      `insert into public.documents (institute_id, subject_id, chapter_id, title) values ($1, $2, $3, $4) returning id`,
-      [inst, subjects.get(n.subject), chapters.get(n.chapter), n.title],
+      `insert into public.documents (institute_id, subject_id, chapter_id, subtopic_id, title)
+       values ($1, $2, $3, $4, $5) returning id`,
+      [inst, subjects.get(n.subject), chapters.get(n.chapter), subtopics.get(chapters.get(n.chapter)!), n.title],
     );
     const doc = rows[0].id as string;
     const version = randomUUID();
@@ -172,7 +189,7 @@ async function seedDocuments(inst: string, slug: string, subjects: Map<string, s
     if (!n.draft)
       await db.query(
         `insert into public.document_audience (document_id, batch_id, institute_id)
-         select $1, batch_id, $2 from public.batch_subjects where subject_id = $3`,
+         select $1, batch_id, $2 from public.subjects where id = $3`,
         [doc, inst, subjects.get(n.subject)],
       );
     files.push({ path, pdf });
@@ -578,7 +595,7 @@ async function seedStudio() {
     const summary = await save('summary', 'institute');
     await db.query(
       `insert into public.artifact_audience (artifact_id, batch_id, institute_id)
-       select $1, batch_id, institute_id from public.batch_subjects where subject_id = $2`,
+       select $1, batch_id, institute_id from public.subjects where id = $2`,
       [summary.id, c0.subject_id],
     );
     const quiz = await save('quiz', 'student');

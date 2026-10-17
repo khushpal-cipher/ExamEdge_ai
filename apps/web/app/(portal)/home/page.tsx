@@ -15,7 +15,11 @@ export default async function StudentHome() {
   ] = await Promise.all([
     db.from('profiles').select('full_name').eq('user_id', member.userId).maybeSingle(),
     db.from('batches').select('name').eq('institute_id', institute.id).is('archived_at', null).order('name'),
-    db.from('subjects').select('id, name, chapters(count)').eq('institute_id', institute.id).order('name'),
+    db
+      .from('subjects')
+      .select('id, name, batches(name), chapters(count)')
+      .eq('institute_id', institute.id)
+      .order('name'),
     // RLS: only scheduled or released tests of the student's batches.
     db
       .from('tests')
@@ -52,7 +56,10 @@ export default async function StudentHome() {
             {subjects.map((s) => (
               <Link key={s.id} href={`/subjects/${s.id}`} className="card tile">
                 <h3>{s.name}</h3>
-                <p className="muted small">{(s.chapters as unknown as { count: number }[])[0]?.count ?? 0} chapters</p>
+                <p className="muted small">
+                  {(s.batches as unknown as { name: string }).name} ·{' '}
+                  {(s.chapters as unknown as { count: number }[])[0]?.count ?? 0} topics
+                </p>
               </Link>
             ))}
           </div>

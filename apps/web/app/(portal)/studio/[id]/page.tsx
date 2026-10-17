@@ -14,6 +14,7 @@ type Row = {
   owner_scope: 'institute' | 'student';
   kind: keyof typeof STUDIO_KIND;
   subject_id: string;
+  chapter_id: string;
   source_refs: SourceRef[];
   content: unknown;
   status: string;
@@ -61,7 +62,7 @@ export default async function StudioArtifact(props: { params: Promise<{ id: stri
   const { data } = await db
     .from('generated_artifacts')
     .select(
-      'id, owner_scope, kind, subject_id, source_refs, content, status, created_at, chapters(name, subjects(name))',
+      'id, owner_scope, kind, subject_id, chapter_id, source_refs, content, status, created_at, chapters(name, subjects(name))',
     )
     .eq('institute_id', institute.id)
     .eq('id', id)
@@ -77,11 +78,12 @@ export default async function StudioArtifact(props: { params: Promise<{ id: stri
   if (staff) {
     const [{ data: audience }, { data: studying }, { data: mine }] = await Promise.all([
       db.from('artifact_audience').select('batch_id').eq('institute_id', institute.id).eq('artifact_id', id),
+      // Published to the subject's own batch only (ADR-038; a trigger enforces it).
       db
-        .from('batch_subjects')
+        .from('subjects')
         .select('batches(id, name, archived_at)')
         .eq('institute_id', institute.id)
-        .eq('subject_id', a.subject_id),
+        .eq('id', a.subject_id),
       // Teachers may publish only to batches they teach (the database enforces it too).
       member.role === 'teacher'
         ? db.from('batch_members').select('batch_id').eq('membership_id', member.id).eq('batch_role', 'teacher')
@@ -111,7 +113,9 @@ export default async function StudioArtifact(props: { params: Promise<{ id: stri
       <div className="top">
         <div>
           <p className="small">
-            <Link href={`/subjects/${a.subject_id}`}>{a.chapters.subjects.name}</Link>
+            <Link href={`/topics/${a.chapter_id}`}>
+              {a.chapters.subjects.name} · {a.chapters.name}
+            </Link>
           </p>
           <h1>{title}</h1>
           <p className="muted small">

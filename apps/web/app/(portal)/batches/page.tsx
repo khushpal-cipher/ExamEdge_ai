@@ -38,6 +38,10 @@ export default async function Batches({ searchParams }: { searchParams: Search }
               <input name="academic_year" maxLength={20} placeholder="2026-27" />
             </label>
             <label>
+              Subjects
+              <input name="subjects" maxLength={1000} placeholder="Physics, Chemistry, Maths" />
+            </label>
+            <label>
               Exam
               <select name="exam_id" defaultValue="">
                 <option value="">None</option>

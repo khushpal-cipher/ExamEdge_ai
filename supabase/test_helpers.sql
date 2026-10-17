@@ -35,20 +35,23 @@ begin
 end $$;
 
 -- Institute <slug> on host <slug>.localhost. Batch X: teacher1, student1, student2, subject Physics.
--- Batch Y: teacher2, student3, subject Chemistry. Pending invitation token = 'tok-<slug>'.
+-- Batch Y: teacher2, student3, subject Chemistry. Topics Rotation (subtopic Torque) and Bonding.
+-- Pending invitation token = 'tok-<slug>'.
 create or replace function tests.make_institute(slug text) returns uuid language plpgsql as $$
 declare
   inst uuid; bx uuid; by_ uuid; sp uuid; sc uuid; m uuid; who text; s1 uuid; q uuid; t uuid; att uuid; d uuid; v uuid;
-  cv uuid; am uuid; ch uuid; qa uuid;
+  cv uuid; am uuid; ch uuid; qa uuid; st uuid;
 begin
   insert into public.institutes (slug, name) values (slug, initcap(slug) || ' Classes') returning id into inst;
   insert into public.institute_domains (hostname, institute_id) values (slug || '.localhost', inst);
   insert into public.batches (institute_id, name) values (inst, 'Batch X') returning id into bx;
   insert into public.batches (institute_id, name) values (inst, 'Batch Y') returning id into by_;
-  insert into public.subjects (institute_id, name) values (inst, 'Physics') returning id into sp;
-  insert into public.subjects (institute_id, name) values (inst, 'Chemistry') returning id into sc;
-  insert into public.batch_subjects (batch_id, subject_id, institute_id) values (bx, sp, inst), (by_, sc, inst);
-  insert into public.chapters (institute_id, subject_id, name) values (inst, sp, 'Rotation'), (inst, sc, 'Bonding');
+  insert into public.subjects (institute_id, batch_id, name) values (inst, bx, 'Physics') returning id into sp;
+  insert into public.subjects (institute_id, batch_id, name) values (inst, by_, 'Chemistry') returning id into sc;
+  insert into public.chapters (institute_id, subject_id, name) values (inst, sp, 'Rotation') returning id into ch;
+  insert into public.chapters (institute_id, subject_id, name) values (inst, sc, 'Bonding');
+  insert into public.subtopics (institute_id, subject_id, chapter_id, name) values (inst, sp, ch, 'Torque')
+  returning id into st;
   foreach who in array array['owner', 'admin', 'teacher1', 'teacher2', 'student1', 'student2', 'student3'] loop
     insert into public.memberships (institute_id, user_id, role)
     values (inst, tests.create_user(who || '@' || slug || '.test'), regexp_replace(who, '\d', ''))
@@ -85,7 +88,8 @@ begin
   select bx, user_id, inst from public.memberships where id = s1;
   -- Phase 4: "Physics notes" published to Batch X with one processed version and one chunk carrying a canary
   -- phrase unique to this institute (T-ISO-06).
-  insert into public.documents (institute_id, subject_id, title) values (inst, sp, 'Physics notes') returning id into d;
+  insert into public.documents (institute_id, subject_id, chapter_id, subtopic_id, title)
+  values (inst, sp, ch, st, 'Physics notes') returning id into d;
   v := gen_random_uuid();
   insert into public.document_versions (id, institute_id, document_id, version, storage_path, mime, size_bytes,
                                         processing_status)
@@ -113,7 +117,6 @@ begin
   select inst, sp, am, user_id, 'What is torque?', 'Torque is the turning effect of a force.'
   from public.memberships where id = s1;
   -- Phase 9: a practice quiz published to Batch X, student1's own flashcards and one graded try of the quiz.
-  select id into ch from public.chapters where institute_id = inst and subject_id = sp;
   insert into public.generated_artifacts (institute_id, owner_scope, kind, subject_id, chapter_id, input_hash,
                                           prompt_version, model, content, status, approved_at)
   values (inst, 'institute', 'quiz', sp, ch, repeat('a', 64), 'studio-v1', 'fake-studio-1',

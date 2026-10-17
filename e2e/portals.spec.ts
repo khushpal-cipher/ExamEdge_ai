@@ -34,37 +34,41 @@ async function subjectId(host: string, name: string) {
     .select('id')
     .eq('institute_id', await instituteId(host))
     .eq('name', name)
+    .limit(1) // names repeat per batch (ADR-038); any copy proves the point
     .single();
   return data!.id as string;
 }
 
-test('owner sets up a batch, subject, chapter and invitations (AC3.1)', async ({ page }) => {
+test('owner sets up a batch with its subjects, a topic and invitations (AC3.1)', async ({ page }) => {
   const tag = Date.now().toString(36);
   await login(page, DEMO, 'owner@demo.test');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Dashboard');
   await noSeriousA11yIssues(page);
 
-  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Subjects' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Subjects');
-  await page.getByLabel('Name', { exact: true }).fill(`Economics ${tag}`);
-  await page.getByRole('button', { name: 'Create subject' }).click();
-  await expect(page.getByRole('status')).toHaveText('Saved.');
-  const section = page.getByRole('region', { name: `Economics ${tag}` });
-  await section.getByLabel('New chapter').fill('Demand and Supply');
-  await section.getByRole('button', { name: 'Add chapter' }).click();
-  await expect(page.getByRole('region', { name: `Economics ${tag}` }).getByLabel('Chapter name')).toHaveValue(
-    'Demand and Supply',
-  );
-
+  // Subjects are typed while creating the batch (ADR-038); more can be added on the batch page.
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Batches' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Batches');
   await page.getByLabel('Name', { exact: true }).fill(`Commerce ${tag}`);
   await page.getByLabel('Academic year', { exact: true }).fill('2026-27');
+  await page.getByLabel('Subjects', { exact: true }).fill(`Economics ${tag}, Accounts ${tag}`);
   await page.getByRole('button', { name: 'Create batch' }).click();
-  await page.getByRole('link', { name: `Commerce ${tag}` }).click();
-  await page.getByLabel(`Economics ${tag}`).check();
-  await page.getByRole('button', { name: 'Save subjects' }).click();
-  await expect(page.getByLabel(`Economics ${tag}`)).toBeChecked();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(`Commerce ${tag}`);
+  await page.getByLabel('New subject').fill(`Business ${tag}`);
+  await page.getByRole('button', { name: 'Add subject' }).click();
+  await expect(page.getByRole('status')).toHaveText('Saved.');
+  const subjects = page.getByRole('region', { name: 'Subjects' });
+  await expect(subjects.getByRole('link')).toHaveText([`Accounts ${tag}`, `Business ${tag}`, `Economics ${tag}`]);
+
+  await subjects.getByRole('link', { name: `Economics ${tag}` }).click();
+  await page.getByLabel('New topic').fill('Demand and Supply');
+  await page.getByRole('button', { name: 'Add topic' }).click();
+  await expect(page.getByLabel('Topic name')).toHaveValue('Demand and Supply');
+  await page.getByRole('link', { name: 'Demand and Supply' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Demand and Supply');
+  await page.getByLabel('New subtopic').fill('Elasticity');
+  await page.getByRole('button', { name: 'Add subtopic' }).click();
+  await expect(page.getByRole('heading', { level: 2, name: 'Elasticity' })).toBeVisible();
+  await expect(page.getByRole('tabpanel', { name: 'Subtopics' }).getByText('Upload notes')).toBeVisible();
 
   await page.goto(`${DEMO}/people?tab=invitations`);
   await page.getByLabel('Email', { exact: true }).fill(`kid-${tag}@demo.test`);
@@ -130,11 +134,13 @@ test('student sees only own batch subjects, works at phone width (AC3.1, AC3.4)'
     .getByRole('link', { name: /Physics/ })
     .click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Physics');
-  await expect(page.getByRole('tabpanel', { name: 'AI tutor' })).toBeVisible();
-  await expect(page.getByRole('tabpanel', { name: 'Sources' })).toBeHidden();
-  await page.getByRole('tab', { name: 'Sources' }).click();
-  await expect(page.getByRole('tabpanel', { name: 'Sources' })).toBeVisible();
-  await expect(page.getByRole('tabpanel', { name: 'AI tutor' })).toBeHidden();
+  await page.getByRole('link', { name: 'Rotational Motion' }).click();
+  // The topic page opens on its notes; Smart Study is the other tab (ADR-038).
+  await expect(page.getByRole('tabpanel', { name: 'Subtopics' })).toBeVisible();
+  await expect(page.getByRole('tabpanel', { name: 'Smart Study' })).toBeHidden();
+  await page.getByRole('tab', { name: 'Smart Study' }).click();
+  await expect(page.getByRole('tabpanel', { name: 'Smart Study' })).toBeVisible();
+  await expect(page.getByRole('tabpanel', { name: 'Subtopics' })).toBeHidden();
   expect(await page.evaluate('document.documentElement.scrollWidth')).toBeLessThanOrEqual(375);
   await noSeriousA11yIssues(page);
 });

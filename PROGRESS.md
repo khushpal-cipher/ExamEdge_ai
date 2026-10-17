@@ -18,13 +18,15 @@ Last updated: 2026-10-17
 **R1 AI bank questions MERGED** into `main` (PR #13, squash commit `b6f2ded`, CI green: run 38936700856 — pgTAP 1276, E2E 27/27 against the production build, 2026-10-16).
 **R1.1 step 1 MERGED** (PR #19, squash `f6e4841`, CI green, 2026-10-17): ADR-037–041 + spec docs.
 **R1.1 step 2 MERGED** (PR #20, squash `17459e5`, CI green check + secrets, 2026-10-17): ExamEdge library removed.
-**R1.1 step 3 IN PROGRESS** on branch `r11-structure` (pushed, no PR yet): DB part done, app part NOT started.
+**R1.1 steps 3+4 BUILT** on branch `r11-structure` (DB + app, commit `debaaae`, pushed); PR #21 open, **CI E2E FAILING 6/26** (see Failed checks).
+**R1.1 step 5 (B: AI notes + AI test) STARTED** on branch `r11-teacher-ai` (from `r11-structure`): DB + core only, WIP commit (see In progress).
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-17 | R1.1 steps 3+4 app part (ADR-038, ADR-040), branch `r11-structure` commit `debaaae` — NOT merged | Migration `20261031000019_topic_scope.sql` (`conversations.chapter_id`, `match_chunks(..., topic)`, invoker `move_students`), applied with `supabase migration up`; new pgTAP `180_topic_scope.sql`. Web: batch create form takes subjects (comma-separated) + "Add subject" and "Move students to another batch" on the batch page; Subjects = per batch (teachers: own batches); subject page = topic list (+ reported answers); new `/topics/<id>` with tabs Subtopics (notes per subtopic, "Upload notes" inside each subtopic) and Smart Study (topic tutor + study tools); audience pickers read the subject's batch; question bank labels "Physics · JEE 2027 Morning". Seed, worker int fixtures, E2E specs (portals, documents, tutor, studio, question-gen, assessments) updated. Local: format, lint + forbidden, typecheck PASS; unit 147/147; `npm run test:db` Files=18 Tests=1298 PASS; `npm run test:int` 26/26; `npm run build` + bundle scan PASS. **E2E NOT run locally** (founder DB, no demo seed) → CI. Browser (production build `next start -p 3001`, newtown, 375 px): student Riya home → maths → probability topic, both tabs, scrollWidth 375; teacher.jee Subjects shows only jee 2027, added + deleted a temporary subtopic, Upload form opens inside it; teacher.neet → maths subject 404 (founder finding A3 fixed); no server errors. Owner pages not clicked in the browser (founder's Google account) — covered by E2E `portals.spec.ts` in CI. |
 | 2026-10-17 | R1.1 step 3 DB part (ADR-038, ADR-040), branch `r11-structure` commit `58de935` — NOT merged | Migration `20261030000018_structure.sql`: `subjects.batch_id not null` (composite FK, unique per batch; a subject linked to several batches copied once per extra batch with its topics; migration stops if content was published to several batches of one subject or an unlinked subject has content), `batch_subjects` dropped, `has_subject` = in the subject's batch (current or past), new `subtopics` (RLS like chapters), `documents.chapter_id` + `subtopic_id` `not null` (3-column FKs, "General" topic/subtopic backfill, no-action FKs so a topic/subtopic with notes cannot be deleted), AFTER-insert trigger `guard_audience_batch` (document/artifact audience = subject's batch, `audience_not_subject_batch`), `batch_members.left_at` (owner/admin update policy), `compute_standings` ignores tests opened after leaving, `start_attempt` refuses `not_current_member` (resume still works). Dry run in a rolled-back transaction, then `supabase migration up` on the founder DB (newtown `physics` → one per batch). Fixtures `supabase/test_helpers.sql` (reloaded with `psql -f`) + `070` updated, new `170_structure.sql` (24 tests). `npm run test:db` → Files=17 Tests=1285 PASS. Found + fixed: a BEFORE trigger answered 23514 before RLS in the isolation matrix → AFTER trigger. |
 | 2026-10-17 | R1.1 step 2: ExamEdge library removed (ADR-037) | Migration `20261029000017_remove_library.sql` (tables, `match_library_chunks`, `publish_library_item`, platform metering dropped; `usage_records.institute_id` not null again — deleted the 24 fake `library_embed` rows, cost 0). Tutor `tutor-v3`, notes only. Local: lint, typecheck, unit 147/147, pgTAP Files=16 Tests=1260 PASS, integration 26/26, build + bundle scan PASS; E2E not run locally (no demo seed in founder DB) → CI run 39035496214 check + secrets green; PR #20 merged `17459e5`. |
 | 2026-10-17 | R1.1 step 1: ADR-037…041, HOW_IT_WORKS, DATABASE_DESIGN, master plan, AI_PIPELINE, ARCHITECTURE | PR #19 CI green, merged `f6e4841`. |
@@ -50,10 +52,64 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
+### R1.1 step 5 — B1 AI notes + B2 AI test (session 29, 2026-10-17), branch `r11-teacher-ai`, WIP, NOT in a PR
+ADR-039. Branch starts from `r11-structure` (PR #21 not merged yet): after #21 merges, `git merge main` (or rebase)
+into `r11-teacher-ai` before opening its PR.
+DONE + TESTED:
+- Migration `20261101000020_teacher_ai.sql` — **applied to the founder's local DB** with `supabase migration up` (no
+  reset): feature `notes_gen` (member, ≤ 0.5 USD); `ai_reserve` refuses `question_gen`/`notes_gen` to students and
+  `tutor`/`tutor_premium`/`generation` to staff; `document_versions.mime` + `documents` bucket allow `text/markdown`;
+  `documents.kind` (`file|ai_notes`, insert grant) so students (who cannot read versions) know to open the notes page;
+  invoker RPC `add_ai_test(inst, subject, chapter, title, opens, closes, seconds, items)` = AI questions (as
+  `add_ai_questions`, plus `marks` per item) + a draft test for the subject's own batch + `test_questions`, one transaction.
+- pgTAP: new `190_teacher_ai.sql` (23 tests); `080_usage.sql` staff/budget/kill-switch checks now reserve `notes_gen`
+  instead of `tutor` (staff may no longer use the tutor; same assertions). `npm run test:db` → Files=19 Tests=1321 PASS.
+- Core: `packages/core/src/ai/notes.ts` (`writeNotes(meter, {topic, subtopic, explanation})` → Markdown, prompt
+  `notes-v1`, fake provider `fake-notes-1` in `routing.ts`), `claudeNotes()` in `claude.ts` (Sonnet 5.5,
+  `client.beta.messages.create`, effort medium, `fallbacks: 'default'` + beta `server-side-fallback-2026-07-01`,
+  max_tokens 16,000 non-streaming — shape checked with the claude-api skill). `npm run typecheck` PASS.
+NOT DONE (in this order):
+1. `packages/core/src/ai/notes.test.ts`: fake output, metering (feature `notes_gen`), refusal → `NotesError('refused')`,
+   recorded-reply request shape for `claudeNotes` (copy the pattern in `questions.test.ts` "claudeQuestions (recorded
+   replies)").
+2. Written questions in `questions.ts`: add `'written'` (not in `QTYPES` for MCQ forms; e.g. `ALL_TYPES`), draft field
+   `model_answer: z.string().max(5000).nullable()` (null for other types), `validDraft` for written (no options/correct,
+   value null, model_answer non-empty), skip the blind solve for written (verification `unverified`), `keyOf` written →
+   `{model_answer}`, fake written drafts from note sentences, TYPE_PROMPT text, bump `QUESTION_PROMPT_VERSION` to
+   `questions-v2`; update `questions.test.ts`.
+3. Worker `apps/worker/src/extract.ts` `readPages`: `text/markdown` → UTF-8 decode (`TextDecoder('utf-8', {fatal:true})`,
+   bad bytes → `corrupt_file`) → one page, method `text_layer`, no OCR; integration test in `ingest.int.test.ts`.
+4. Web, topic page `apps/web/app/(portal)/topics/[id]/page.tsx`:
+   - each subtopic (staff): "Write notes with AI" (`<details>`: title + explanation textarea ≤ 5,000) → server action:
+     `writeNotes` with `webMeter` → insert `documents` (`kind: 'ai_notes'`) + `document_versions` (`mime: text/markdown`,
+     size, `uploading`) → `db.storage.from('documents').upload(path, blob, {contentType: 'text/markdown'})` in the
+     teacher's own session (storage policy `documents_upload` allows it) → set `queued` → redirect `/documents/<id>`.
+   - staff: remove the Tutor and Studio "Make study material" form; second tab for staff = "AI test" form (MCQ count,
+     theory count, difficulty) → action: `chapterNotes` (topic's published notes) → `generateQuestions` single +
+     written → `rpc('add_ai_test', …)` (default times: next day 10:00 IST, 60 min) → redirect `/tests/<id>`.
+   - students keep Smart Study as today; AI notes link to the new notes page.
+5. New page `/notes/[id]` (any member; RLS decides): read the document, download the current version with the user's
+   session, refuse if the blob type is not Markdown, render with the existing safe `Markdown` component + a client
+   "Download as PDF" button (`window.print()`) + print CSS hiding the portal nav. Document page (staff) for
+   `kind = 'ai_notes'`: show the notes + an edit textarea that saves a new Markdown version (no PDF upload form).
+6. Question bank `questions/page.tsx`: remove the "Make questions with AI" form (keep AI badges + Approve);
+   `questions/actions.ts` `generateQuestions` becomes the topic "AI test" action.
+7. E2E: rewrite `e2e/question-gen.spec.ts` (teacher → topic → AI test → draft test with MCQ + theory, flagged MCQ
+   cannot be approved, theory approved only after Save, scheduling refused until approved); `e2e/studio.spec.ts` test 1
+   (teachers have no Studio; `ai_reserve('generation')` as teacher → 42501; seeded teacher summary still visible to
+   students; AC9.2 reuse proven with a student generating twice); add an AI-notes journey (write → process → publish →
+   student opens notes page). Never weaken assertions.
+8. Docs: ADR-039 "Built:" line, HOW_IT_WORKS Part 2B/2C, DATABASE_DESIGN (`documents.kind`, `add_ai_test`,
+   `notes_gen`), AI_PIPELINE feature matrix row "AI notes".
+9. Gate (format, lint, typecheck, unit, `test:db`, `test:int`, build; E2E in CI), browser check on newtown at 375 px as
+   teacher + student, then PR, CI green, merge.
+
 ### R1.1 founder change list (session 27, 2026-10-17) — build order in "Next exact action"
 - Step 1 MERGED (#19), step 2 MERGED (#20). Step 3 DB part committed on `r11-structure` (`58de935`, pushed).
-- **WARNING — local DB is ahead of `main`'s code:** migrations 17 (library removal, matches main) and **18 (structure,
-  only on `r11-structure`) are applied to the founder's local DB.** Until the app part of step 3 is built, code on
+- **WARNING — local DB is ahead of `main`'s code:** migrations 17 (library removal, matches main) and **18 + 19
+  (structure, topic scope; only on `r11-structure`) and 20 (teacher AI; only on `r11-teacher-ai`, session 29) are
+  applied to the founder's local DB.** Since migration 20, staff get `not_allowed` from the tutor and Studio on any
+  branch (by design, ADR-039). Until the app part of step 3 is built, code on
   `main` (and the `next dev` the founder may have on :3000) breaks where it uses `batch_subjects` (batch page subject
   ticks, document audience picker, Studio publish) and on upload (documents now need `chapter_id` + `subtopic_id`).
   Backup taken before migration 18: `backups/2026-10-17T13-13-25-392Z` (gitignored; `npm run restore-drill` reads it).
@@ -175,7 +231,19 @@ DONE + TESTED (2026-10-16, session 19):
 | Real AI | Anthropic key (tutor, Studio, OCR and AI bank questions ready); Voyage client not written (Q-08) — RUNBOOKS §5 |
 
 ## Failed checks
-- None. Note: locally, `e2e/portals.spec.ts:142` (T-SEC-05) fails if Playwright reuses a `next dev` already running on
+- **PR #21 CI run 39051599920 (commit `6dc2e67`, 2026-10-17): check FAILED — E2E 20 passed, 6 failed** (secrets
+  pass; format, lint, typecheck, unit, pgTAP, integration, build all passed before E2E). Not fixed yet:
+  - `e2e/tutor.spec.ts:32` and `:113`, `e2e/studio.spec.ts:42` and `:88`: `getByRole('tab', { name: 'Smart Study' })`
+    never appears on `/topics/<id>`.
+  - `e2e/documents.spec.ts:32`: `getByRole('tabpanel', { name: 'Subtopics' }).getByText('Upload notes')` never appears.
+  - `e2e/question-gen.spec.ts:18`: bank "Make questions with AI" → no redirect to `ok=questions_made`.
+  Shared suspicion (unverified): the topic page does not render for these users in CI — check what
+  `/topics/<id>` returns there (404 from `opensBatch` / teacher batch filter, or the `demoTopic` helper picking a topic
+  of another batch's copy of the subject after the per-batch split in `scripts/seed-demo.ts`), and why
+  `generateQuestions` fails (chapter lookup with `subject_id` may now miss). Reproduce locally only with the founder's
+  yes (needs `npm run seed:demo` in a fresh DB — the local DB has the founder's data). CI uploads no Playwright
+  traces (only `gitleaks-results.sarif`), so read the code paths first; full log: `gh run view 39051599920 --log-failed`.
+- Note: locally, `e2e/portals.spec.ts:142` (T-SEC-05) fails if Playwright reuses a `next dev` already running on
   :3000 (dev sends `Cache-Control: no-store` without `private`). Before `npm run check`, make sure port 3000 is free
   (`lsof -nP -iTCP:3000 -sTCP:LISTEN`); if another session's dev server holds it, rely on CI for E2E and say so.
 
@@ -277,7 +345,26 @@ institute's ₹ bill (D1) and hiding `/usage` from owners wait for the founder's
 7. D2 tokens + real cost per institute on the platform table (D1 bill + commission wait for the formula) → opus · medium · Why: money; RLS so owners see only the charge.
 8. Full gate (TEST_STRATEGY §6), browser check per role at 375 px, PR, CI, merge → sonnet · medium.
 Steps 3–7 depend on step 1; step 4 depends on step 3 — re-verify step 3's RLS tests before starting 4.
-**Start here (session 28): finish step 3 + 4 on branch `r11-structure`** (`git checkout r11-structure && git pull`).
+**Status (session 28 handoff): steps 3 + 4 built on `r11-structure`; PR #21 open
+(https://github.com/khushpal-cipher/ExamEdge_ai/pull/21), Auto-fix on, NOT merged.** First CI run (39051354988)
+failed only at `format:check` on `.claude/launch.json` (fixed in the handoff commit), so **E2E has not run yet**.
+**Next exact action (session 30):**
+1. `git checkout r11-structure && git pull`; fix the 6 E2E failures of PR #21 listed under "Failed checks" (app or
+   specs, never weaken a test); push; Auto-fix is on for PR #21 (the app reports CI); when green, squash-merge and
+   record the CI run + merge hash here.
+   Note: `e2e/question-gen.spec.ts` and `e2e/studio.spec.ts` test 1 (teacher Studio) are rewritten in step 5 anyway —
+   on `r11-structure` only make them pass for today's behaviour (step 3+4 scope), do not pull step 5 in.
+2. Then `git checkout r11-teacher-ai`, `git merge main`, continue step 5 from "In progress" → "NOT DONE" item 1.
+**R1.1 progress (8 build steps):** 1 ADRs ✅ merged · 2 library removed ✅ merged · 3 DB structure ✅ built (PR #21, E2E
+failing) · 4 topic page / upload / topic-only practice ✅ built (PR #21, E2E failing) · 5 AI notes + AI test 🟡 DB + core
+done on `r11-teacher-ai` · 6 Contest page + batch
+switcher ⬜ (promotion tool already built) · 7 platform tokens + cost ⬜ · 8 full gate + per-role browser check ⬜.
+≈ 4 of 8 steps done (half); by founder groups: E done, A done (pending merge), C half (history + promotion yes,
+switcher + Contest no), B and D not started.
+After merge: steps 5 (B1 AI notes, B2 AI test), 6 (C2 Contest
+page + C1 batch switcher), 7 (D2 platform tokens + cost), 8. Teachers still have the tutor/Studio on the topic page
+until step 5 removes them (ADR-039). The list below is the step 3/4 work list, kept for reference (done).
+**(Done) step 3 + 4 on branch `r11-structure`** (`git checkout r11-structure && git pull`).
 Steps 1–2 are merged; do not redo them. The DB part of step 3 is done and applied locally (see "In progress").
 App part to build now (files found with `git grep batch_subjects`, `chapter_id`):
 1. `apps/web/app/(portal)/actions.ts` (`setBatchSubjects` uses `batch_subjects`; `createSubject` needs `batch_id`) and
@@ -406,6 +493,7 @@ For the full gate without a reset, rely on CI and say so.
 - Roadmap and acceptance criteria: `docs/IMPLEMENTATION_ROADMAP.md`
 - Commands: `supabase start` / `supabase status` / `supabase test db`; scripts in root `package.json`.
 - Local Supabase: API http://127.0.0.1:54321, DB postgresql://postgres:postgres@127.0.0.1:54322/postgres (local defaults; keys via `supabase status -o env`, never commit them).
+- Preview config `web-prod-3001` in `.claude/launch.json` (session 28): `next start -p 3001` on the last build, for browser checks while another session's `next dev` holds :3000.
 - `@axe-core/playwright` 4.13.0 (session 5, `npm i -D`).
 - `@anthropic-ai/sdk` 0.131.0 (session 12, `npm i -w @examedge/core @anthropic-ai/sdk@0.131.0`).
 - Playwright Chromium (session 3, `npx playwright install chromium`, chromium-1243/headless-shell-1248 in ~/Library/Caches/ms-playwright).
@@ -421,6 +509,8 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 29 | 2026-10-17 | PR #21 CI: E2E 6/26 failing (not fixed). Step 5 started on `r11-teacher-ai`: migration 20 (staff/student AI split, Markdown notes, `add_ai_test`) applied locally, pgTAP 1321 PASS, core `notes.ts` + `claudeNotes`; web/worker/E2E not done | see `git log` (branch) |
+| 28 | 2026-10-17 | R1.1 steps 3+4 app part: migration 19 (topic chats/retrieval, move_students), batch page subjects + promotion, topic page Subtopics / Smart Study, seed/E2E updated; local gate green except E2E (CI) | `debaaae` (branch) |
 | 27 | 2026-10-17 | R1.1 step 1 (ADRs, #19) and step 2 (library removed, #20) merged; step 3 DB part (subjects in batches, subtopics, batch history, pgTAP 1285) on `r11-structure`, applied to the local DB; app part next. Founder guide pushed by mistake and removed at once | `58de935` (branch) |
 | 26 | 2026-10-17 | No code. Founder change list R1.1 written, questions answered, approved for building (groups A–E, 8-step build order); worker started; both newtown students signed in | see `git log` |
 | 25 | 2026-10-17 | Founder: no new features (will test the whole flow themself); email/Google checks not tried yet; leftover E2E rows (3 batches, 2 subjects, 3 gamma institutes) deleted from the local DB with their yes | see `git log` |
