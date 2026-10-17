@@ -162,7 +162,7 @@ DONE + TESTED (2026-10-16, session 19):
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 26)
-**Founder's change list "R1.1" (session 26, 2026-10-17) — COLLECT ONLY. Build nothing until the founder says "fix all".**
+**Founder's change list "R1.1" (session 26, 2026-10-17) — APPROVED: the founder said start building (session 27).**
 The founder collects every finding first; then one plan, one branch per group, everything fixed together.
 Each item: what the founder wants → how it is today → build notes.
 
@@ -236,13 +236,15 @@ reversing ADR-010/ADR-027.
 per institute, set in the platform portal, charged in ₹ — calculation undecided (founder decides later); Q3 Subject →
 Topic → Subtopic, AI tab "Smart Study" per main topic, AI picks subtopics itself; Q4 past-batch students keep using
 the AI; Q5 AI notes = in-app notes page + "Download as PDF".
-**Still open (ask when building):** commission formula (D1/D2 wait for it); is the institute's monthly AI budget /
-students' daily AI limit still enforced (protects the founder's cost); C1 wording "i can see what my current jr which
-are in sem have" — assumed a past-batch view does NOT show juniors' current content (confirm); Vedam-style
-attendance / recordings / assignments are not asked for (not in scope unless the founder says so).
+**Last answers (2026-10-17, session 26):** keep both AI limits as today (institute monthly budget + student daily
+limit; founder may revisit later); a past batch looks exactly like the current-batch interface (same pages, same
+Smart Study), with content from the student's own year (founder's earlier words: "not what the current 9th class
+students get"); no attendance / recordings / assignments in this build.
+**Only open item:** commission formula → build D2's tokens + real-cost columns now; the commission field, the
+institute's ₹ bill (D1) and hiding `/usage` from owners wait for the founder's formula (ask then).
 
-**Build order (when the founder says "fix all")** — model/effort per founder rule:
-1. Settle the still-open items, write ADRs + update HOW_IT_WORKS / DATABASE_DESIGN → Model: opus · Effort: high · Why: data-model
+**Build order (approved — start at step 1)** — model/effort per founder rule:
+1. Write ADRs (one per group A–E; ADR-037 reverses ADR-010/027 for E) + update HOW_IT_WORKS / DATABASE_DESIGN → Model: opus · Effort: high · Why: data-model
    and product decisions for all groups.
 2. E remove library (migration + code + tests) → sonnet · medium · Why: mechanical removal, many files, tests guide it.
 3. A1 subjects inside batches + A2 topics/subtopics + C1 batch history (one migration: `subjects.batch_id`, topics,
@@ -251,7 +253,7 @@ attendance / recordings / assignments are not asked for (not in scope unless the
 4. A2 topic page (Subtopics | Smart Study) + A3 upload button + C3 topic-only practice → sonnet · medium · Why: UI restructure on step 3.
 5. B1 AI notes + B2 AI test (written questions, mix) → sonnet · high · Why: AI gateway, metering, approval flow.
 6. C2 contest page → sonnet · low · Why: read-only list over existing tables/RPCs.
-7. D1 + D2 bill and commission → opus · medium · Why: money; RLS so owners see only the charge.
+7. D2 tokens + real cost per institute on the platform table (D1 bill + commission wait for the formula) → opus · medium · Why: money; RLS so owners see only the charge.
 8. Full gate (TEST_STRATEGY §6), browser check per role at 375 px, PR, CI, merge → sonnet · medium.
 Steps 3–7 depend on step 1; step 4 depends on step 3 — re-verify step 3's RLS tests before starting 4.
 Founder asked how a teacher uploads notes (answered: Subjects → open subject → "Upload notes" → document page →
@@ -259,7 +261,9 @@ tick batches → Publish; needs the worker running to leave "Processing").
 newtown state (session 26): batches `jee 2027` (maths: 2 chapters, physics: 0) and `neet 2027` (physics); 0 documents,
 0 tests — so students see empty subjects until a teacher uploads/publishes notes or schedules a test.
 
-**Start here.** No code changed in session 25 or 26. The founder is testing the app by hand from a clean local DB.
+**Start here (session 27): build R1.1 above, step 1 first.** One branch per build step (e.g. `r11-remove-library`),
+PR + CI green + squash-merge each. New migrations: `supabase migration up` only (never reset: founder data in
+`newtown`/`vedam`; migrate their subjects/chapters, do not drop them). No code changed in sessions 25–26.
 1. Ask the founder what they found while testing; fix reported bugs (branch, tests, PR, CI green, merge).
 2. Two founder items wait for their **"go"** (do NOT start before): (a) AI tokens + cost per institute in the
    platform "All institutes" table; (b) delete the ExamEdge library feature (details below).
@@ -383,7 +387,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
-| 26 | 2026-10-17 | No code. Founder change list started (teacher AI = AI notes + AI tests only; subjects inside batches; student batch history); worker started; both newtown students (JEE, NEET) signed in and saw their batch + subjects | see `git log` |
+| 26 | 2026-10-17 | No code. Founder change list R1.1 written, questions answered, approved for building (groups A–E, 8-step build order); worker started; both newtown students signed in | see `git log` |
 | 25 | 2026-10-17 | Founder: no new features (will test the whole flow themself); email/Google checks not tried yet; leftover E2E rows (3 batches, 2 subjects, 3 gamma institutes) deleted from the local DB with their yes | see `git log` |
 | 24 | 2026-10-17 | Read-only check of local state (real Google sign-in works; allen owner had joined). Read-only audit of the three portals + browser check of each role and isolation (no code changed); open question: aggregate counts on the platform institute page | see `git log` |
 | 23 | 2026-10-17 | Founder chose: build "Send new owner invitation", keep 3-character address minimum. ADR-036, pgTAP 1303, PR #18 CI green and merged | `5fc5051` |

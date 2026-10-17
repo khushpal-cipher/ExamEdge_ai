@@ -55,6 +55,10 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
   student joined excluded, same average to 2 decimals = same rank). Regrading recalculates both ranks.
 - Clicking a student's name shows a full progress page (HOW_IT_WORKS.md Part 2E); the student sees the same page as "My progress".
 - Staff never see the text of students' AI chats — only counts/topics.
+- Release 1.1 (2026-10-17): the founder's change list in PROGRESS.md "Next exact action" (groups A–E: subjects in
+  batches, Subject → Topic → Subtopic with "Smart Study", teacher AI = AI notes + AI test, batch history, Contest
+  page, AI bill per institute, remove the library) is APPROVED; build it in the listed order. Its answers override
+  older docs; update HOW_IT_WORKS, DATABASE_DESIGN, AI_PIPELINE_DESIGN and DECISIONS as each part is built.
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full
