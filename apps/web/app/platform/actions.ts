@@ -100,6 +100,21 @@ export async function updateInstitute(form: FormData) {
   redirect(`/institutes/${id}?${error ? 'error=invalid' : 'ok=saved'}`);
 }
 
+// Only institutes nobody has joined yet (the RPC refuses otherwise); the founder types the address to confirm.
+export async function deleteInstitute(form: FormData) {
+  const db = await requireAal2();
+  const id = form.get('institute_id');
+  if (!isUuid(id)) notFound();
+  const { error } = await db.rpc('delete_institute', {
+    inst: id,
+    confirm_slug: String(form.get('confirm_slug') ?? ''),
+  });
+  if (!error) redirect('/');
+  const code = ['has_members', 'confirm_mismatch'].includes(error.message) ? error.message : 'invalid';
+  if (code === 'invalid') log.error('platform.delete_institute_failed', { code: error.code });
+  redirect(`/institutes/${id}?error=${code}`);
+}
+
 const LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const LOGO_MAX = 500 * 1024; // under the 1 MB Server Action body limit; the bucket caps at 1 MiB
 
