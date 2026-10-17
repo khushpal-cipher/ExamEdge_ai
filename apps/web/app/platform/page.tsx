@@ -60,10 +60,6 @@ export default async function Platform({ searchParams }: { searchParams: Promise
           Could not change the AI switch. Sign in again and retry.
         </p>
       )}
-      <p>
-        <Link href="/library">ExamEdge library</Link>{' '}
-        <span className="small muted">— write, review and publish shared content</span>
-      </p>
       <section className="card stack" aria-labelledby="ai">
         <h2 id="ai">AI for all institutes</h2>
         <form action={setGlobalAi} className="row">

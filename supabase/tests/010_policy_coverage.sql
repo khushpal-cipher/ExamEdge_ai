@@ -19,11 +19,11 @@ select is_empty($$ select relname from pg_temp.our_tables t
   where not exists (select 1 from pg_policy p where p.polrelid = t.oid) $$,
   'every public table has at least one policy');
 
--- audit_events keeps rows of deleted institutes and platform actions, and usage_records meters platform (library)
--- AI calls, so their institute_id is nullable; no API role can write either table directly.
+-- audit_events keeps rows of deleted institutes and platform actions, so its institute_id is nullable; no API role
+-- can write it directly.
 select is_empty($$ select relname from pg_temp.our_tables t
   join pg_attribute a on a.attrelid = t.oid and a.attname = 'institute_id'
-  where not a.attnotnull and t.relname not in ('audit_events', 'usage_records') $$,
+  where not a.attnotnull and t.relname <> 'audit_events' $$,
   'every tenant table has institute_id not null');
 
 select is_empty($$ select relname from pg_temp.our_tables t
@@ -51,7 +51,7 @@ select set_eq($$ select proname::text from pg_temp.our_functions
         'submit_attempt', 'get_attempt_review', 'grade_answer', 'release_results', 'student_progress',
         'can_read_document', 'can_read_object', 'pending_jobs', 'ai_reserve', 'ai_settle', 'ai_reserve_job',
         'ai_settle_job', 'ai_globally_enabled', 'set_ai_enabled', 'report_answer', 'tutor_activity',
-        'publish_library_item', 'ai_reserve_platform', 'ai_settle_platform', 'can_read_artifact',
+        'can_read_artifact',
         'submit_practice', 'practice_activity', 'guard_upload', 'job_slot_free', 'purge_expired', 'purgeable', 'is_service_account',
         'purgeable_files', 'delete_institute', 'reinvite_owner'],
   'SECURITY DEFINER functions match the reviewed allowlist');

@@ -103,14 +103,6 @@ describe('claudeTutor (recorded stream)', () => {
     expect(requests[0]!.headers.get('anthropic-beta')).toContain('server-side-fallback-2026-07-01');
     expect(g.refused).toBe(true);
   });
-
-  it('labels library passages as ExamEdge library search results', async () => {
-    const { sdk, requests } = client();
-    const library: Passage = { source_kind: 'library', library_item_id: 'L1', title: 'Torque', content: 'tau = r F' };
-    await claudeTutor('claude-haiku-5-5', sdk).generate({ ...input, passages: [library] }, () => {});
-    const content = (requests[0]!.body.messages as { content: object[] }[])[0]!.content;
-    expect(content[0]).toMatchObject({ type: 'search_result', source: 'lib:L1', title: 'ExamEdge library: Torque' });
-  });
 });
 
 function ocrClient(text: string, stopReason = 'end_turn') {

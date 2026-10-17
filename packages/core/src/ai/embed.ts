@@ -34,7 +34,7 @@ const sum = (texts: string[], f: (t: string) => number) => texts.reduce((n, t) =
 
 export async function embed(
   meter: Meter,
-  feature: 'ingest_embed' | 'query_embed' | 'library_embed',
+  feature: 'ingest_embed' | 'query_embed',
   texts: string[],
   _inputType: 'document' | 'query',
 ) {
