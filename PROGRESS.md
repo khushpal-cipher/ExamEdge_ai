@@ -161,8 +161,31 @@ DONE + TESTED (2026-10-16, session 19):
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 24)
-`main` = `5fc5051` (+ this PROGRESS commit). No open branch, no open PR. Session 23 (2026-10-17): PR #18 merged —
+## Next exact action (session 25)
+**Session 24 (2026-10-17), no code changed.** Founder asked for a read-only audit of "the three portals" (their prompt
+said Flutter; there is no Flutter project on this Mac — this Next.js app is the one). Explained: platform admin
+(admin.localhost:3000), staff portal and student portal (same institute address, role decides; `lib/tenant.ts`
+`requireMember`, `app/page.tsx` redirect, `(portal)/layout.tsx` menus). Browser check against `next dev` (seeded demo
+users only), all as expected, no console/server errors:
+- signed out: `/dashboard` `/home` `/people` `/usage` → redirect to `/`; `demo.localhost/platform` 404; unknown host 404.
+- owner@demo.test → `/dashboard`; all 7 staff tabs + batch/subject/test/question/student pages 200; sign-out works.
+- teacher1@demo.test: 6 tabs (no AI usage), invite role "student" only, sees only JEE 2027 Morning; 404 on `/usage`,
+  `/home`, `/progress`, the NEET batch and a Rival subject.
+- student01@demo.test → `/home`; menu Home + My progress; 9 staff URLs 404; AI tutor (demo AI) answered with a
+  "From your institute's notes … p.1" label (this added one chat for student01); on rival.localhost → "You are not a
+  member of this institute".
+- platform@examedge.test on admin.localhost → two-factor screen; `/library`, `/institutes/<id>` redirect without aal2.
+  Stopped there (enrolling TOTP would change the account). Nothing after TOTP re-verified this session.
+- `/tests/<id>/check` is 404 for tests without written questions — by design (link shown only when there are some).
+Findings told to the founder: leftover E2E data in the local DB (Demo "Commerce mvbx…" batches, "Economics mvbx…"
+subjects, three suspended `gamma-…` institutes); worker not running (new uploads stay queued); a typo in the demo
+email creates an empty account (ADR-034); not built vs HOW_IT_WORKS: batch "last active", progress "days active /
+notes opened / flashcards reviewed" (no activity tracking in R1), Excel (CSV only), KaTeX, break-glass support access.
+Founder thought their platform portal "sees everything" about institutes — explained it cannot see students' data by
+design (TH-15). **Open question to the founder:** do they want per-institute aggregate counts (students, batches,
+tests, documents; no personal data) on the platform institute page? Product decision — wait for their answer.
+
+`main` = `5fc5051` (+ PROGRESS commits). No open branch, no open PR. Session 23 (2026-10-17): PR #18 merged —
 platform "Send new owner invitation" (ADR-036, `reinvite_owner`, migration `20261028000016`) + create form explains
 the 3-character address minimum (founder kept the minimum at 3). Applied locally with `supabase migration up` (no reset).
 
@@ -194,6 +217,8 @@ For the full gate without a reset, rely on CI and say so.
 3. Still needs founder decisions/accounts (see Blocked): domain + Resend domain verification (emails to anyone, set
    `EMAIL_FROM`), publish the Google consent screen, Phase 10 cloud parts, Anthropic key, Q-08, Q-01.
 4. Any new local task: new branch, tests, `supabase migration up` (no reset), PR, CI green, squash-merge, PROGRESS.
+5. Ask whether the founder wants the leftover E2E rows (Commerce/Economics `mvbx…`, `gamma-…` institutes) removed
+   from the local DB; never delete without a yes.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -215,7 +240,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
-| 24 | 2026-10-17 | Read-only check of local state: platform admin signed in with real Google; allen owner had joined (PROGRESS was stale); asked founder about pending checks | see `git log` |
+| 24 | 2026-10-17 | Read-only check of local state (real Google sign-in works; allen owner had joined). Read-only audit of the three portals + browser check of each role and isolation (no code changed); open question: aggregate counts on the platform institute page | see `git log` |
 | 23 | 2026-10-17 | Founder chose: build "Send new owner invitation", keep 3-character address minimum. ADR-036, pgTAP 1303, PR #18 CI green and merged | `5fc5051` |
 | 22 | 2026-10-17 | Founder hands-on testing. Merged #14 institute list refresh, #15 delete institute (ADR-033), #16 local demo accounts (ADR-034), #17 Google sign-in + invitation emails (ADR-035); CI green each | `e5ac8f3` |
 | 1–2 | 2026-10-14/15 | Planning docs, founder decisions, tools, git init, workspaces, local Supabase init + pgTAP smoke | `5d26fc7` |
