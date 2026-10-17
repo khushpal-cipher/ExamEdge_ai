@@ -9,6 +9,7 @@ import { notFound, redirect } from 'next/navigation';
 import { AiBlocked, type Meter } from '@examedge/core/ai/gateway';
 import { embedLibraryItem } from '@examedge/core/ai/library';
 import { log } from '@examedge/core/log';
+import { sendInvites } from '@/lib/email';
 import { supabase } from '@/lib/supabase';
 import { currentHost, isAdminHost, isUuid, rootHost } from '@/lib/tenant';
 
@@ -46,7 +47,7 @@ export async function verifyTotp(form: FormData) {
   redirect(error ? '/?error=code' : '/');
 }
 
-export type CreateState = { link: string } | { error: string } | null;
+export type CreateState = { link: string; emailed: boolean } | { error: string } | null;
 const CREATE_ERRORS: Record<string, string> = {
   slug_reserved: 'That address is reserved.',
   slug_invalid: 'Use 3–40 lowercase letters, digits or hyphens.',
@@ -59,11 +60,15 @@ export async function createInstitute(_prev: CreateState, form: FormData): Promi
     .trim()
     .toLowerCase();
   const host = `${slug}.${rootHost()}`;
+  const name = String(form.get('name') ?? '').trim();
+  const email = String(form.get('owner_email') ?? '')
+    .trim()
+    .toLowerCase();
   const { data: token, error } = await db.rpc('create_institute', {
     new_slug: slug,
-    new_name: String(form.get('name') ?? '').trim(),
+    new_name: name,
     new_host: host,
-    owner_email: String(form.get('owner_email') ?? '').trim(),
+    owner_email: email,
   });
   if (error) {
     if (error.code === '23505') return { error: 'That address or name is already taken.' };
@@ -75,8 +80,10 @@ export async function createInstitute(_prev: CreateState, form: FormData): Promi
   // Same scheme and port as the admin host the founder is using.
   const origin = new URL((await headers()).get('origin') ?? `https://admin.${rootHost()}`);
   origin.hostname = host;
+  const link = `${origin.origin}/invite/${token}`;
+  const sent = await sendInvites(name, [{ email, link, role: 'owner' }]);
   refresh(); // show the new institute in the list without losing the one-time link in the form state
-  return { link: `${origin.origin}/invite/${token}` };
+  return { link, emailed: sent.has(email) };
 }
 
 const STATUSES = ['pilot', 'active', 'suspended', 'offboarding'];

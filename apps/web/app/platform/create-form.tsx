@@ -32,7 +32,11 @@ export function CreateInstitute({ root }: { root: string }) {
       )}
       {state && 'link' in state && (
         <div role="status" className="notice stack">
-          <p>Created. Send this owner invitation link now — it is shown only once:</p>
+          <p>
+            {state.emailed
+              ? 'Created. The owner was emailed this invitation link. It is shown here only once:'
+              : 'Created. The email could not be sent: send this owner invitation link yourself now — it is shown only once:'}
+          </p>
           <input readOnly value={state.link} aria-label="Owner invitation link" style={{ width: '100%' }} />
         </div>
       )}

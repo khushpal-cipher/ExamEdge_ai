@@ -25,6 +25,8 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<PUBLISHABLE_KEY>
 DEMO_LOGIN_ENABLED=true
 ```
 
+Optional: Google sign-in and invitation emails need `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID`, `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET` in a root `.env` (read by `supabase start`) and `RESEND_API_KEY` in `apps/web/.env.local` (ADR-035). Without them the Google button stays disabled and invitation links are shown to copy.
+
 Then `npm run dev` and open **http://demo.localhost:3000**. Type a demo email (or any new email: a local account is created for it) and press **Sign in as demo user**
 (works only against a local Supabase; it can never be switched on in production).
 
