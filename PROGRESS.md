@@ -166,28 +166,36 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 The founder collects every finding first; then one plan, one branch per group, everything fixed together.
 Each item: what the founder wants → how it is today → build notes.
 
-**A. Structure: batch → subject → chapter (→ topic)**
+**A. Structure: batch → subject → topic → subtopic**
 - A1 **Subjects inside the batch.** When creating/editing a batch (e.g. "Class 10"), the owner types its subject names
   (Science, Maths, Social Studies) right there; no separate Subjects page + linking.
   Today: subjects are institute-wide, linked to batches via `batch_subjects` (DATABASE_DESIGN §4.2).
   Build: subject belongs to one batch (`subjects.batch_id`, composite FK); migrate existing rows; drop the linking UI.
-- A2 **Chapter is the working place.** Subject → chapter (e.g. Maths → Probability) gets its own page; notes, AI
-  features and practice live **inside the chapter**, not on the subject page. "Topics are different" from chapters
-  (founder): chapters may hold topics to sort things more clearly — see open question Q3.
-  Today: one subject page (Sources / AI tutor / Studio); chapters are only labels/pills; AI picks a chapter in a form.
+- A2 **Subject → Topic → Subtopic; the topic is the working place** (founder answer, 2026-10-17). The teacher adds a
+  main topic to a subject (Maths → Probability) and subtopics inside it (Conditional probability, Bayes theorem).
+  The topic page has tabs like Vedam's class page (Session | Attendance | Assignment), here: **Subtopics | Smart
+  Study**. Subtopics tab = each subtopic with its notes (uploaded + AI notes). **Smart Study** tab (founder's chosen
+  name) = the AI for that whole topic: **one AI tab per main topic; the AI picks the relevant subtopics itself**
+  (retrieval over all notes of the topic's subtopics; no subtopic picker).
+  Today: one subject page (Sources / AI tutor / Studio); chapters are flat labels; AI picks a chapter in a form.
+  Build: rename/extend `chapters` into topics + a `subtopics` table (composite FKs, RLS), documents and AI scoped to
+  subtopic/topic.
 - A3 **"Upload notes" easy to find.** Today a small collapsed `<details>` at the bottom of Sources
   (`subjects/[id]/page.tsx`); on narrow screens the page opens on the AI tutor tab (`panes.tsx`). Build: a clear
   button at the top of the chapter's notes; teachers see only subjects of batches they teach (Neha Gupta, NEET
   teacher, opened "maths", which no batch of hers studies → upload works but nothing to publish to).
 
 **B. Teacher AI = only these two features** (replaces today's teacher AI set; both inside a chapter, A2)
-- B1 **AI notes.** Teacher explains the topic to the AI (typed) → AI writes detailed notes → shown as a PDF → teacher
-  reviews/edits → Publish to batch → students of that batch see it like uploaded notes (tutor can use it).
+- B1 **AI notes.** Teacher explains the topic to the AI (typed) → AI writes detailed notes → teacher reviews/edits →
+  Publish to batch → students of that batch see it like uploaded notes (tutor can use it). Format (founder answer):
+  **a notes page in the app, with "Download as PDF"**.
   Today: does not exist (Studio "summary" only summarises existing notes).
 - B2 **AI test.** Teacher asks for a quiz, theory (written) questions, or a mix → reviews → schedules the test.
   Today: "Make questions with AI" makes MCQ/numerical bank questions only, no written ones (ADR-032); test is then
   built by hand from the bank.
-- Remove from teachers: Studio (summary/flashcards/mind map/quiz) and the staff AI tutor — see Q1.
+- Remove from teachers: Studio (summary/flashcards/mind map/quiz), the staff AI tutor and today's "Make questions
+  with AI" form (B2 replaces it). **Students keep everything**: AI tutor, summary, flashcards, mind map, practice quiz
+  (founder answer) — all inside the topic's Smart Study tab.
 
 **C. Student portal**
 - C1 **Batch history like a semester switcher** (founder showed Vedam's portal: "BTech CSE AI 2025" + "SEM1_25 /
@@ -197,7 +205,8 @@ Each item: what the founder wants → how it is today → build notes.
   Today: a student can be in several batches at once; no past/current, no switcher.
   Build: one batch per class per year (batches already have `academic_year`); promoting a student = add him to the
   new batch and mark the old membership **past** (`batch_members.left_at`), never delete it; a past batch is
-  read-only for him (no new tests, no new AI use); next year's juniors join a new batch, so his view stays "his
+  read-only for him (no new tests), but **he can still use Smart Study / the AI tutor on his old notes** (founder
+  answer); next year's juniors join a new batch, so his view stays "his
   time" without date filters. Promotion tool for the owner: "move these students from Class 9 2025 → Class 10 2026".
 - C2 **Contest (tests) page.** A "Tests" menu item listing **every** test the institute conducted for his batch:
   upcoming, live (Start), finished, results (marks, rank).
@@ -211,29 +220,32 @@ Each item: what the founder wants → how it is today → build notes.
   budget banners). Show only "This month's AI charge: ₹X" = real AI cost + the founder's **commission**.
   Today: owner/admin "AI usage" tab (`/usage`, `usage_summary`).
 - D2 **Platform admin sees both** (earlier item): per institute this month: tokens, real cost, commission, amount
-  charged — in the "All institutes" table.
+  charged — in the "All institutes" table. The founder sets the commission **per institute** in the platform portal
+  (different for each); the institute sees the charge **in ₹**. How the commission is calculated (%, ₹ per tokens,
+  fixed fee) is **not decided yet** — founder will decide later; do not build D1/D2 before that.
 
 **E. Remove the ExamEdge library** (earlier decision): library pages, subject → library link (newtown's maths and
 physics are both linked to "JEE Main Physics", which is why Units/Laws of Motion/Rotational Motion/Gravitation show
 under Sources), library on student pages, library in the tutor; drop tables (migration); tests, seed, docs; ADR
 reversing ADR-010/ADR-027.
 
-**Open questions to ask the founder before building (product decisions):**
-- Q1 Students keep the AI tutor and Studio (flashcards, summary, mind map, practice quiz)? Teachers lose them?
-- Q2 Commission: one percentage for all institutes or per institute? Charge in ₹ (exchange rate fixed by founder)?
-  Is the monthly AI budget/limit still enforced (it protects the founder's cost)?
-- Q3 Topics: should chapters contain topics (Probability → Conditional probability, Bayes) and notes/AI attach to a
-  topic, or is the chapter enough?
-- Q4 Past batch: can the student still ask the AI tutor about old notes (counts against today's limit)?
-- Q5 AI notes: PDF to download, or a notes page in the app that can also be downloaded as PDF?
+**Founder answers (2026-10-17):** Q1 students keep all AI tools, teachers only AI notes + AI test; Q2 commission
+per institute, set in the platform portal, charged in ₹ — calculation undecided (founder decides later); Q3 Subject →
+Topic → Subtopic, AI tab "Smart Study" per main topic, AI picks subtopics itself; Q4 past-batch students keep using
+the AI; Q5 AI notes = in-app notes page + "Download as PDF".
+**Still open (ask when building):** commission formula (D1/D2 wait for it); is the institute's monthly AI budget /
+students' daily AI limit still enforced (protects the founder's cost); C1 wording "i can see what my current jr which
+are in sem have" — assumed a past-batch view does NOT show juniors' current content (confirm); Vedam-style
+attendance / recordings / assignments are not asked for (not in scope unless the founder says so).
 
 **Build order (when the founder says "fix all")** — model/effort per founder rule:
-1. Answer Q1–Q5, write ADRs + update HOW_IT_WORKS / DATABASE_DESIGN → Model: opus · Effort: high · Why: data-model
+1. Settle the still-open items, write ADRs + update HOW_IT_WORKS / DATABASE_DESIGN → Model: opus · Effort: high · Why: data-model
    and product decisions for all groups.
 2. E remove library (migration + code + tests) → sonnet · medium · Why: mechanical removal, many files, tests guide it.
-3. A1 subjects inside batches + C1 batch history (one migration: `subjects.batch_id`, `batch_members.left_at`, RLS +
+3. A1 subjects inside batches + A2 topics/subtopics + C1 batch history (one migration: `subjects.batch_id`, topics,
+   `subtopics`, `batch_members.left_at`, RLS +
    pgTAP isolation) → opus · high · Why: tenancy/RLS change on core tables; re-run full T-ISO suite after.
-4. A2 chapter page + A3 upload button + C3 chapter-only practice → sonnet · medium · Why: UI restructure on step 3.
+4. A2 topic page (Subtopics | Smart Study) + A3 upload button + C3 topic-only practice → sonnet · medium · Why: UI restructure on step 3.
 5. B1 AI notes + B2 AI test (written questions, mix) → sonnet · high · Why: AI gateway, metering, approval flow.
 6. C2 contest page → sonnet · low · Why: read-only list over existing tables/RPCs.
 7. D1 + D2 bill and commission → opus · medium · Why: money; RLS so owners see only the charge.
