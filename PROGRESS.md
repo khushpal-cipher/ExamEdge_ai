@@ -177,6 +177,11 @@ The founder is collecting every finding first; all items get fixed together at t
    current) in the student portal. Today a student can belong to several batches; there is no "past batch" view.
 4. (earlier, still waiting) AI tokens + cost per institute in the platform "All institutes" table.
 5. (earlier, still waiting) delete the ExamEdge library feature (details below).
+6. **"Upload notes" is hard to find** (founder, as Neha Gupta / NEET teacher on "maths"): it is a small collapsed
+   `<details>` at the bottom of the Sources box (`subjects/[id]/page.tsx`), and on narrow screens the subject page
+   opens on the AI tutor tab (`panes.tsx`), hiding Sources. Fix: a clear button at the top of Sources, open Sources
+   first for staff on phones; teachers should see only subjects their batches study, or be told why they cannot
+   publish (Neha's batch studies physics only → "No batch you can publish to studies this subject").
 Founder asked how a teacher uploads notes (answered: Subjects → open subject → "Upload notes" → document page →
 tick batches → Publish; needs the worker running to leave "Processing").
 newtown state (session 26): batches `jee 2027` (maths: 2 chapters, physics: 0) and `neet 2027` (physics); 0 documents,
