@@ -70,6 +70,16 @@ async function renderPdfPage(doc: PDFDocumentProxy, n: number) {
 export async function readPages(bytes: Uint8Array, mime: string, meter: Meter) {
   if (bytes.length === 0) throw new IngestError('empty_file');
   if (bytes.length > MAX_BYTES) throw new IngestError('too_large');
+  // AI notes (ADR-039): Markdown text, one page, no OCR. Bytes that are not UTF-8 are a corrupt file.
+  if (mime === 'text/markdown') {
+    let text: string;
+    try {
+      text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    } catch {
+      throw new IngestError('corrupt_file');
+    }
+    return { pages: [{ page: 1, text }], method: 'text_layer' };
+  }
   const magic = MAGIC[mime];
   if (!magic || !magic.every((b, i) => bytes[i] === b)) throw new IngestError('wrong_file_type');
   if (mime !== 'application/pdf') {

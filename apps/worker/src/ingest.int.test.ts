@@ -175,7 +175,18 @@ describe('AC4.1 fixture files', () => {
     expect(await version(v)).toMatchObject({ extraction_method: 'ocr', page_count: 1 });
   });
 
+  it('AI notes (Markdown) → ready from the text, no OCR call', async () => {
+    const doc = await newDocument('AI notes');
+    const md = '# Torque\n\nTorque is the turning effect of a force: $\\tau = r \\times F$.\n\n- Unit: newton metre';
+    const v = await addVersion(doc, Buffer.from(md), 'text/markdown');
+    expect(await ingest(v)).toBe('ready');
+    expect(await version(v)).toMatchObject({ extraction_method: 'text_layer', page_count: 1 });
+    expect((await chunks(doc)).map((c) => c.content).join('\n')).toContain('turning effect of a force');
+    expect((await usage(v)).map((u) => u.feature)).toEqual(['ingest_embed']);
+  });
+
   it.each([
+    ['Markdown that is not UTF-8', Buffer.from([0x23, 0x20, 0xff, 0xfe, 0x41]), 'text/markdown', 'corrupt_file'],
     ['corrupt PDF', Buffer.from('%PDF-1.7\n1 0 obj garbage'), 'application/pdf', 'corrupt_file'],
     ['wrong magic bytes', Buffer.from('<html>not a pdf</html>'), 'application/pdf', 'wrong_file_type'],
     ['PNG bytes declared as JPEG', PNG, 'image/jpeg', 'wrong_file_type'],
