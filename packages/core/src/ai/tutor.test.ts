@@ -4,7 +4,6 @@ import {
   assemble,
   capPassages,
   fakeTutor,
-  mergeLayers,
   NOT_FOUND_TEXT,
   PASSAGE_CHARS,
   REFUSED_TEXT,
@@ -15,8 +14,7 @@ import {
 } from './tutor';
 
 const INST = '11111111-1111-1111-1111-111111111111';
-type NotesPassage = Extract<Passage, { document_id: string }>;
-const passage = (content: string, extra: Partial<NotesPassage> = {}): NotesPassage => ({
+const passage = (content: string, extra: Partial<Passage> = {}): Passage => ({
   institute_id: INST,
   document_id: 'd1',
   title: 'Rotational Motion',
@@ -178,85 +176,5 @@ describe('tutorAnswer (gateway around retrieval and generation)', () => {
     const out = await tutorAnswer(meter, req([ROTATION]), () => {}, refusing);
     expect(out).toMatchObject({ content: REFUSED_TEXT, refused: true, citations: [] });
     expect(calls[1]![4]).toBe('refused');
-  });
-});
-
-describe('ExamEdge library layer (Phase 8)', () => {
-  const lib = (
-    id: string,
-    score: number,
-    content = 'Escape velocity v = sqrt(2GM/R) is about 11.2 km/s.',
-  ): Passage => ({
-    source_kind: 'library',
-    library_item_id: id,
-    title: 'Escape velocity',
-    content,
-    score,
-  });
-  it('labels library-only paragraphs "library", institute-cited ones "notes", one citation per item', () => {
-    const out = assemble(
-      [
-        {
-          text: 'Torque is r × F.',
-          cites: [
-            { passage: 0, cited_text: 't' },
-            { passage: 1, cited_text: 'e' },
-          ],
-        },
-        {
-          text: '\n\nEscape velocity is 11.2 km/s.',
-          cites: [
-            { passage: 1, cited_text: 'e' },
-            { passage: 2, cited_text: 'e2' },
-          ],
-        },
-        { text: '\n\nRest is general.', cites: [] },
-      ],
-      [ROTATION, lib('L1', 0.1), lib('L1', 0.09, 'Second chunk of the same item.')],
-    );
-    expect(out.paragraphs.map((p) => [p.label, p.citations])).toEqual([
-      ['notes', [0, 1]],
-      ['library', [1]],
-      ['general', []],
-    ]);
-    expect(out.citations[1]).toEqual({
-      source_kind: 'library',
-      library_item_id: 'L1',
-      title: 'Escape velocity',
-      cited_text: 'e',
-    });
-    expect(out.notFound).toBe(false);
-  });
-  it('merges the layers by score with at most 6 of the 8 from either', () => {
-    const inst = Array.from({ length: 10 }, (_, i) => passage(`n${i}`, { score: 1 - i / 100 }));
-    const library = Array.from({ length: 10 }, (_, i) => lib(`L${i}`, 0.5 - i / 100));
-    const merged = mergeLayers(inst, library);
-    expect(merged).toHaveLength(8);
-    expect(merged.map((p) => p.source_kind ?? 'institute')).toEqual([
-      ...Array(6).fill('institute'),
-      'library',
-      'library',
-    ]);
-    expect(mergeLayers([], library)).toHaveLength(6);
-    expect(mergeLayers([passage('x', { score: 0.2 })], [lib('L', 0.3)]).map((p) => p.content)).toEqual([
-      library[0]!.content,
-      'x',
-    ]);
-  });
-  it('accepts global library passages but still refuses another institute', async () => {
-    const { meter } = fakeMeter();
-    const out = await tutorAnswer(
-      meter,
-      {
-        institute: INST,
-        question: 'What is escape velocity?',
-        history: [],
-        premium: false,
-        retrieve: async () => [lib('L1', 0.3)],
-      },
-      () => {},
-    );
-    expect(out.paragraphs[0]).toMatchObject({ label: 'library', citations: [0] });
-    expect(out.citations[0]).toMatchObject({ source_kind: 'library', library_item_id: 'L1' });
   });
 });

@@ -44,7 +44,7 @@ institute **can later be moved** to its own database without rewriting the app (
 1. Every tenant row has `institute_id NOT NULL`; parents expose `UNIQUE (institute_id, id)` and children use
    **composite foreign keys** so a row can never point at another institute's row.
 2. No table mixes tenant data with other tenants' data except usage/audit tables, which are keyed by institute.
-3. Global data (exam/subject catalog, shared library) is **read-only reference data** that can be copied to another cell.
+3. Global data (exam catalog) is **read-only reference data** that can be copied to another cell.
 4. `institutes.cell` column exists (always `'main'` for now). Tenant resolution goes through one function, so a
    future router can send a host to a different cell.
 5. All storage paths start with `{institute_id}/`; an institute's files can be exported or moved by prefix.
@@ -97,7 +97,7 @@ institute **can later be moved** to its own database without rewriting the app (
 | **pg-boss queue (inside Postgres)** | Background job queue with retries, dead-letter, cron. | No extra vendor; jobs are transactional with our data (ADR-007). |
 | **Worker** | Runs long tasks: read PDFs, OCR, embed, generate quizzes, release results, send emails, later render audio/video. | Vercel functions have time/size limits (300 s default, 800 s max on Pro [V]; 4.5 MB request body [V]). |
 | **AI gateway (code module, not a service)** | The only code allowed to call AI providers. Checks quota, tags institute/user/feature, records tokens and cost, applies kill switch. | Prevents unbounded cost and untracked usage (ADR-009). |
-| **Platform admin area** | Create institutes, set quotas, see usage, manage library, audited "break-glass" support access. | Central control without touching tenant data casually. |
+| **Platform admin area** | Create institutes, set quotas, see usage, audited "break-glass" support access. | Central control without touching tenant data casually. |
 | **Sentry + structured logs** | Errors and traces with IDs only (no names, emails, prompts). | Debugging without leaking student data. |
 
 ## 5. Request and data flows
@@ -125,10 +125,10 @@ institute **can later be moved** to its own database without rewriting the app (
 1. Student on Physics page sends a question → route handler (streaming).
 2. AI gateway: quota check (institute budget, student daily limits) → reject politely if exceeded.
 3. Retrieval (RLS-bound): institute chunks from **published documents for the student's batches in this subject**
-   + shared-library chunks for the mapped library subject. Hybrid vector + keyword, fused, reranked.
+   (R1.1: the topic's notes; no shared library, ADR-037). Hybrid vector + keyword, fused.
 4. Claude receives the passages as `search_result` blocks with citations enabled [V]. Default model Haiku 5.5;
    escalates to Sonnet 5.5 for hard problems within quota (ADR-008).
-5. Answer streams back; each paragraph is labelled **Institute notes / ExamEdge library / General explanation**.
+5. Answer streams back; each paragraph is labelled **Institute notes / General explanation**.
 6. Gateway writes `usage_records` (tokens, cost) and the message is stored in the student's private conversation.
 
 ### 5.4 Test attempt

@@ -37,7 +37,7 @@ Then `npm run dev` and open **http://demo.localhost:3000**. Type a demo email (o
 | Teachers | `teacher1@demo.test` … `teacher3@demo.test` | Upload notes, publish, question bank, tests, check written answers, release results, Studio |
 | Students | `student01@demo.test` … `student50@demo.test` | Subjects, AI tutor, practice quiz, flashcards, tests, My progress |
 | Second institute | same names `@rival.test` at **http://rival.localhost:3000** | Proves isolation: nothing of Demo Classes is visible |
-| Platform admin | `platform@examedge.test` at **http://admin.localhost:3000** | Institutes, limits, AI switch, library. First sign-in asks you to set up an authenticator app (TOTP). |
+| Platform admin | `platform@examedge.test` at **http://admin.localhost:3000** | Institutes, limits, AI switch. First sign-in asks you to set up an authenticator app (TOTP). |
 
 Uploaded notes are processed by the worker: `npm run dev:worker` (needs `WORKER_DATABASE_URL`,
 `WORKER_STORAGE_EMAIL`, `WORKER_STORAGE_PASSWORD` — names in `.env.example`; local values in `scripts/local-supabase.ts`).

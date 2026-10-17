@@ -332,15 +332,17 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
 ### ADR-037 Remove the ExamEdge library (R1.1 group E; reverses ADR-010 and ADR-027)
 - **Decision:** ExamEdge shares no content with institutes. Drop the library tables (`library_subjects`,
   `library_chapters`, `library_topics`, `library_items`, `library_chunks`), `subjects.library_subject_id`,
-  `chapters.library_chapter_id`, `match_library_chunks`, `publish_library_item`, the platform metering path
+  `match_library_chunks`, `publish_library_item`, the platform metering path
   (`ai_reserve_platform` / `ai_settle_platform`, feature `library_embed`), the platform library pages, the
   subject → library link, the library on student pages and in the tutor. Tutor = the institute's notes + labelled
   "General explanation" only (prompt `tutor-v3`).
 - **Why:** founder decision (2026-10-17): no shared content; it also confused testing (both newtown subjects were
   linked to "JEE Main Physics", so its chapters showed under Sources).
 - **Kept:** `exams` (batches reference it). Old chat messages may still carry `library` labels/citations; they are
-  shown as plain text without a link (no rewrite of stored chats).
-- **Built:** —
+  shown as plain text without a link (no rewrite of stored chats). `usage_records.institute_id` is `not null` again;
+  the 24 fake-cost platform rows (`library_embed`, cost 0) were deleted by the migration. Eval: library questions
+  dropped from `demo-retrieval.json`.
+- **Built:** migration `20261029000017_remove_library.sql`, branch `r11-remove-library`.
 
 ### ADR-038 Subjects inside batches; Subject → Topic → Subtopic (R1.1 groups A1–A3)
 - **Subject belongs to one batch.** `subjects.batch_id not null`, composite FK `(institute_id, batch_id)` → batches,

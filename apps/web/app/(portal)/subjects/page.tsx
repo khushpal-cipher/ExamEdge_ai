@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { MANAGERS, requireMember, STAFF } from '@/lib/tenant';
-import { addChapter, createSubject, deleteChapter, moveChapter, renameChapter, setSubjectLibrary } from '../actions';
+import { addChapter, createSubject, deleteChapter, moveChapter, renameChapter } from '../actions';
 import { Flash, type Search } from '../flash';
 
 type Chapter = { id: string; name: string; position: number };
@@ -8,17 +8,11 @@ type Chapter = { id: string; name: string; position: number };
 export default async function Subjects({ searchParams }: { searchParams: Search }) {
   const { institute, member, db } = await requireMember(STAFF);
   const manager = MANAGERS.includes(member.role);
-  const [{ data: subjects }, { data: library }] = await Promise.all([
-    db
-      .from('subjects')
-      .select('id, name, library_subject_id, chapters(id, name, position)')
-      .eq('institute_id', institute.id)
-      .order('name'),
-    db.from('library_subjects').select('id, name, exams(name)').order('name'),
-  ]);
-  const libraryName = new Map(
-    (library ?? []).map((l) => [l.id as string, `${(l.exams as unknown as { name: string }).name} · ${l.name}`]),
-  );
+  const { data: subjects } = await db
+    .from('subjects')
+    .select('id, name, chapters(id, name, position)')
+    .eq('institute_id', institute.id)
+    .order('name');
   return (
     <>
       <div className="top">
@@ -51,27 +45,6 @@ export default async function Subjects({ searchParams }: { searchParams: Search 
               <h2 id={`s-${s.id}`}>{s.name}</h2>
               <Link href={`/subjects/${s.id}`}>Open subject</Link>
             </div>
-            {manager ? (
-              <form action={setSubjectLibrary} className="inline">
-                <input type="hidden" name="subject_id" value={s.id} />
-                <label>
-                  ExamEdge library
-                  <select name="library_subject_id" defaultValue={s.library_subject_id ?? ''}>
-                    <option value="">None</option>
-                    {[...libraryName].map(([id, name]) => (
-                      <option key={id} value={id}>
-                        {name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button type="submit">Save</button>
-              </form>
-            ) : (
-              <p className="small muted">
-                ExamEdge library: {s.library_subject_id ? libraryName.get(s.library_subject_id) : 'none'}
-              </p>
-            )}
             {chapters.length === 0 ? (
               <p className="empty">No chapters yet.</p>
             ) : (

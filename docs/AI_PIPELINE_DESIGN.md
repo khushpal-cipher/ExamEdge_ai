@@ -9,7 +9,7 @@ Prices and sources: [COST_MODEL.md](COST_MODEL.md). NotebookLM is a product refe
 |---|---|---|---|
 | Tutor default | Claude Haiku 5.5, effort `low` | `claude-haiku-5-5` | [V] pricing $0.10/$0.50 per MTok (prompts ≤ 100K tokens), $0.50/$2.50 above |
 | Tutor escalation, grading assist, summaries, dual-solve | Claude Sonnet 5.5 | `claude-sonnet-5-5` | [V] $2/$10 per MTok |
-| Institute content and library authoring (quizzes, explanations) | Claude Opus 5.5 | `claude-opus-5-5` | [V] $4/$20 per MTok; thinking cannot be disabled, effort default `medium` [V] |
+| Institute content authoring (AI test questions) | Claude Opus 5.5 | `claude-opus-5-5` | [V] $4/$20 per MTok; thinking cannot be disabled, effort default `medium` [V] |
 | Bulk, non-urgent generation | Message Batches API | — | [V] 50 % discount |
 | Citations | `search_result` content blocks with `citations.enabled` | GA, no beta header [V] | — |
 | PDF / OCR fallback | Claude PDF input (page images + text) | Haiku 5.5 | [V] ~1,500–3,000 text tokens/page + image tokens |
@@ -31,7 +31,7 @@ call(feature, ctx{institute_id, user_id?, job_id?}, input)
   2. reserve the worst-case cost (ai_reserve / ai_reserve_job): kill switches, atomic counter + institute budget
      check (reject → AiBlocked → "limit reached"; provider never called) — ADR-025
   3. build prompt from versioned template (prompt_version), no PII
-  4. assert all context passages belong to ctx.institute_id or the library
+  4. assert all context passages belong to ctx.institute_id
   5. call provider (stream for chat), timeout, 1 retry on 429/5xx with backoff
   6. validate output (zod schema for structured kinds)
   7. settle the reservation once (tokens, cost_micro_usd from the routing.ts price table; error → counter refunded)
@@ -63,26 +63,25 @@ worker (tenant transaction):
 ## 4. Retrieval and answer generation (tutor)
 
 1. **Identity & membership** — user JWT; institute from host; RLS enforces membership (never a prompt).
-2. **Scope** — subject from the page; optional chapter filter chosen by the student; library subject from `subjects.library_subject_id`.
+2. **Scope** — subject from the page (R1.1: the topic, ADR-038). The ExamEdge library was removed in R1.1 (ADR-037).
 3. **Retrieve institute material** — `match_chunks(query_embedding, query_text, subject_id, k=30)`:
    readable published documents for the student's batches → exact cosine top-30 + keyword (OR of the question's content words, English stop words dropped — `private.keyword_query`, ADR-027) top-30 → reciprocal rank fusion.
-4. **Retrieve library material** — published `library_chunks` for the mapped subject (HNSW + iterative scan [V], same keyword half) top-20 (`match_library_chunks`, ADR-027).
-5. **Rerank** — top-8 overall, at most 6 from either layer (keeps both voices) [R]. Keep rerank only if eval recall@8 improves ≥ 5 points.
-6. **Generate** — system prompt (versioned) states: answer for exam level X; prefer institute material for "what was taught";
+4. **Rerank** — top-8 [R]. Keep rerank only if eval recall@8 improves ≥ 5 points.
+5. **Generate** — system prompt (versioned) states: answer for exam level X; prefer institute material for "what was taught";
    label each paragraph; say when material is missing; flag disagreements. Passages sent as `search_result` blocks:
-   `source = "inst:{document_id}#p{page}"` or `"lib:{item_id}"`, `title = "Your notes: {title}, p.{n}"` / `"ExamEdge library: {topic}"`.
-7. **Citations** — Claude returns citations on text blocks [V]. Paragraphs with institute citations → "From your institute's notes";
-   with library citations → "ExamEdge library"; **uncited text → "General explanation"** (deterministic, not model-claimed).
-8. **Missing evidence** — no passage above a relevance threshold → answer marked "General explanation — not found in your institute's material".
-9. **Contradictions** — model is asked to state conflicts explicitly; the answer shows both sources; message flagged into a teacher review queue. Detection is model-judged and **not guaranteed** (residual risk).
-10. **Escalation** — Sonnet 5.5 when the student taps "Solve step by step" or a heuristic detects a numerical/derivation question, within the premium quota.
-11. **Prompt size cap** — history trimmed to last 6 turns + passages ≤ ~8K tokens [R].
+   `source = "inst:{document_id}#p{page}"`, `title = "Your notes: {title}, p.{n}"` (prompt `tutor-v3`).
+6. **Citations** — Claude returns citations on text blocks [V]. Paragraphs with institute citations → "From your institute's notes";
+   **uncited text → "General explanation"** (deterministic, not model-claimed).
+7. **Missing evidence** — no passage above a relevance threshold → answer marked "General explanation — not found in your institute's material".
+8. **Contradictions** — model is asked to state conflicts explicitly; the answer shows both sources; message flagged into a teacher review queue. Detection is model-judged and **not guaranteed** (residual risk).
+9. **Escalation** — Sonnet 5.5 when the student taps "Solve step by step" or a heuristic detects a numerical/derivation question, within the premium quota.
+10. **Prompt size cap** — history trimmed to last 6 turns + passages ≤ ~8K tokens [R].
 
-**When institute notes are missing/outdated/incorrect:** missing → library + general (labelled). Outdated/incorrect → student "report" button → teacher queue;
-teacher can withdraw or replace the document; library errors go to the platform content queue.
+**When institute notes are missing/outdated/incorrect:** missing → general (labelled). Outdated/incorrect → student "report" button → teacher queue;
+teacher can withdraw or replace the document.
 
 **Evaluation (must exist before students use the tutor):**
-- Golden set per pilot subject: 100 questions (40 from institute notes, 40 library, 20 out-of-scope) with expected source pages.
+- Golden set per pilot subject: 100 questions (80 from institute notes, 20 out-of-scope) with expected source pages.
 - Metrics: retrieval recall@8, citation support rate (LLM judge + 20 % human sample), answer correctness (human-graded sample of 30),
   label accuracy, refusal rate, p50/p95 latency, cost per answer.
 - Runs on every change to prompts, models, chunker, or retrieval; results committed under `evals/results/`.
@@ -95,7 +94,7 @@ Latency figures are **[E]** until measured. "Reuse" = can a result be cached and
 | Feature | Inputs | Pipeline | Model/service | Output | Validation | Storage | Latency | Cost driver | Failure/retry | Reuse | Approval | Release |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | AI tutor (grounded answers) | question, subject, history | §4 | Haiku → Sonnet | streamed Markdown + citations | citations map to readable sources; labels deterministic | messages | first token 1–3 s | input tokens × volume; Sonnet share | 1 retry; partial stream marked incomplete | No (personal) | No | R1 |
-| Summary / study guide | chapter docs + library topic | map-reduce over chunks | Sonnet (batch for institute) | JSON sections + citations | schema; every section cites ≥ 1 source | generated_artifacts | 20–60 s async | doc length | job retry ×3 | Yes per institute+input_hash | Yes (institute scope); student scope no | R1 |
+| Summary / study guide | chapter docs | map-reduce over chunks | Sonnet (batch for institute) | JSON sections + citations | schema; every section cites ≥ 1 source | generated_artifacts | 20–60 s async | doc length | job retry ×3 | Yes per institute+input_hash | Yes (institute scope); student scope no | R1 |
 | MCQ single/multi | chapter scope, count, difficulty | generate → dual-solve → flag | Opus generate, Sonnet blind solve | questions + keys JSON | schema (4 options, unique, key count rules); dual-solve agreement; KaTeX parse | questions/question_keys | 30–90 s async | Opus output tokens | retry; disagreements → teacher | Yes (question bank) | **Yes for tests** | R1 |
 | Numerical | same | generate → dual-solve compare within tolerance + unit check | Opus + Sonnet | value, unit, tolerance | numeric agreement; unit present; tolerance > 0 | same | 30–90 s | same | same | Yes | **Yes** | R1 |
 | Written (theory) answer grading | question, teacher's model answer, student answer | **R1: teacher checks manually, no AI**; R2: optional AI-suggested marks | none (R1) / Sonnet (R2) | marks + comment | 0 ≤ marks ≤ max; release blocked until all marked | attempt_answers | teacher time | none in R1 | — | No | **Teacher decides marks** | R1 manual, R2 AI help |
@@ -113,7 +112,7 @@ Latency figures are **[E]** until measured. "Reuse" = can a result be cached and
 | Learning analytics | attempts, practice, events | SQL aggregates | none | dashboards | aggregate-only for staff | views (security_invoker) | < 1 s | DB | — | — | — | R1 (basic), R2 (full) |
 
 **Not assumed correct because it fits a schema:** every AI-authored question used in an institute test needs teacher approval;
-dual-solve disagreement blocks approval until the teacher resolves it; library items need expert review before publishing.
+dual-solve disagreement blocks approval until the teacher resolves it.
 
 ## 6. Subject-specific validation
 

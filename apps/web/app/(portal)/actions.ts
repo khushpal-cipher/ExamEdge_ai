@@ -111,20 +111,6 @@ export async function createSubject(form: FormData) {
   done('/subjects', error);
 }
 
-// Which ExamEdge library subject the tutor also searches for this subject (ADR-027). Owner/admin only (RLS too).
-export async function setSubjectLibrary(form: FormData) {
-  const { institute, db } = await requireMember(MANAGERS);
-  const subject = form.get('subject_id');
-  const library = form.get('library_subject_id');
-  if (!isUuid(subject) || (library !== '' && !isUuid(library))) done('/subjects', { code: '23514' });
-  const { error } = await db
-    .from('subjects')
-    .update({ library_subject_id: library || null })
-    .eq('institute_id', institute.id)
-    .eq('id', subject);
-  done('/subjects', error);
-}
-
 export async function addChapter(form: FormData) {
   const { institute, db } = await requireMember(STAFF);
   const subject = form.get('subject_id');
