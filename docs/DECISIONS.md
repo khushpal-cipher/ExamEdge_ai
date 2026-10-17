@@ -292,6 +292,25 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
   invitation, same as a first Google sign-in.
 - Test: E2E `isolation.spec.ts` invitation test no longer pre-creates the invited account (failed before, passes now).
 
+### ADR-035 Google sign-in and invitation emails switched on (2026-10-17, Accepted)
+- **Unblocks ADR-020** after the founder created a Google Cloud OAuth client and a Resend account (keys only in the
+  gitignored root `.env` and `apps/web/.env.local`).
+- **Google:** `[auth.external.google] enabled = true`; client id/secret come from env (`supabase start` reads the root
+  `.env`). "Continue with Google" calls `signInWithOAuth` (PKCE) with `redirectTo = <same host>/auth/callback?next=…`;
+  the callback exchanges the code and redirects to the **request's own host** (Next's `request.url` carries the dev
+  server hostname, which would drop the host-only session cookie), `next` passed through `safeNext`. The admin host
+  serves `/auth/callback` too (proxy skips the `/platform` rewrite for it). The button is live only when Supabase
+  reports Google enabled (`/auth/v1/settings`, cached 5 min). CI uses placeholder credentials; E2E stubs Google's page.
+- **Emails:** sent from the Server Function that creates the invitation (People, and the platform "Create institute"
+  owner invite), **not the worker** as ADR-020 planned: only that function ever holds the raw token (the DB stores
+  its hash), and handing the token to a job would store it. Resend batch API, 100 per call, plain `fetch` (no SDK).
+  The one-time link is still shown on screen with an "emailed / not emailed" badge as a fallback. No key → nothing
+  is sent. No PII in logs (status and count only).
+- **Limits [U]:** without a verified domain Resend only delivers to the account's own address (test sender
+  `onboarding@resend.dev`); verify a domain and set `EMAIL_FROM` before real institutes. Free tier 100 emails/day
+  (R-06). Batch validation is strict: one rejected address fails its chunk of 100 (shortcut noted in `lib/email.ts`).
+- Google OAuth consent screen is in **Testing** mode: only listed test users can sign in until it is published.
+
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
 | # | Issue found | Resolution |

@@ -1,5 +1,6 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { DEMO_PASSWORD, demoLoginAllowed, safeNext } from '@examedge/core/demo';
 import { log } from '@examedge/core/log';
@@ -21,6 +22,24 @@ export async function signInDemo(form: FormData) {
   }
   if (error) redirect(`${next}${next.includes('?') ? '&' : '?'}error=signin`);
   redirect(next);
+}
+
+// Google via Supabase Auth (PKCE). Google returns to /auth/callback on the same host, so the session cookie stays
+// host-only for this institute; `next` brings an invitee back to their invitation.
+export async function signInGoogle(form: FormData) {
+  const next = safeNext(form.get('next'));
+  const origin = (await headers()).get('origin');
+  if (!origin) redirect(`/?error=signin`);
+  const db = await supabase();
+  const { data, error } = await db.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` },
+  });
+  if (error || !data.url) {
+    log.error('auth.google_start_failed', { code: error?.code });
+    redirect(`${next}${next.includes('?') ? '&' : '?'}error=signin`);
+  }
+  redirect(data.url);
 }
 
 export async function signOut() {

@@ -6,6 +6,7 @@
 import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { done, text } from './form';
+import { sendInvites } from '@/lib/email';
 import { currentHost, hostname, isUuid, MANAGERS, requireMember, STAFF } from '@/lib/tenant';
 
 // ---------------------------------------------------------------- batches
@@ -221,7 +222,7 @@ export async function revokeInvitation(form: FormData) {
   done('/people?tab=invitations', error, 'revoked');
 }
 
-export type InviteResult = { email: string; link?: string; error?: string };
+export type InviteResult = { email: string; link?: string; error?: string; role?: string; emailed?: boolean };
 export type InviteState = { results: InviteResult[] } | null;
 
 const ROLES = ['owner', 'admin', 'teacher', 'student'];
@@ -232,8 +233,8 @@ const INVITE_ERRORS: Record<string, string> = {
   '23514': 'invalid',
 };
 
-// Single invite or a CSV list (one per line: email[,role[,batch name]]). Emails are BLOCKED (ADR-020), so each
-// link is returned once to the person who created it; only its hash is stored.
+// Single invite or a CSV list (one per line: email[,role[,batch name]]). Each link is emailed (ADR-035) and also
+// returned once to the person who created it, as a fallback; only its hash is stored.
 export async function createInvitations(_prev: InviteState, form: FormData): Promise<InviteState> {
   const { institute, db } = await requireMember(STAFF);
   const defaultRole = ROLES.includes(text(form, 'role')) ? text(form, 'role') : 'student';
@@ -274,9 +275,12 @@ export async function createInvitations(_prev: InviteState, form: FormData): Pro
         batch: role === 'teacher' || role === 'student' ? batch : null,
       });
       if (error) results.push({ email, error: INVITE_ERRORS[error.code ?? ''] ?? 'failed' });
-      else results.push({ email, link: `${base}/invite/${token}` });
+      else results.push({ email, link: `${base}/invite/${token}`, role });
     }
   }
+  const invites = results.flatMap((r) => (r.link ? [{ email: r.email, link: r.link, role: r.role! }] : []));
+  const sent = await sendInvites(institute.name, invites);
+  for (const r of results) if (r.link) r.emailed = sent.has(r.email);
   revalidatePath('/people');
   return { results };
 }

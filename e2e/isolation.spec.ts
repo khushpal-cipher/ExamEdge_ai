@@ -76,3 +76,24 @@ test('invitation link: wrong account is rejected, invited account joins once (AC
   await page.getByRole('button', { name: 'Accept invitation' }).click();
   await expect(page.getByRole('main').getByRole('alert')).toHaveText(/expired, was revoked or was already used/);
 });
+
+test('Continue with Google starts Google sign-in and comes back to the same institute host', async ({ page }) => {
+  // Stop at our Supabase authorize step and read where it would send the browser: Google is never contacted
+  // (Playwright cannot intercept a redirect target, and CI's placeholder client id would be rejected there).
+  let google: URL | undefined;
+  await page.route('http://127.0.0.1:54321/auth/v1/authorize**', async (route) => {
+    const res = await route.fetch({ maxRedirects: 0 });
+    google = new URL(res.headers()['location'] ?? 'about:blank');
+    await route.fulfill({ body: 'stopped before Google' });
+  });
+  await page.goto('http://demo.localhost:3000/');
+  await page.getByRole('button', { name: 'Continue with Google' }).click();
+  await expect(page.getByText('stopped before Google')).toBeVisible();
+  expect(google?.hostname).toBe('accounts.google.com');
+  expect(google?.searchParams.get('redirect_uri')).toBe('http://127.0.0.1:54321/auth/v1/callback');
+  const cookies = await page.context().cookies('http://demo.localhost:3000');
+  expect(cookies.some((c) => c.name.endsWith('-code-verifier'))).toBe(true);
+  // A bad or missing code goes back to the same institute's sign-in, never to another host.
+  await page.goto('http://demo.localhost:3000/auth/callback?code=bogus&next=//evil.com');
+  await expect(page).toHaveURL('http://demo.localhost:3000/?error=signin');
+});

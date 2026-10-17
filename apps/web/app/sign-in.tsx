@@ -1,13 +1,23 @@
 import { demoLoginAllowed } from '@examedge/core/demo';
-import { signInDemo } from './actions';
+import { googleEnabled } from '@/lib/auth-providers';
+import { signInDemo, signInGoogle } from './actions';
 
-export function SignIn({ next = '/', failed = false }: { next?: string; failed?: boolean }) {
+export async function SignIn({ next = '/', failed = false }: { next?: string; failed?: boolean }) {
   return (
     <section aria-labelledby="sign-in" className="card stack">
       <h2 id="sign-in">Sign in</h2>
-      <button type="button" disabled>
-        Continue with Google (not configured yet)
-      </button>
+      {(await googleEnabled()) ? (
+        <form action={signInGoogle}>
+          <input type="hidden" name="next" value={next} />
+          <button type="submit" className="primary">
+            Continue with Google
+          </button>
+        </form>
+      ) : (
+        <button type="button" disabled>
+          Continue with Google (not configured yet)
+        </button>
+      )}
       {demoLoginAllowed(process.env) && (
         <form action={signInDemo} className="stack">
           <input type="hidden" name="next" value={next} />

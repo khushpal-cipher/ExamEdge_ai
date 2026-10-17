@@ -16,6 +16,9 @@ jobs:
     env:
       CI: true
       DEMO_LOGIN_ENABLED: true # allowed only because Supabase here is the local stack
+      # Placeholders so the local stack starts with Google enabled; E2E stops at Google's page (no real sign-in).
+      SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: ci-placeholder.apps.googleusercontent.com
+      SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET: ci-placeholder
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0

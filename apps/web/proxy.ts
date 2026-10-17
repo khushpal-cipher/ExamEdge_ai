@@ -11,7 +11,11 @@ export async function proxy(request: NextRequest) {
   if (!isAdminHost(host) && (path === '/platform' || path.startsWith('/platform/'))) {
     return new NextResponse(null, { status: 404 });
   }
-  const target = isAdminHost(host) ? new URL(`/platform${path === '/' ? '' : path}`, request.url) : null;
+  // /auth/callback is shared by every host, including the admin host.
+  const target =
+    isAdminHost(host) && path !== '/auth/callback'
+      ? new URL(`/platform${path === '/' ? '' : path}`, request.url)
+      : null;
   if (target) target.search = request.nextUrl.search;
   const respond = () => (target ? NextResponse.rewrite(target, { request }) : NextResponse.next({ request }));
 

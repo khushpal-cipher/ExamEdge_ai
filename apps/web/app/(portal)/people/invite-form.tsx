@@ -63,7 +63,8 @@ export function InviteForm({ roles, batches }: { roles: string[]; batches: Batch
       {state && (
         <div role="status" className="stack">
           <p className="small">
-            Email sending is not set up yet. Copy each link now and send it yourself — it is shown only once.
+            Each person is emailed their link. If a row says &quot;not emailed&quot;, copy that link now and send it
+            yourself — links are shown only once.
           </p>
           <div className="table-wrap">
             <table>
@@ -76,7 +77,14 @@ export function InviteForm({ roles, batches }: { roles: string[]; batches: Batch
               <tbody>
                 {state.results.map((r, i) => (
                   <tr key={i}>
-                    <td>{r.email}</td>
+                    <td>
+                      {r.email}{' '}
+                      {r.link && (
+                        <span className={`badge ${r.emailed ? 'good' : 'warn'}`}>
+                          {r.emailed ? 'emailed' : 'not emailed'}
+                        </span>
+                      )}
+                    </td>
                     <td>
                       {r.link ? (
                         <input
