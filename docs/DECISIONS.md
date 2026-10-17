@@ -283,6 +283,15 @@ Format per decision: **Decision · Alternatives · Why · Disadvantages · Opera
   (`actor_kind = platform_admin`); a logo file is removed by the daily purge (ADR-031).
 - Tests: pgTAP `150_delete_institute.sql`; platform E2E deletes its test institute and is refused for Demo Classes.
 
+### ADR-034 Local demo sign-in creates unknown accounts (2026-10-17, Accepted)
+- **Why:** founder testing kept failing with "Sign-in failed" for every new invited email, because a local account
+  had to be created by hand first. Google sign-in (the real path) is not configured yet.
+- **Rule:** `signInDemo` signs up an unknown email with the demo password when sign-in fails with
+  `invalid_credentials`. Still gated by `demoLoginAllowed` (only `DEMO_LOGIN_ENABLED=true` with a localhost Supabase
+  URL), so it can never run in production. A new account has no membership: it sees nothing until it accepts an
+  invitation, same as a first Google sign-in.
+- Test: E2E `isolation.spec.ts` invitation test no longer pre-creates the invited account (failed before, passes now).
+
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
 | # | Issue found | Resolution |
