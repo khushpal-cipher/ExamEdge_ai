@@ -16,6 +16,7 @@ const fail = (status: number, code: string) => Response.json({ code }, { status,
 
 const Body = z.object({
   subjectId: z.uuid(),
+  topicId: z.uuid(),
   conversationId: z.uuid().optional(),
   question: z.string().trim().min(1).max(2000),
   premium: z.boolean().default(false),
@@ -23,14 +24,21 @@ const Body = z.object({
 
 type Db = Awaited<ReturnType<typeof supabase>>;
 
-// The institute's notes only (RLS: documents published to the caller's batches).
-async function retrieve(db: Db, meter: Meter, subjectId: string, question: string): Promise<Passage[]> {
+// The topic's notes only (all its subtopics; RLS: documents published to the caller's batches).
+async function retrieve(
+  db: Db,
+  meter: Meter,
+  subjectId: string,
+  topicId: string,
+  question: string,
+): Promise<Passage[]> {
   const { vectors } = await embed(meter, 'query_embed', [question], 'query');
   const { data, error } = await db.rpc('match_chunks', {
     query_embedding: toVector(vectors[0]!),
     query_text: question,
     subject: subjectId,
     k: 30,
+    topic: topicId,
   });
   if (error) throw error;
   const chunks = data as Omit<Passage, 'title'>[];
@@ -53,17 +61,18 @@ export async function POST(req: Request) {
   if (!institute || institute.status === 'suspended' || !member?.role) return fail(404, 'not_found');
   const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return fail(400, 'bad_request');
-  const { subjectId, conversationId, question, premium } = parsed.data;
+  const { subjectId, topicId, conversationId, question, premium } = parsed.data;
   const db = await supabase();
 
-  // RLS: a student only sees subjects of their own batches.
-  const { data: subject } = await db
-    .from('subjects')
+  // RLS: a student only sees topics of subjects of their own batches.
+  const { data: topic } = await db
+    .from('chapters')
     .select('id')
     .eq('institute_id', institute.id)
-    .eq('id', subjectId)
+    .eq('subject_id', subjectId)
+    .eq('id', topicId)
     .maybeSingle();
-  if (!subject) return fail(404, 'not_found');
+  if (!topic) return fail(404, 'not_found');
   let history: { role: 'user' | 'assistant'; content: string }[] = [];
   if (conversationId) {
     // RLS: only the owner of the conversation can read it.
@@ -71,7 +80,7 @@ export async function POST(req: Request) {
       .from('conversations')
       .select('id, messages(role, content, created_at)')
       .eq('institute_id', institute.id)
-      .eq('subject_id', subjectId)
+      .eq('chapter_id', topicId)
       .eq('id', conversationId)
       .maybeSingle();
     if (!conv) return fail(404, 'not_found');
@@ -99,7 +108,7 @@ export async function POST(req: Request) {
             question,
             history,
             premium,
-            retrieve: () => retrieve(db, meter, subjectId, question),
+            retrieve: () => retrieve(db, meter, subjectId, topicId, question),
           },
           (text) => send({ t: 'delta', text }),
         );
@@ -108,7 +117,12 @@ export async function POST(req: Request) {
         if (!conv) {
           const { data, error } = await db
             .from('conversations')
-            .insert({ institute_id: institute.id, subject_id: subjectId, title: question.slice(0, 200) })
+            .insert({
+              institute_id: institute.id,
+              subject_id: subjectId,
+              chapter_id: topicId,
+              title: question.slice(0, 200),
+            })
             .select('id')
             .single();
           if (error) throw error;

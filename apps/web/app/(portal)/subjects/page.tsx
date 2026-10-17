@@ -1,101 +1,68 @@
 import Link from 'next/link';
 import { MANAGERS, requireMember, STAFF } from '@/lib/tenant';
-import { addChapter, createSubject, deleteChapter, moveChapter, renameChapter } from '../actions';
 import { Flash, type Search } from '../flash';
 
-type Chapter = { id: string; name: string; position: number };
+type Batch = {
+  id: string;
+  name: string;
+  academic_year: string | null;
+  subjects: { id: string; name: string; chapters: { count: number }[] }[];
+};
 
+// Subjects live inside batches (ADR-038); owners add them on the batch page. Teachers see only the batches they
+// teach (a UI filter: RLS still lets staff read every subject).
 export default async function Subjects({ searchParams }: { searchParams: Search }) {
   const { institute, member, db } = await requireMember(STAFF);
   const manager = MANAGERS.includes(member.role);
-  const { data: subjects } = await db
-    .from('subjects')
-    .select('id, name, chapters(id, name, position)')
-    .eq('institute_id', institute.id)
-    .order('name');
+  const [{ data }, { data: mine }] = await Promise.all([
+    db
+      .from('batches')
+      .select('id, name, academic_year, subjects(id, name, chapters(count))')
+      .eq('institute_id', institute.id)
+      .is('archived_at', null)
+      .order('name'),
+    db.from('batch_members').select('batch_id').eq('institute_id', institute.id).eq('membership_id', member.id),
+  ]);
+  const teaching = new Set((mine ?? []).map((r) => r.batch_id));
+  const batches = ((data ?? []) as unknown as Batch[]).filter((b) => manager || teaching.has(b.id));
   return (
     <>
       <div className="top">
         <div>
           <h1>Subjects</h1>
-          <p className="muted">Subjects and their chapters. Assign subjects to batches on each batch page.</p>
+          <p className="muted">
+            {manager
+              ? 'Each batch has its own subjects. Add them on the batch page.'
+              : 'Subjects of the batches you teach.'}
+          </p>
         </div>
       </div>
       <Flash searchParams={searchParams} />
-      {manager && (
-        <section className="card stack" aria-labelledby="new-subject">
-          <h2 id="new-subject">New subject</h2>
-          <form action={createSubject} className="inline">
-            <label>
-              Name
-              <input name="name" required maxLength={120} placeholder="Physics" />
-            </label>
-            <button type="submit" className="primary">
-              Create subject
-            </button>
-          </form>
-        </section>
-      )}
-      {!subjects?.length && <p className="empty">No subjects yet.</p>}
-      {(subjects ?? []).map((s) => {
-        const chapters = [...((s.chapters ?? []) as Chapter[])].sort((a, b) => a.position - b.position);
-        return (
-          <section key={s.id} className="card stack" aria-labelledby={`s-${s.id}`}>
-            <div className="top">
-              <h2 id={`s-${s.id}`}>{s.name}</h2>
-              <Link href={`/subjects/${s.id}`}>Open subject</Link>
-            </div>
-            {chapters.length === 0 ? (
-              <p className="empty">No chapters yet.</p>
-            ) : (
-              <ol className="stack" style={{ paddingLeft: 20, margin: 0 }}>
-                {chapters.map((c, i) => (
-                  <li key={c.id}>
-                    <div className="row">
-                      <form action={renameChapter} className="row">
-                        <input type="hidden" name="chapter_id" value={c.id} />
-                        <label className="sr-only" htmlFor={`c-${c.id}`}>
-                          Chapter name
-                        </label>
-                        <input id={`c-${c.id}`} name="name" defaultValue={c.name} required maxLength={200} />
-                        <button type="submit">Rename</button>
-                      </form>
-                      <form action={moveChapter}>
-                        <input type="hidden" name="chapter_id" value={c.id} />
-                        <input type="hidden" name="dir" value="up" />
-                        <button type="submit" disabled={i === 0} aria-label={`Move ${c.name} up`}>
-                          ↑
-                        </button>
-                      </form>
-                      <form action={moveChapter}>
-                        <input type="hidden" name="chapter_id" value={c.id} />
-                        <input type="hidden" name="dir" value="down" />
-                        <button type="submit" disabled={i === chapters.length - 1} aria-label={`Move ${c.name} down`}>
-                          ↓
-                        </button>
-                      </form>
-                      <form action={deleteChapter}>
-                        <input type="hidden" name="chapter_id" value={c.id} />
-                        <button type="submit" className="link" aria-label={`Delete ${c.name}`}>
-                          Delete
-                        </button>
-                      </form>
-                    </div>
+      {!batches.length && <p className="empty">No batches yet.</p>}
+      {batches.map((b) => (
+        <section key={b.id} className="card stack" aria-labelledby={`b-${b.id}`}>
+          <div className="top">
+            <h2 id={`b-${b.id}`}>
+              {b.name} {b.academic_year && <span className="muted small">{b.academic_year}</span>}
+            </h2>
+            {manager && <Link href={`/batches/${b.id}`}>Add subjects</Link>}
+          </div>
+          {b.subjects.length === 0 ? (
+            <p className="empty">No subjects yet.</p>
+          ) : (
+            <ul className="pills" aria-label={`Subjects of ${b.name}`}>
+              {[...b.subjects]
+                .sort((x, y) => x.name.localeCompare(y.name))
+                .map((s) => (
+                  <li key={s.id}>
+                    <Link href={`/subjects/${s.id}`}>{s.name}</Link>{' '}
+                    <span className="small muted">{s.chapters[0]?.count ?? 0} topics</span>
                   </li>
                 ))}
-              </ol>
-            )}
-            <form action={addChapter} className="inline">
-              <input type="hidden" name="subject_id" value={s.id} />
-              <label>
-                New chapter
-                <input name="name" required maxLength={200} placeholder="Rotational Motion" />
-              </label>
-              <button type="submit">Add chapter</button>
-            </form>
-          </section>
-        );
-      })}
+            </ul>
+          )}
+        </section>
+      ))}
     </>
   );
 }

@@ -120,9 +120,11 @@ function Actions({ m, onRated }: { m: ChatMessage; onRated: (f: ChatMessage['fee
   );
 }
 
+// Smart Study's tutor for one topic (ADR-038): retrieval covers the notes of all the topic's subtopics.
 export function Tutor(props: {
   subjectId: string;
-  subjectName: string;
+  topicId: string;
+  topicName: string;
   conversationId: string | null;
   messages: ChatMessage[];
 }) {
@@ -147,6 +149,7 @@ export function Tutor(props: {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           subjectId: props.subjectId,
+          topicId: props.topicId,
           conversationId: conversationId ?? undefined,
           question,
           premium,
@@ -188,7 +191,7 @@ export function Tutor(props: {
   return (
     <>
       <div className="row" style={{ justifyContent: 'space-between' }}>
-        <h2>AI tutor · {props.subjectName}</h2>
+        <h2>AI tutor · {props.topicName}</h2>
         {messages.length > 0 && (
           <button
             type="button"
@@ -207,7 +210,7 @@ export function Tutor(props: {
       <div className="stack chat" role="log" aria-label="Chat" aria-busy={busy}>
         {messages.length === 0 && !busy && (
           <p className="empty reading">
-            Ask a doubt about {props.subjectName}. Answers come from your institute&apos;s notes (with page links);
+            Ask a doubt about {props.topicName}. Answers come from your institute&apos;s notes (with page links);
             anything else is marked &quot;General explanation&quot;.
           </p>
         )}
@@ -253,7 +256,7 @@ export function Tutor(props: {
           value={draft}
           maxLength={2000}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder={`Ask a doubt about ${props.subjectName}…`}
+          placeholder={`Ask a doubt about ${props.topicName}…`}
         />
         <div className="row">
           <button type="submit" className="primary" value="normal" disabled={busy || !draft.trim()}>

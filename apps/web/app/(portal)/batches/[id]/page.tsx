@@ -1,11 +1,16 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { isUuid, MANAGERS, requireMember, STAFF } from '@/lib/tenant';
-import { addBatchMember, removeBatchMember, setBatchArchived, setBatchSubjects } from '../../actions';
+import { addBatchMember, createSubject, moveStudents, removeBatchMember, setBatchArchived } from '../../actions';
 import { Flash } from '../../flash';
 import { Standings } from './standings';
 
-type Row = { membership_id: string; batch_role: string; memberships: { user_id: string; status: string } | null };
+type Row = {
+  membership_id: string;
+  batch_role: string;
+  left_at: string | null;
+  memberships: { user_id: string; status: string } | null;
+};
 
 export default async function Batch({
   params,
@@ -25,13 +30,21 @@ export default async function Batch({
     .maybeSingle();
   if (!batch) notFound();
   const manager = MANAGERS.includes(member.role);
-  const [{ data: subjects }, { data: chosen }, { data: rows }, { data: profiles }, { data: members }] =
+  const [{ data: subjects }, { data: others }, { data: rows }, { data: profiles }, { data: members }] =
     await Promise.all([
-      db.from('subjects').select('id, name').eq('institute_id', institute.id).order('name'),
-      db.from('batch_subjects').select('subject_id').eq('institute_id', institute.id).eq('batch_id', id),
+      db.from('subjects').select('id, name').eq('institute_id', institute.id).eq('batch_id', id).order('name'),
+      manager
+        ? db
+            .from('batches')
+            .select('id, name, academic_year')
+            .eq('institute_id', institute.id)
+            .neq('id', id)
+            .is('archived_at', null)
+            .order('name')
+        : Promise.resolve({ data: [] as { id: string; name: string; academic_year: string | null }[] }),
       db
         .from('batch_members')
-        .select('membership_id, batch_role, memberships(user_id, status)')
+        .select('membership_id, batch_role, left_at, memberships(user_id, status)')
         .eq('institute_id', institute.id)
         .eq('batch_id', id),
       db.from('profiles').select('user_id, full_name'),
@@ -43,12 +56,13 @@ export default async function Batch({
   const inBatch = (rows ?? []) as unknown as Row[];
   const inSet = new Set(inBatch.map((r) => r.membership_id));
   if (!manager && !inSet.has(member.id)) notFound(); // teachers open only batches they teach (TH-03)
-  const chosenSet = new Set((chosen ?? []).map((c) => c.subject_id));
   const sorted = (role: string) =>
     inBatch
       .filter((r) => r.batch_role === role)
+      .sort((a, b) => Number(!!a.left_at) - Number(!!b.left_at))
       .map((r) => ({ ...r, name: name.get(r.memberships?.user_id ?? '') ?? 'Unnamed' }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => Number(!!a.left_at) - Number(!!b.left_at) || a.name.localeCompare(b.name));
+  const current = sorted('student').filter((r) => !r.left_at);
   const addable = (members ?? [])
     .filter((m) => !inSet.has(m.id))
     .map((m) => ({ ...m, name: name.get(m.user_id) ?? 'Unnamed' }))
@@ -77,39 +91,27 @@ export default async function Batch({
       <Flash searchParams={searchParams} />
 
       <section className="card stack" aria-labelledby="subjects">
-        <h2 id="subjects">Subjects studied</h2>
+        <h2 id="subjects">Subjects</h2>
         {!subjects?.length ? (
-          <p className="empty">
-            No subjects yet. <Link href="/subjects">Add subjects</Link> first.
-          </p>
-        ) : manager ? (
-          <form action={setBatchSubjects} className="stack">
-            <input type="hidden" name="batch_id" value={batch.id} />
-            <fieldset className="row" style={{ border: 0, padding: 0, margin: 0 }}>
-              <legend className="sr-only">Subjects</legend>
-              {subjects.map((s) => (
-                <label key={s.id} className="row" style={{ display: 'flex' }}>
-                  <input type="checkbox" name="subject_id" value={s.id} defaultChecked={chosenSet.has(s.id)} />
-                  {s.name}
-                </label>
-              ))}
-            </fieldset>
-            <div>
-              <button type="submit" className="primary">
-                Save subjects
-              </button>
-            </div>
-          </form>
+          <p className="empty">No subjects in this batch yet.</p>
         ) : (
           <ul className="pills">
-            {subjects
-              .filter((s) => chosenSet.has(s.id))
-              .map((s) => (
-                <li key={s.id}>
-                  <Link href={`/subjects/${s.id}`}>{s.name}</Link>
-                </li>
-              ))}
+            {subjects.map((s) => (
+              <li key={s.id}>
+                <Link href={`/subjects/${s.id}`}>{s.name}</Link>
+              </li>
+            ))}
           </ul>
+        )}
+        {manager && (
+          <form action={createSubject} className="inline">
+            <input type="hidden" name="batch_id" value={batch.id} />
+            <label>
+              New subject
+              <input name="name" required maxLength={120} placeholder="Maths" />
+            </label>
+            <button type="submit">Add subject</button>
+          </form>
         )}
       </section>
 
@@ -132,6 +134,7 @@ export default async function Batch({
                       <tr key={r.membership_id}>
                         <td>{r.name}</td>
                         <td>
+                          {r.left_at && <span className="badge">Moved on</span>}
                           {r.memberships?.status !== 'active' && (
                             <span className="badge warn">{r.memberships?.status}</span>
                           )}
@@ -156,6 +159,43 @@ export default async function Batch({
           </section>
         );
       })}
+
+      {manager && current.length > 0 && (others ?? []).length > 0 && (
+        <section className="card stack" aria-labelledby="move">
+          <h2 id="move">Move students to another batch</h2>
+          <p className="small muted">
+            For promotion, e.g. Class 9 → Class 10. They stay in this batch&apos;s history and can still read its notes
+            and results, but cannot take its new tests.
+          </p>
+          <form action={moveStudents} className="stack">
+            <input type="hidden" name="batch_id" value={batch.id} />
+            <fieldset className="stack">
+              <legend>Students</legend>
+              {current.map((r) => (
+                <label key={r.membership_id} className="row">
+                  <input type="checkbox" name="membership_id" value={r.membership_id} defaultChecked />
+                  {r.name}
+                </label>
+              ))}
+            </fieldset>
+            <div className="inline">
+              <label>
+                New batch
+                <select name="to_batch_id" required>
+                  {others!.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name} {b.academic_year && `(${b.academic_year})`}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="submit" className="primary">
+                Move students
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
 
       {manager && addable.length > 0 && (
         <section className="card stack" aria-labelledby="add-member">

@@ -57,3 +57,16 @@ export async function requireMember(roles: string[] = [...STAFF, 'student']) {
   if (!roles.includes(member.role)) notFound();
   return { institute, member: member as Member & { id: string; role: string }, db: await supabase() };
 }
+
+// Teachers work only in the batches they teach (a UI filter, ADR-038); owner/admin everywhere; students: RLS decides.
+export async function opensBatch(m: Awaited<ReturnType<typeof requireMember>>, batch: string) {
+  if (m.member.role !== 'teacher') return true;
+  const { data } = await m.db
+    .from('batch_members')
+    .select('batch_id')
+    .eq('institute_id', m.institute.id)
+    .eq('batch_id', batch)
+    .eq('membership_id', m.member.id)
+    .maybeSingle();
+  return !!data;
+}

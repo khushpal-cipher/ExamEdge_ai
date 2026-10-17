@@ -2,7 +2,7 @@
 // it and a student sees it; a student makes a private practice quiz that the database grades, and nobody else — a
 // classmate, staff, another institute — can open it (AC9.4). Needs `npm run seed:demo` (seeded Studio summary).
 import { expect, test, type Page } from '@playwright/test';
-import { demoSignIn, signedIn, sql } from './helpers';
+import { demoSignIn, demoTopic, signedIn, sql } from './helpers';
 
 const DEMO = 'http://demo.localhost:3000';
 const RIVAL = 'http://rival.localhost:3000';
@@ -13,13 +13,14 @@ async function login(page: Page, email: string, base = DEMO) {
   await expect(page).toHaveURL(/\/(home|dashboard)$/);
 }
 
-const physics = async () =>
-  (
-    await sql(
-      `select s.id from subjects s join institutes i on i.id = s.institute_id
-       where i.slug = 'demo' and s.name = 'Physics'`,
-    )
-  ).rows[0].id as string;
+const topic = async (name: string) => (await demoTopic('Physics', name)).topic;
+
+// The topic page's Smart Study tab (ADR-038).
+async function smartStudy(page: Page, chapter: string) {
+  await page.goto(`${DEMO}/topics/${await topic(chapter)}`);
+  await page.getByRole('tab', { name: 'Smart Study' }).click();
+  return page.getByRole('tabpanel', { name: 'Smart Study' });
+}
 
 const generations = async () =>
   (
@@ -29,10 +30,8 @@ const generations = async () =>
     )
   ).rows[0].n as number;
 
-async function generate(page: Page, subject: string, chapter: string, kind: string) {
-  await page.goto(`${DEMO}/subjects/${subject}`);
-  const form = page.getByRole('form', { name: 'Make study material' });
-  await form.getByLabel('Chapter').selectOption({ label: chapter });
+async function generate(page: Page, chapter: string, kind: string) {
+  const form = (await smartStudy(page, chapter)).getByRole('form', { name: 'Make study material' });
   await form.getByLabel('Make').selectOption({ label: kind });
   await form.getByRole('button', { name: 'Generate' }).click();
   await expect(page).toHaveURL(/\/studio\/[0-9a-f-]{36}\?ok=(generated|reused)$/);
@@ -41,18 +40,17 @@ async function generate(page: Page, subject: string, chapter: string, kind: stri
 }
 
 test('teacher generates, reuses and publishes study material; students of the batch see it', async ({ browser }) => {
-  const subject = await physics();
   const teacher = await (await browser.newContext()).newPage();
   await login(teacher, 'teacher1@demo.test');
 
   // The seed made this summary from the same notes, so asking again reuses it without any AI use (AC9.2).
   const before = await generations();
-  const seeded = await generate(teacher, subject, 'Rotational Motion', 'Summary');
+  const seeded = await generate(teacher, 'Rotational Motion', 'Summary');
   expect(seeded.ok).toBe('reused');
   await expect(teacher.getByRole('status')).toContainText('no AI use counted');
   expect(await generations()).toBe(before);
 
-  const made = await generate(teacher, subject, 'Laws of Motion', 'Mind map');
+  const made = await generate(teacher, 'Laws of Motion', 'Mind map');
   try {
     expect(made.ok).toBe('generated');
     expect(await generations()).toBe(before + 1);
@@ -61,7 +59,7 @@ test('teacher generates, reuses and publishes study material; students of the ba
     await expect(
       teacher.getByRole('link', { name: /From your institute's notes: Laws of Motion/ }).first(),
     ).toBeVisible();
-    const again = await generate(teacher, subject, 'Laws of Motion', 'Mind map');
+    const again = await generate(teacher, 'Laws of Motion', 'Mind map');
     expect(again).toEqual({ id: made.id, ok: 'reused' });
     expect(await generations()).toBe(before + 1);
 
@@ -74,8 +72,9 @@ test('teacher generates, reuses and publishes study material; students of the ba
     await teacher.getByRole('button', { name: 'Approve and publish' }).click();
     await expect(teacher.getByRole('status')).toContainText('Published.');
 
-    await student.goto(`${DEMO}/subjects/${subject}`);
-    await student
+    await (
+      await smartStudy(student, 'Laws of Motion')
+    )
       .getByRole('list', { name: 'From your teachers' })
       .getByRole('link', { name: 'Mind map: Laws of Motion' })
       .click();
@@ -87,10 +86,9 @@ test('teacher generates, reuses and publishes study material; students of the ba
 });
 
 test('a student practice quiz is graded by the database and private to its owner', async ({ browser }) => {
-  const subject = await physics();
   const page = await (await browser.newContext()).newPage();
   await login(page, 'student02@demo.test');
-  const quiz = await generate(page, subject, 'Laws of Motion', 'Practice quiz');
+  const quiz = await generate(page, 'Laws of Motion', 'Practice quiz');
   try {
     await expect(page.getByText('Only you can see it.')).toBeVisible();
     const { rows } = await sql('select content from generated_artifacts where id = $1', [quiz.id]);
@@ -125,8 +123,9 @@ test('a student practice quiz is graded by the database and private to its owner
     // Staff never list students' own material.
     const staff = await (await browser.newContext()).newPage();
     await login(staff, 'teacher1@demo.test');
-    await staff.goto(`${DEMO}/subjects/${subject}`);
-    await expect(staff.getByRole('link', { name: 'Practice quiz: Laws of Motion' })).toHaveCount(0);
+    await expect(
+      (await smartStudy(staff, 'Laws of Motion')).getByRole('link', { name: 'Practice quiz: Laws of Motion' }),
+    ).toHaveCount(0);
   } finally {
     await sql('delete from generated_artifacts where id = $1', [quiz.id]);
   }

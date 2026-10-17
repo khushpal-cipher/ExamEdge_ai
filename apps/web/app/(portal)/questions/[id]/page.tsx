@@ -29,7 +29,11 @@ export default async function EditQuestion({
       .eq('institute_id', institute.id)
       .eq('id', id)
       .maybeSingle(),
-    db.from('subjects').select('id, name, chapters(id, name, position)').eq('institute_id', institute.id).order('name'),
+    db
+      .from('subjects')
+      .select('id, name, batches(name), chapters(id, name, position)')
+      .eq('institute_id', institute.id)
+      .order('name'),
   ]);
   if (!q) notFound();
   const keys = q.question_keys as unknown as { key: QuestionInit['key']; second_solve: Answer } | null;
@@ -80,6 +84,7 @@ export default async function EditQuestion({
         <QuestionForm
           subjects={(subjects ?? []).map((s) => ({
             ...s,
+            name: `${s.name} · ${(s.batches as unknown as { name: string }).name}`,
             chapters: [...(s.chapters ?? [])].sort((a, b) => a.position - b.position),
           }))}
           initial={initial}

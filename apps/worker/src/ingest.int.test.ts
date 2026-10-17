@@ -35,8 +35,9 @@ const english = (n: number) =>
 
 async function newDocument(title: string, institute = inst) {
   const { rows } = await db.query(
-    `insert into public.documents (institute_id, subject_id, title)
-     select $1, id, $2 from public.subjects where institute_id = $1 and name = 'Physics' returning id`,
+    `insert into public.documents (institute_id, subject_id, chapter_id, subtopic_id, title)
+     select $1, st.subject_id, st.chapter_id, st.id, $2 from public.subtopics st
+     join public.subjects s on s.id = st.subject_id where st.institute_id = $1 and s.name = 'Physics' returning id`,
     [institute, title],
   );
   return rows[0].id as string;

@@ -1,260 +1,139 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Markdown } from '@/lib/markdown';
-import { STUDIO_KIND } from '@/lib/studio';
-import { isUuid, requireMember } from '@/lib/tenant';
+import { isUuid, opensBatch, requireMember } from '@/lib/tenant';
+import { addChapter, deleteChapter, moveChapter, renameChapter } from '../../actions';
 import { Flash, type Search } from '../../flash';
-import { DOCUMENT_STATUS, VERSION_STATUS } from '../../documents/status';
-import { Upload } from '../../documents/upload';
-import { generate } from '../../studio/actions';
 import { resolveReport } from './actions';
-import { Panes } from './panes';
-import { Tutor, type ChatMessage } from './tutor';
 
-type Doc = { id: string; title: string; status: string; chapter_id: string | null };
+type Topic = { id: string; name: string; position: number; subtopics: { count: number }[] };
 type Report = { id: string; question: string; answer: string; reason: string | null; created_at: string };
-type Artifact = { id: string; owner_scope: string; kind: string; status: string; chapters: { name: string } };
 
+// A subject lists its topics (table chapters, ADR-038); each topic page holds the notes and Smart Study.
 export default async function SubjectWorkspace(props: { params: Promise<{ id: string }>; searchParams: Search }) {
-  const { institute, member, db } = await requireMember();
+  const m = await requireMember();
+  const { institute, member, db } = m;
   const { id } = await props.params;
   if (!isUuid(id)) notFound();
-  // RLS: staff see every subject of the institute; students only subjects of their own batches.
+  // RLS: staff see every subject of the institute; students only subjects of their own (current or past) batches.
   const { data: subject } = await db
     .from('subjects')
-    .select('id, name, chapters(id, name, position)')
+    .select('id, name, batch_id, batches(name), chapters(id, name, position, subtopics(count))')
     .eq('institute_id', institute.id)
     .eq('id', id)
     .maybeSingle();
-  if (!subject) notFound();
-  const chapters = [...(subject.chapters as { id: string; name: string; position: number }[])].sort(
-    (a, b) => a.position - b.position,
-  );
+  if (!subject || !(await opensBatch(m, subject.batch_id))) notFound();
+  const topics = [...(subject.chapters as unknown as Topic[])].sort((a, b) => a.position - b.position);
   const student = member.role === 'student';
-  // RLS: staff see every document of the institute; students only notes published to one of their batches.
-  const { data: docRows } = await db
-    .from('documents')
-    .select('id, title, status, chapter_id')
-    .eq('institute_id', institute.id)
-    .eq('subject_id', id)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false });
-  const docs = (docRows ?? []) as Doc[];
-  // Staff also see the latest file's processing state.
-  const latest = new Map<string, string>();
-  if (!student && docs.length) {
-    const { data: versions } = await db
-      .from('document_versions')
-      .select('document_id, version, processing_status')
-      .eq('institute_id', institute.id)
-      .in(
-        'document_id',
-        docs.map((d) => d.id),
-      )
-      .order('version');
-    for (const v of versions ?? []) latest.set(v.document_id as string, v.processing_status as string);
-  }
-  const chapterName = new Map(chapters.map((c) => [c.id, c.name]));
-  // RLS: a chat is readable by its owner only; staff see reported answers, never chats (ADR-015).
-  // RLS: students see their own artifacts and those published to their batches; staff see institute artifacts.
-  const [{ data: chat }, { data: reportRows }, { data: artifactRows }] = await Promise.all([
-    db
-      .from('conversations')
-      .select('id, messages(id, role, content, citations, answer_labels, feedback, created_at)')
-      .eq('institute_id', institute.id)
-      .eq('subject_id', id)
-      .eq('user_id', member.userId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    student
-      ? Promise.resolve({ data: [] })
-      : db
-          .from('answer_reports')
-          .select('id, question, answer, reason, created_at')
-          .eq('institute_id', institute.id)
-          .eq('subject_id', id)
-          .is('resolved_at', null)
-          .order('created_at', { ascending: false })
-          .limit(50),
-    db
-      .from('generated_artifacts')
-      .select('id, owner_scope, kind, status, chapters(name)')
-      .eq('institute_id', institute.id)
-      .eq('subject_id', id)
-      .order('created_at', { ascending: false })
-      .limit(50),
-  ]);
-  const artifacts = (artifactRows ?? []) as unknown as Artifact[];
-  const artifactList = (label: string, list: Artifact[]) =>
-    list.length > 0 && (
-      <>
-        <h3>{label}</h3>
-        <ul className="stack" style={{ listStyle: 'none', padding: 0, margin: 0 }} aria-label={label}>
-          {list.map((a) => (
-            <li key={a.id}>
-              <Link href={`/studio/${a.id}`}>
-                {STUDIO_KIND[a.kind]}: {a.chapters.name}
-              </Link>
-              {!student && a.status !== 'published' && (
-                <span className={`badge ${a.status === 'draft' ? 'warn' : 'bad'}`}>
-                  {a.status === 'draft' ? 'Draft' : 'Withdrawn'}
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-      </>
-    );
-  const messages = ((chat?.messages ?? []) as (ChatMessage & { created_at: string })[]).sort((a, b) =>
-    a.created_at.localeCompare(b.created_at),
-  );
+  // Staff review reported answers here; they never see the chats themselves (ADR-015).
+  const { data: reportRows } = student
+    ? { data: [] }
+    : await db
+        .from('answer_reports')
+        .select('id, question, answer, reason, created_at')
+        .eq('institute_id', institute.id)
+        .eq('subject_id', id)
+        .is('resolved_at', null)
+        .order('created_at', { ascending: false })
+        .limit(50);
   const reports = (reportRows ?? []) as Report[];
   return (
     <>
       <div className="top">
         <div>
           <p className="small">
-            <Link href={student ? '/home' : '/subjects'}>{student ? 'Home' : 'Subjects'}</Link>
+            <Link href={student ? '/home' : '/subjects'}>{student ? 'Home' : 'Subjects'}</Link> ·{' '}
+            {(subject.batches as unknown as { name: string }).name}
           </p>
           <h1>{subject.name}</h1>
-          <p className="muted">{chapters.length} chapters</p>
+          <p className="muted">{topics.length} topics</p>
         </div>
       </div>
       <Flash searchParams={props.searchParams} />
-      {chapters.length > 0 && (
-        <ul className="pills" aria-label="Chapters">
-          {chapters.map((c) => (
-            <li key={c.id}>{c.name}</li>
+      <section className="card stack" aria-labelledby="topics">
+        <h2 id="topics">Topics</h2>
+        {topics.length === 0 && (
+          <p className="empty">{student ? 'Your teachers have not added topics yet.' : 'No topics yet.'}</p>
+        )}
+        <ol className="stack" style={{ paddingLeft: 20, margin: 0 }}>
+          {topics.map((c, i) => (
+            <li key={c.id}>
+              <div className="row">
+                <Link href={`/topics/${c.id}`}>{c.name}</Link>
+                <span className="small muted">{c.subtopics[0]?.count ?? 0} subtopics</span>
+              </div>
+              {!student && (
+                <div className="row small">
+                  <form action={renameChapter} className="row">
+                    <input type="hidden" name="subject_id" value={subject.id} />
+                    <input type="hidden" name="chapter_id" value={c.id} />
+                    <label className="sr-only" htmlFor={`c-${c.id}`}>
+                      Topic name
+                    </label>
+                    <input id={`c-${c.id}`} name="name" defaultValue={c.name} required maxLength={200} />
+                    <button type="submit">Rename</button>
+                  </form>
+                  <form action={moveChapter}>
+                    <input type="hidden" name="subject_id" value={subject.id} />
+                    <input type="hidden" name="chapter_id" value={c.id} />
+                    <input type="hidden" name="dir" value="up" />
+                    <button type="submit" disabled={i === 0} aria-label={`Move ${c.name} up`}>
+                      ↑
+                    </button>
+                  </form>
+                  <form action={moveChapter}>
+                    <input type="hidden" name="subject_id" value={subject.id} />
+                    <input type="hidden" name="chapter_id" value={c.id} />
+                    <input type="hidden" name="dir" value="down" />
+                    <button type="submit" disabled={i === topics.length - 1} aria-label={`Move ${c.name} down`}>
+                      ↓
+                    </button>
+                  </form>
+                  <form action={deleteChapter}>
+                    <input type="hidden" name="subject_id" value={subject.id} />
+                    <input type="hidden" name="chapter_id" value={c.id} />
+                    <button type="submit" className="link" aria-label={`Delete ${c.name}`}>
+                      Delete
+                    </button>
+                  </form>
+                </div>
+              )}
+            </li>
           ))}
-        </ul>
+        </ol>
+        {!student && (
+          <form action={addChapter} className="inline">
+            <input type="hidden" name="subject_id" value={subject.id} />
+            <label>
+              New topic
+              <input name="name" required maxLength={200} placeholder="Probability" />
+            </label>
+            <button type="submit">Add topic</button>
+          </form>
+        )}
+      </section>
+      {!student && (
+        <section className="card stack" aria-labelledby="reports">
+          <h2 id="reports">Reported answers ({reports.length})</h2>
+          {reports.length === 0 && <p className="muted small">No open reports for this subject.</p>}
+          <ul className="stack" style={{ listStyle: 'none', padding: 0 }} aria-label="Reported answers">
+            {reports.map((r) => (
+              <li key={r.id} className="card stack">
+                <p className="small muted">Question</p>
+                <p>{r.question}</p>
+                <p className="small muted">Answer</p>
+                <Markdown text={r.answer} />
+                {r.reason && <p className="small">Student&apos;s note: {r.reason}</p>}
+                <form action={resolveReport}>
+                  <input type="hidden" name="report_id" value={r.id} />
+                  <input type="hidden" name="subject_id" value={subject.id} />
+                  <button type="submit">Resolve</button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
-      <Panes
-        sources={
-          <>
-            <h2>Sources</h2>
-            {docs.length === 0 && (
-              <p className="empty">
-                {student ? 'Your teachers have not published notes for this subject yet.' : 'No notes uploaded yet.'}
-              </p>
-            )}
-            <ul className="stack" style={{ listStyle: 'none', padding: 0, margin: 0 }} aria-label="Notes">
-              {docs.map((d) => {
-                const chapter = d.chapter_id ? chapterName.get(d.chapter_id) : null;
-                if (student)
-                  return (
-                    <li key={d.id}>
-                      <a href={`/documents/${d.id}/file`} target="_blank" rel="noopener">
-                        {d.title}
-                      </a>
-                      {chapter && <div className="small muted">{chapter}</div>}
-                    </li>
-                  );
-                const processing = latest.get(d.id);
-                const [label, tone] =
-                  processing && processing !== 'ready' ? VERSION_STATUS[processing]! : DOCUMENT_STATUS[d.status]!;
-                return (
-                  <li key={d.id}>
-                    <Link href={`/documents/${d.id}`}>{d.title}</Link> <span className={`badge ${tone}`}>{label}</span>
-                    {chapter && <div className="small muted">{chapter}</div>}
-                  </li>
-                );
-              })}
-            </ul>
-            {!student && (
-              <details>
-                <summary>Upload notes</summary>
-                <Upload subjectId={subject.id} chapters={chapters} />
-              </details>
-            )}
-          </>
-        }
-        tutor={
-          <>
-            {!student && (
-              <details open={reports.length > 0}>
-                <summary>Reported answers ({reports.length})</summary>
-                {reports.length === 0 && <p className="muted small">No open reports for this subject.</p>}
-                <ul className="stack" style={{ listStyle: 'none', padding: 0 }} aria-label="Reported answers">
-                  {reports.map((r) => (
-                    <li key={r.id} className="card stack">
-                      <p className="small muted">Question</p>
-                      <p>{r.question}</p>
-                      <p className="small muted">Answer</p>
-                      <Markdown text={r.answer} />
-                      {r.reason && <p className="small">Student&apos;s note: {r.reason}</p>}
-                      <form action={resolveReport}>
-                        <input type="hidden" name="report_id" value={r.id} />
-                        <input type="hidden" name="subject_id" value={subject.id} />
-                        <button type="submit">Resolve</button>
-                      </form>
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            )}
-            <Tutor
-              key={chat?.id ?? 'new'}
-              subjectId={subject.id}
-              subjectName={subject.name}
-              conversationId={chat?.id ?? null}
-              messages={messages}
-            />
-          </>
-        }
-        studio={
-          <>
-            <h2>Studio</h2>
-            {student ? (
-              <>
-                {artifactList(
-                  'From your teachers',
-                  artifacts.filter((a) => a.owner_scope === 'institute'),
-                )}
-                {artifactList(
-                  'Made by you',
-                  artifacts.filter((a) => a.owner_scope === 'student'),
-                )}
-              </>
-            ) : (
-              artifactList('Study material', artifacts)
-            )}
-            {chapters.length === 0 ? (
-              <p className="empty small">Add chapters to this subject to make study material.</p>
-            ) : (
-              <form action={generate} className="stack" aria-label="Make study material">
-                <input type="hidden" name="subject_id" value={subject.id} />
-                <label className="stack small">
-                  Chapter
-                  <select name="chapter_id" required>
-                    {chapters.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="stack small">
-                  Make
-                  <select name="kind">
-                    {Object.entries(STUDIO_KIND).map(([k, label]) => (
-                      <option key={k} value={k}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button type="submit">Generate</button>
-              </form>
-            )}
-            <p className="small muted">
-              {student
-                ? "Made by AI from your teachers' notes for the chapter, just for you. Practice quizzes never affect your rank."
-                : 'Made by AI from the published notes of the chapter. Students see it only after you approve and publish it.'}
-            </p>
-          </>
-        }
-      />
     </>
   );
 }

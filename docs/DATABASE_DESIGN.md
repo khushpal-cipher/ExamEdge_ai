@@ -88,7 +88,7 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 
 **batch_members** (T) — pk `(batch_id, membership_id)`, `institute_id`, `batch_role` (`teacher|student`), `left_at` (R1.1, ADR-040: null = current; set when a student is promoted to a new batch — the row is kept so the student still sees their own year read-only; `start_attempt` refuses tests of a left batch). Composite FKs to `batches(institute_id,id)` and `memberships(institute_id,id)`. Index `(membership_id)`.
 - Check: `batch_role='student'` requires membership role `student` (trigger) — prevents a student being made a batch teacher.
-- S staff of institute; S own rows. I/D admin/owner (teachers for students in own batches [R]).
+- S staff of institute; S own rows. I/D admin/owner (teachers for students in own batches [R]). U `left_at` owner/admin. Promotion = `move_students(from_batch, to_batch, members)` (invoker, one statement: old rows get `left_at`, new rows are inserted).
 
 **subjects** (T) — `batch_id` (composite FK → batches, R1.1 ADR-038), `name`; `unique(institute_id, batch_id, name)`, `unique(institute_id,id)`. A subject belongs to exactly one batch (`batch_subjects` dropped in R1.1).
 **chapters** (T) — shown as **Topic** in the UI (DB name kept, ADR-038). `subject_id` (composite FK), `name`, `position`; `unique(institute_id, subject_id, id)`.
@@ -126,7 +126,7 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 **answer_reports** (T) — `subject_id` (composite FK), `message_id` (unique; composite FK, `on delete set null`), `reported_by`, `question`, `answer`, `citations`, `reason` (≤ 500), `created_at`, `resolved_at`, `resolved_by`.
 - Written only by definer `report_answer(msg, why)` (caller must own the conversation): a copy, so it survives the chat being deleted. S/U(`resolved_at`, `resolved_by`) staff of the institute; `reported_by` has no column grant (staff never see who reported). Students: none.
 
-`match_chunks(query_embedding, query_text, subject, k)` (invoker) returns `institute_id` and `similarity` with each chunk so the tutor can assert the tenant (TH-06) and evals can record scores.
+`match_chunks(query_embedding, query_text, subject, k, topic default null)` (invoker; `topic` = a chapter id, R1.1 Smart Study; null = whole subject) returns `institute_id` and `similarity` with each chunk so the tutor can assert the tenant (TH-06) and evals can record scores.
 
 **generated_artifacts** (T or S, as built in Phase 9, ADR-028) — `owner_scope` (`institute|student`), `owner_user_id` (set by trigger iff student), `kind` (`summary|flashcards|mind_map|quiz`; more kinds in R2/R3), `subject_id`, `chapter_id` (3-column composite FK `(institute_id, subject_id, chapter_id)` → chapters), `source_refs jsonb` (`[{document_id, title, page_start, page_end}]`, cited by index in `content`), `input_hash` (sha256 hex), `prompt_version`, `model`, `schema_version`, `content jsonb` (≤ 200 KB), `status` (`draft|published|withdrawn`), `usage_record_id`, `created_by`, `approved_by`, `approved_at`. Checks: student scope ⇔ owner set; student artifacts stay `draft`; `published` ⇒ `approved_at`.
 - Partial unique `(institute_id, kind, input_hash, prompt_version) where owner_scope='institute'` and `(institute_id, owner_user_id, kind, input_hash, prompt_version) where owner_scope='student'` → generate once, reuse.

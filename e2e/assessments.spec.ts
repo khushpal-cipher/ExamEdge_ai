@@ -46,8 +46,12 @@ test('teacher builds a mixed test, student takes it, teacher checks and releases
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tests');
   await noSeriousA11yIssues(page);
   await page.getByRole('main').getByRole('link', { name: 'Question bank' }).click();
-  await page.getByRole('navigation', { name: 'Subjects' }).getByRole('link', { name: 'Physics' }).click();
-  await expect(page.getByRole('heading', { name: /^Physics \(\d+\)$/ })).toBeVisible();
+  // Subject names repeat per batch, so the bank labels them with their batch (ADR-038).
+  await page
+    .getByRole('navigation', { name: 'Subjects' })
+    .getByRole('link', { name: 'Physics · JEE 2027 Morning' })
+    .click();
+  await expect(page.getByRole('heading', { name: /^Physics · JEE 2027 Morning \(\d+\)$/ })).toBeVisible();
   const form = page.getByRole('region', { name: 'New question' });
 
   await form.getByLabel('Question', { exact: true }).fill(stems.single);

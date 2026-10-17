@@ -2,7 +2,7 @@
 // chats stay private (staff and other institutes read nothing); the daily limit message; foreign Origin → 403.
 // Needs `npm run seed:demo` (published notes are processed by the seed).
 import { expect, test, type Page } from '@playwright/test';
-import { demoSignIn, signedIn, sql } from './helpers';
+import { demoSignIn, demoTopic, signedIn, sql } from './helpers';
 
 const DEMO = 'http://demo.localhost:3000';
 
@@ -12,15 +12,16 @@ async function login(page: Page, email: string) {
   await expect(page).toHaveURL(/\/(home|dashboard)$/);
 }
 
-const physicsId = async () =>
-  (
-    await sql(
-      `select s.id from subjects s join institutes i on i.id = s.institute_id where i.slug = 'demo' and s.name = 'Physics'`,
-    )
-  ).rows[0].id as string;
+const rotation = () => demoTopic('Physics', 'Rotational Motion');
+
+// Smart Study tab of a topic page (ADR-038).
+async function smartStudy(page: Page) {
+  await page.getByRole('tab', { name: 'Smart Study' }).click();
+  return page.getByRole('tabpanel', { name: 'Smart Study' });
+}
 
 async function ask(page: Page, question: string) {
-  const tutor = page.getByRole('tabpanel', { name: 'AI tutor' });
+  const tutor = await smartStudy(page);
   const newChat = tutor.getByRole('button', { name: 'New chat' });
   if (await newChat.isVisible()) await newChat.click();
   await tutor.getByLabel('Your doubt').fill(question);
@@ -29,10 +30,10 @@ async function ask(page: Page, question: string) {
 }
 
 test('student gets a page-cited answer and reports it; the teacher sees and resolves the report', async ({ page }) => {
-  const subject = await physicsId();
+  const { subject, topic } = await rotation();
   const reason = `Check the formula ${Date.now()}`;
   await login(page, 'student05@demo.test');
-  await page.goto(`${DEMO}/subjects/${subject}`);
+  await page.goto(`${DEMO}/topics/${topic}`);
   const tutor = await ask(page, 'What is torque?');
   const chip = tutor.getByRole('link', { name: /From your institute's notes: Rotational Motion .*, p\.1/ }).first();
   await expect(chip).toBeVisible();
@@ -48,7 +49,7 @@ test('student gets a page-cited answer and reports it; the teacher sees and reso
 
   // The saved chat comes back after a reload.
   await page.reload();
-  await expect(page.getByRole('tabpanel', { name: 'AI tutor' }).getByText('What is torque?')).toBeVisible();
+  await expect((await smartStudy(page)).getByText('What is torque?')).toBeVisible();
 
   await page.context().clearCookies();
   await login(page, 'teacher1@demo.test');
@@ -63,14 +64,16 @@ test('student gets a page-cited answer and reports it; the teacher sees and reso
 
 test('chats and reports stay private: staff and other institutes read no chat text (ADR-015, T-E2E-ISO-01)', async () => {
   // A private chat of student05 (fixture written as the database owner).
+  const { subject, topic } = await rotation();
   const { rows } = await sql(
     `with c as (
-       insert into conversations (institute_id, user_id, subject_id, title)
-       select s.institute_id, u.id, s.id, 'Private doubt' from subjects s join institutes i on i.id = s.institute_id,
-         auth.users u where i.slug = 'demo' and s.name = 'Physics' and u.email = 'student05@demo.test'
+       insert into conversations (institute_id, user_id, subject_id, chapter_id, title)
+       select s.institute_id, u.id, s.id, $2, 'Private doubt' from subjects s, auth.users u
+       where s.id = $1 and u.email = 'student05@demo.test'
        returning id, institute_id)
      insert into messages (institute_id, conversation_id, role, content)
      select institute_id, id, 'assistant', 'Private answer' from c returning id, conversation_id`,
+    [subject, topic],
   );
   const { id: message, conversation_id: conversation } = rows[0] as { id: string; conversation_id: string };
   const owner = await signedIn('student05@demo.test');
@@ -119,7 +122,7 @@ test('a student over the daily limit is told so and nothing is saved (T-SEC-12)'
   await sql(counter, [email]);
   try {
     await login(page, email);
-    await page.goto(`${DEMO}/subjects/${await physicsId()}`);
+    await page.goto(`${DEMO}/topics/${(await rotation()).topic}`);
     const tutor = await ask(page, 'What is inertia?');
     await expect(tutor.getByRole('alert')).toHaveText("You've used today's AI limit. It resets tomorrow.");
     await expect(tutor.getByLabel('Your doubt')).toHaveValue('What is inertia?');
@@ -136,7 +139,8 @@ test('a student over the daily limit is told so and nothing is saved (T-SEC-12)'
 
 test('the tutor endpoint refuses a request from another origin', async ({ page }) => {
   await login(page, 'student05@demo.test');
-  const body = { subjectId: await physicsId(), question: 'What is torque?', premium: false };
+  const { subject, topic } = await rotation();
+  const body = { subjectId: subject, topicId: topic, question: 'What is torque?', premium: false };
   const foreign = await page.request.post(`${DEMO}/api/tutor`, {
     data: body,
     headers: { origin: 'http://rival.localhost:3000' },

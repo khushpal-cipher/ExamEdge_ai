@@ -46,6 +46,7 @@ const OK: Record<string, string> = {
   saved_draft: 'Saved. It is a draft again until you publish it.',
   questions_made: 'AI questions added below as drafts. Check each one and approve it before using it in a test.',
   approved: 'Approved. It can now be added to tests.',
+  moved: 'Moved. The old batch stays in their history (read-only).',
 };
 
 export async function Flash({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {

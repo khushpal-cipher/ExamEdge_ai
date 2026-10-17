@@ -7,7 +7,7 @@ import { drain } from '../apps/worker/src/ingest';
 import { workerDownloader } from '../apps/worker/src/storage';
 import { makePdf } from '../scripts/make-pdf';
 import { localWorkerEnv } from '../scripts/local-supabase';
-import { demoSignIn, env, signedIn, sql } from './helpers';
+import { demoSignIn, demoTopic, env, signedIn, sql } from './helpers';
 
 const DEMO = 'http://demo.localhost:3000';
 const RIVAL = 'http://rival.localhost:3000';
@@ -29,21 +29,15 @@ async function runWorker() {
   }
 }
 
-const physicsId = async () =>
-  (
-    await sql(
-      `select s.id from subjects s join institutes i on i.id = s.institute_id where i.slug = 'demo' and s.name = 'Physics'`,
-    )
-  ).rows[0].id as string;
-
 test('teacher uploads, publishes and withdraws notes; student access follows (AC4.3)', async ({ page, browser }) => {
   test.setTimeout(90_000);
   const title = `E2E notes ${Date.now().toString(36)}`;
-  const subject = await physicsId();
+  const { topic } = await demoTopic('Physics', 'Units and Measurement');
 
+  // Notes go into a subtopic of the topic (ADR-038); the topic page opens on its Subtopics tab.
   await login(page, DEMO, 'teacher1@demo.test');
-  await page.goto(`${DEMO}/subjects/${subject}`);
-  await page.getByText('Upload notes', { exact: true }).click();
+  await page.goto(`${DEMO}/topics/${topic}`);
+  await page.getByRole('tabpanel', { name: 'Subtopics' }).getByText('Upload notes', { exact: true }).click();
   const upload = page.getByRole('form', { name: 'Upload notes' });
   await upload.getByLabel('Title').fill(title);
   await upload.getByLabel(/^File/).setInputFiles({
@@ -70,7 +64,7 @@ test('teacher uploads, publishes and withdraws notes; student access follows (AC
   // student01 is in JEE 2027 Morning: sees the notes and opens the file
   const student = await (await browser.newContext()).newPage();
   await login(student, DEMO, 'student01@demo.test');
-  await student.goto(`${DEMO}/subjects/${subject}`);
+  await student.goto(`${DEMO}/topics/${topic}`);
   await expect(student.getByRole('link', { name: title })).toHaveAttribute('href', `/documents/${doc}/file`);
   const file = await student.request.get(`${DEMO}/documents/${doc}/file`);
   expect(file.status()).toBe(200);

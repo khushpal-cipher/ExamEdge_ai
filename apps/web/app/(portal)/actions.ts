@@ -10,18 +10,33 @@ import { sendInvites } from '@/lib/email';
 import { currentHost, hostname, isUuid, MANAGERS, requireMember, STAFF } from '@/lib/tenant';
 
 // ---------------------------------------------------------------- batches
+// The owner types the batch's subjects right there (comma-separated, ADR-038).
 export async function createBatch(form: FormData) {
   const { institute, db } = await requireMember(MANAGERS);
   const name = text(form, 'name');
   if (!name) done('/batches', { code: '23514' });
   const exam = text(form, 'exam_id');
-  const { error } = await db.from('batches').insert({
-    institute_id: institute.id,
-    name,
-    academic_year: text(form, 'academic_year', 20),
-    exam_id: isUuid(exam) ? exam : null,
-  });
-  done('/batches', error);
+  const { data, error } = await db
+    .from('batches')
+    .insert({
+      institute_id: institute.id,
+      name,
+      academic_year: text(form, 'academic_year', 20),
+      exam_id: isUuid(exam) ? exam : null,
+    })
+    .select('id')
+    .single();
+  if (error) done('/batches', error);
+  const subjects = [
+    ...new Set(
+      text(form, 'subjects', 1000)
+        .split(',')
+        .map((s) => s.trim().slice(0, 120)),
+    ),
+  ];
+  const rows = subjects.filter(Boolean).map((s) => ({ institute_id: institute.id, batch_id: data.id, name: s }));
+  const { error: subjectError } = rows.length ? await db.from('subjects').insert(rows) : { error: null };
+  done(`/batches/${data.id}`, subjectError);
 }
 
 export async function setBatchArchived(form: FormData) {
@@ -36,35 +51,16 @@ export async function setBatchArchived(form: FormData) {
   done(`/batches/${id}`, error);
 }
 
-export async function setBatchSubjects(form: FormData) {
-  const { institute, db } = await requireMember(MANAGERS);
-  const id = form.get('batch_id');
-  if (!isUuid(id)) done('/batches', { code: '23514' });
-  const wanted = new Set(form.getAll('subject_id').filter(isUuid));
-  const { data: current, error: readError } = await db
-    .from('batch_subjects')
-    .select('subject_id')
-    .eq('institute_id', institute.id)
-    .eq('batch_id', id);
-  if (readError) done(`/batches/${id}`, readError);
-  const have = new Set(current!.map((r) => r.subject_id as string));
-  const add = [...wanted].filter((s) => !have.has(s));
-  const remove = [...have].filter((s) => !wanted.has(s));
-  if (add.length) {
-    const rows = add.map((subject_id) => ({ institute_id: institute.id, batch_id: id, subject_id }));
-    const { error } = await db.from('batch_subjects').insert(rows);
-    if (error) done(`/batches/${id}`, error);
-  }
-  if (remove.length) {
-    const { error } = await db
-      .from('batch_subjects')
-      .delete()
-      .eq('institute_id', institute.id)
-      .eq('batch_id', id)
-      .in('subject_id', remove);
-    if (error) done(`/batches/${id}`, error);
-  }
-  done(`/batches/${id}`, null);
+// Promotion (ADR-040): the old batch row is kept with left_at, so the student still sees their own year.
+export async function moveStudents(form: FormData) {
+  const { db } = await requireMember(MANAGERS);
+  const from = form.get('batch_id');
+  const to = form.get('to_batch_id');
+  if (!isUuid(from)) done('/batches', { code: '23514' });
+  const members = form.getAll('membership_id').filter(isUuid);
+  if (!isUuid(to) || !members.length) done(`/batches/${from}`, { code: '23514' });
+  const { error } = await db.rpc('move_students', { from_batch: from, to_batch: to, members });
+  done(`/batches/${from}`, error, 'moved');
 }
 
 export async function addBatchMember(form: FormData) {
@@ -102,20 +98,26 @@ export async function removeBatchMember(form: FormData) {
   done(`/batches/${batch}`, error);
 }
 
-// ---------------------------------------------------------------- subjects and chapters
+// ---------------------------------------------------------------- subjects, topics (table chapters), subtopics
 export async function createSubject(form: FormData) {
   const { institute, db } = await requireMember(MANAGERS);
+  const batch = form.get('batch_id');
   const name = text(form, 'name');
-  if (!name) done('/subjects', { code: '23514' });
-  const { error } = await db.from('subjects').insert({ institute_id: institute.id, name });
-  done('/subjects', error);
+  if (!isUuid(batch)) done('/batches', { code: '23514' });
+  if (!name) done(`/batches/${batch}`, { code: '23514' });
+  const { error } = await db.from('subjects').insert({ institute_id: institute.id, batch_id: batch, name });
+  done(`/batches/${batch}`, error);
 }
+
+// Topic forms live on the subject page; the subject id only picks where to go back to.
+const subjectPage = (form: FormData) =>
+  isUuid(form.get('subject_id')) ? `/subjects/${form.get('subject_id')}` : '/subjects';
 
 export async function addChapter(form: FormData) {
   const { institute, db } = await requireMember(STAFF);
   const subject = form.get('subject_id');
   const name = text(form, 'name', 200);
-  if (!isUuid(subject) || !name) done('/subjects', { code: '23514' });
+  if (!isUuid(subject) || !name) done(subjectPage(form), { code: '23514' });
   const { data: last } = await db
     .from('chapters')
     .select('position')
@@ -127,30 +129,30 @@ export async function addChapter(form: FormData) {
   const { error } = await db
     .from('chapters')
     .insert({ institute_id: institute.id, subject_id: subject, name, position: (last?.position ?? 0) + 1 });
-  done('/subjects', error);
+  done(subjectPage(form), error);
 }
 
 export async function renameChapter(form: FormData) {
   const { institute, db } = await requireMember(STAFF);
   const id = form.get('chapter_id');
   const name = text(form, 'name', 200);
-  if (!isUuid(id) || !name) done('/subjects', { code: '23514' });
+  if (!isUuid(id) || !name) done(subjectPage(form), { code: '23514' });
   const { error } = await db.from('chapters').update({ name }).eq('institute_id', institute.id).eq('id', id);
-  done('/subjects', error);
+  done(subjectPage(form), error);
 }
 
 // Swaps positions with the neighbour above/below within the same subject.
 export async function moveChapter(form: FormData) {
   const { institute, db } = await requireMember(STAFF);
   const id = form.get('chapter_id');
-  if (!isUuid(id)) done('/subjects', { code: '23514' });
+  if (!isUuid(id)) done(subjectPage(form), { code: '23514' });
   const { data: me } = await db
     .from('chapters')
     .select('subject_id, position')
     .eq('institute_id', institute.id)
     .eq('id', id)
     .maybeSingle();
-  if (!me) done('/subjects', { code: '42501' });
+  if (!me) done(subjectPage(form), { code: '42501' });
   const up = form.get('dir') === 'up';
   const { data: other } = await db
     .from('chapters')
@@ -161,27 +163,74 @@ export async function moveChapter(form: FormData) {
     .order('position', { ascending: !up })
     .limit(1)
     .maybeSingle();
-  if (!other) done('/subjects', null);
+  if (!other) done(subjectPage(form), null);
   const a = await db
     .from('chapters')
     .update({ position: other.position })
     .eq('institute_id', institute.id)
     .eq('id', id);
-  if (a.error) done('/subjects', a.error);
+  if (a.error) done(subjectPage(form), a.error);
   const b = await db
     .from('chapters')
     .update({ position: me.position })
     .eq('institute_id', institute.id)
     .eq('id', other.id);
-  done('/subjects', b.error);
+  done(subjectPage(form), b.error);
 }
 
 export async function deleteChapter(form: FormData) {
   const { institute, db } = await requireMember(STAFF);
   const id = form.get('chapter_id');
-  if (!isUuid(id)) done('/subjects', { code: '23514' });
+  if (!isUuid(id)) done(subjectPage(form), { code: '23514' });
   const { error } = await db.from('chapters').delete().eq('institute_id', institute.id).eq('id', id);
-  done('/subjects', error, 'deleted');
+  done(subjectPage(form), error, 'deleted');
+}
+
+export async function addSubtopic(form: FormData) {
+  const { institute, db } = await requireMember(STAFF);
+  const subject = form.get('subject_id');
+  const chapter = form.get('chapter_id');
+  const name = text(form, 'name', 200);
+  if (!isUuid(subject) || !isUuid(chapter)) done('/subjects', { code: '23514' });
+  if (!name) done(`/topics/${chapter}`, { code: '23514' });
+  const { data: last } = await db
+    .from('subtopics')
+    .select('position')
+    .eq('institute_id', institute.id)
+    .eq('chapter_id', chapter)
+    .order('position', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const { error } = await db.from('subtopics').insert({
+    institute_id: institute.id,
+    subject_id: subject,
+    chapter_id: chapter,
+    name,
+    position: (last?.position ?? 0) + 1,
+  });
+  done(`/topics/${chapter}`, error);
+}
+
+export async function renameSubtopic(form: FormData) {
+  const { institute, db } = await requireMember(STAFF);
+  const id = form.get('subtopic_id');
+  const chapter = form.get('chapter_id');
+  const name = text(form, 'name', 200);
+  if (!isUuid(chapter)) done('/subjects', { code: '23514' });
+  if (!isUuid(id) || !name) done(`/topics/${chapter}`, { code: '23514' });
+  const { error } = await db.from('subtopics').update({ name }).eq('institute_id', institute.id).eq('id', id);
+  done(`/topics/${chapter}`, error);
+}
+
+// Refused (in_use) while the subtopic still has notes.
+export async function deleteSubtopic(form: FormData) {
+  const { institute, db } = await requireMember(STAFF);
+  const id = form.get('subtopic_id');
+  const chapter = form.get('chapter_id');
+  if (!isUuid(chapter)) done('/subjects', { code: '23514' });
+  if (!isUuid(id)) done(`/topics/${chapter}`, { code: '23514' });
+  const { error } = await db.from('subtopics').delete().eq('institute_id', institute.id).eq('id', id);
+  done(`/topics/${chapter}`, error, 'deleted');
 }
 
 // ---------------------------------------------------------------- people

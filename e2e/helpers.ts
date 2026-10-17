@@ -34,3 +34,15 @@ export async function demoSignIn(page: Page, email: string) {
   await page.getByLabel('Demo user email').fill(email);
   await page.getByRole('button', { name: 'Sign in as demo user' }).click();
 }
+
+// Demo subjects repeat per batch (ADR-038); the seeded notes, questions and Studio material sit in the first batch
+// that studies the subject (JEE 2027 Morning for Physics, Chemistry and Maths).
+export async function demoTopic(subject: string, topic: string | null = null) {
+  const { rows } = await sql(
+    `select s.id as subject, c.id as topic from subjects s join institutes i on i.id = s.institute_id
+     join batches b on b.id = s.batch_id left join chapters c on c.subject_id = s.id and c.name = $2
+     where i.slug = 'demo' and s.name = $1 order by b.created_at, b.id limit 1`,
+    [subject, topic],
+  );
+  return rows[0] as { subject: string; topic: string };
+}
