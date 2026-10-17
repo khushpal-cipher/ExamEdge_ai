@@ -13,7 +13,8 @@ Continue building ExamEdge AI Release 1 in ~/Documents/startup/examedge_ai.
 2. Continue from PROGRESS.md "Next exact action" and "In progress". Do not restart or redo finished work;
    re-verify only what PROGRESS.md marks as unverified.
 3. First check `docker info` (run `open -a Docker` and wait if it fails) and `supabase status`
-   (run `supabase start` if stopped).
+   (run `supabase start` from the repo root if stopped). Never reset the local database without asking me:
+   it holds my test institutes (see PROGRESS.md).
 4. Before writing any Next.js code, read node_modules/next/AGENTS.md and the relevant files in
    node_modules/next/dist/docs/. This is Next 16: middleware.ts is now proxy.ts.
 5. Standing rule: install any free dev tool you need from trusted sources without asking and log it in

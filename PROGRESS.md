@@ -148,6 +148,8 @@ DONE + TESTED (2026-10-16, session 19):
 | Embedding real institute documents (Phase 4) | Q-08 Voyage data-use terms |
 | Pilot launch (Phase 10) | Q-01 legal opinion on minors' data (G8, AC10.4) |
 | Phase 10 cloud parts | Founder approval for accounts: production Supabase/Vercel/Railway, domain + wildcard TLS, prod Google OAuth, Sentry + spend alerts, independent backup storage; then the real restore drill (G7, AC10.2), k6 load test (AC10.3, AC7.4), rollback rehearsal (AC10.5) |
+| Invitation emails to anyone but the founder | A domain + Resend domain verification, then `EMAIL_FROM` (Resend test sender only reaches the account owner) — ADR-035 |
+| Google sign-in for everyone | Google consent screen is in Testing (only listed test users); publish it, and add the production callback URL when Supabase cloud exists |
 | Real AI | Anthropic key (tutor, Studio, OCR and AI bank questions ready); Voyage client not written (Q-08) — RUNBOOKS §5 |
 
 ## Failed checks
@@ -158,26 +160,35 @@ DONE + TESTED (2026-10-16, session 19):
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 22)
-`main` = `b6f2ded` (AI bank questions merged, PR #13). No open branch, no open PR. No local Release 1 work is known
-to be left: every Release 1 feature in HOW_IT_WORKS.md is built and tested in demo mode.
-Merged branches `phase-10-local`, `r1-ocr`, `r1-purge-files`, `r1-question-gen` can be deleted.
-Repo setting "Allow auto-merge" is on (founder, 2026-10-16), but `main` has no required status checks, so GitHub
-refuses auto-merge ("unstable"/"clean" status). Open question to the founder: make `check` + `secrets` required on
-`main` (repo setting → needs their yes), or keep merging by hand after CI is green.
+## Next exact action (session 23)
+`main` = `e5ac8f3`. No open branch, no open PR. Session 22 (2026-10-17) was founder hands-on testing; merged on the way:
+PR #14 (new institute shows in list), #15 delete institute (ADR-033), #16 local demo sign-in creates unknown accounts
+(ADR-034), #17 Google sign-in + invitation emails (ADR-035). All CI green.
+
+**Local state the founder is using — do NOT run `supabase db reset` / `npm run db:reset` without asking first** (it
+wipes their test data): institutes `v4classes` (owner v4classes@gmail.com accepted; teacher khushpal@gmail.com invited),
+`sharma` (owner sharma@gmail.com, not accepted), `allen` (owner allen@gmail.com, not accepted); founder platform admin
+`khushalsinghchouhan4@gmail.com` (TOTP enrolled). New migrations: apply with `supabase migration up` (keeps data).
+For the full gate without a reset, rely on CI and say so.
+
+**Founder keys (never print, never commit):** root `.env` = `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID/SECRET` (read by
+`supabase start`, so start Supabase from the repo root) + `RESEND_API_KEY`; `apps/web/.env.local` also has
+`RESEND_API_KEY`. Both gitignored; `gitleaks dir` flags them (expected), `gitleaks git` must stay clean.
+
 0. Fresh session: `cd ~/Documents/startup/examedge_ai && git checkout main && git pull && npm ci`; `docker info`
-   (else `open -a Docker`); `supabase status` (else `supabase start`); `supabase db reset && npm run seed:demo`.
-1. Tell the founder in simple English that Release 1 is fully built locally, then ask which to do next (all need
-   their decision; nothing else is waiting):
-   - approve cloud accounts → Phase 10 cloud parts (production Supabase/Vercel/Railway, domain + TLS, prod Google
-     OAuth, Sentry, spend alerts, independent backup storage, real restore drill G7, k6 load test AC7.4/AC10.3,
-     rollback rehearsal AC10.5, staging AC1.4–1.6);
-   - give an Anthropic key → switch tutor, Studio, OCR and AI bank questions to real AI (RUNBOOKS §5) and run the
-     BLOCKED checks: AC4.5/AC4.6 (OCR), AC5.2 (cost ±2 %), AC6.1–6.6 (tutor evals), AI question agreement rate;
-   - answer Q-08 (Voyage terms → write the Voyage client) and Q-01 (legal, blocks the pilot);
-   - a subject expert reviewer for real library content (AC8.1).
-2. Any new local task: new branch, tests + full gate (`npm run check` with port 3000 free, so E2E runs against the
-   production build), PR, CI green, squash-merge, PROGRESS update.
+   (else `open -a Docker`); `supabase status` (else `supabase start`). Dev server and worker stop when a session ends:
+   start the web with preview_start `web`; worker = `npm run dev:worker` with the local env from
+   `scripts/local-supabase.ts` `localWorkerEnv` (WORKER_DATABASE_URL, WORKER_STORAGE_EMAIL/PASSWORD, NEXT_PUBLIC_*).
+1. Ask the founder how their two pending checks went (UNVERIFIED, need their Google account/inbox):
+   (a) invite their Resend sign-up email from V4 Classes → People: email arrives ("emailed" badge);
+   (b) open it in a private window → Continue with Google → Accept invitation (that Gmail must be a Google OAuth
+   test user). Fix whatever fails; record evidence here.
+2. Offered to the founder, not yet decided (ask, do not build unasked):
+   - "Send new owner invitation" on the platform institute page (wrong owner email / lost link; today only SQL);
+   - clearer "too short" message for 1–2 character web addresses; allowing 2-character addresses is a product decision.
+3. Still needs founder decisions/accounts (see Blocked): domain + Resend domain verification (emails to anyone, set
+   `EMAIL_FROM`), publish the Google consent screen, Phase 10 cloud parts, Anthropic key, Q-08, Q-01.
+4. Any new local task: new branch, tests, `supabase migration up` (no reset), PR, CI green, squash-merge, PROGRESS.
 
 ## Relevant files and commands
 - Plan entry point: `docs/PROJECT_MASTER_PLAN.md`
@@ -199,6 +210,7 @@ refuses auto-merge ("unstable"/"clean" status). Open question to the founder: ma
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 22 | 2026-10-17 | Founder hands-on testing. Merged #14 institute list refresh, #15 delete institute (ADR-033), #16 local demo accounts (ADR-034), #17 Google sign-in + invitation emails (ADR-035); CI green each | `e5ac8f3` |
 | 1–2 | 2026-10-14/15 | Planning docs, founder decisions, tools, git init, workspaces, local Supabase init + pgTAP smoke | `5d26fc7` |
 | 4 | 2026-10-15 | Phase 1 gate green, CI audit gate, PR #1 merged (`913ec7f`). Phase 2 built: tenancy schema + RLS, 334 pgTAP, web tenant/sign-in/invite, demo seed, 6 E2E; local gate green; PR not yet opened | see `git log` |
 | 5 | 2026-10-15 | PR #2 merged (`c106364`). Phase 3 built (migration + 394 pgTAP, staff/student portals, platform admin + TOTP, E2E spec); E2E 4 failures fixed but not re-run; gate not run | see `git log` |
