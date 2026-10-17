@@ -442,3 +442,14 @@ th {
   margin: 0 6px 4px 0;
   text-decoration: none;
 }
+
+/* AI notes print as a clean page (Download as PDF, ADR-039). */
+@media print {
+  .side,
+  .no-print {
+    display: none !important;
+  }
+  .shell {
+    display: block;
+  }
+}

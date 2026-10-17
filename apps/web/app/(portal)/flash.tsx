@@ -17,7 +17,7 @@ const ERRORS: Record<string, string> = {
   invalid_key: 'The answer key does not match the options.',
   question_not_verified:
     'The two AI answers to this question differ, or the second check did not run. Open it, fix it if needed and save it.',
-  no_questions: 'The AI could not make usable questions from these notes. Try another chapter or question type.',
+  no_questions: 'The AI could not make usable questions from these notes. Try another topic or question type.',
   document_no_batches: 'Choose at least one batch.',
   document_not_ready: 'The file is still being processed. Publish it when it is ready.',
   closed: 'This test is not open right now.',
@@ -25,7 +25,9 @@ const ERRORS: Record<string, string> = {
   quota: "You've used today's AI limit. It resets tomorrow.",
   budget: "Your institute's AI budget for this month is used up. Please tell your institute admin.",
   ai_disabled: 'AI is switched off right now. Please try again later.',
-  no_sources: 'There are no published notes for this chapter yet, so there is nothing to make it from.',
+  no_sources: 'There are no published notes for this topic yet, so there is nothing to make it from.',
+  notes_refused: 'The AI could not write notes from this explanation. Try explaining it differently.',
+  storage_full: 'Your institute’s storage is full. Ask your admin.',
   refused: 'The AI could not make this from these notes. Please ask your teacher.',
   generation_failed: 'The AI could not make this right now. Please try again.',
 };
@@ -46,6 +48,12 @@ const OK: Record<string, string> = {
   saved_draft: 'Saved. It is a draft again until you publish it.',
   questions_made: 'AI questions added below as drafts. Check each one and approve it before using it in a test.',
   approved: 'Approved. It can now be added to tests.',
+  notes_written: 'AI notes written. Read and edit them below, then publish them when they are ready.',
+  notes_saved: 'Saved as a new version. Students keep the current one until it is processed.',
+  ai_test_made:
+    'AI test made as a draft. Open each question to check it (MCQs whose answers match can be approved here), then schedule it.',
+  ai_test_partial:
+    'AI test made as a draft, but one kind of question could not be made. Check the questions, then schedule it.',
   moved: 'Moved. The old batch stays in their history (read-only).',
 };
 
