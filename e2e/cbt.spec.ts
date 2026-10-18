@@ -67,6 +67,12 @@ test('CBT test: full screen, warnings, the 3rd submits it; only staff switch it 
   const q1 = student.getByRole('group', { name: /^Question 1\b/ });
   await q1.getByLabel('A. 4').check();
   await expect(q1.getByRole('status')).toHaveText('Saved');
+  // the submit question is asked on the page: "Keep working" stays in full screen with no warning (a browser
+  // confirm() popup made Chrome leave full screen unnoticed — founder bug, session 40)
+  await student.getByRole('button', { name: 'Submit test' }).click();
+  await student.getByRole('button', { name: 'Keep working' }).click();
+  await expect(student.getByRole('alertdialog')).toHaveCount(0);
+  expect(await fullscreen(student)).toBe(true);
   const warnings = async () =>
     (await sql('select cbt_warnings, status from test_attempts where test_id = $1', [testId])).rows[0];
 
@@ -88,10 +94,14 @@ test('CBT test: full screen, warnings, the 3rd submits it; only staff switch it 
   await dialog.getByRole('button', { name: 'Return to full screen' }).click();
   await expect(dialog).toHaveCount(0);
 
-  // ---- 3: a reload also leaves the test → submitted automatically, the answer kept
-  await student.reload();
-  await expect(student.getByText('Your test was submitted automatically after 3 warnings')).toBeVisible();
+  // ---- 3: copy or paste is blocked and counts too (founder, session 40) → submitted automatically, the answer kept.
+  // (A reload counts the same way; hand-checked in session 39.)
+  const blocked = await student.evaluate(
+    "!document.dispatchEvent(new ClipboardEvent('paste', { bubbles: true, cancelable: true }))",
+  );
+  expect(blocked).toBe(true);
   await expect.poll(warnings).toEqual({ cbt_warnings: 3, status: 'auto_submitted' });
+  await expect(student.getByText('Your test was submitted automatically after 3 warnings')).toBeVisible();
   const { rows } = await sql(
     `select aa.response from attempt_answers aa join test_attempts a on a.id = aa.attempt_id where a.test_id = $1`,
     [testId],

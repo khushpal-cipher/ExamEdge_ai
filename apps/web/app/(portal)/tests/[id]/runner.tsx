@@ -92,8 +92,10 @@ export function Runner({
   const [warnings, setWarnings] = useState(initialWarnings);
   const browserOk = useCbtBrowser() !== false;
   const leaving = useRef(false);
-  const asking = useRef(false); // the submit confirm() takes focus from the page
   const started = useRef(false);
+  const [cur, setCur] = useState(0); // one question on screen at a time
+  // Asked on the page, not with confirm(): Chrome leaves full screen for a browser popup (founder bug, session 40).
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     const offset = Date.parse(serverNow) - Date.now();
@@ -126,13 +128,21 @@ export function Runner({
     }
     const onFullscreen = () => !document.fullscreenElement && leave();
     const onVisibility = () => document.hidden && leave();
+    // No copy or paste during a CBT test (founder, session 40): blocked, and each try is a warning.
+    const onClipboard = (e: ClipboardEvent) => {
+      e.preventDefault();
+      leave();
+    };
+    const clip = ['copy', 'cut', 'paste'] as const;
     document.addEventListener('fullscreenchange', onFullscreen);
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('blur', leave);
+    clip.forEach((t) => document.addEventListener(t, onClipboard));
     return () => {
       document.removeEventListener('fullscreenchange', onFullscreen);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('blur', leave);
+      clip.forEach((t) => document.removeEventListener(t, onClipboard));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- set up once per attempt; handlers read refs
   }, [cbt, attemptId]);
@@ -150,7 +160,7 @@ export function Runner({
     setAway(false);
   }
   function leave() {
-    if (leaving.current || asking.current || submitting.current) return;
+    if (leaving.current || submitting.current) return;
     leaving.current = true;
     setAway(true);
     void warn();
@@ -209,8 +219,8 @@ export function Runner({
             ) : (
               <p>
                 {warnings
-                  ? 'You left full screen or switched to another tab or app. '
-                  : 'Leaving full screen or switching to another tab or app counts as a warning. '}
+                  ? 'You left full screen, switched to another tab or app, or tried to copy or paste. '
+                  : 'Leaving full screen, switching to another tab or app, or copying or pasting counts as a warning. '}
                 On warning {CBT_WARNINGS} your test is submitted automatically.
                 {warnings === CBT_WARNINGS - 1 ? ' One more warning submits your test.' : ''}
               </p>
@@ -238,14 +248,14 @@ export function Runner({
           {questions.length - unanswered} of {questions.length} answered · answers save automatically
         </span>
       </div>
-      {questions.map((q, i) => {
+      {questions.slice(cur, cur + 1).map((q) => {
         const value = answers[q.question_id];
         const st = state[q.question_id];
         const name = `q-${q.question_id}`;
         return (
           <fieldset key={q.question_id} className="card stack">
             <legend>
-              <b>Question {i + 1}</b>{' '}
+              <b>Question {cur + 1}</b>{' '}
               <span className="small muted">
                 {q.marks} marks{Number(q.negative_marks) ? `, −${q.negative_marks} if wrong` : ''}
                 {q.type === 'multi' ? ' · more than one may be correct' : ''}
@@ -325,18 +335,22 @@ export function Runner({
           </fieldset>
         );
       })}
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <button type="button" disabled={cur === 0} onClick={() => setCur(cur - 1)}>
+          Previous
+        </button>
+        <span className="small muted">
+          Question {cur + 1} of {questions.length}
+        </span>
+        <button type="button" disabled={cur === questions.length - 1} onClick={() => setCur(cur + 1)}>
+          Next
+        </button>
+      </div>
       <form
         ref={form}
         onSubmit={(e) => {
           e.preventDefault();
           if (submitting.current) return;
-          const auto = left != null && left <= 0;
-          asking.current = true;
-          const sure =
-            auto || confirm(unanswered ? `${unanswered} questions are unanswered. Submit anyway?` : 'Submit the test?');
-          // focus comes back after the dialog closes; a blur from it is not the student leaving
-          setTimeout(() => (asking.current = false), 500);
-          if (!sure) return;
           // Save anything still waiting for its autosave delay, then submit. Called directly: after preventDefault a
           // second requestSubmit() does not run a form `action` again.
           submitting.current = true;
@@ -350,9 +364,25 @@ export function Runner({
       >
         <input type="hidden" name="test_id" value={testId} />
         <input type="hidden" name="attempt_id" value={attemptId} />
-        <button type="submit" className="primary">
-          Submit test
-        </button>
+        {confirming ? (
+          <div className="card stack" role="alertdialog" aria-labelledby="submit-q">
+            <p id="submit-q">
+              {unanswered ? `${unanswered} questions are unanswered. Submit anyway?` : 'Submit the test?'}
+            </p>
+            <div className="row">
+              <button type="submit" className="primary">
+                Submit now
+              </button>
+              <button type="button" onClick={() => setConfirming(false)}>
+                Keep working
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" className="primary" onClick={() => setConfirming(true)}>
+            Submit test
+          </button>
+        )}
       </form>
     </div>
   );

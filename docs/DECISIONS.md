@@ -529,7 +529,9 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
   quizzes are another table and never have it). On a CBT test the student's page asks for full screen at "Start test
   in full screen"; the test then fills the whole page (no menu) and the questions are covered whenever the page is not
   in full screen. Leaving full screen, switching tab or app (page hidden or window blur — founder chose to count it),
-  or reloading/leaving the page and coming back is one warning; warning 3 submits the attempt (`auto_submitted`).
+  reloading/leaving the page and coming back, or trying to copy, cut or paste (blocked; founder, 2026-10-19) is one
+  warning; warning 3 submits the attempt (`auto_submitted`). The submit question is asked on the page, not with a
+  browser `confirm()` popup (Chrome leaves full screen for it; founder found the gap, 2026-10-19).
   Teachers see the count per student in the rank list and the CSV.
 - **Where it is counted:** `test_attempts.cbt_warnings` (0–3), changed only by definer `cbt_warning(attempt)` (own
   running attempt of a CBT test; the 3rd submits it), so a reload cannot reset it. `tests.cbt` cannot change once the
