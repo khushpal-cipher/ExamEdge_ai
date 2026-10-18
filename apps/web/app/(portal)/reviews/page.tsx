@@ -7,14 +7,16 @@ import { replyReview, sendReview } from './actions';
 export default async function Reviews({ searchParams }: { searchParams: Search }) {
   const { institute, member, db } = await requireMember([...MANAGERS, 'student']);
   if (member.role === 'student') {
-    // RLS: only the student's own named reviews (an anonymous one has no author stored).
-    const { data: mine, error } = await db
-      .from('reviews')
-      .select('id, body, reply, created_at, replied_at')
-      .eq('institute_id', institute.id)
-      .order('created_at', { ascending: false })
-      .limit(50);
+    // Own reviews, anonymous ones too (the author link is private; the institute never sees it).
+    const { data, error } = await db.rpc('my_reviews', { inst: institute.id });
     if (error) throw error;
+    const mine = (data ?? []) as {
+      id: string;
+      body: string;
+      anonymous: boolean;
+      created_at: string;
+      reply: string | null;
+    }[];
     return (
       <>
         <div className="top">
@@ -34,7 +36,7 @@ export default async function Reviews({ searchParams }: { searchParams: Search }
           </label>
           <p className="muted small">
             Only the owner and admins of {institute.name} read reviews, not your teachers. If you hide your name, your
-            name is not saved with the review, so nobody can see who wrote it, and you will not see their reply.
+            name is not shown to anyone at {institute.name}, and you still see their reply below.
           </p>
           <button type="submit" className="primary">
             Send review
@@ -45,7 +47,10 @@ export default async function Reviews({ searchParams }: { searchParams: Search }
             <h2 id="mine">Your reviews</h2>
             {mine.map((r) => (
               <article key={r.id} className="card stack" aria-label={`Your review from ${formatTime(r.created_at)}`}>
-                <p className="muted small">{formatTime(r.created_at)}</p>
+                <p className="muted small">
+                  {formatTime(r.created_at)}
+                  {r.anonymous ? ' · name hidden' : ''}
+                </p>
                 <p style={{ whiteSpace: 'pre-wrap' }}>{r.body}</p>
                 {r.reply ? (
                   <p className="notice" style={{ whiteSpace: 'pre-wrap' }}>
@@ -93,7 +98,7 @@ export default async function Reviews({ searchParams }: { searchParams: Search }
           <form action={replyReview} className="stack">
             <input type="hidden" name="review_id" value={r.id} />
             <label>
-              Your reply{r.user_id ? '' : ' (anonymous: the student will not see it)'}
+              Your reply
               <textarea name="reply" rows={2} maxLength={2000} defaultValue={r.reply ?? ''} />
             </label>
             <div>

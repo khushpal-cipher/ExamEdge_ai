@@ -27,8 +27,11 @@ select throws_ok(format($$ insert into public.reviews (institute_id, batch_id, b
   tests.inst('alpha'), pg_temp.bx('alpha')), '23514', null, 'blank review rejected');
 select throws_ok(format($$ insert into public.reviews (institute_id, batch_id, body) values (%L, %L, %L) $$,
   tests.inst('alpha'), pg_temp.bx('alpha'), repeat('a', 2001)), '23514', null, 'over 2000 characters rejected');
-select results_eq($$ select body from public.reviews $$, $$ values ('Great physics classes') $$,
-  'a student reads only their own named review (not the anonymous one, not others)');
+select is((select count(*) from public.reviews), 0::bigint, 'a student reads no review rows directly');
+select results_eq(format($$ select body, anonymous from public.my_reviews(%L) order by body $$, tests.inst('alpha')),
+  $$ values ('Great physics classes', false), ('Too much homework', true) $$,
+  'my_reviews: both own reviews, the anonymous one included');
+select throws_ok($$ select * from private.review_authors $$, '42501', null, 'the author table is not readable');
 select throws_ok($$ update public.reviews set body = 'changed' $$, '42501', null, 'nor change them');
 select is(tests.affected($$ update public.reviews set reply = 'self reply' where true $$), 0::bigint,
   'a student cannot reply');
@@ -56,9 +59,16 @@ select results_eq($$ select replied_by, replied_at is not null from public.revie
   format($$ values (%L::uuid, true) $$, tests.uid('owner@alpha.test')), 'who and when are stamped by the database');
 select throws_ok($$ update public.reviews set reply = '' where body like 'Great%' $$, '23514', null, 'empty reply rejected');
 
+select is((select count(*) from public.my_reviews(tests.inst('alpha'))), 0::bigint, 'owner''s my_reviews: none of the students''');
+select throws_ok($$ select user_id from private.review_authors $$, '42501', null, 'owner cannot look up an anonymous author');
+select is((select user_id from public.reviews where body like 'Too much%'), null, 'and the review row has no author');
+
 select tests.login('student1@alpha.test');
-select results_eq($$ select body, reply from public.reviews $$,
-  $$ values ('Great physics classes', 'Thanks, we will add doubt classes') $$, 'the student reads the reply to their review');
+select results_eq(format($$ select body, reply from public.my_reviews(%L) order by body $$, tests.inst('alpha')),
+  $$ values ('Great physics classes', 'Thanks, we will add doubt classes'), ('Too much homework', 'Noted') $$,
+  'the student reads the replies, also to their anonymous review');
+select tests.login('student2@alpha.test');
+select is((select count(*) from public.my_reviews(tests.inst('alpha'))), 0::bigint, 'another student sees none of them');
 select tests.login('teacher1@alpha.test');
 select is(tests.affected($$ update public.reviews set reply = 'teacher' where true $$), 0::bigint, 'a teacher cannot reply');
 select tests.login('owner@alpha.test');

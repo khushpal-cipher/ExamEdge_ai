@@ -53,7 +53,8 @@ select set_eq($$ select proname::text from pg_temp.our_functions
         'ai_settle_job', 'ai_globally_enabled', 'set_ai_enabled', 'report_answer', 'tutor_activity',
         'can_read_artifact',
         'submit_practice', 'practice_activity', 'guard_upload', 'job_slot_free', 'purge_expired', 'purgeable', 'is_service_account',
-        'purgeable_files', 'delete_institute', 'reinvite_owner', 'inr_per_usd', 'set_inr_per_usd'],
+        'purgeable_files', 'delete_institute', 'reinvite_owner', 'inr_per_usd', 'set_inr_per_usd',
+        'record_review_author', 'my_reviews'],
   'SECURITY DEFINER functions match the reviewed allowlist');
 
 select is_empty($$ select proname from pg_temp.our_functions

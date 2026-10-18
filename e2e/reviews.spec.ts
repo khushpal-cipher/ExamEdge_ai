@@ -13,7 +13,9 @@ async function login(page: Page, email: string) {
   await expect(page).toHaveURL(/\/(home|dashboard)$/);
 }
 
-test('student reviews reach only the owner/admin, who reply; a hidden name is not stored', async ({ page }) => {
+test('student reviews reach only the owner/admin, who reply; a hidden name stays hidden, its reply still arrives', async ({
+  page,
+}) => {
   const tag = Date.now().toString(36);
   await login(page, 'student01@demo.test');
   await page.getByRole('link', { name: 'Review', exact: true }).click();
@@ -41,13 +43,19 @@ test('student reviews reach only the owner/admin, who reply; a hidden name is no
   await named.getByLabel('Your reply').fill(`Thanks ${tag}`);
   await named.getByRole('button', { name: 'Reply' }).click();
   await expect(page.getByRole('status')).toHaveText('Reply saved.');
-  await expect(hidden.getByText('anonymous: the student will not see it')).toBeVisible();
+  await hidden.getByLabel('Your reply').fill(`Noted ${tag}`);
+  await hidden.getByRole('button', { name: 'Reply' }).click();
+  await expect(page.getByRole('status')).toHaveText('Reply saved.');
+  await expect(hidden).toContainText('Anonymous');
 
   await login(page, 'student01@demo.test');
   await page.goto(`${DEMO}/reviews`);
   const mine = page.getByRole('region', { name: 'Your reviews' });
   await expect(mine.getByRole('article').filter({ hasText: `Named review ${tag}` })).toContainText(`Thanks ${tag}`);
-  await expect(mine.getByText(`Hidden review ${tag}`)).toHaveCount(0);
+  // The student who hid their name still sees the reply (the institute never learns who it was).
+  const mineHidden = mine.getByRole('article').filter({ hasText: `Hidden review ${tag}` });
+  await expect(mineHidden).toContainText('name hidden');
+  await expect(mineHidden).toContainText(`Noted ${tag}`);
 
   await login(page, 'teacher1@demo.test');
   await expect(page.getByRole('link', { name: 'Reviews' })).toHaveCount(0);
