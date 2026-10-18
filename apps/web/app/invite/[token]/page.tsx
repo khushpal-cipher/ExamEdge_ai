@@ -26,27 +26,32 @@ export default async function Invite({
   const self = `/invite/${encodeURIComponent(token)}`;
   return (
     <main className="center">
-      <h1>Join {institute.name}</h1>
-      {error && MESSAGES[error] && (
-        <p role="alert" className="alert">
-          {MESSAGES[error]}
-        </p>
-      )}
-      {!member ? (
-        <SignIn next={self} failed={error === 'signin'} />
-      ) : (
-        <>
-          <form action={acceptInvite}>
-            <input type="hidden" name="token" value={token} />
-            <button type="submit" className="primary">
-              Accept invitation
-            </button>
-          </form>
-          <form action={signOut}>
-            <button type="submit">Use a different account</button>
-          </form>
-        </>
-      )}
+      <div>
+        <h1>Join {institute.name}</h1>
+        <p className="lede">Sign in with the email address your institute invited.</p>
+      </div>
+      <div className="stack">
+        {error && MESSAGES[error] && (
+          <p role="alert" className="alert">
+            {MESSAGES[error]}
+          </p>
+        )}
+        {!member ? (
+          <SignIn next={self} failed={error === 'signin'} />
+        ) : (
+          <>
+            <form action={acceptInvite}>
+              <input type="hidden" name="token" value={token} />
+              <button type="submit" className="primary">
+                Accept invitation
+              </button>
+            </form>
+            <form action={signOut}>
+              <button type="submit">Use a different account</button>
+            </form>
+          </>
+        )}
+      </div>
     </main>
   );
 }

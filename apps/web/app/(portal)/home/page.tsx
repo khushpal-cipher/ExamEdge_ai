@@ -46,36 +46,18 @@ export default async function StudentHome() {
   return (
     <>
       <div className="top">{hello}</div>
-      <section className="card stack" aria-labelledby="my-subjects">
-        <h2 id="my-subjects">My subjects</h2>
-        {!subjects?.length ? (
-          <p className="empty">No subjects yet. Your institute adds them to your batch.</p>
-        ) : (
-          <div className="grid">
-            {subjects.map((s) => (
-              <Link key={s.id} href={`/subjects/${s.id}`} className="card tile">
-                <h3>{s.name}</h3>
-                <p className="muted small">
-                  {(s.chapters as unknown as { count: number }[])[0]?.count ?? 0} topic
-                  {(s.chapters as unknown as { count: number }[])[0]?.count === 1 ? '' : 's'}
-                </p>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
       <div className="grid">
         <section className="card stack" aria-labelledby="upcoming">
           <h2 id="upcoming">Upcoming tests</h2>
           {upcoming.length === 0 ? (
             <p className="empty">No tests scheduled yet.</p>
           ) : (
-            <ul className="stack" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            <ul className="stack list">
               {upcoming.map((t) => {
                 const phase = testPhase(t, now);
                 const started = mine.has(t.id);
                 return (
-                  <li key={t.id} className="row" style={{ justifyContent: 'space-between' }}>
+                  <li key={t.id} className="row between">
                     <span>
                       <b>{t.title}</b>
                       <span className="small muted">
@@ -137,6 +119,24 @@ export default async function StudentHome() {
           )}
         </section>
       </div>
+      <section className="card stack" aria-labelledby="my-subjects">
+        <h2 id="my-subjects">My subjects</h2>
+        {!subjects?.length ? (
+          <p className="empty">No subjects yet. Your institute adds them to your batch.</p>
+        ) : (
+          <div className="grid">
+            {subjects.map((s) => (
+              <Link key={s.id} href={`/subjects/${s.id}`} className="card tile">
+                <h3>{s.name}</h3>
+                <p className="muted small">
+                  {(s.chapters as unknown as { count: number }[])[0]?.count ?? 0} topic
+                  {(s.chapters as unknown as { count: number }[])[0]?.count === 1 ? '' : 's'}
+                </p>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
     </>
   );
 }

@@ -8,7 +8,7 @@ export function BatchSwitcher({ list, selected }: { list: StudentBatch[]; select
   return (
     <form action={chooseBatch} className="switcher">
       <label>
-        Batch
+        <span>Batch</span>
         <select
           name="batch"
           defaultValue={selected}

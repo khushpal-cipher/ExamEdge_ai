@@ -577,3 +577,14 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
   off-white, with a dark mode. Fonts stay Poppins + Lora. CSS/markup only, no new dependency.
 - **Plan and token table:** `docs/UI_REDESIGN_PLAN.md` (branch `r13-ui`; the founder sees student Home + test page
   before the rest is restyled).
+
+**ADR-049 update (founder, 2026-10-19, session 41):** the indigo + saffron theme is replaced by the founder's palette
+`#3368A0` (primary), `#66A3BF` (secondary), `#C8DFDB` (mint), `#F2EFE7` (warm off-white), and the founder asked for a
+real redesign, not a recolour. Built ("workbook" direction, founder said "keep this type of UI"): Plus Jakarta Sans for
+the interface + Source Serif 4 for page titles, numbers and long reading (replacing Poppins + Lora); page sections are
+divided by hairlines and space instead of boxes, cards only for things you press or fill; mint = "yours/current"
+(selected answer, active nav); `#66A3BF` only for progress fills and accent rules (2.4–2.8:1, never text); links in
+`#244E7A`; dark mode derived. Entry pages: name + purpose left, sign-in right. Home shows Upcoming tests + My progress
+before subjects. Test runner: timer with answered-progress bar, serif question stem, large option rows, Previous/Next
+pinned at the bottom on phones. An institute's brand colour now tints only its own logo mark (it used to replace the
+accent everywhere). No logic, DB or E2E selector change.

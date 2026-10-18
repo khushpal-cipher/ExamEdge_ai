@@ -41,14 +41,15 @@ export default async function PortalLayout({ children }: { children: React.React
         ? [...STAFF_NAV, ['/reviews', 'Reviews'], ['/usage', 'Bill']]
         : STAFF_NAV;
   return (
-    <div className="shell" style={brandStyle(branding.color)}>
+    <div className="shell">
       <aside className="side">
         <a className="brand" href={nav[0]![0]}>
           {logo ? (
             // eslint-disable-next-line @next/next/no-img-element -- tiny public logo, not worth image optimisation config
             <img className="logo" src={logo} alt="" width={38} height={38} />
           ) : (
-            <span className="logo" aria-hidden="true">
+            // The institute's brand colour tints its own mark; the interface keeps the ExamEdge palette (ADR-049).
+            <span className="logo" aria-hidden="true" style={brandStyle(branding.color)}>
               {initials(institute.name)}
             </span>
           )}

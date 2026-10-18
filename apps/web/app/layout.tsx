@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
-import { Lora, Poppins } from 'next/font/google';
+import { Plus_Jakarta_Sans, Source_Serif_4 } from 'next/font/google';
 import './globals.css';
 
-const ui = Poppins({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-ui' });
-const read = Lora({ subsets: ['latin'], variable: '--font-read' });
+// ADR-049: Plus Jakarta Sans for the interface, Source Serif 4 for page titles and long reading (notes, answers).
+const ui = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-ui' });
+const read = Source_Serif_4({ subsets: ['latin'], variable: '--font-read' });
 
 export const metadata: Metadata = {
   title: 'ExamEdge AI',

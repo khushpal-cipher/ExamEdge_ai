@@ -1,5 +1,9 @@
 # UI redesign plan (R1.3, founder, 2026-10-19) — ADR-049
 
+> **Superseded theme (session 41):** the founder replaced indigo + saffron with `#3368A0` / `#66A3BF` / `#C8DFDB` /
+> `#F2EFE7` and new fonts (Plus Jakarta Sans + Source Serif 4) — see the ADR-049 update in DECISIONS.md. The theme
+> table below is history; the build order (steps 3–7) still applies.
+
 ## What the founder asked
 "The UI looks very bad." Of five references (21st.dev, brilliant.org, guild.com, circle-website.webflow.io,
 museconnect.webflow.io) the founder accepted **Brilliant** as the layout/feel reference, but **not Brilliant's
