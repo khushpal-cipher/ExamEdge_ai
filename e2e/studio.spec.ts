@@ -33,8 +33,7 @@ const generations = async () =>
 
 async function generate(page: Page, chapter: string, kind: string) {
   const form = (await smartStudy(page, chapter)).getByRole('form', { name: 'Make study material' });
-  await form.getByLabel('Make').selectOption({ label: kind });
-  await form.getByRole('button', { name: 'Generate' }).click();
+  await form.getByRole('button', { name: kind, exact: true }).click(); // one tile per tool (ADR-043)
   await expect(page).toHaveURL(/\/studio\/[0-9a-f-]{36}\?ok=(generated|reused)$/);
   const url = new URL(page.url());
   return { id: url.pathname.split('/').pop()!, ok: url.searchParams.get('ok') };

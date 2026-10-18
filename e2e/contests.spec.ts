@@ -82,8 +82,11 @@ test('a promoted student switches to the past batch and sees only their own time
     await page.getByRole('link', { name: 'Contest' }).click();
     await expect(page.getByText('No tests in this batch yet.')).toBeVisible();
 
+    // One click switches (no Show button) and opens that batch's Home (ADR-043).
     await page.getByRole('combobox').selectOption({ label: 'JEE 2027 Morning (past)' });
-    await page.getByRole('button', { name: 'Show' }).click();
+    await expect(page).toHaveURL(/\/home$/);
+    await expect(page.getByRole('button', { name: 'Show' })).toHaveCount(0);
+    await page.getByRole('link', { name: 'Contest' }).click();
     await expect(page.getByText(/JEE 2027 Morning · past batch/)).toBeVisible();
     const results = page.getByRole('region', { name: 'Results', exact: true });
     await expect(results.getByText('Physics Test 1')).toBeVisible();
