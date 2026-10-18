@@ -148,7 +148,7 @@ test('teacher builds a mixed test, student takes it, teacher checks and releases
   // ADR-046: own marks at once; correct answers only after closing time; rank only with release.
   await expect(student.locator('.stat').filter({ hasText: 'Marks so far' })).toContainText('12 / 16');
   await expect(student.locator('.stat').filter({ hasText: 'Test rank' })).toContainText('After release');
-  await expect(student.getByText('Not checked yet')).toBeVisible();
+  await expect(student.getByText('Not checked yet', { exact: true })).toBeVisible();
   await expect(student.getByText(/^Correct answer: shown after the test closes/)).toHaveCount(3);
   await noSeriousA11yIssues(student);
 
