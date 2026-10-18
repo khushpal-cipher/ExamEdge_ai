@@ -23,13 +23,15 @@ Last updated: 2026-10-18 (session 36)
 **R1.1 step 6 MERGED** (PR #23, squash `061dadf`, CI green run 39091413903: check incl. E2E + secrets, 2026-10-18): Contest page + batch switcher (ADR-040).
 **R1.1 step 7 MERGED** (PR #24, squash `4f3f78a`, CI green run 39091772704: check incl. E2E + secrets, 2026-10-18): platform "All institutes" shows AI tokens + cost this month per institute (ADR-041 part 1).
 **R1.1 step 8 MERGED** (PR #25, squash `f0b1ec5`, CI green run 39107064953: check incl. pgTAP + E2E + secrets, 2026-10-18). **R1.1 is DONE** (all 8 steps); only ADR-041 part 2 (charges/bill) waits for the founder.
-**R1.2 = founder change list — founder said GO (session 35, 2026-10-18).** Steps 1–3 on PR #26 (CI green, NOT merged); item 1 (new test page) **built and locally green** on branch `r12-new-test` (stacked on `r12-ui`), E2E only in CI. See "In progress" and "Next exact action (session 36)".
+**R1.2 steps 1–3 MERGED** (PR #26, squash `ed98a0c`, CI run 39116328717 green, 2026-10-18).
+**R1.2 item 1 MERGED** (PR #27, squash `6956c98`, CI run 39118383486 green on `6397d00`: unit 164, pgTAP 1347, integration 28, E2E 29/29 against the production build, secrets, 2026-10-18). **R1.2 is DONE**; only ADR-041 part 2 (charges/bill) waits for the founder.
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-18 | R1.2 merged (PR #26 `ed98a0c`, PR #27 `6956c98`) | Founder approved merging #26 in chat; `r12-new-test` rebased onto `main`, force-pushed; PR #27 CI run 39118383486 green (check incl. E2E 29/29 + secrets); `gh pr merge 27 --squash` → `6956c98`. |
 | 2026-10-18 | R1.2 item 1 web part (ADR-042), branch `r12-new-test` — NOT merged | Local: format, lint + forbidden, typecheck PASS; unit 164/164; `npm run test:db` Files=22 Tests=1347 PASS; `npm run test:int` 28/28; `npm run build` + bundle scan PASS. E2E → CI. Browser (production build `next start -p 3001`, newtown, teacher.jee, 375 px): topic page → only "Subtopics" tab (student: Subtopics + Smart Study); Tests → New test (maths · jee 2027) → draft page; AI request "2 MCQs + 1 theory on probability, medium" → `?error=no_sources` (no published notes, nothing added); "Type a question" (written) → `ok=question_added`, listed in Questions; Schedule → `ok=scheduled`; bank has no New question form; scrollWidth 375 after the label fix (was 721). Temporary test + question **deleted** (tests 0, questions 3 = before). |
 | 2026-10-18 | R1.2 steps 1–3 (PR #26, branch `r12-ui`, CI green, NOT merged) | ADR-042 (new test page) + ADR-043 (switcher, tiles), HOW_IT_WORKS / DATABASE_DESIGN / AI_PIPELINE updated (`66a877f`). One-click batch switcher (`batch-switcher.tsx`, noscript Show), `chooseBatch` → `redirect('/home')`; Smart Study tiles (one form, a submit button per tool, icons in `--accent`) + "Made by you" / "From your teachers" below (`c56c686`). E2E updated: `contests.spec.ts` (switch → /home, no Show button), `studio.spec.ts` (tile click). Local: format, lint, typecheck, unit 154, pgTAP 1334, int 28, build + bundle PASS. Browser (`next dev` :3000 via preview `web-attach`, newtown, student1, 375 px, scrollWidth 375): subject page → pick "neet 2027 (past)" → /home of neet 2027; tiles render; Summary tile → `?error=no_sources` on probability (no notes, nothing created). Temporary row (student1 past member of neet 2027) added and **removed** (count back to 1). CI run 39116328717: check (incl. E2E) + secrets **pass**. |
 | 2026-10-18 | R1.1 step 8 merged (PR #25) | Past-batch test page shows the reason instead of "Start test" (+E2E in `contests.spec.ts`); teacher question bank lists only subjects of their batches; "Topic" / "Topic strength" wording; singular "1 topic"/"1 subtopic"; `launch.json` `web-attach`. Local: format, lint, typecheck, unit 154, int 28, build + bundle ok; pgTAP 1334 on `c5df7cd`. CI run 39107064953 green (incl. pgTAP + E2E); `gh pr merge 25 --squash` → `f0b1ec5`. |
@@ -63,7 +65,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### R1.2 item 1 — new test page (ADR-042), branch `r12-new-test` (stacked on `r12-ui`) — session 36: BUILT, locally green
+### R1.2 item 1 — new test page (ADR-042) — session 36: MERGED (PR #27, `6956c98`)
 - `5067caf` DB (migration 23, **applied to the founder's local DB**), `64bc029` core `planTest`, `d9533bf` WIP web part
   (sessions 35), then session 36: topic page Smart Study tab restored for students (staff: Subtopics only); Tests →
   New test = required "Subject (and its batch)" select grouped by batch (replaces the batch checkboxes); question bank
@@ -78,8 +80,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
   dev`) → CI.
 - **Unverified:** the full AI path with real questions in the browser (founder DB has no published notes → the AI
   request correctly ended at `?error=no_sources`); covered by E2E `question-gen` in CI.
-**WARNING — local DB is ahead of `main`:** migration 23 is applied to the founder's DB, so `main`'s code (topic page
-"AI test" tab → `add_ai_test`) fails there until this branch merges. The `next dev` on :3000 (started 14:05, before
+Migration 23 is now on `main` too (local DB and `main` agree again). The `next dev` on :3000 (started 14:05, before
 these files) served a stale build: the "Add questions with AI" form rendered without its server action (plain GET).
 Restart it (`npm run dev`) before using it; the production build (`web-prod-3001`) is correct.
 
@@ -114,13 +115,10 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 37)
-1. `cd ~/Documents/startup/examedge_ai && git fetch && git status` (branch `r12-new-test`); `docker info`,
-   `supabase status`.
-2. Merge PR #26 (https://github.com/khushpal-cipher/ExamEdge_ai/pull/26, steps 1–3, CI green): `gh pr merge 26
-   --squash` — in session 36 the Claude Code auto-mode classifier **refused** this merge, so the founder must run it
-   or allow it. Then `git rebase --onto origin/main r12-ui r12-new-test`, `git push --force-with-lease`.
-3. Open/refresh the PR for `r12-new-test` into `main`, watch CI (E2E `question-gen`, `assessments`, `studio` are new),
-   fix until green, merge. Then R1.2 is done; only ADR-041 part 2 (bill) waits for the founder.
+1. `cd ~/Documents/startup/examedge_ai && git checkout main && git pull`; `docker info`, `supabase status`.
+2. R1.1 and R1.2 are merged and done. Restart the stale `next dev` on :3000 (`npm run dev`) before the founder tests.
+3. Ask the founder for the next change list, or for ADR-041 part 2 (charges per institute + bill page; payment
+   gateway = paid account → ask first). Phase 10 cloud parts stay BLOCKED (see Blocked).
 
 ## R1.2 founder change list (session 34, 2026-10-18) — founder said GO in session 35
 R1.1 is merged and done (`main` = `f0b1ec5`). The founder described these changes in session 34 and said "that's all the
