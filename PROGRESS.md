@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-18 (session 38)
+Last updated: 2026-10-18 (session 38, handoff)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -32,13 +32,17 @@ shows "Add questions" (AI box + Type a question) first, hint on the New test for
 **Session 37 work MERGED** (session 38, founder said "merge both"): PR #30 (`4e27872`, CI run 39138871672 green) —
 negative marks + optional model answer + JEE Advanced multi-correct (ADR-045); PR #31 (`8499b5e`, CI run 39140952256
 green, after merging `main` into `r12-bill` because force-push is not allowed) — ₹ Bill (ADR-041 part 2). `main` = `8499b5e`.
+**Session 38 (open, CI green, NOT merged):** PR #32 instant result (ADR-046), PR #33 student reviews + replies (ADR-047).
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
-| 2026-10-18 | Student sees own result right after submit (founder, ADR-046), branch `r12-instant-result` | Founder chose: marks + right/wrong at once, correct answers at closing time (key-sharing risk), theory = own answer + marks once checked, rank after release. Migration `20261109000028_instant_result.sql` (`private.get_attempt_review`) applied with `supabase migration up`. pgTAP `060` +6 (after submit: live marks, no keys; still writing / another student's attempt refused; after close: −negative, blank 0, keys, no model answer, no rank; checked-before-release written marks + comment): `npx supabase test db` Files=24 Tests=1378 PASS. format, lint + forbidden, typecheck PASS; unit 163/163; int 28/28; build + bundle PASS. E2E `assessments.spec.ts` (Marks so far 12 / 16, After release, Not checked yet, 3× key-after-close note; after close 3× Correct answer, no Model answer) → CI (:3000 held by the founder's `next dev`). Browser (founder's `next dev` :3000, newtown, student2): temporary copy of "jhj" with a submitted attempt → "-1 / 4", "After release", "Correct answer: shown after the test closes"; after moving its close time → "Correct answer: A", 375 px scrollWidth 375; released "jhj" unchanged (rank 1). Temporary test **deleted** (tests 5, attempts 1, answers 1 = before). |
+| 2026-10-18 | Student sees own result right after submit (founder, ADR-046), branch `r12-instant-result` | Founder chose: marks + right/wrong at once, correct answers at closing time (key-sharing risk), theory = own answer + marks once checked, rank after release. Migration `20261109000028_instant_result.sql` (`private.get_attempt_review`) applied with `supabase migration up`. pgTAP `060` +6 (after submit: live marks, no keys; still writing / another student's attempt refused; after close: −negative, blank 0, keys, no model answer, no rank; checked-before-release written marks + comment): `npx supabase test db` Files=24 Tests=1378 PASS. format, lint + forbidden, typecheck PASS; unit 163/163; int 28/28; build + bundle PASS. E2E `assessments.spec.ts` (Marks so far 12 / 16, After release, Not checked yet, 3× key-after-close note; after close 3× Correct answer, no Model answer) → CI (:3000 held by the founder's `next dev`). Browser (founder's `next dev` :3000, newtown, student2): temporary copy of "jhj" with a submitted attempt → "-1 / 4", "After release", "Correct answer: shown after the test closes"; after moving its close time → "Correct answer: A", 375 px scrollWidth 375; released "jhj" unchanged (rank 1). Temporary test **deleted** (tests 5, attempts 1, answers 1 = before). PR #32; CI first failed on `getByText('Not checked yet')` (also in the notice) → `exact: true`, run 39147007384 green on `8c20c74`. |
+| 2026-10-18 | Student reviews, read only by owner/admin (founder, ADR-047), branch `r12-reviews` (from `main` `8499b5e`; independent of PR #32) | Founder: Review tab for students, Reviews tab for owner/admin only, student may hide their name (then no `user_id` stored), text only. Migration `20261110000029_reviews.sql` applied with `psql -1 -f` + a `supabase_migrations.schema_migrations` row (`supabase migration up` refused: migration 28 is applied locally but not on this branch). pgTAP new `250_reviews.sql` + fixture row in `test_helpers.sql` (reloaded with `psql -f`): `npx supabase test db` Files=25 Tests=1412 PASS (isolation matrix incl. reviews). format, lint + forbidden, typecheck PASS; unit 163/163; int 28/28; build + bundle PASS. E2E new `reviews.spec.ts` → CI. Browser (founder's `next dev` :3000, newtown): student2 sees "Review" in the sidebar, sent an anonymous review → flash, stored with `user_id` null + batch neet 2027, 375 px scrollWidth 375; teacher.jee: no Reviews link, `/reviews` 404. Temporary review **deleted**; the founder's own two "hello!" reviews kept. Owner page not clicked (founder's Google sign-in) → E2E. |
+| 2026-10-18 | Owner/admin reply to reviews (founder, same PR #33) | Migration `20261111000030_review_replies.sql` (`reply`, `replied_at`, `replied_by` stamped by trigger `stamp_reply`; U(`reply`) owner/admin; student reads own named rows) applied with `psql -1 -f` + history row. pgTAP `250` now 26 tests (owner replies incl. anonymous, cannot edit body or forge `replied_by`, empty reply rejected, remove clears stamps, student reads reply, teacher/student cannot reply): Files=25 Tests=1423 PASS. typecheck, lint, format, unit 163, build + bundle PASS. E2E `reviews.spec.ts` extended (owner replies → student sees it; hidden review not in the student's list) → CI. Browser: student2 page lists "Your reviews" with the founder's own live reply "asdhk" (founder tested the owner reply form on :3000; DB stamped `replied_by`/`replied_at`). Temporary "TMP named review" **deleted**. |
+| 2026-10-18 | Anonymous reviewers see the reply too (founder, same PR #33) | Migration `20261112000031_review_authors.sql`: `private.review_authors` (no API grant) filled by definer trigger `record_author` from the session, backfilled for named reviews; definer `my_reviews(inst)` (allowlist +2); policy `reviews_own_read` dropped. Applied with `psql -1 -f` + history row (backfill run by hand after). pgTAP `250` (my_reviews returns own incl. anonymous with replies, others' none, owner cannot read `private.review_authors`, anonymous row has no `user_id`): Files=25 Tests=1429 PASS. typecheck, lint, format, unit 163, int 28, build + bundle PASS. E2E `reviews.spec.ts` (owner replies to the hidden one, student sees "name hidden" + reply) → CI. Browser (student2): "TMP hidden review" + DB reply shown; founder's own "whats up"→"done" (anonymous) and "hello!"→"asdhk" (named, needed the backfill — found in this check) shown. CI: first run failed on `getByLabel('Your review')` (the student's review cards are also labelled) → `exact: true`; run 39147004736 green. Temporary review **deleted**. Founder's first anonymous "hello!" (before migration 31) has no stored author, so its reply cannot reach the student. |
 | 2026-10-18 | Owner/admin "AI usage" → **Bill** in ₹ (founder, ADR-041 part 2 first step), branch `r12-bill` (stacked on `r12-typed-marks`) | Founder chose: platform admin sets "₹ per US$"; commission later. Migration `20261108000027_bill.sql` (`settings.inr_per_usd`, `set_inr_per_usd` aal2 + audit, `inr_per_usd()`, `institute_bill(inst)`), applied with `supabase migration up` (+ the `public.inr_per_usd()` wrapper run by hand with `psql`, same SQL as the file). Local: format, lint, typecheck PASS; unit 163/163 (budget-level helper + its test removed with the old page); pgTAP Files=24 Tests=1372 PASS (new `240_bill.sql`, allowlist +2); int 28/28; build + bundle PASS. E2E `usage.spec.ts` (owner Bill ₹ only, no tokens/$) + `portals.spec.ts` (platform saves the rate) → CI. Browser (`web-prod-3001`, teacher.jee): no Bill link, `/usage` 404. Owner page and platform form **not clicked in the browser** (founder's Google/MFA sign-in) → E2E in CI. |
 | 2026-10-18 | Multiple-correct MCQs marked like JEE Advanced (founder chose it over split-by-count, ADR-045), on `r12-typed-marks` / PR #30 | Migration `20261107000026_multi_partial_marks.sql` (`grade_objective`: all right = full, only right but not all = marks/4 each, any wrong = −negative, blank 0); pgTAP `060` old "subset = no partial marks" assertion replaced by 7 new-rule cases (founder changed the rule); 1361 PASS. Form hint under the options. PR #30 CI first failed on 2 E2E selectors (new label also matched "Correct answer"; documents test picked a soft-deleted/NEET note — that one also failed on `main` since ADR-044): fixed in `005337c`. |
 | 2026-10-18 | Type a question: negative marks + optional model answer (founder, session 37), branch `r12-typed-marks` | Migration `20261106000025_typed_negative_marks.sql` (`add_test_questions` reads `negative_marks`) applied with `supabase migration up`; form: "Marks for a correct answer" + "Negative marks for a wrong answer" (not for theory), model answer optional; check + review pages hide an empty model answer. Local: format, lint + forbidden, typecheck PASS; unit 164/164; `npx supabase test db` Files=23 Tests=1355 PASS (3 new in `220`); `npm run test:int` 28/28; `npm run build` + bundle scan PASS. E2E `assessments.spec.ts` updated (MCQ −1 shown in the table, theory added with no model answer) → CI (:3000 held by another `next dev`). Browser (`web-prod-3001`, newtown, teacher.jee "Amit Verma"): temporary draft test on maths · jee 2027 → typed MCQ with negative 1 → stored `marks 4, negative_marks 1`; theory with blank model answer → stored `{"model_answer": ""}`, no negative field shown; 375 px scrollWidth 375. Temporary test + 2 questions **deleted** (tests 2, questions 3 = before). |
@@ -128,14 +132,35 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 39)
-1. `git checkout r12-instant-result && git pull`; `docker info`; `supabase status`. Local DB has migrations up to 28.
-2. If its PR (ADR-046, instant result) is green and not merged: ask the founder "merge?"; on yes `gh pr merge <n> --squash`.
-   Force-push is blocked by the auto-mode classifier: to update a branch after `main` moved, merge `main` into it.
-3. Founder still to do: set "₹ per US$" at admin.localhost:3000 → Institute bills (Bill says "Not available yet"
-   until then). Commission per institute: ask for the formula when they are ready (ADR-041).
-4. Optional, ask first: "End test now" button for teachers; Settings still shows "Batches taking the test" checkboxes.
+State at handoff (2026-10-18, session 38): `main` = `8499b5e` (PR #30 + #31 merged this session). **Two PRs open,
+both CI green, NOT merged** (founder has not said "merge" for these):
+- PR #32 `r12-instant-result` (CI run 39147007384 green on `8c20c74`): students see their own marks + right/wrong right
+  after submitting, correct answers after closing time, theory = own answer + marks once checked, rank after release
+  (ADR-046, migration 28).
+- PR #33 `r12-reviews` (CI run 39147004736 green): student "Review" tab (text, "Hide my name"), owner/admin
+  "Reviews" tab with replies; teachers see nothing; a hidden-name student still sees the reply via
+  `private.review_authors` + `my_reviews()` (ADR-047, migrations 29–31).
+- Both branches start from `main` `8499b5e`; they conflict only in PROGRESS.md (this file, on `r12-reviews`, is the
+  newer one: keep it).
+- Local working tree is on `r12-reviews`, so the founder's `next dev` on :3000 shows reviews but NOT #32's result page.
+- Local DB has migrations up to 31: 28 via `supabase migration up`; 29–31 via `psql -1 -f` + hand-added rows in
+  `supabase_migrations.schema_migrations` (`supabase migration up` refused while 28 was missing on the branch). The
+  founder's own test reviews ("hello!" ×2, "whats up") and replies are real local data — keep them.
+- Force-push is blocked by the auto-mode classifier: never rebase; update a branch by merging `main` into it.
 
-## Next exact action (session 38) — history (done: #30, #31 merged; MCQ result → ADR-046)
+Steps:
+1. `git checkout r12-reviews && git pull`; `docker info`; `supabase status`.
+2. Ask the founder "merge #32 and #33?". On yes: `gh pr merge 32 --squash`; then on `r12-reviews`
+   `git fetch origin && git merge origin/main` (PROGRESS.md conflict: keep the `r12-reviews` side), run
+   `npx supabase test db` + `npm run typecheck`, push, wait for CI green (Auto-fix on), `gh pr merge 33 --squash`.
+   Record merge commits here.
+3. Founder still to do: set "₹ per US$" at admin.localhost:3000 → Institute bills. Commission per institute: ask for
+   the formula when they are ready (ADR-041).
+4. Optional, ask first: "End test now" button for teachers; test Settings still shows "Batches taking the test"
+   checkboxes; reviews: delete/hide, notify the student of a reply.
+5. Otherwise ask the founder for the next change list. Phase 10 cloud parts stay BLOCKED (see Blocked).
+
+## Next exact action (session 38) — history
 State at handoff (2026-10-18, session 37): **two PRs open, both CI green, NOT merged** (founder has not said merge):
 - PR #30 `r12-typed-marks` → `main` (CI run 39138871672 green): "Type a question" negative marks (accepts "1" or
   "-1", stored as the amount taken off), optional theory model answer (migration 25), multi-correct MCQs marked like

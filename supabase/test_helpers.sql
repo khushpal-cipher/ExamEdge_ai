@@ -116,6 +116,7 @@ begin
   insert into public.answer_reports (institute_id, subject_id, message_id, reported_by, question, answer)
   select inst, sp, am, user_id, 'What is torque?', 'Torque is the turning effect of a force.'
   from public.memberships where id = s1;
+  insert into public.reviews (institute_id, batch_id, body) values (inst, bx, 'Review of ' || slug); -- ADR-047
   -- Phase 9: a practice quiz published to Batch X, student1's own flashcards and one graded try of the quiz.
   insert into public.generated_artifacts (institute_id, owner_scope, kind, subject_id, chapter_id, input_hash,
                                           prompt_version, model, content, status, approved_at)

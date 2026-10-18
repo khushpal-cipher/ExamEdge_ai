@@ -509,6 +509,21 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
 - **Why keys wait for closing time:** students start at different times inside the test window; an early finisher
   who saw the key could pass it to classmates still writing (founder chose this over showing keys at once).
 
+### ADR-047 Student reviews, read only by owner/admin (founder, 2026-10-18)
+- **Decision:** a "Review" page in the student sidebar (text up to 2000 characters, "Hide my name" tick box) and a
+  "Reviews" page for owner/admin listing them newest first with name + batch, or "Anonymous" + batch. Teachers have
+  no link and get 404; RLS gives them no rows. Table `public.reviews` (migration 29), plain RLS insert (no definer
+  function). pgTAP `250_reviews.sql`, fixture row in `test_helpers.sql` (isolation matrix), E2E `reviews.spec.ts`.
+- **How a hidden name stays hidden:** `reviews.user_id` is null, so nothing the institute can read (pages, API,
+  exports) names the author. The author is kept only in `private.review_authors` (no API role can read it; migration
+  31), used solely by `my_reviews()` so the student still gets the reply (founder asked for that). The platform's
+  own database access could link them; the institute cannot. The batch stays so the owner knows which class it is about
+  (in a very small batch that can narrow it down; the page says only owner/admin read it).
+- **Replies (founder, same day):** owner/admin write one reply per review (editable; empty = removed); the database
+  stamps `replied_by`/`replied_at` (trigger). The student sees replies under "Your reviews", anonymous reviews included
+  (migration 31, see above). Migration 30.
+- **Not built (not asked):** delete/hide, star rating, limits per student, notifications of a reply.
+
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
 | # | Issue found | Resolution |

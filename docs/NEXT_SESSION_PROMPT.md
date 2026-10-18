@@ -70,6 +70,10 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
   JEE Advanced marking for multi-correct MCQs (ADR-045) and the owner's "AI usage" page as a ₹ Bill (rate set by the
   platform admin; commission later). Built on PR #30 and PR #31 (stacked), CI green, waiting for the founder's
   "merge". Open: how MCQ-only tests should show results (PROGRESS.md "Next exact action").
+- Session 38 (2026-10-18): #30 and #31 merged (`main` = `8499b5e`). Founder chose: a student sees own marks and
+  right/wrong right after submitting, correct answers only after closing time, rank with release (ADR-046, PR #32);
+  student reviews of the coaching readable and answerable only by owner/admin, with "Hide my name" that still lets
+  the student read the reply (ADR-047, PR #33). Both CI green, waiting for the founder's "merge".
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full

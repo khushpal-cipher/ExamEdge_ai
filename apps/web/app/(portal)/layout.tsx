@@ -17,6 +17,7 @@ const STUDENT_NAV = [
   ['/home', 'Home'],
   ['/contests', 'Contest'],
   ['/progress', 'My progress'],
+  ['/reviews', 'Review'],
 ];
 
 const initials = (name: string) =>
@@ -37,7 +38,7 @@ export default async function PortalLayout({ children }: { children: React.React
     member.role === 'student'
       ? STUDENT_NAV
       : MANAGERS.includes(member.role)
-        ? [...STAFF_NAV, ['/usage', 'Bill']]
+        ? [...STAFF_NAV, ['/reviews', 'Reviews'], ['/usage', 'Bill']]
         : STAFF_NAV;
   return (
     <div className="shell" style={brandStyle(branding.color)}>

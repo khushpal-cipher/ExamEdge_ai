@@ -126,6 +126,11 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 **answer_reports** (T) — `subject_id` (composite FK), `message_id` (unique; composite FK, `on delete set null`), `reported_by`, `question`, `answer`, `citations`, `reason` (≤ 500), `created_at`, `resolved_at`, `resolved_by`.
 - Written only by definer `report_answer(msg, why)` (caller must own the conversation): a copy, so it survives the chat being deleted. S/U(`resolved_at`, `resolved_by`) staff of the institute; `reported_by` has no column grant (staff never see who reported). Students: none.
 
+**reviews** (T, ADR-047) — `batch_id` (composite FK), `user_id` (null = the student hid their name), `body` (1–2000 chars), `created_at`, `reply` (1–2000 or null), `replied_at`, `replied_by` (set by trigger `stamp_reply`).
+- I student, about a batch they are in (`in_batch`), `user_id` own or null. S owner/admin. Students read their own (incl. anonymous) only through definer `my_reviews(inst)`. U(`reply`) owner/admin only. No D for anyone. Teachers: none.
+
+**private.review_authors** — `review_id` (PK, FK cascade), `user_id`. Written by trigger `record_author` from the session for every review; no API role can read it (migration 31).
+
 `match_chunks(query_embedding, query_text, subject, k, topic default null)` (invoker; `topic` = a chapter id, R1.1 Smart Study; null = whole subject) returns `institute_id` and `similarity` with each chunk so the tutor can assert the tenant (TH-06) and evals can record scores.
 
 **generated_artifacts** (T or S, as built in Phase 9, ADR-028) — `owner_scope` (`institute|student`), `owner_user_id` (set by trigger iff student), `kind` (`summary|flashcards|mind_map|quiz`; more kinds in R2/R3), `subject_id`, `chapter_id` (3-column composite FK `(institute_id, subject_id, chapter_id)` → chapters), `source_refs jsonb` (`[{document_id, title, page_start, page_end}]`, cited by index in `content`), `input_hash` (sha256 hex), `prompt_version`, `model`, `schema_version`, `content jsonb` (≤ 200 KB), `status` (`draft|published|withdrawn`), `usage_record_id`, `created_by`, `approved_by`, `approved_at`. Checks: student scope ⇔ owner set; student artifacts stay `draft`; `published` ⇒ `approved_at`.
