@@ -211,7 +211,7 @@ export function ProgressView({
 
       <div className="grid">
         <section className="card stack" aria-labelledby="chapters">
-          <h2 id="chapters">Chapter strength</h2>
+          <h2 id="chapters">Topic strength</h2>
           {p.chapters.length === 0 ? (
             <p className="empty">Appears after the first released test.</p>
           ) : (

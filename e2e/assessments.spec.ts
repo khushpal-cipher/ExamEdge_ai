@@ -215,7 +215,7 @@ test('teacher builds a mixed test, student takes it, teacher checks and releases
   await expect(student.getByRole('region', { name: 'Institute tests' })).toContainText(`E2E Test ${tag}`);
   await noSeriousA11yIssues(student);
   await page.goto(`${DEMO}/students/${await userId('student01@demo.test')}`);
-  for (const name of ['Summary', 'Institute tests', 'Chapter strength', 'Question types', 'Teacher comments'])
+  for (const name of ['Summary', 'Institute tests', 'Topic strength', 'Question types', 'Teacher comments'])
     expect(await page.getByRole('region', { name }).innerText(), name).toBe(
       await student.getByRole('region', { name }).innerText(),
     );

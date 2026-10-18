@@ -46,7 +46,9 @@ export default async function SubjectWorkspace(props: { params: Promise<{ id: st
             {(subject.batches as unknown as { name: string }).name}
           </p>
           <h1>{subject.name}</h1>
-          <p className="muted">{topics.length} topics</p>
+          <p className="muted">
+            {topics.length} topic{topics.length === 1 ? '' : 's'}
+          </p>
         </div>
       </div>
       <Flash searchParams={props.searchParams} />
@@ -60,7 +62,9 @@ export default async function SubjectWorkspace(props: { params: Promise<{ id: st
             <li key={c.id}>
               <div className="row">
                 <Link href={`/topics/${c.id}`}>{c.name}</Link>
-                <span className="small muted">{c.subtopics[0]?.count ?? 0} subtopics</span>
+                <span className="small muted">
+                  {c.subtopics[0]?.count ?? 0} subtopic{c.subtopics[0]?.count === 1 ? '' : 's'}
+                </span>
               </div>
               {!student && (
                 <div className="row small">

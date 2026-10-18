@@ -55,7 +55,10 @@ export default async function StudentHome() {
             {subjects.map((s) => (
               <Link key={s.id} href={`/subjects/${s.id}`} className="card tile">
                 <h3>{s.name}</h3>
-                <p className="muted small">{(s.chapters as unknown as { count: number }[])[0]?.count ?? 0} topics</p>
+                <p className="muted small">
+                  {(s.chapters as unknown as { count: number }[])[0]?.count ?? 0} topic
+                  {(s.chapters as unknown as { count: number }[])[0]?.count === 1 ? '' : 's'}
+                </p>
               </Link>
             ))}
           </div>
