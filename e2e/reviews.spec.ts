@@ -20,10 +20,10 @@ test('student reviews reach only the owner/admin, who reply; a hidden name stays
   await login(page, 'student01@demo.test');
   await page.getByRole('link', { name: 'Review', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Review');
-  await page.getByLabel('Your review').fill(`Named review ${tag}`);
+  await page.getByLabel('Your review', { exact: true }).fill(`Named review ${tag}`);
   await page.getByRole('button', { name: 'Send review' }).click();
   await expect(page.getByRole('status')).toHaveText('Thank you. Your review was sent to the owner and admins.');
-  await page.getByLabel('Your review').fill(`Hidden review ${tag}`);
+  await page.getByLabel('Your review', { exact: true }).fill(`Hidden review ${tag}`);
   await page.getByLabel('Hide my name').check();
   await page.getByRole('button', { name: 'Send review' }).click();
   await expect(page.getByRole('status')).toBeVisible();
