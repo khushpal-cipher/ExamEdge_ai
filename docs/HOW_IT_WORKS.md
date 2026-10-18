@@ -47,14 +47,17 @@ library is gone.
 ### B. AI notes (inside a subtopic)
 1. In a subtopic, click **Write notes with AI** and explain the subtopic in your own words (typed).
 2. The AI writes detailed notes from that explanation.
-3. The teacher reads and edits them, then clicks **Save** and **Publish**. Students of the batch see them like
+3. The notes open on their document page: the teacher reads them, edits them under **Edit notes** (each Save is a
+   new version; students keep the previous one until the new one is processed), then clicks **Publish**. Students of the batch see them like
    uploaded notes (an in-app notes page with **Download as PDF**), and Smart Study can use them.
 4. Teachers no longer have the AI tutor or Studio (summary, flashcards, mind map, quiz); those are for students.
 
 ### C. Creating a test
 1. **Question bank**: the teacher types questions. **AI test** (inside a topic): the teacher asks for a quiz (MCQs),
    theory (written) questions or a mix, e.g. "10 MCQs + 5 theory questions from Rotational Motion, medium level". The
-   AI makes them from the topic's published notes and puts them into a new draft test.
+   AI makes them from the topic's published notes and puts them into a new draft test for that subject's batch
+   (defaults the teacher can change: MCQ 4 marks, theory 5 marks, tomorrow 10:00–11:00 India time, 60 minutes).
+   Opening a question from the test and saving it brings the teacher back to the test.
    - Question types: single-correct MCQ, multi-correct MCQ, numerical answer, and **theory (written) questions** where the student types the answer. One test can mix them, for example 10 MCQs and 5 theory questions.
    - For a theory question the teacher writes a model answer. It's only a guide for checking, never used to mark automatically.
    - Every AI-made MCQ or numerical question is **solved a second time by a different AI model**. If the two answers don't match, the question is flagged and the teacher must fix it. AI theory questions come with a model answer; the teacher checks and saves each one.

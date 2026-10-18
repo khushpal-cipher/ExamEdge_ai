@@ -390,7 +390,11 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
   second solve) and put into a **new draft test**; the teacher reviews/edits each question and schedules the test
   (scheduling already refuses unapproved questions). Written questions get a model answer and max marks; they cannot
   be second-solved, so they stay `unverified` until the teacher saves them (`teacher_verified`).
-- **Built:** —
+- **Built:** migration `20261101000020_teacher_ai.sql` (`notes_gen`, staff/student AI split in `ai_reserve`,
+  `text/markdown` versions, `documents.kind`, `add_ai_test`); core `notes.ts` (`notes-v1`, `claudeNotes`) and
+  `questions-v2` (written questions); worker reads Markdown as text; web: "Write notes with AI" in each subtopic,
+  edit + publish on the document page, `/notes/<id>` with "Download as PDF" (print CSS), topic tab **AI test** for
+  staff (Smart Study for students only), bank AI form removed; branch `r11-teacher-ai`.
 
 ### ADR-040 Batch history and Contest page (R1.1 group C)
 - **Past membership:** `batch_members.left_at timestamptz` (null = current). Promotion tool for owner/admin on the

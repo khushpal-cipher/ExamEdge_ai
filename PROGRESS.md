@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-17 (session 30)
+Last updated: 2026-10-18 (session 31)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -19,7 +19,7 @@ Last updated: 2026-10-17 (session 30)
 **R1.1 step 1 MERGED** (PR #19, squash `f6e4841`, CI green, 2026-10-17): ADR-037–041 + spec docs.
 **R1.1 step 2 MERGED** (PR #20, squash `17459e5`, CI green check + secrets, 2026-10-17): ExamEdge library removed.
 **R1.1 steps 3+4 MERGED** (PR #21, squash `22ac7f3`, CI green run 39052604720 on `98546f6`: unit 147, pgTAP 1298, integration 26, E2E 26/26, 2026-10-17).
-**R1.1 step 5 (B: AI notes + AI test) IN PROGRESS** on branch `r11-teacher-ai` (main merged in): DB, core, worker, most web done; doc page edit, E2E, docs, gate left (see In progress).
+**R1.1 step 5 (B: AI notes + AI test) BUILT** on branch `r11-teacher-ai` (main merged in): local gate green except E2E (runs in CI); PR into main next (see In progress).
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
@@ -89,27 +89,33 @@ DONE + TESTED:
     hides `.side` / `.no-print`.
   - `flash.tsx`: `notes_refused`, `storage_full`, `notes_written`, `notes_saved`, `ai_test_made`, `ai_test_partial`;
     `no_sources`/`no_questions` say "topic".
-NOT DONE (in this order):
-1. Staff document page `documents/[id]/page.tsx` for `kind = 'ai_notes'`: select `kind`; download the current version
-   (staff session) and show it with `Markdown` + a `<form action={saveAiNotes}>` textarea (defaultValue = the text,
-   max `MAX_NOTES`); hide the "Upload a new version" `Upload` block; "Open file" → link to `/notes/<id>`.
-2. Browser check (preview `web-prod-3001` after `npm run build`, or `next dev` if :3000 is free) on newtown at 375 px:
-   teacher.jee → topic → subtopic → Write notes with AI → doc page (worker must run to reach Ready; worker command in
-   "Local DB now") → Publish → student1 opens `/notes/<id>`; teacher → AI test tab → draft test → approve / save
-   questions → schedule. Fix what breaks.
-3. E2E: rewrite `e2e/question-gen.spec.ts` (teacher → topic `/topics/<id>` AI test tab → draft test with MCQ + theory;
-   flagged MCQ cannot be approved (UI + API `question_not_verified`); theory approved only after Save on
-   `/questions/<id>`; scheduling refused (`test_question_not_ready` or the approval check) until all approved; student
-   `ai_reserve('question_gen')` → 42501); `e2e/studio.spec.ts` test 1 (teachers have no Smart Study tab on a topic;
-   `ai_reserve('generation')` as teacher → 42501; seeded teacher summary still visible to students; AC9.2 reuse with
-   a student generating twice); new AI-notes journey (write → `runWorker()` → Ready → publish → student opens
-   `/notes/<id>`; non-member/other institute 404). Check `e2e/tutor.spec.ts` teacher part still passes (it goes to the
-   subject page for reports). Never weaken assertions.
-4. Docs: ADR-039 "Built:" line, HOW_IT_WORKS Part 2B/2C (marks MCQ 4 / theory 5 default, default times),
-   DATABASE_DESIGN (`documents.kind`, `add_ai_test`, `notes_gen`), AI_PIPELINE feature matrix row "AI notes" and the
-   written-question row.
-5. Gate: format, lint, typecheck, unit, `npm run test:db`, `npm run test:int`, build; E2E in CI. Then PR into main,
-   CI green, squash-merge, record here.
+DONE in session 31 (2026-10-18), commit `edaff6c` + docs/PROGRESS commit:
+1. Staff document page for `kind = 'ai_notes'`: shows the newest stored version (Markdown) + "Edit notes" form
+   (`saveAiNotes`, max `MAX_NOTES`); no "Upload a new version"; "Open notes page" → `/notes/<id>`.
+2. Browser check (`next dev` :3000, worker running, newtown, 375 px, scrollWidth 375): teacher.jee → maths →
+   probability → added subtopic "Bayes theorem (test)" → Write notes with AI → doc page (Waiting → worker `ingest.ready`
+   4 chunks) → Edit + Save (v2, editor shows v2, v1 live) → Publish jee 2027 → student1 opens `/notes/<id>` (renders,
+   "Download as PDF"), home shows the upcoming AI test; student2 (neet) → `/notes/<id>` 404. AI test tab: 2 MCQ +
+   1 theory → draft test (13 marks, tomorrow 10:00–11:00); Schedule refused (`test_question_not_ready`); approved
+   MCQ 1, saved MCQ 2 + theory → Schedule OK. Fixed what the check found: (a) saving a question opened from its only
+   test now returns to that test (`back` field, `saveQuestion` accepts only `/tests/<uuid>`); (b) flash
+   `test_question_not_ready` now says questions must be approved; (c) staff dashboard said "AI tutor and Studio";
+   (d) AI test help said "for probability's batch". Cleaned up afterwards via the UI: test back to draft + deleted,
+   AI notes deleted. **Left in the founder's DB:** empty subtopic "Bayes theorem (test)" under newtown maths →
+   probability — it cannot be deleted for 30 days (see Known issues) — ask the founder before removing it by SQL.
+3. E2E: `e2e/question-gen.spec.ts` rewritten (AI test tab → draft test, marks 4/5, audience, usage 3, flagged +
+   theory not approvable in UI/API, Schedule refused then OK after approving, student sees it, student
+   `add_ai_test`/`ai_reserve('question_gen')` 42501, rival 404); new `e2e/ai-notes.spec.ts` (write → worker → Ready →
+   edit → publish → student01 reads `/notes/<id>`; student30 (NEET) and rival 404; student `notes_gen` 42501);
+   `e2e/studio.spec.ts` test 1 = teachers have no Smart Study + staff `generation`/`tutor` 42501 + seeded summary
+   visible to students + AC9.2 reuse by a student; test 2 staff check moved to the topic page. `runWorker` moved to
+   `e2e/helpers.ts`. **Not run locally** (needs `npm run seed:demo`; founder DB) → CI.
+4. Docs: ADR-039 "Built", HOW_IT_WORKS 2B/2C, DATABASE_DESIGN (`documents.kind`, `add_ai_test`, staff/student AI
+   split), AI_PIPELINE rows "AI notes" and "Written question (AI test)".
+5. Gate (2026-10-18, before the PR): `npm run format:check` PASS, `npm run lint` PASS (+ forbidden ok),
+   `npm run typecheck` PASS, `npm test` 154/154, `npm run test:db` Files=19 Tests=1321 PASS, `npm run test:int` 28/28,
+   `npm run build` + `check-bundle: ok`. E2E → CI on the PR.
+NEXT: open PR `r11-teacher-ai` → main, CI green (fix E2E if it fails, never weaken), squash-merge, record here.
 
 ### R1.1 founder change list (session 27, 2026-10-17) — build order in "Next exact action"
 - Step 1 MERGED (#19), step 2 MERGED (#20). Step 3 DB part committed on `r11-structure` (`58de935`, pushed).
@@ -356,12 +362,11 @@ Steps 3–7 depend on step 1; step 4 depends on step 3 — re-verify step 3's RL
 (https://github.com/khushpal-cipher/ExamEdge_ai/pull/21), Auto-fix on, NOT merged.** First CI run (39051354988)
 failed only at `format:check` on `.claude/launch.json` (fixed in the handoff commit), so **E2E has not run yet**.
 **Next exact action (session 31):**
-1. `git checkout r11-teacher-ai && git pull` (main `22ac7f3` is already merged in). Continue step 5 from
-   "In progress" → "NOT DONE" item 1 (staff document page for AI notes), then items 2–5.
+1. Step 5 is built (session 31): finish its PR (In progress → NEXT): CI green, squash-merge, record.
 2. After step 5 merges: step 6 (C2 Contest page + C1 batch switcher), step 7 (D2 platform tokens + cost), step 8.
 **R1.1 progress (8 build steps):** 1 ADRs ✅ merged · 2 library removed ✅ merged · 3 DB structure ✅ merged (#21) ·
-4 topic page / upload / topic-only practice ✅ merged (#21) · 5 AI notes + AI test 🟡 DB, core, worker, most web done on
-`r11-teacher-ai` (doc-page edit, browser check, E2E, docs, gate left) · 6 Contest page + batch
+4 topic page / upload / topic-only practice ✅ merged (#21) · 5 AI notes + AI test 🟡 built on `r11-teacher-ai`, local
+gate green, PR + CI left · 6 Contest page + batch
 switcher ⬜ (promotion tool already built) · 7 platform tokens + cost ⬜ · 8 full gate + per-role browser check ⬜.
 ≈ 4.5 of 8 steps done; by founder groups: E done, A done (merged), C half (history + promotion yes, switcher + Contest
 no), B mostly built (not merged), D not started.
@@ -510,9 +515,16 @@ For the full gate without a reset, rely on CI and say so.
 ## Known regressions
 - None.
 
+## Known issues (not fixed)
+- A subtopic (or topic) whose notes were deleted cannot be deleted until the daily purge hard-deletes those notes
+  30 days later (soft-deleted documents still hold the no-action FK, ADR-038/ADR-031); the page says "It is still
+  used somewhere". Found in session 31; pre-existing since step 3. Fix idea: let `deleteSubtopic` move or hard-delete
+  soft-deleted documents of that subtopic (needs a small migration/RPC) — ask the founder if it matters.
+
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 31 | 2026-10-18 | Step 5 finished: AI notes edit on the document page, browser check (3 copy fixes + return-to-test after saving a question), E2E (AI test rewrite, AI notes journey, Studio teacher test), docs; local gate green except E2E (CI) | see `git log` (branch `r11-teacher-ai`) |
 | 30 | 2026-10-17 | PR #21 E2E fixed (`demoTopic` batch order) and merged `22ac7f3`. Step 5: notes unit tests, written AI questions (`questions-v2`), worker Markdown, web AI notes / AI test / `/notes` page / bank form removed (typecheck + lint + unit green; no browser check, no E2E yet) | see `git log` (branch `r11-teacher-ai`) |
 | 29 | 2026-10-17 | PR #21 CI: E2E 6/26 failing (not fixed). Step 5 started on `r11-teacher-ai`: migration 20 (staff/student AI split, Markdown notes, `add_ai_test`) applied locally, pgTAP 1321 PASS, core `notes.ts` + `claudeNotes`; web/worker/E2E not done | see `git log` (branch) |
 | 28 | 2026-10-17 | R1.1 steps 3+4 app part: migration 19 (topic chats/retrieval, move_students), batch page subjects + promotion, topic page Subtopics / Smart Study, seed/E2E updated; local gate green except E2E (CI) | `debaaae` (branch) |
