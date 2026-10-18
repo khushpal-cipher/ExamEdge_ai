@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { saveQuestion } from '../tests/actions';
+import { addTypedQuestion, saveQuestion } from '../tests/actions';
 
 type Subject = { id: string; name: string; chapters: { id: string; name: string }[] };
 export type QuestionInit = {
@@ -29,11 +29,13 @@ export function QuestionForm({
   initial,
   subjectId,
   back,
+  testId,
 }: {
   subjects: Subject[];
   initial?: QuestionInit;
   subjectId?: string;
   back?: string;
+  testId?: string; // "Type a question" on a draft test: adds it to the test too (ADR-042)
 }) {
   const [type, setType] = useState(initial?.type ?? 'single');
   const [subject, setSubject] = useState(initial?.subject_id ?? subjectId ?? subjects[0]?.id ?? '');
@@ -41,7 +43,8 @@ export function QuestionForm({
   const option = (id: string) => initial?.options.find((o) => o.id === id)?.text ?? '';
   const correct = new Set(initial?.key?.correct ?? []);
   return (
-    <form action={saveQuestion} className="stack">
+    <form action={testId ? addTypedQuestion : saveQuestion} className="stack" aria-label={testId ? 'Type a question' : undefined}>
+      {testId && <input type="hidden" name="test_id" value={testId} />}
       {initial && <input type="hidden" name="question_id" value={initial.id} />}
       {back && <input type="hidden" name="back" value={back} />}
       <div className="inline">
@@ -56,9 +59,9 @@ export function QuestionForm({
           </select>
         </label>
         <label>
-          Chapter
-          <select name="chapter_id" defaultValue={initial?.chapter_id ?? ''} key={subject}>
-            <option value="">No chapter</option>
+          Topic
+          <select name="chapter_id" defaultValue={initial?.chapter_id ?? ''} key={subject} required={!!testId}>
+            {!testId && <option value="">No topic</option>}
             {chapters.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -140,6 +143,12 @@ export function QuestionForm({
         Explanation shown after results (optional)
         <textarea name="explanation" maxLength={5000} rows={2} defaultValue={initial?.explanation} />
       </label>
+      {testId && (
+        <label>
+          Marks
+          <input name="marks" type="number" min={0.5} step={0.5} defaultValue={4} required style={{ width: 80 }} />
+        </label>
+      )}
       <div>
         <button type="submit" className="primary">
           {initial ? 'Save question' : 'Add question'}

@@ -61,8 +61,8 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
   older docs; update HOW_IT_WORKS, DATABASE_DESIGN, AI_PIPELINE_DESIGN and DECISIONS as each part is built.
 - Release 1.2 (2026-10-18): R1.1 is merged and done. The founder's R1.2 change list (new test page with AI chat box
   or manual questions, one-click batch switcher, Home after switching, NotebookLM-style Smart Study tiles) and its
-  build order are in PROGRESS.md "Next exact action (session 35)". Build it only after the founder says go.
-  Charges/bill and payment gateway wait until the founder decides prices at the end.
+  build order are in PROGRESS.md ("R1.2 founder change list"). The founder said GO (session 35): build it all
+  (ADR-042, ADR-043). Charges/bill and payment gateway wait until the founder decides prices at the end.
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full

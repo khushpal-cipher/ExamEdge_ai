@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-18 (session 34)
+Last updated: 2026-10-18 (session 35)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -23,13 +23,14 @@ Last updated: 2026-10-18 (session 34)
 **R1.1 step 6 MERGED** (PR #23, squash `061dadf`, CI green run 39091413903: check incl. E2E + secrets, 2026-10-18): Contest page + batch switcher (ADR-040).
 **R1.1 step 7 MERGED** (PR #24, squash `4f3f78a`, CI green run 39091772704: check incl. E2E + secrets, 2026-10-18): platform "All institutes" shows AI tokens + cost this month per institute (ADR-041 part 1).
 **R1.1 step 8 MERGED** (PR #25, squash `f0b1ec5`, CI green run 39107064953: check incl. pgTAP + E2E + secrets, 2026-10-18). **R1.1 is DONE** (all 8 steps); only ADR-041 part 2 (charges/bill) waits for the founder.
-**R1.2 = founder change list (session 34)** — planned, NOT started; see "Next exact action (session 35)".
+**R1.2 = founder change list — founder said GO (session 35, 2026-10-18).** Steps 1–3 on PR #26 (CI green, NOT merged); item 1 (new test page) in progress on branch `r12-new-test` (WIP). See "In progress" and "Next exact action (session 36)".
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-18 | R1.2 steps 1–3 (PR #26, branch `r12-ui`, CI green, NOT merged) | ADR-042 (new test page) + ADR-043 (switcher, tiles), HOW_IT_WORKS / DATABASE_DESIGN / AI_PIPELINE updated (`66a877f`). One-click batch switcher (`batch-switcher.tsx`, noscript Show), `chooseBatch` → `redirect('/home')`; Smart Study tiles (one form, a submit button per tool, icons in `--accent`) + "Made by you" / "From your teachers" below (`c56c686`). E2E updated: `contests.spec.ts` (switch → /home, no Show button), `studio.spec.ts` (tile click). Local: format, lint, typecheck, unit 154, pgTAP 1334, int 28, build + bundle PASS. Browser (`next dev` :3000 via preview `web-attach`, newtown, student1, 375 px, scrollWidth 375): subject page → pick "neet 2027 (past)" → /home of neet 2027; tiles render; Summary tile → `?error=no_sources` on probability (no notes, nothing created). Temporary row (student1 past member of neet 2027) added and **removed** (count back to 1). CI run 39116328717: check (incl. E2E) + secrets **pass**. |
 | 2026-10-18 | R1.1 step 8 merged (PR #25) | Past-batch test page shows the reason instead of "Start test" (+E2E in `contests.spec.ts`); teacher question bank lists only subjects of their batches; "Topic" / "Topic strength" wording; singular "1 topic"/"1 subtopic"; `launch.json` `web-attach`. Local: format, lint, typecheck, unit 154, int 28, build + bundle ok; pgTAP 1334 on `c5df7cd`. CI run 39107064953 green (incl. pgTAP + E2E); `gh pr merge 25 --squash` → `f0b1ec5`. |
 | 2026-10-18 | R1.1 step 7 merged (PR #24) | `public.platform_usage()` + "AI this month" column on `/platform`; pgTAP 1334 PASS, unit 154, int 28, build PASS locally; CI run 39091772704 green (incl. E2E); `gh pr merge 24 --squash` → `4f3f78a`. |
 | 2026-10-18 | R1.1 step 6 merged (PR #23) | E2E locator fixes (`exact: true` region name; table link instead of chart `<title>`), commit `2d41986`; CI run 39091413903 green; `gh pr merge 23 --squash` → `061dadf`. |
@@ -61,6 +62,65 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
+### R1.2 item 1 — new test page (ADR-042), branch `r12-new-test` (stacked on `r12-ui`) — session 35, IN PROGRESS
+DONE + TESTED:
+- `5067caf` migration `20261104000023_test_page.sql` — **applied to the founder's local DB** (`supabase migration up`):
+  `tests.subject_id` (nullable, composite FK → subjects, set null, insert grant); invoker RPC
+  `add_test_questions(inst, test, items)` (draft test the caller may manage + has a subject; each item's `chapter_id`
+  must be a topic of that subject; `origin` ai|teacher; questions + keys + appended `test_questions`); **`add_ai_test`
+  dropped**. pgTAP: AI-test section moved out of `190`, new `220_test_page.sql` (22 tests). `npx supabase test db` →
+  Files=22 Tests=1347 PASS.
+- `64bc029` core `packages/core/src/ai/plan.ts`: `planTest(meter, {request, topics})` (feature `question_gen`,
+  `plan-v1`, ≤ 4 parts, ≤ 20/part, ≤ 40 total, `PlanError` unclear|too_many|refused), fake rule parser `fakePlan`,
+  `claudePlan` in `claude.ts` (Haiku 5.5, `beta.messages.parse` + `betaZodOutputFormat`, effort low, no fallback —
+  same pattern as `claudeStudio`, checked with the claude-api skill). `plan.test.ts` 10/10 PASS.
+UNCOMMITTED WIP in the working tree (committed as a WIP commit in the session-35 handoff — **typecheck FAILS**):
+- `tests/actions.ts`: `fromForm()` (shared by `saveQuestion`), `createTest` now takes `subject_id` (audience = the
+  subject's batch; deletes the empty draft if the audience insert is refused), new `addTypedQuestion` (→
+  `add_test_questions`, origin teacher, `ok=question_added`).
+- `questions/actions.ts`: `makeAiTest` replaced by `addAiQuestions` (test → topics → `planTest` → per part
+  `chapterNotes` + `generateQuestions` → `add_test_questions`; `ok=ai_questions_added|ai_questions_partial`; errors
+  `plan_*`, `no_topics`, `no_sources`, `no_questions`, AiBlocked reasons).
+- `flash.tsx`: `plan_unclear`, `plan_too_many`, `plan_refused`, `no_topics`, `ai_questions_added`,
+  `ai_questions_partial`, `question_added` (old `ai_test_*` removed).
+- `question-form.tsx`: optional `testId` → action `addTypedQuestion`, "Topic" select required, Marks field; label
+  "Chapter" → "Topic".
+- `tests/[id]/page.tsx` selects `subject_id`; `staff-test.tsx`: `Test.subject_id`, new `Fill` panel on a draft test
+  with a subject ("Add questions with AI" textarea + Send, `<details>` "Type a question" = `QuestionForm testId`),
+  "Add from the bank" kept.
+- **`topics/[id]/page.tsx` is HALF-EDITED and breaks the typecheck** (`Cannot find name 'STUDY'`, line ~241): the
+  AI test tab and the `makeAiTest` import were removed, the tabs list now reads `...(student ? [STUDY] : [])` but the
+  Smart Study tab object was deleted with it. Fix: `git diff "apps/web/app/(portal)/topics/[id]/page.tsx"`, restore
+  the removed `{ key: 'study', label: 'Smart Study', content: (…) }` object from `git show HEAD:"apps/web/app/(portal)/topics/[id]/page.tsx"`
+  and use it as `...(student ? [{ key: 'study', … }] : [])`; keep the `makeAiTest` import and the AI test tab removed;
+  update the file's top comment (staff make tests on the Tests page, ADR-042).
+NOT DONE (item 1):
+1. Fix the topic page (above); `npm run typecheck`, `npm run lint`, prettier.
+2. `tests/page.tsx` New test form: replace the batch checkboxes with a required `subject_id` `<select>` grouped by
+   batch (`<optgroup label=batch>` → subjects; batches from `teachableBatches`, subjects via `.in('batch_id', ids)`);
+   help text "Pick the subject … then fill it with AI or by typing questions".
+3. Question bank (`questions/page.tsx`): remove the "New question" section and the `QuestionForm` import (bank =
+   list / edit / approve / delete); change the empty-state text to point to Tests.
+4. E2E: rewrite `e2e/question-gen.spec.ts` (Tests → New test with subject → "Add questions with AI" request e.g.
+   "2 MCQs + 1 theory on <topic>, medium" → draft test with marks 4/4/5, AI badges, theory not approvable, Schedule
+   refused then OK after approving; student `add_test_questions` / `ai_reserve('question_gen')` 42501; rival 404) —
+   it still calls `add_ai_test` (line ~145, now dropped → must change). `e2e/assessments.spec.ts` builds questions
+   with the bank form (lines ~60–105, "Type" combobox) → use "Type a question" on the test page; New test now needs a
+   subject. Check `portals.spec.ts` / others for "New question", "Batches taking the test", `makeAiTest`, "AI test".
+   Never weaken an assertion.
+5. Seed: `scripts/seed-demo.ts` tests may need `subject_id` (optional — nullable; old tests keep "Add from the bank").
+6. Docs: ADR-042 "Built", DATABASE_DESIGN already describes it; RUNBOOKS/README if they mention the AI test tab
+   (`git grep -n "AI test" docs README.md`).
+7. Gate: format, lint, typecheck, unit, `npm run test:db`, `npm run test:int`, build; E2E in CI. Browser check
+   (`next dev` + worker) as teacher.jee@newtown.test at 375 px: Tests → New test (subject maths · jee 2027) → AI request
+   → questions → approve → Schedule; Type a question; topic page has no AI test tab; student Smart Study unchanged.
+   Remove any test rows you create (or ask the founder) and record it.
+**WARNING — local DB is ahead of `main`:** migration 23 is applied to the founder's DB, so `main`'s code (the topic
+page "AI test" tab → `add_ai_test`) fails there until this branch merges. The `next dev` on :3000 (another session,
+same folder) serves the working tree, so it shows whatever this branch has.
+Scratch file left outside the repo by mistake: `/tmp/claude-501/study_obj.txt` (a copy of the Smart Study tab JSX;
+safe to delete).
+
 ### R1.1 step 6 — C2 Contest page + C1 batch switcher (session 32, 2026-10-18) — MERGED (PR #23, `061dadf`)
 ADR-040. DONE + TESTED:
 - Migration `20261102000021_batch_view.sql` (**applied to the founder's local DB** with `supabase migration up`):
@@ -339,9 +399,18 @@ DONE + TESTED (2026-10-16, session 19):
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 35) — R1.2 founder change list (session 34, 2026-10-18)
+## Next exact action (session 36)
+1. `cd ~/Documents/startup/examedge_ai && git fetch && git status` (branch `r12-new-test`); `docker info`,
+   `supabase status`.
+2. PR #26 (https://github.com/khushpal-cipher/ExamEdge_ai/pull/26, steps 1–3) — CI run 39116328717 green: merge it
+   (`gh pr merge 26 --squash`), record the commit here, then rebase `r12-new-test` onto `main`
+   (`git rebase --onto origin/main r12-ui r12-new-test`; resolve if needed).
+3. Finish R1.2 item 1 = "NOT DONE" list under "In progress → R1.2 item 1" (start with the half-edited topic page).
+4. Gate, browser check, PR, CI green, merge; update this file. Then R1.2 is done; only ADR-041 part 2 (bill) waits.
+
+## R1.2 founder change list (session 34, 2026-10-18) — founder said GO in session 35
 R1.1 is merged and done (`main` = `f0b1ec5`). The founder described these changes in session 34 and said "that's all the
-changes"; **build only after the founder says go** (they approved the plan's direction, not the start).
+changes"; **the founder said go in session 35** (build all of R1.2 in the order below).
 Each item: what the founder wants → how it is today → build notes.
 
 **1. New test on the Tests page (replaces the topic's "AI test" tab and the bank's "Add question" form)**
@@ -654,6 +723,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 35 | 2026-10-18 | Founder: GO for R1.2. Steps 1–3 (ADR-042/043, one-click switcher → Home, Smart Study tiles) on PR #26, CI green, not merged. Item 1: migration 23 (`tests.subject_id`, `add_test_questions`, `add_ai_test` dropped; pgTAP 1347) applied locally, core `planTest` (10 unit tests); web part WIP (typecheck fails on the topic page) | WIP commit on `r12-new-test` |
 | 34 | 2026-10-18 | R1.1 step 8: local gate, browser check per role at 375 px, 3 fixes (past-batch test page, teacher bank filter, wording); PR #25 CI green, merged `f0b1ec5` → R1.1 done. Founder's R1.2 change list recorded + planned (not started) | `f0b1ec5` |
 | 32 | 2026-10-18 | PR #22 merged (`0cc9a2e`). Step 6: migration 21 (progress per batch, skip tests after leaving), Contest page, batch switcher, E2E; browser check with temporary rows (4 fixes); local gate green; PR #23 first CI failed on 2 E2E locators in the new spec, fixed and pushed | `6533b04` (branch `r11-contest`) |
 | 31 | 2026-10-18 | Step 5 finished: AI notes edit on the document page, browser check (3 copy fixes + return-to-test after saving a question), E2E (AI test rewrite, AI notes journey, Studio teacher test), docs; local gate green except E2E (CI) | see `git log` (branch `r11-teacher-ai`) |

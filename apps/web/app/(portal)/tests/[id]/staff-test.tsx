@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { formatDuration, formatTime, pct, PHASE_LABEL, testPhase, toLocalInput, TYPE_SHORT } from '@/lib/assess';
+import { MAX_REQUEST } from '@examedge/core/ai/plan';
 import { MANAGERS, type requireMember } from '@/lib/tenant';
 import {
   addTestQuestion,
@@ -12,7 +13,8 @@ import {
   updateTestQuestion,
 } from '../actions';
 import { teachableBatches } from '../batches';
-import { approveQuestion } from '../../questions/actions';
+import { addAiQuestions, approveQuestion } from '../../questions/actions';
+import { QuestionForm } from '../../questions/question-form';
 import { AiBadge } from '../../questions/ai-badge';
 
 type Ctx = Awaited<ReturnType<typeof requireMember>>;
@@ -25,6 +27,7 @@ export type Test = {
   duration_seconds: number;
   shuffle_questions: boolean;
   created_by: string | null;
+  subject_id: string | null;
 };
 type TQ = {
   question_id: string;
@@ -254,6 +257,7 @@ export async function StaffTest({ ctx, test }: { ctx: Ctx; test: Test }) {
             </table>
           </div>
         )}
+        {phase === 'draft' && canManage && test.subject_id && <Fill ctx={ctx} test={test} />}
         {phase === 'draft' && canManage && (
           <AddQuestion ctx={ctx} test={test} have={new Set(questions.map((q) => q.question_id))} />
         )}
@@ -338,6 +342,52 @@ function Settings({
         </form>
       )}
     </section>
+  );
+}
+
+// Fill a draft test of one subject (ADR-042): ask the AI in words, or type a question. Both land in the bank too.
+async function Fill({ ctx, test }: { ctx: Ctx; test: Test }) {
+  // RLS: the subject is readable by staff; its topics come with it.
+  const { data: subject } = await ctx.db
+    .from('subjects')
+    .select('id, name, chapters(id, name, position)')
+    .eq('institute_id', ctx.institute.id)
+    .eq('id', test.subject_id!)
+    .maybeSingle();
+  if (!subject) return null;
+  const chapters = [...(subject.chapters ?? [])].sort((a, b) => a.position - b.position);
+  return (
+    <div className="stack">
+      <form action={addAiQuestions} className="stack" aria-label="Add questions with AI">
+        <input type="hidden" name="test_id" value={test.id} />
+        <label className="stack">
+          Add questions with AI
+          <textarea
+            name="request"
+            required
+            maxLength={MAX_REQUEST}
+            rows={3}
+            placeholder={`10 MCQs + 5 theory on ${chapters
+              .slice(0, 2)
+              .map((c) => c.name)
+              .join(' and ') || 'Networking and HTML'}, medium`}
+          />
+        </label>
+        <div className="row">
+          <button type="submit" className="primary">
+            Send
+          </button>
+          <span className="small muted">
+            Topics of {subject.name}: {chapters.map((c) => c.name).join(', ') || 'none yet'}. Questions are made from
+            each topic&apos;s published notes; a second AI re-solves every MCQ and flags a mismatch.
+          </span>
+        </div>
+      </form>
+      <details>
+        <summary className="button">Type a question</summary>
+        <QuestionForm subjects={[{ ...subject, chapters }]} subjectId={subject.id} testId={test.id} />
+      </details>
+    </div>
   );
 }
 
