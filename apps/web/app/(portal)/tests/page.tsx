@@ -87,6 +87,7 @@ export default async function Tests({ searchParams }: { searchParams: Search }) 
             <button type="submit" className="primary">
               Create test
             </button>
+            <span className="small muted"> Next page: add questions with AI or type them.</span>
           </div>
         </form>
       </section>
