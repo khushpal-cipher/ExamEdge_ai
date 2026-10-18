@@ -183,7 +183,8 @@ again (R1.2, ADR-043).
 1. Click **Start** when the test opens. The timer starts.
 2. MCQs are clicked, numerical answers typed as numbers, and theory answers typed in a text box. Every answer saves automatically. If the internet drops, the student reconnects and continues within the same time limit.
 3. Click **Submit**, or the test auto-submits at the deadline.
-4. Results appear after the teacher has checked the theory answers and released them: marks per question, teacher comments, **test rank** and updated **overall rank**.
+4. Right after submitting, the student sees their own marks so far and which questions they got right or wrong (with the marks for each). Theory answers show the student's own answer and, once a teacher has checked it, its marks. Correct answers appear once the test's closing time passes (not earlier, so nobody can pass them to classmates still writing). (ADR-046)
+5. After the teacher releases results: final marks, teacher comments, model answers, **test rank** and updated **overall rank**.
 
 ### G. My progress
 The same full progress page teachers see (Part 2E): ranks, marks trend, topic strengths, practice history. Suggested topics to practise next come later.

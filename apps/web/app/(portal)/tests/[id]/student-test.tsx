@@ -15,9 +15,16 @@ type Review = {
   options: { id: string; text: string }[];
   explanation: string;
   response: unknown;
-  key: { correct?: string[]; value?: number; tolerance_abs?: number; tolerance_pct?: number; model_answer?: string };
+  // null before release: objective keys come at closing time, the model answer with release (ADR-046)
+  key: {
+    correct?: string[];
+    value?: number;
+    tolerance_abs?: number;
+    tolerance_pct?: number;
+    model_answer?: string;
+  } | null;
   marks: number;
-  marks_awarded: number;
+  marks_awarded: number | null; // null = written answer not checked yet
   teacher_comment: string | null;
 };
 
@@ -31,6 +38,7 @@ function shown(type: string, response: unknown) {
 }
 
 function answerKey(r: Review) {
+  if (!r.key) return '';
   if (r.type === 'written') return r.key.model_answer ?? '';
   if (r.type === 'numerical') {
     const tol = r.key.tolerance_abs
@@ -84,13 +92,7 @@ export async function StudentTest({ ctx, test, error }: { ctx: Ctx; test: Test; 
         questions={(questions ?? []) as RunnerQuestion[]}
       />
     );
-  } else if (phase === 'released' && attempt) body = <ReviewView ctx={ctx} attempt={attempt} />;
-  else if (attempt)
-    body = (
-      <p className="notice">
-        Submitted. Your marks and rank appear here after your teachers check the written answers and release results.
-      </p>
-    );
+  } else if (attempt) body = <ReviewView ctx={ctx} attempt={attempt} test={test} released={phase === 'released'} />;
   else if (phase === 'open' && !(await inCurrentBatch(ctx, test.id))) body = <p className="notice">{PAST_BATCH}</p>;
   else if (phase === 'open')
     body = (
@@ -134,31 +136,49 @@ export async function StudentTest({ ctx, test, error }: { ctx: Ctx; test: Test; 
   );
 }
 
+// Before release (ADR-046): own marks right after submit, keys after closing time, rank only with release.
 async function ReviewView({
   ctx,
   attempt,
+  test,
+  released,
 }: {
   ctx: Ctx;
   attempt: { id: string; score: number | null; max_score: number | null; rank: number | null };
+  test: Test;
+  released: boolean;
 }) {
-  const { data } = await ctx.db.rpc('get_attempt_review', { a: attempt.id });
+  const { data, error } = await ctx.db.rpc('get_attempt_review', { a: attempt.id });
+  if (error) throw error;
   const rows = (data ?? []) as Review[];
+  const unchecked = rows.filter((r) => r.marks_awarded == null).length;
+  const score = released ? attempt.score : rows.reduce((s, r) => s + Number(r.marks_awarded ?? 0), 0);
+  const max = released ? attempt.max_score : rows.reduce((s, r) => s + Number(r.marks), 0);
   return (
     <>
+      {!released && (
+        <p className="notice">
+          Submitted.{' '}
+          {unchecked > 0
+            ? `${unchecked === 1 ? '1 written answer is' : `${unchecked} written answers are`} not checked yet; your marks go up when your teacher checks ${unchecked === 1 ? 'it' : 'them'}. `
+            : ''}
+          Your test rank comes when your teachers release results.
+        </p>
+      )}
       <div className="grid">
         <div className="card stat">
-          <span className="muted small">Marks</span>
+          <span className="muted small">{unchecked > 0 ? 'Marks so far' : 'Marks'}</span>
           <b>
-            {attempt.score} / {attempt.max_score}
+            {score} / {max}
           </b>
         </div>
         <div className="card stat">
           <span className="muted small">Percentage</span>
-          <b>{pct(attempt.score, attempt.max_score)}%</b>
+          <b>{pct(score, max)}%</b>
         </div>
         <div className="card stat">
           <span className="muted small">Test rank</span>
-          <b>{attempt.rank}</b>
+          <b>{released ? attempt.rank : 'After release'}</b>
         </div>
       </div>
       <p>
@@ -168,9 +188,13 @@ async function ReviewView({
         <section key={r.question_id} className="card stack" aria-labelledby={`r-${r.question_id}`}>
           <h2 id={`r-${r.question_id}`}>
             Question {i + 1}{' '}
-            <span className={`badge ${r.marks_awarded >= r.marks ? 'good' : r.marks_awarded < 0 ? 'bad' : 'warn'}`}>
-              {r.marks_awarded} / {r.marks}
-            </span>
+            {r.marks_awarded == null ? (
+              <span className="badge warn">Not checked yet</span>
+            ) : (
+              <span className={`badge ${r.marks_awarded >= r.marks ? 'good' : r.marks_awarded < 0 ? 'bad' : 'warn'}`}>
+                {r.marks_awarded} / {r.marks}
+              </span>
+            )}
           </h2>
           <p style={{ whiteSpace: 'pre-wrap' }}>{r.stem}</p>
           {r.options.length > 0 && (
@@ -191,6 +215,9 @@ async function ReviewView({
               <b>{r.type === 'written' ? 'Model answer' : 'Correct answer'}:</b>{' '}
               <span style={{ whiteSpace: 'pre-wrap' }}>{answerKey(r)}</span>
             </p>
+          )}
+          {!r.key && r.type !== 'written' && (
+            <p className="muted">Correct answer: shown after the test closes ({formatTime(test.closes_at)}).</p>
           )}
           {r.explanation && <p className="muted">{r.explanation}</p>}
           {r.teacher_comment && (

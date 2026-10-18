@@ -145,6 +145,12 @@ test('teacher builds a mixed test, student takes it, teacher checks and releases
   student.once('dialog', (d) => void d.accept());
   await student.getByRole('button', { name: 'Submit test' }).click();
   await expect(student.getByText(/^Submitted\./)).toBeVisible();
+  // ADR-046: own marks at once; correct answers only after closing time; rank only with release.
+  await expect(student.locator('.stat').filter({ hasText: 'Marks so far' })).toContainText('12 / 16');
+  await expect(student.locator('.stat').filter({ hasText: 'Test rank' })).toContainText('After release');
+  await expect(student.getByText('Not checked yet', { exact: true })).toBeVisible();
+  await expect(student.getByText(/^Correct answer: shown after the test closes/)).toHaveCount(3);
+  await noSeriousA11yIssues(student);
 
   // ---- the test closes (time travel; guard triggers would refuse to move an opened test's times)
   await sql(
@@ -159,6 +165,9 @@ test('teacher builds a mixed test, student takes it, teacher checks and releases
     [testId],
   );
   const { attempt, question } = rows[0] as { attempt: string; question: string };
+  await student.reload();
+  await expect(student.getByText('Correct answer:', { exact: true })).toHaveCount(3);
+  await expect(student.getByText('Model answer:', { exact: true })).toHaveCount(0);
 
   // AC7.8: teacher3 teaches only NEET 2027 Evening — no checking screen, and the RPC refuses.
   const other = await (await browser.newContext()).newPage();

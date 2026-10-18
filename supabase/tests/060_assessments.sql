@@ -166,6 +166,12 @@ select lives_ok(format($$ select public.submit_attempt(%L) $$, tests.attempt('Un
   'student submits');
 select throws_ok(format($$ select public.submit_attempt(%L) $$, tests.attempt('Unit 1', 'student1@alpha.test')),
   'P0001', 'attempt_closed', 'double submit rejected');
+-- ADR-046: own result right after submit; no keys while the test is still open, written answer not checked yet.
+select results_eq(format($$ select type, marks_awarded, key, explanation from public.get_attempt_review(%L) order by pos $$,
+  tests.attempt('Unit 1', 'student1@alpha.test')),
+  $$ values ('single', 4.0, null::jsonb, null::text), ('multi', 4.0, null, null), ('numerical', 4.0, null, null),
+            ('written', null, null, null) $$,
+  'after submit, before close: objective marks live, no keys or explanations, written not checked yet');
 select throws_ok(format($$ select public.save_answer(%L, %L, '["b"]') $$,
   tests.attempt('Unit 1', 'student1@alpha.test'), tests.id_of('questions', 'stem', 'Q1 single')), 'P0001',
   'attempt_closed', 'no saves after submit');
@@ -184,6 +190,10 @@ select lives_ok(format($$
   tests.attempt('Unit 1', 'student2@alpha.test'), tests.id_of('questions', 'stem', 'Q1 single'),
   tests.id_of('questions', 'stem', 'Q3 numerical'), tests.id_of('questions', 'stem', 'Q4 written')),
   'student2 saves answers');
+select throws_ok(format($$ select * from public.get_attempt_review(%L) $$, tests.attempt('Unit 1', 'student2@alpha.test')),
+  '42501', 'results_not_released', 'no own result while still writing');
+select throws_ok(format($$ select * from public.get_attempt_review(%L) $$, tests.attempt('Unit 1', 'student1@alpha.test')),
+  '42501', 'results_not_released', 'nor another student''s submitted result');
 
 -- AC7.3: the deadline passes (DB clock) while student2 is still in the test.
 select tests.logout();
@@ -222,6 +232,15 @@ insert into public.attempt_answers (attempt_id, question_id, institute_id, respo
   (tests.attempt('Unit 1', 'student3@alpha.test'), tests.id_of('questions', 'stem', 'Q4 written'), tests.inst('alpha'), '"Turning force"');
 alter table public.tests enable trigger guard;
 
+-- ADR-046: closed but not released → objective keys appear, the model answer does not; s2 (deadline passed) sees theirs.
+select tests.login('student2@alpha.test');
+select results_eq(format($$ select type, marks_awarded, key is not null from public.get_attempt_review(%L) order by pos $$,
+  tests.attempt('Unit 1', 'student2@alpha.test')),
+  $$ values ('single', -1.0, true), ('multi', 0.0, true), ('numerical', 4.0, true), ('written', null, false) $$,
+  'after close: wrong = −negative, blank = 0, keys shown, model answer hidden until release');
+select is((select rank from public.test_attempts where id = tests.attempt('Unit 1', 'student2@alpha.test')), null,
+  'no rank before release');
+
 -- ---------------------------------------------------------------- AC7.7 / AC7.8 checking
 select tests.login('teacher1@alpha.test');
 select throws_ok(format($$ select public.release_results(%L) $$, tests.id_of('tests', 'title', 'Unit 1')),
@@ -257,6 +276,11 @@ select lives_ok(format($$
   'teacher marks every written answer (half marks allowed)');
 select is((select count(*) from public.audit_events where action = 'attempt_answers.grade'), 0::bigint,
   'teachers do not read audit events');
+select tests.login('student1@alpha.test');
+select results_eq(format($$ select marks_awarded, key, teacher_comment from public.get_attempt_review(%L) where type = 'written' $$,
+  tests.attempt('Unit 1', 'student1@alpha.test')), $$ values (3.5, null::jsonb, 'Mention r x F') $$,
+  'checked before release: the student sees the written marks and comment, still no model answer');
+select tests.login('teacher1@alpha.test');
 select lives_ok(format($$ select public.release_results(%L) $$, tests.id_of('tests', 'title', 'Unit 1')),
   'teacher releases Unit 1');
 
