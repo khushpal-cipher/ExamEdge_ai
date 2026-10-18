@@ -435,6 +435,16 @@ Steps 3–7 depend on step 1; step 4 depends on step 3 — re-verify step 3's RL
 **Status (session 28 handoff): steps 3 + 4 built on `r11-structure`; PR #21 open
 (https://github.com/khushpal-cipher/ExamEdge_ai/pull/21), Auto-fix on, NOT merged.** First CI run (39051354988)
 failed only at `format:check` on `.claude/launch.json` (fixed in the handoff commit), so **E2E has not run yet**.
+**Session 34 (2026-10-18), branch `r11-final-check` (step 8, NOT finished — usage limit):** local gate on `c5df7cd` green
+(format, lint, typecheck, unit 154, pgTAP Files=21 Tests=1334, int 28/28, build + check-bundle ok). Fixed: test page no
+longer shows "Start test" for a past batch's open test (shows the reason; E2E added in `contests.spec.ts`); question
+bank lists only subjects of batches the teacher teaches (same UI filter as Subjects); bank column "Chapter" → "Topic".
+Browser (prod build :3001, 375 px, scrollWidth ≤ 375): student1 home/Contest/progress/topic + Smart Study tab; student2
+(NEET) → JEE maths subject/topic 404; student1 on vedam → "not a member"; teacher.jee dashboard/subjects/topic
+(Upload notes, Write notes with AI, AI test tab)/bank/tests/batches. No rows added. Pane was left signed in as
+teacher.jee on newtown (was student1). NEXT: rerun full gate on the branch, open PR into main, CI green, merge, mark
+R1.1 done. Small copy left: "Chapter strength" on progress page, "1 subtopics" plural; tutor/AI notes not re-clicked
+(covered by E2E).
 **Next exact action (session 34):** steps 1–7 are merged (`main` = `4f3f78a`). Do step 8 only:
 1. `git checkout main && git pull && git checkout -b r11-final-check`.
 2. Local gate: `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:db`,

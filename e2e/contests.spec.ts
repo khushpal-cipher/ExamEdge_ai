@@ -98,6 +98,17 @@ test('a promoted student switches to the past batch and sees only their own time
     // The chart's <title> tooltips also hold test names: check the table's link.
     await expect(page.getByRole('link', { name: 'Mixed Test 2', exact: true })).toBeVisible();
     await expect(page.getByText('Chemistry Test 3')).toHaveCount(0);
+
+    // An open test of the past batch, reached by its address: no Start button, the reason instead.
+    const practice = (
+      await sql(
+        `select t.id from tests t join institutes i on i.id = t.institute_id
+         where i.slug = 'demo' and t.title = 'Physics Practice Test'`,
+      )
+    ).rows[0].id as string;
+    await page.goto(`${DEMO}/tests/${practice}`);
+    await expect(page.getByText('You have moved to a new batch', { exact: false })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Start test' })).toHaveCount(0);
   } finally {
     await sql('delete from batch_members where batch_id = $1', [next]);
     await sql('delete from batches where id = $1', [next]);
