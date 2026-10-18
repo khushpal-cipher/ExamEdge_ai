@@ -84,7 +84,14 @@ ADR-040. DONE + TESTED:
 - Docs: ADR-040 "Built (step 6)", DATABASE_DESIGN (function signatures). HOW_IT_WORKS already described it.
 - Not done (small): the test page itself still shows "Start test" for a past batch's open test (the DB refuses and
   the message explains); Contest/Home hide it.
-NEXT: open PR `r11-contest` → main, check CI, fix until green, squash-merge, record here.
+- **PR #23 opened** (https://github.com/khushpal-cipher/ExamEdge_ai/pull/23), Auto-fix on. First CI run
+  39090576230: `secrets` pass, `check` **failed at E2E, only the new `contests.spec.ts` (test locators, no app
+  bug)**: (1) "Live now" had 2 Start/Continue links (another spec opens a JEE test in parallel) → the check now
+  uses the Physics Practice Test row; (2) the new batch's name matched both the page text and the switcher's
+  `<option>` → scoped to `main`. No assertion weakened. Fix pushed in the session-32 handoff commit; **CI on it
+  not yet seen.**
+NEXT: `gh pr checks 23`; if green → `gh pr merge 23 --squash`, record merge commit + run id here,
+`git checkout main && git pull`. If E2E still fails: `gh run view <run> --log-failed`, fix (never weaken), push.
 
 ### R1.1 step 5 — B1 AI notes + B2 AI test (sessions 29–31) — MERGED (PR #22, `0cc9a2e`)
 ADR-039. `main` (`22ac7f3`) is merged into the branch (merge commit `7161ffd`); the branch tree = main + step 5.
@@ -400,15 +407,15 @@ Steps 3–7 depend on step 1; step 4 depends on step 3 — re-verify step 3's RL
 **Status (session 28 handoff): steps 3 + 4 built on `r11-structure`; PR #21 open
 (https://github.com/khushpal-cipher/ExamEdge_ai/pull/21), Auto-fix on, NOT merged.** First CI run (39051354988)
 failed only at `format:check` on `.claude/launch.json` (fixed in the handoff commit), so **E2E has not run yet**.
-**Next exact action (session 32):**
-1. Step 6 built on `r11-contest` (In progress): PR into main, CI green, squash-merge, record.
+**Next exact action (session 33):**
+1. Step 6: PR #23 — check CI on the locator fix, squash-merge, record (In progress → NEXT).
 2. Then step 7 (D2: platform "All institutes" table shows tokens + real cost this month per institute, ADR-041;
    one invoker SQL function over `usage_records`; commission/₹ bill wait for the founder's formula), then step 8
    (full gate + per-role browser check at 375 px).
 **R1.1 progress (8 build steps):** 1 ADRs ✅ merged · 2 library removed ✅ merged · 3 DB structure ✅ merged (#21) ·
 4 topic page / upload / topic-only practice ✅ merged (#21) · 5 AI notes + AI test ✅ merged (#22) · 6 Contest page +
 batch switcher 🟡 built on `r11-contest`, PR + CI left · 7 platform tokens + cost ⬜ · 8 full gate + per-role browser
-check ⬜. ≈ 5.5 of 8 steps done; by founder groups: E, A, B done; C built (not merged); D not started.
+check ⬜. ≈ 5.5 of 8 steps done; by founder groups: E, A, B done; C built (PR #23, CI fix pushed); D not started.
 After merge: steps 5 (B1 AI notes, B2 AI test), 6 (C2 Contest
 page + C1 batch switcher), 7 (D2 platform tokens + cost), 8. Teachers still have the tutor/Studio on the topic page
 until step 5 removes them (ADR-039). The list below is the step 3/4 work list, kept for reference (done).
@@ -563,7 +570,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
-| 32 | 2026-10-18 | PR #22 merged (`0cc9a2e`). Step 6: migration 21 (progress per batch, skip tests after leaving), Contest page, batch switcher, E2E; browser check with temporary rows (4 fixes); local gate green except E2E (CI) | `6533b04` (branch `r11-contest`) |
+| 32 | 2026-10-18 | PR #22 merged (`0cc9a2e`). Step 6: migration 21 (progress per batch, skip tests after leaving), Contest page, batch switcher, E2E; browser check with temporary rows (4 fixes); local gate green; PR #23 first CI failed on 2 E2E locators in the new spec, fixed and pushed | `6533b04` (branch `r11-contest`) |
 | 31 | 2026-10-18 | Step 5 finished: AI notes edit on the document page, browser check (3 copy fixes + return-to-test after saving a question), E2E (AI test rewrite, AI notes journey, Studio teacher test), docs; local gate green except E2E (CI) | see `git log` (branch `r11-teacher-ai`) |
 | 30 | 2026-10-17 | PR #21 E2E fixed (`demoTopic` batch order) and merged `22ac7f3`. Step 5: notes unit tests, written AI questions (`questions-v2`), worker Markdown, web AI notes / AI test / `/notes` page / bank form removed (typecheck + lint + unit green; no browser check, no E2E yet) | see `git log` (branch `r11-teacher-ai`) |
 | 29 | 2026-10-17 | PR #21 CI: E2E 6/26 failing (not fixed). Step 5 started on `r11-teacher-ai`: migration 20 (staff/student AI split, Markdown notes, `add_ai_test`) applied locally, pgTAP 1321 PASS, core `notes.ts` + `claudeNotes`; web/worker/E2E not done | see `git log` (branch) |

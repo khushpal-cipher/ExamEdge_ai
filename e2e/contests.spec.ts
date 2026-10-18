@@ -33,7 +33,9 @@ test('Contest lists every test of the batch by phase; a forged batch cookie is i
 
   const section = (name: string) => page.getByRole('region', { name });
   await expect(section('Live now').getByText('Physics Practice Test')).toBeVisible();
-  await expect(section('Live now').getByRole('link', { name: /Start|Continue/ })).toBeVisible();
+  // Other specs open tests for this batch in parallel: check this test's own row.
+  const practice = section('Live now').getByRole('listitem').filter({ hasText: 'Physics Practice Test' });
+  await expect(practice.getByRole('link', { name: /Start|Continue/ })).toBeVisible();
   await expect(section('Upcoming').getByText('Maths Test 4')).toBeVisible();
   await expect(section('Finished · waiting for results').getByText('Chemistry Test 3')).toBeVisible();
   await expect(section('Results').getByText('Physics Test 1')).toBeVisible();
@@ -76,7 +78,7 @@ test('a promoted student switches to the past batch and sees only their own time
   );
   try {
     await login(page, email);
-    await expect(page.getByText(name, { exact: true })).toBeVisible(); // current batch by default
+    await expect(page.getByRole('main').getByText(name, { exact: true })).toBeVisible(); // current batch by default
     await page.getByRole('link', { name: 'Contest' }).click();
     await expect(page.getByText('No tests in this batch yet.')).toBeVisible();
 
