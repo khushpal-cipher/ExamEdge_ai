@@ -110,6 +110,7 @@ What teachers **don't** see by default: the actual text of a student's private A
 ### F. Who sees what (staff)
 - **Owner/admin:** everything in their institute.
 - **Teacher:** all of the institute's notes, but student results only for **their own batches**.
+- **Reviews** (sidebar, owner/admin only): what students wrote about the coaching, newest first, with the student's name and batch, or "Anonymous" and the batch if the student hid their name. Teachers never see reviews. (ADR-047)
 - **Nobody** in one institute can ever see another institute's anything.
 
 ---
@@ -187,7 +188,10 @@ again (R1.2, ADR-043).
 ### G. My progress
 The same full progress page teachers see (Part 2E): ranks, marks trend, topic strengths, practice history. Suggested topics to practise next come later.
 
-### H. Limits
+### H. Review
+**Review** in the sidebar: the student writes what they like and what should be better (up to 2000 characters) and can tick **Hide my name**. Only the institute's owner and admins read it, never teachers. With the name hidden, the name is not saved at all, so nobody can find out who wrote it. (ADR-047)
+
+### I. Limits
 Each student has a daily AI limit (for example 40 doubts a day). When it's reached: "You've used today's AI limit. It resets tomorrow." This keeps costs safe.
 
 ---

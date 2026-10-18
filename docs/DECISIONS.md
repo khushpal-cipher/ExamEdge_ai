@@ -499,6 +499,16 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
   the quarter keeps it exact for 4-mark questions and proportional for other marks.
 - **Note:** a test released before this keeps its stored marks until a teacher clicks Recalculate.
 
+### ADR-047 Student reviews, read only by owner/admin (founder, 2026-10-18)
+- **Decision:** a "Review" page in the student sidebar (text up to 2000 characters, "Hide my name" tick box) and a
+  "Reviews" page for owner/admin listing them newest first with name + batch, or "Anonymous" + batch. Teachers have
+  no link and get 404; RLS gives them no rows. Table `public.reviews` (migration 29), plain RLS insert (no definer
+  function). pgTAP `250_reviews.sql`, fixture row in `test_helpers.sql` (isolation matrix), E2E `reviews.spec.ts`.
+- **Why the id is not stored for a hidden name:** hiding it only on screen would still let an owner (or a database
+  read) find the author; with `user_id` null nobody can. The batch stays so the owner knows which class it is about
+  (in a very small batch that can narrow it down; the page says only owner/admin read it).
+- **Not built (not asked):** replies, delete/hide, star rating, limits per student.
+
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
 | # | Issue found | Resolution |
