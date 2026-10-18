@@ -429,6 +429,45 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
   calls count at their reservation like `usage_summary`), column "AI this month" on `/platform`, pgTAP
   `210_platform_usage.sql`, E2E in `portals.spec.ts` (platform) and `usage.spec.ts` (Rival sees only its own row).
 
+### ADR-042 New test on the Tests page: AI request box or typed questions (R1.2 item 1, founder 2026-10-18)
+- **Decision:** a test is made on the Tests page only. **New test** = subject (a list grouped by batch — picking the
+  subject picks its batch; teachers see only batches they teach), title, opens, closes, duration → a **draft** test
+  for that subject's batch, then its test page. On a draft test that has a subject the teacher fills it two ways:
+  **With AI** — a request box ("10 MCQs + 5 theory on Networking and HTML, medium"), each Send adds one batch of
+  questions; **Manual** — "Type a question" (MCQ single/multi: stem, options, correct; numerical: value, tolerance;
+  theory: question + model answer; topic; marks). "Add from the bank" stays. Review (approve AI drafts) → Schedule, as
+  today. The topic page's **AI test** tab, `makeAiTest` and the question bank's **New question** form are removed; the
+  bank stays the store (list, edit, approve, delete) and every question made on a test page is saved there.
+- **AI request → plan → questions:** the request text goes through the gateway as feature `question_gen` (staff
+  only) to `planTest` (Haiku 5.5, effort low, structured output): `{difficulty, parts: [{topic, type, count}]}`, where
+  `topic` is the index of one of the subject's real topics sent with the request. The server validates it (topic index
+  in range, type in `single|multi|numerical|written`, 1 ≤ count ≤ 20, ≤ 4 parts, ≤ 40 questions), then for each part
+  runs the existing `generateQuestions` (ADR-032/039: Opus writes from **that topic's** published notes, Sonnet solves
+  MCQ/numerical blind). A topic without published notes is skipped and the page says the test is partial. Demo mode:
+  a deterministic parser (number before "mcq/multi/numerical/theory", topic names found in the text, difficulty word;
+  no topic named = every topic with notes).
+- **Why not a multi-turn chat:** one request → one batch keeps it stateless (no chat table, the request text is never
+  stored, TH-10); "Send" again adds more. The request is the teacher's own text, the model only returns a plan that is
+  checked against real topic ids, and questions are still written from the notes with the existing prompts, so prompt
+  injection cannot reach other data.
+- **Database:** `tests.subject_id` (nullable — older tests have none and keep "Add from the bank" only; composite FK
+  → subjects, `on delete set null`); invoker RPC `add_test_questions(inst, test, items)` replaces `add_ai_test`
+  (dropped): the test must be a draft the caller may manage (RLS on `test_questions`) and have a subject; every item's
+  topic must be a topic of that subject; `origin` `ai` (review trigger keeps it a draft, keys + blind second answer
+  stored) or `teacher` (approved, `teacher_verified`); questions, keys and `test_questions` (appended, marks per item)
+  in one transaction.
+- **Disadvantages:** several Opus calls run inside one server action (≤ 4 parts × 2 calls); on Vercel this needs a
+  longer `maxDuration` [U] or a worker job later. Old multi-batch tests stay as they are.
+
+### ADR-043 One-click batch switcher, Home after switching, Smart Study tiles (R1.2 items 2–4, founder 2026-10-18)
+- **Switcher:** choosing a batch in the dropdown submits at once (small client component; a `<noscript>` "Show"
+  button keeps it working without JavaScript). `chooseBatch` then goes to **Home** of that batch, so the student never
+  stays on the old batch's subject page.
+- **Smart Study tools** look like NotebookLM's "Studio": a grid of tiles (Summary, Flashcards, Mind map, Practice
+  quiz), each with an icon in the institute's colour; tapping a tile makes it (one form, one submit button per tool —
+  the same `generate` action). Below: "Made by you" and "From your teachers" for this topic, to open again. Audio,
+  video, slides, reports, infographics and data tables are later (not built).
+
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
 | # | Issue found | Resolution |

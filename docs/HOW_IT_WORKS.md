@@ -53,11 +53,16 @@ library is gone.
 4. Teachers no longer have the AI tutor or Studio (summary, flashcards, mind map, quiz); those are for students.
 
 ### C. Creating a test
-1. **Question bank**: the teacher types questions. **AI test** (inside a topic): the teacher asks for a quiz (MCQs),
-   theory (written) questions or a mix, e.g. "10 MCQs + 5 theory questions from Rotational Motion, medium level". The
-   AI makes them from the topic's published notes and puts them into a new draft test for that subject's batch
-   (defaults the teacher can change: MCQ 4 marks, theory 5 marks, tomorrow 10:00–11:00 India time, 60 minutes).
-   Opening a question from the test and saving it brings the teacher back to the test.
+1. **Tests → New test** (R1.2, ADR-042): pick the **subject** (listed under its batch, so this also picks the batch),
+   a title, the date and time it opens and closes, and the duration. This makes a draft test; its page offers two
+   ways to fill it:
+   - **With AI**: write what you want in the box, e.g. "10 MCQs + 5 theory questions on Networking and HTML, medium".
+     The AI finds those topics in the subject and makes the questions from each topic's published notes (MCQ 4 marks,
+     theory 5 marks by default). Send another request to add more.
+   - **Manual**: type a question right there (MCQ: question, options, correct option; numerical: answer and allowed
+     error; theory: question and model answer), with its topic and marks.
+   Every question made here is also saved in the **Question bank** (list, edit, approve), and questions can still be
+   added from the bank. Opening a question from the test and saving it brings the teacher back to the test.
    - Question types: single-correct MCQ, multi-correct MCQ, numerical answer, and **theory (written) questions** where the student types the answer. One test can mix them, for example 10 MCQs and 5 theory questions.
    - For a theory question the teacher writes a model answer. It's only a guide for checking, never used to mark automatically.
    - Every AI-made MCQ or numerical question is **solved a second time by a different AI model**. If the two answers don't match, the question is flagged and the teacher must fix it. AI theory questions come with a model answer; the teacher checks and saves each one.
@@ -113,7 +118,8 @@ Click the invitation email → **Continue with Google** → land on the institut
 **Batch switcher** (like a semester dropdown): a student who was in "Class 9 2025" and is now in "Class 10 2026"
 picks "Class 9 2025" and sees **their own time** there — notes, tests, results, progress and Smart Study — exactly
 like the current batch, but no new tests can be taken. They never see what this year's Class 9 students get (that
-is a different batch). Default = the current batch. The owner moves students up with **Move students to another
+is a different batch). Default = the current batch. Picking a batch in the dropdown switches at once and opens that batch's Home
+(R1.2, ADR-043). The owner moves students up with **Move students to another
 batch** on the batch page; the old batch stays in their history.
 
 **Menu:** Home · **Contest** · My progress. Contest lists every test the institute held for the selected batch:
@@ -161,6 +167,9 @@ A subject lists its topics. Clicking a topic opens the **topic page** with two t
 The student never uploads anything. The AI already has the institute's notes.
 
 ### E. Smart Study tools (self-practice, inside a topic)
+The tools are tiles with icons, like NotebookLM's Studio: tap **Summary**, **Flashcards**, **Mind map** or **Practice
+quiz** to make it. Below the tiles: what the student already made for this topic and what the teachers shared, to open
+again (R1.2, ADR-043).
 - **Practice quiz**: made from the topic's notes, 10 questions, see the score immediately. These quizzes don't affect rank; they count as practice.
 - **Flashcards**, **summary**, **mind map**: made instantly from the topic's notes.
 - Later: **audio lessons** in Hindi and other languages, and **animated video** explanations.
