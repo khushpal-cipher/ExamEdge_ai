@@ -486,6 +486,15 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
   time would fail, and the worker should not decide audiences. Covered by pgTAP `230_notes_autopublish.sql` and E2E
   `documents.spec.ts`.
 
+### ADR-045 Multiple-correct MCQs marked like JEE Advanced (founder, 2026-10-18)
+- **Decision:** replaces ADR-023's "exact set or nothing". Only correct options picked: all of them = full marks,
+  otherwise marks ÷ 4 per correct option picked (+1 each on a 4-mark question, like JEE Advanced's +3/+2/+1); any wrong
+  option picked = −negative marks (the teacher sets them per question, e.g. 2); blank = 0. Single-correct and
+  numerical unchanged. `private.grade_objective` (migration 26), pgTAP `060_assessments.sql`.
+- **Why the quarter:** the founder chose JEE Advanced's rule over splitting marks by the number of correct options;
+  the quarter keeps it exact for 4-mark questions and proportional for other marks.
+- **Note:** a test released before this keeps its stored marks until a teacher clicks Recalculate.
+
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
 | # | Issue found | Resolution |

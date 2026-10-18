@@ -159,7 +159,7 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 
 **attempt_answers** (S) — pk `(attempt_id, question_id)`, `institute_id`, `response jsonb` (option ids, a number, or typed text for written questions), `answered_at`, `is_correct`, `marks_awarded`, `graded_by`, `graded_at`, `teacher_comment`.
 - I/U via `save_answer` RPC only: checks caller owns attempt, `status='in_progress'`, `now() < deadline_at` (DB clock), question belongs to the test. Students cannot set `is_correct/marks_awarded` (column privileges).
-- Objective answers (single/multi/numerical) are marked automatically. Written answers are marked **only by a teacher** of that batch (or admin) via `grade_answer` RPC: `0 ≤ marks ≤ max` (half marks allowed), optional comment, audited. Changing marks after release recalculates both ranks.
+- Objective answers (single/multi/numerical) are marked automatically (multi-correct: JEE Advanced partial marks, ADR-045). Written answers are marked **only by a teacher** of that batch (or admin) via `grade_answer` RPC: `0 ≤ marks ≤ max` (half marks allowed), optional comment, audited. Changing marks after release recalculates both ranks.
 
 **practice_attempts** (S) — `user_id`, `artifact_id` (composite FK; the student's own or a published quiz), `answers jsonb` (`{question id: option id}`, only the quiz's ids), `score`, `max_score`, `completed_at`. No insert grant: written only by definer `submit_practice(art, answers)`, which grades in SQL and returns the per-question result. S owner only; staff get counts/averages per chapter via `practice_activity(inst, student, batch default null)` (definer, same callers as `student_progress`; `batch` = one batch's subjects, ADR-040). Never counts for rank.
 

@@ -123,6 +123,12 @@ export function QuestionForm({
               </label>
             </div>
           ))}
+          {type === 'multi' && (
+            <p className="small muted">
+              Marked like JEE Advanced: all correct options = full marks; only correct ones but not all = a quarter of
+              the marks for each; any wrong option = the negative marks.
+            </p>
+          )}
         </fieldset>
       )}
       {type === 'numerical' && (
