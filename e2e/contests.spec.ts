@@ -31,7 +31,7 @@ test('Contest lists every test of the batch by phase; a forged batch cookie is i
   await expect(page.getByText('JEE 2027 Morning', { exact: true })).toBeVisible();
   await expect(page.getByRole('combobox')).toHaveCount(0); // one batch → no switcher
 
-  const section = (name: string) => page.getByRole('region', { name });
+  const section = (name: string) => page.getByRole('region', { name, exact: true });
   await expect(section('Live now').getByText('Physics Practice Test')).toBeVisible();
   // Other specs open tests for this batch in parallel: check this test's own row.
   const practice = section('Live now').getByRole('listitem').filter({ hasText: 'Physics Practice Test' });
@@ -85,7 +85,7 @@ test('a promoted student switches to the past batch and sees only their own time
     await page.getByRole('combobox').selectOption({ label: 'JEE 2027 Morning (past)' });
     await page.getByRole('button', { name: 'Show' }).click();
     await expect(page.getByText(/JEE 2027 Morning · past batch/)).toBeVisible();
-    const results = page.getByRole('region', { name: 'Results' });
+    const results = page.getByRole('region', { name: 'Results', exact: true });
     await expect(results.getByText('Physics Test 1')).toBeVisible();
     await expect(results.getByText('Mixed Test 2')).toBeVisible();
     // Held after they left: not theirs.
@@ -95,7 +95,8 @@ test('a promoted student switches to the past batch and sees only their own time
 
     await page.getByRole('link', { name: 'My progress' }).click();
     await expect(page.getByText('JEE 2027 Morning', { exact: true }).first()).toBeVisible();
-    await expect(page.getByText('Mixed Test 2').first()).toBeVisible();
+    // The chart's <title> tooltips also hold test names: check the table's link.
+    await expect(page.getByRole('link', { name: 'Mixed Test 2', exact: true })).toBeVisible();
     await expect(page.getByText('Chemistry Test 3')).toHaveCount(0);
   } finally {
     await sql('delete from batch_members where batch_id = $1', [next]);
