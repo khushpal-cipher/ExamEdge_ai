@@ -507,7 +507,10 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
 - **Why the id is not stored for a hidden name:** hiding it only on screen would still let an owner (or a database
   read) find the author; with `user_id` null nobody can. The batch stays so the owner knows which class it is about
   (in a very small batch that can narrow it down; the page says only owner/admin read it).
-- **Not built (not asked):** replies, delete/hide, star rating, limits per student.
+- **Replies (founder, same day):** owner/admin write one reply per review (editable; empty = removed); the database
+  stamps `replied_by`/`replied_at` (trigger). The student sees replies under "Your reviews" — only for reviews sent with
+  their name, since an anonymous review has no author to show it to (both pages say so). Migration 30.
+- **Not built (not asked):** delete/hide, star rating, limits per student, notifications of a reply.
 
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 

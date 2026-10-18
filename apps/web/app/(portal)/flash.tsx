@@ -60,6 +60,7 @@ const OK: Record<string, string> = {
   ai_questions_partial:
     'AI questions added, but some could not be made (a topic without published notes, or the AI found nothing usable). Check them, then schedule the test.',
   question_added: 'Question added to the test and saved in the question bank.',
+  reply_saved: 'Reply saved.',
   review_sent: 'Thank you. Your review was sent to the owner and admins.',
   moved: 'Moved. The old batch stays in their history (read-only).',
 };

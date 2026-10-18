@@ -126,8 +126,8 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 **answer_reports** (T) — `subject_id` (composite FK), `message_id` (unique; composite FK, `on delete set null`), `reported_by`, `question`, `answer`, `citations`, `reason` (≤ 500), `created_at`, `resolved_at`, `resolved_by`.
 - Written only by definer `report_answer(msg, why)` (caller must own the conversation): a copy, so it survives the chat being deleted. S/U(`resolved_at`, `resolved_by`) staff of the institute; `reported_by` has no column grant (staff never see who reported). Students: none.
 
-**reviews** (T, ADR-047) — `batch_id` (composite FK), `user_id` (null = the student hid their name; never stored then), `body` (1–2000 chars), `created_at`.
-- I student, about a batch they are in (`in_batch`), `user_id` own or null. S owner/admin. No U/D for anyone (no grant). Teachers: none.
+**reviews** (T, ADR-047) — `batch_id` (composite FK), `user_id` (null = the student hid their name; never stored then), `body` (1–2000 chars), `created_at`, `reply` (1–2000 or null), `replied_at`, `replied_by` (set by trigger `stamp_reply`).
+- I student, about a batch they are in (`in_batch`), `user_id` own or null. S owner/admin; a student their own named rows. U(`reply`) owner/admin only. No D for anyone. Teachers: none.
 
 `match_chunks(query_embedding, query_text, subject, k, topic default null)` (invoker; `topic` = a chapter id, R1.1 Smart Study; null = whole subject) returns `institute_id` and `similarity` with each chunk so the tutor can assert the tenant (TH-06) and evals can record scores.
 

@@ -1,4 +1,5 @@
--- ADR-047: student reviews of the coaching; only owner/admin read them; a hidden name is never stored.
+-- ADR-047: student reviews of the coaching; only owner/admin read and reply; a hidden name is never stored; the
+-- student reads replies to their named reviews.
 begin;
 select tests.setup();
 select * from no_plan();
@@ -26,8 +27,11 @@ select throws_ok(format($$ insert into public.reviews (institute_id, batch_id, b
   tests.inst('alpha'), pg_temp.bx('alpha')), '23514', null, 'blank review rejected');
 select throws_ok(format($$ insert into public.reviews (institute_id, batch_id, body) values (%L, %L, %L) $$,
   tests.inst('alpha'), pg_temp.bx('alpha'), repeat('a', 2001)), '23514', null, 'over 2000 characters rejected');
-select is((select count(*) from public.reviews), 0::bigint, 'students do not read reviews, not even their own');
+select results_eq($$ select body from public.reviews $$, $$ values ('Great physics classes') $$,
+  'a student reads only their own named review (not the anonymous one, not others)');
 select throws_ok($$ update public.reviews set body = 'changed' $$, '42501', null, 'nor change them');
+select is(tests.affected($$ update public.reviews set reply = 'self reply' where true $$), 0::bigint,
+  'a student cannot reply');
 
 select tests.login('teacher1@alpha.test');
 select is((select count(*) from public.reviews), 0::bigint, 'teachers never read reviews');
@@ -41,6 +45,26 @@ select results_eq($$ select body, user_id from public.reviews order by body $$,
   format($$ values ('Great physics classes', %L::uuid), ('Review of alpha', null), ('Too much homework', null) $$, tests.uid('student1@alpha.test')),
   'owner sees the named author and no author for the anonymous one');
 select throws_ok($$ delete from public.reviews $$, '42501', null, 'owner cannot delete reviews');
+select throws_ok($$ update public.reviews set body = 'edited' $$, '42501', null, 'owner cannot edit what a student wrote');
+select throws_ok(format($$ update public.reviews set replied_by = %L $$, tests.uid('admin@alpha.test')), '42501', null,
+  'nor set who replied');
+select is(tests.affected($$ update public.reviews set reply = 'Thanks, we will add doubt classes' where body like 'Great%' $$),
+  1::bigint, 'owner replies');
+select is(tests.affected($$ update public.reviews set reply = 'Noted' where body like 'Too much%' $$), 1::bigint,
+  'owner can reply to an anonymous review too');
+select results_eq($$ select replied_by, replied_at is not null from public.reviews where body like 'Great%' $$,
+  format($$ values (%L::uuid, true) $$, tests.uid('owner@alpha.test')), 'who and when are stamped by the database');
+select throws_ok($$ update public.reviews set reply = '' where body like 'Great%' $$, '23514', null, 'empty reply rejected');
+
+select tests.login('student1@alpha.test');
+select results_eq($$ select body, reply from public.reviews $$,
+  $$ values ('Great physics classes', 'Thanks, we will add doubt classes') $$, 'the student reads the reply to their review');
+select tests.login('teacher1@alpha.test');
+select is(tests.affected($$ update public.reviews set reply = 'teacher' where true $$), 0::bigint, 'a teacher cannot reply');
+select tests.login('owner@alpha.test');
+select lives_ok($$ update public.reviews set reply = null where body like 'Great%' $$, 'owner removes a reply');
+select results_eq($$ select replied_by, replied_at from public.reviews where body like 'Great%' $$,
+  $$ values (null::uuid, null::timestamptz) $$, 'removing a reply clears who and when');
 
 select tests.login('owner@bravo.test');
 select results_eq($$ select body from public.reviews $$, $$ values ('Review of bravo') $$,

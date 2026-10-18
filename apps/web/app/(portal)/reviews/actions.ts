@@ -4,7 +4,7 @@
 // under their own id or none ("Hide my name" stores no id at all).
 import { done, text } from '../form';
 import { studentBatches } from '@/lib/student';
-import { requireMember } from '@/lib/tenant';
+import { isUuid, MANAGERS, requireMember } from '@/lib/tenant';
 
 export async function sendReview(form: FormData) {
   const { institute, member, db } = await requireMember(['student']);
@@ -18,4 +18,17 @@ export async function sendReview(form: FormData) {
     body,
   });
   done('/reviews', error, 'review_sent');
+}
+
+// Owner/admin reply (an empty reply removes it). The database stamps who and when.
+export async function replyReview(form: FormData) {
+  const { institute, db } = await requireMember(MANAGERS);
+  const id = form.get('review_id');
+  if (!isUuid(id)) done('/reviews', { code: '23514' });
+  const { error } = await db
+    .from('reviews')
+    .update({ reply: text(form, 'reply', 2000) || null })
+    .eq('institute_id', institute.id)
+    .eq('id', id);
+  done('/reviews', error, 'reply_saved');
 }
