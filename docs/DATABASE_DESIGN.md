@@ -97,7 +97,7 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 
 ### 4.3 Documents and retrieval (T)
 
-**documents** — `subject_id`, `chapter_id`, `subtopic_id` (R1.1: both `not null`, composite FKs; ADR-038), `kind` (`file|ai_notes`, set on insert; AI notes = a Markdown version, ADR-039), `title`, `current_version_id`, `status` (`draft|published|withdrawn`), `published_at`, `withdrawn_at`, `deleted_at`, `created_by`.
+**documents** — `subject_id`, `chapter_id`, `subtopic_id` (R1.1: both `not null`, composite FKs; ADR-038), `kind` (`file|ai_notes`, set on insert; AI notes = a Markdown version, ADR-039), `title`, `current_version_id`, `status` (`draft|published|withdrawn`), `published_at`, `withdrawn_at`, `deleted_at`, `created_by`. Trigger `guard` (R1.2, ADR-044): when the first version of a `file` document becomes current, a draft publishes itself (the upload already recorded the subject's batch in `document_audience`); `published` needs a current version (`document_not_ready`).
 - Index `(institute_id, subject_id) where deleted_at is null`.
 - S `private.can_read_document(id)`. I/U staff. D: soft delete by staff; after 30 days the daily purge deletes the files (worker service account, Storage API) and then the rows (ADR-031).
 

@@ -43,7 +43,7 @@ const OK: Record<string, string> = {
   scheduled: 'Test scheduled. Students see it on their home page.',
   released: 'Results released. Ranks are updated.',
   cancelled: 'Test cancelled.',
-  uploaded: 'Uploaded. The file is being read; this page updates by itself.',
+  uploaded: 'Uploaded. It is published to the batch as soon as the file is read; this page updates by itself.',
   queued: 'Queued for processing.',
   published: 'Published. Students in the chosen batches can open it now.',
   withdrawn: 'Withdrawn. Students can no longer open it.',

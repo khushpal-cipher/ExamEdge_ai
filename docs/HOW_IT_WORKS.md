@@ -40,7 +40,8 @@ library is gone.
    - the text is read from the PDF; scanned or handwritten pages are read by Claude (OCR)
    - the notes are split into small paragraphs, keeping page numbers
    - Voyage gives each paragraph a "meaning code" so it can be found later
-3. Status changes to **"Ready"**. The teacher previews it and clicks **Publish**.
+3. Status changes to **"Ready"** and the notes are **published to the subject's batch by themselves** — a teacher's
+   own notes need no check (founder, R1.2, ADR-044). Only AI notes wait for the teacher to publish them (B below).
 4. Students of that batch now see it under the topic, grouped by subtopic, and Smart Study can use it.
 5. If something is wrong, the teacher clicks **Withdraw** and students lose access immediately. Uploading a new version replaces the old one.
 
