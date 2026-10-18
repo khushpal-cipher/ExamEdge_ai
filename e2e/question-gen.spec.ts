@@ -1,8 +1,8 @@
-// AI test journey (ADR-039, AC7.5): a teacher asks for MCQs + theory questions inside a topic and gets a new draft
-// test. A second AI solves each MCQ without the key: questions whose answers match can be approved; a flagged one
+// AI test journey (ADR-042, AC7.5): a teacher makes a test for a subject on the Tests page and asks the AI in words
+// for MCQs + theory questions on one of its topics; they land in the draft test. A second AI solves each MCQ without the key: questions whose answers match can be approved; a flagged one
 // cannot (in the UI or through the API) until the teacher checks and saves it; theory questions are approved only by
 // saving them. The test cannot be scheduled before every question is approved. Students and another institute can
-// neither make AI tests nor reach them. Needs `npm run seed:demo`.
+// neither add questions to tests nor reach them. Needs `npm run seed:demo`.
 import { expect, test, type Page } from '@playwright/test';
 import { demoSignIn, demoTopic, signedIn, sql } from './helpers';
 
@@ -15,9 +15,12 @@ async function login(page: Page, email: string, base = DEMO) {
   await expect(page).toHaveURL(/\/(home|dashboard)$/);
 }
 
+// <input type="datetime-local"> value in India time, `minutes` from now.
+const istInput = (minutes: number) => new Date(Date.now() + (330 + minutes) * 60_000).toISOString().slice(0, 16);
+
 const one = async (query: string, params: unknown[] = []) => (await sql(query, params)).rows[0];
 
-test('AI test: a draft of MCQs + theory; flagged and theory questions need the teacher before scheduling', async ({
+test('AI test: a request adds MCQs + theory to a draft; flagged and theory questions need the teacher before scheduling', async ({
   browser,
 }) => {
   test.setTimeout(120_000);
@@ -28,15 +31,23 @@ test('AI test: a draft of MCQs + theory; flagged and theory questions need the t
   await login(teacher, 'teacher1@demo.test');
   let testId: string | undefined;
   try {
-    await teacher.goto(`${DEMO}/topics/${topic}`);
-    await teacher.getByRole('tab', { name: 'AI test' }).click();
-    const form = teacher.getByRole('form', { name: 'Make a test with AI' });
-    await form.getByLabel('MCQs').fill('10');
-    await form.getByLabel('Theory questions').fill('2');
-    await form.getByRole('button', { name: 'Make test' }).click();
-    await expect(teacher).toHaveURL(/\/tests\/[0-9a-f-]{36}\?ok=ai_test_made$/);
+    const title = `E2E AI test ${Date.now().toString(36)}`;
+    await teacher.goto(`${DEMO}/tests`);
+    await teacher.getByLabel('Title').fill(title);
+    await teacher.getByLabel('Opens (India time)').fill(istInput(24 * 60));
+    await teacher.getByLabel('Closes (India time)').fill(istInput(25 * 60));
+    await teacher.getByLabel('Duration (minutes)').fill('60');
+    await teacher.getByLabel('Subject (and its batch)').selectOption({ label: 'Physics · JEE 2027 Morning' });
+    await teacher.getByRole('button', { name: 'Create test' }).click();
+    await expect(teacher).toHaveURL(/\/tests\/[0-9a-f-]{36}$/);
     testId = new URL(teacher.url()).pathname.split('/').pop()!;
     const tst = testId;
+    expect(await one('select subject_id from tests where id = $1', [tst])).toEqual({ subject_id: subject });
+
+    const form = teacher.getByRole('form', { name: 'Add questions with AI' });
+    await form.getByLabel('Add questions with AI').fill('10 MCQs + 2 theory on Rotational Motion, medium');
+    await form.getByRole('button', { name: 'Send' }).click();
+    await expect(teacher).toHaveURL(new RegExp(`/tests/${tst}\\?ok=ai_questions_added$`));
 
     // A draft test for the subject's own batch, with every question an AI draft (MCQ 4 marks, theory 5).
     expect(await one('select status from tests where id = $1', [tst])).toEqual({ status: 'draft' });
@@ -73,7 +84,7 @@ test('AI test: a draft of MCQs + theory; flagged and theory questions need the t
       `select count(*)::int as n from usage_records where feature = 'question_gen' and created_at >= $1`,
       [start],
     );
-    expect(usage.n).toBe(3); // MCQs: one write + one blind solve; theory: one write (no blind solve)
+    expect(usage.n).toBe(4); // the plan; MCQs: one write + one blind solve; theory: one write (no blind solve)
     const flagged = mcqs.find((q) => q.verification === 'dual_solve_disagree')!;
     const matched = mcqs.find((q) => q.verification === 'dual_solve_agree')!;
     expect([flagged, matched].every(Boolean)).toBe(true);
@@ -137,21 +148,20 @@ test('AI test: a draft of MCQs + theory; flagged and theory questions need the t
     await expect(teacher.getByRole('status')).toHaveText('Test scheduled. Students see it on their home page.');
     const student = await (await browser.newContext()).newPage();
     await login(student, 'student01@demo.test');
-    await expect(student.getByText('Rotational Motion — AI test')).toBeVisible();
+    await expect(student.getByText(title)).toBeVisible();
 
-    // Students cannot make AI tests or spend AI on questions; another institute cannot see them.
+    // Students cannot add questions to tests or spend AI on questions; another institute cannot see them.
     const studentApi = await signedIn('student01@demo.test');
-    const item = { type: 'written', stem: 'x', verification: 'unverified', key: { model_answer: 'x' }, marks: 5 };
-    const stored = await studentApi.rpc('add_ai_test', {
-      inst,
-      subject,
-      chapter: topic,
-      title: 'x',
-      opens: new Date().toISOString(),
-      closes: new Date(Date.now() + 3_600_000).toISOString(),
-      seconds: 600,
-      items: [item],
-    });
+    const item = {
+      origin: 'ai',
+      chapter_id: topic,
+      type: 'written',
+      stem: 'x',
+      verification: 'unverified',
+      key: { model_answer: 'x' },
+      marks: 5,
+    };
+    const stored = await studentApi.rpc('add_test_questions', { inst, test: tst, items: [item] });
     expect(stored.error?.code).toBe('42501');
     const reserve = await studentApi.rpc('ai_reserve', {
       inst,

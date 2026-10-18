@@ -24,7 +24,7 @@ const ICON: Record<string, string> = {
 };
 
 // The topic page (ADR-038): Subtopics (notes, uploaded or written with AI inside a subtopic) | Smart Study (students:
-// the AI over the whole topic) or AI test (staff, ADR-039).
+// the AI over the whole topic). Staff make tests on the Tests page (ADR-042).
 export default async function TopicPage(props: { params: Promise<{ id: string }>; searchParams: Search }) {
   const m = await requireMember();
   const { institute, member, db } = m;
@@ -238,7 +238,55 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
             ),
           },
           // Students: Smart Study. Staff make tests on the Tests page (ADR-042).
-          ...(student ? [STUDY] : []),
+          ...(student
+            ? [
+                {
+                  key: 'study',
+                  label: 'Smart Study',
+                  content: (
+                    <div className="study">
+                      <section className="card stack">
+                        <Tutor
+                          key={chat?.id ?? 'new'}
+                          subjectId={topic.subject_id}
+                          topicId={topic.id}
+                          topicName={topic.name}
+                          conversationId={chat?.id ?? null}
+                          messages={messages}
+                        />
+                      </section>
+                      <section className="card stack" aria-labelledby="tools">
+                        <h2 id="tools">Study tools</h2>
+                        <form action={generate} className="tiles" aria-label="Make study material">
+                          <input type="hidden" name="subject_id" value={topic.subject_id} />
+                          <input type="hidden" name="chapter_id" value={topic.id} />
+                          {Object.entries(STUDIO_KIND).map(([k, label]) => (
+                            <button key={k} type="submit" name="kind" value={k} className="tile">
+                              <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d={ICON[k]} />
+                              </svg>
+                              {label}
+                            </button>
+                          ))}
+                        </form>
+                        {artifactList(
+                          'Made by you',
+                          artifacts.filter((a) => a.owner_scope === 'student'),
+                        )}
+                        {artifactList(
+                          'From your teachers',
+                          artifacts.filter((a) => a.owner_scope === 'institute'),
+                        )}
+                        <p className="small muted">
+                          Made by AI from your teachers&apos; notes for this topic, just for you. Practice quizzes never
+                          affect your rank.
+                        </p>
+                      </section>
+                    </div>
+                  ),
+                },
+              ]
+            : []),
         ]}
       />
     </>

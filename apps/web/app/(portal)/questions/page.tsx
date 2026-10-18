@@ -5,7 +5,6 @@ import { deleteQuestion } from '../tests/actions';
 import { approveQuestion } from './actions';
 import { AiBadge } from './ai-badge';
 import { Flash } from '../flash';
-import { QuestionForm } from './question-form';
 
 export default async function QuestionBank({
   searchParams,
@@ -51,7 +50,7 @@ export default async function QuestionBank({
       <div className="top">
         <div>
           <h1>Question bank</h1>
-          <p className="muted">MCQs, numerical and written questions. Tests are built from these.</p>
+          <p className="muted">MCQs, numerical and written questions made on test pages, to edit, approve and reuse.</p>
         </div>
       </div>
       <Flash searchParams={searchParams} />
@@ -73,16 +72,15 @@ export default async function QuestionBank({
               </Link>
             ))}
           </nav>
-          <section className="card stack" aria-labelledby="new-question">
-            <h2 id="new-question">New question</h2>
-            <QuestionForm key={subject.id} subjects={list} subjectId={subject.id} />
-          </section>
           <section className="card stack" aria-labelledby="bank">
             <h2 id="bank">
               {subject.name} ({questions?.length ?? 0})
             </h2>
             {!questions?.length ? (
-              <p className="empty">No questions in {subject.name} yet.</p>
+              <p className="empty">
+                No questions in {subject.name} yet. Make a test on the <Link href="/tests">Tests</Link> page: its
+                questions are saved here.
+              </p>
             ) : (
               <div className="table-wrap">
                 <table>

@@ -367,10 +367,12 @@ async function Fill({ ctx, test }: { ctx: Ctx; test: Test }) {
             required
             maxLength={MAX_REQUEST}
             rows={3}
-            placeholder={`10 MCQs + 5 theory on ${chapters
-              .slice(0, 2)
-              .map((c) => c.name)
-              .join(' and ') || 'Networking and HTML'}, medium`}
+            placeholder={`10 MCQs + 5 theory on ${
+              chapters
+                .slice(0, 2)
+                .map((c) => c.name)
+                .join(' and ') || 'Networking and HTML'
+            }, medium`}
           />
         </label>
         <div className="row">
@@ -401,7 +403,7 @@ async function AddQuestion({ ctx, test, have }: { ctx: Ctx; test: Test; have: Se
   const usable = (bank ?? []).filter((q) => !have.has(q.id) && q.question_keys);
   return usable.length === 0 ? (
     <p className="muted small">
-      No more questions with answer keys in the bank. <Link href="/questions">Add questions</Link>.
+      No more approved questions with answer keys in the <Link href="/questions">question bank</Link>.
     </p>
   ) : (
     <form action={addTestQuestion} className="inline">

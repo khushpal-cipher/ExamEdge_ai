@@ -43,7 +43,11 @@ export function QuestionForm({
   const option = (id: string) => initial?.options.find((o) => o.id === id)?.text ?? '';
   const correct = new Set(initial?.key?.correct ?? []);
   return (
-    <form action={testId ? addTypedQuestion : saveQuestion} className="stack" aria-label={testId ? 'Type a question' : undefined}>
+    <form
+      action={testId ? addTypedQuestion : saveQuestion}
+      className="stack"
+      aria-label={testId ? 'Type a question' : undefined}
+    >
       {testId && <input type="hidden" name="test_id" value={testId} />}
       {initial && <input type="hidden" name="question_id" value={initial.id} />}
       {back && <input type="hidden" name="back" value={back} />}

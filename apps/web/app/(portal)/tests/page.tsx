@@ -19,12 +19,21 @@ export default async function Tests({ searchParams }: { searchParams: Search }) 
       .order('opens_at', { ascending: false }),
     teachableBatches(db, institute.id, member),
   ]);
+  const { data: subjects } = await db
+    .from('subjects')
+    .select('id, name, batch_id')
+    .eq('institute_id', institute.id)
+    .in(
+      'batch_id',
+      batches.map((b) => b.id),
+    )
+    .order('name');
   return (
     <>
       <div className="top">
         <div>
           <h1>Tests</h1>
-          <p className="muted">Create a test, add questions from the bank, then schedule it for your batches.</p>
+          <p className="muted">Pick the subject, then fill the test with AI or by typing questions, and schedule it.</p>
         </div>
         <Link href="/questions" className="button">
           Question bank
@@ -52,16 +61,25 @@ export default async function Tests({ searchParams }: { searchParams: Search }) 
               <input name="duration_minutes" type="number" min={1} max={1440} defaultValue={60} required />
             </label>
           </div>
-          <fieldset className="row" style={{ border: 0, padding: 0, margin: 0 }}>
-            <legend className="small muted">Batches taking the test</legend>
-            {batches.length === 0 && <span className="muted small">You do not teach any batch yet.</span>}
-            {batches.map((b) => (
-              <label key={b.id} className="row" style={{ display: 'flex' }}>
-                <input type="checkbox" name="batch_id" value={b.id} />
-                {b.name}
-              </label>
-            ))}
-          </fieldset>
+          <label>
+            Subject (and its batch)
+            <select name="subject_id" required defaultValue="">
+              <option value="" disabled>
+                {batches.length ? 'Pick a subject' : 'You do not teach any batch yet'}
+              </option>
+              {batches.map((b) => (
+                <optgroup key={b.id} label={b.name}>
+                  {(subjects ?? [])
+                    .filter((s) => s.batch_id === b.id)
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} · {b.name}
+                      </option>
+                    ))}
+                </optgroup>
+              ))}
+            </select>
+          </label>
           <label className="row" style={{ display: 'flex' }}>
             <input type="checkbox" name="shuffle" /> Shuffle question order for each student
           </label>
