@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-18 (session 37)
+Last updated: 2026-10-18 (session 37, handoff)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -124,16 +124,31 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 38)
-1. PR #30 (`r12-typed-marks`: negative marks, optional model answer, JEE Advanced multi marking) — Auto-fix is on;
-   merge when CI is green. Then the bill PR (`r12-bill`, stacked on it): retarget to `main` if GitHub did not, CI
-   green, merge. Founder still has to set "₹ per US$" in the platform admin (admin.localhost → Institute bills).
-2. Commission per institute: ask the founder for the formula when they are ready (ADR-041).
-3. **Founder question answered (session 37), product decision open:** a test with only MCQ/numerical questions does
-   **not** show marks right after submit today — results (marks + ranks) appear only when a teacher clicks
-   **Release results** (ADR-023: ranks need everyone's answers; release is manual). Ask the founder whether MCQ-only
-   tests should release by themselves (e.g. at the close time, so ranks are fair) or show the student's own score at
-   submit with ranks later. Do not build before the answer.
-4. Then items 4–5 of the session-37 list below.
+State at handoff (2026-10-18, session 37): **two PRs open, both CI green, NOT merged** (founder has not said merge):
+- PR #30 `r12-typed-marks` → `main` (CI run 39138871672 green): "Type a question" negative marks (accepts "1" or
+  "-1", stored as the amount taken off), optional theory model answer (migration 25), multi-correct MCQs marked like
+  JEE Advanced (migration 26, ADR-045), E2E selector fixes incl. the documents test that also failed on `main`.
+- PR #31 `r12-bill` → base `r12-typed-marks` (CI run 39139334898 green): owner/admin "AI usage" → **Bill** in ₹
+  (cost × "₹ per US$" set on the platform page; migration 27, pgTAP `240_bill.sql`). Commission later.
+- Local working tree is on `r12-bill` (contains both). Local DB has migrations up to 27 (all applied). The founder's
+  `next dev` on :3000 serves this folder, so they see both changes now. `web-prod-3001` preview may still run.
+- Local data change with the founder's yes: test "jhj" (newtown, class 10, MCQ only, 1 submitted attempt) closing
+  time moved to 2026-10-18 20:45 IST (the `guard_test` trigger refuses times on an open test, so it was done with
+  `set local session_replication_role = replica` in one `psql` transaction). Founder will release it as
+  teacher.jee@newtown.test after 20:45 and check My progress.
+
+Steps:
+1. `git checkout r12-typed-marks && git pull`; `docker info`; `supabase status`.
+2. Ask the founder "merge #30 and #31?". On yes: `gh pr merge 30 --squash --delete-branch`; then retarget #31
+   (`gh pr edit 31 --base main`), rebase `r12-bill` onto `main` if needed (drop #30's commits), push, wait for CI
+   (Auto-fix is on), `gh pr merge 31 --squash`. Record merge commits here.
+3. **Open product decision (ask, do not build first):** MCQ-only tests show nothing until closing time + a teacher's
+   "Release results" (ADR-023). Founder was offered: (a) student sees own score right after submit, rank later;
+   (b) MCQ-only tests release by themselves at closing time; (c) "End test now" button for teachers. Build the chosen
+   one(s) with pgTAP + E2E.
+4. Founder must set "₹ per US$" at admin.localhost:3000 → Institute bills (until then the Bill says "Not available
+   yet"). Commission per institute: ask for the formula when they are ready (ADR-041).
+5. Items 4–5 of the session-37 list below (small follow-ups; ask first).
 
 ## Next exact action (session 37) — history
 1. `cd ~/Documents/startup/examedge_ai && git checkout main && git pull` (`main` = `3261716`); `docker info`,
