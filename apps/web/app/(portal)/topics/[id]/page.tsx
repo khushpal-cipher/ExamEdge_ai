@@ -7,7 +7,6 @@ import { Flash, type Search } from '../../flash';
 import { writeAiNotes } from '../../documents/actions';
 import { DOCUMENT_STATUS, VERSION_STATUS } from '../../documents/status';
 import { Upload } from '../../documents/upload';
-import { makeAiTest } from '../../questions/actions';
 import { generate } from '../../studio/actions';
 import { Tutor, type ChatMessage } from '../../subjects/[id]/tutor';
 import { Tabs } from './tabs';
@@ -25,7 +24,7 @@ const ICON: Record<string, string> = {
 };
 
 // The topic page (ADR-038): Subtopics (notes, uploaded or written with AI inside a subtopic) | Smart Study (students:
-// the AI over the whole topic) or AI test (staff, ADR-039).
+// the AI over the whole topic). Staff make tests on the Tests page (ADR-042).
 export default async function TopicPage(props: { params: Promise<{ id: string }>; searchParams: Search }) {
   const m = await requireMember();
   const { institute, member, db } = m;
@@ -238,89 +237,56 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
               </div>
             ),
           },
-          student
-            ? {
-                key: 'study',
-                label: 'Smart Study',
-                content: (
-                  <div className="study">
-                    <section className="card stack">
-                      <Tutor
-                        key={chat?.id ?? 'new'}
-                        subjectId={topic.subject_id}
-                        topicId={topic.id}
-                        topicName={topic.name}
-                        conversationId={chat?.id ?? null}
-                        messages={messages}
-                      />
-                    </section>
-                    <section className="card stack" aria-labelledby="tools">
-                      <h2 id="tools">Study tools</h2>
-                      <form action={generate} className="tiles" aria-label="Make study material">
-                        <input type="hidden" name="subject_id" value={topic.subject_id} />
-                        <input type="hidden" name="chapter_id" value={topic.id} />
-                        {Object.entries(STUDIO_KIND).map(([k, label]) => (
-                          <button key={k} type="submit" name="kind" value={k} className="tile">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                              <path d={ICON[k]} />
-                            </svg>
-                            {label}
-                          </button>
-                        ))}
-                      </form>
-                      {artifactList(
-                        'Made by you',
-                        artifacts.filter((a) => a.owner_scope === 'student'),
-                      )}
-                      {artifactList(
-                        'From your teachers',
-                        artifacts.filter((a) => a.owner_scope === 'institute'),
-                      )}
-                      <p className="small muted">
-                        Made by AI from your teachers&apos; notes for this topic, just for you. Practice quizzes never
-                        affect your rank.
-                      </p>
-                    </section>
-                  </div>
-                ),
-              }
-            : {
-                key: 'test',
-                label: 'AI test',
-                content: (
-                  <section className="card stack" aria-labelledby="ai-test">
-                    <h2 id="ai-test">Make a test with AI</h2>
-                    <form action={makeAiTest} className="inline" aria-label="Make a test with AI">
-                      <input type="hidden" name="chapter_id" value={topic.id} />
-                      <label>
-                        MCQs
-                        <input name="mcq" type="number" min={0} max={20} defaultValue={10} required />
-                      </label>
-                      <label>
-                        Theory questions
-                        <input name="theory" type="number" min={0} max={20} defaultValue={5} required />
-                      </label>
-                      <label>
-                        Difficulty
-                        <select name="difficulty" defaultValue="medium">
-                          <option value="easy">Easy</option>
-                          <option value="medium">Medium</option>
-                          <option value="hard">Hard</option>
-                        </select>
-                      </label>
-                      <button type="submit" className="primary">
-                        Make test
-                      </button>
-                    </form>
-                    <p className="small muted">
-                      Made by AI from this topic&apos;s published notes into a new draft test for this subject&apos;s
-                      batch. A second AI solves every MCQ again without the answer key; a question whose answers differ
-                      is flagged. Theory questions come with a model answer: open each one, check it and save it. The
-                      test can be scheduled only when every question is approved.
-                    </p>
-                  </section>
-                ),
-              },
+          // Students: Smart Study. Staff make tests on the Tests page (ADR-042).
+          ...(student
+            ? [
+                {
+                  key: 'study',
+                  label: 'Smart Study',
+                  content: (
+                    <div className="study">
+                      <section className="card stack">
+                        <Tutor
+                          key={chat?.id ?? 'new'}
+                          subjectId={topic.subject_id}
+                          topicId={topic.id}
+                          topicName={topic.name}
+                          conversationId={chat?.id ?? null}
+                          messages={messages}
+                        />
+                      </section>
+                      <section className="card stack" aria-labelledby="tools">
+                        <h2 id="tools">Study tools</h2>
+                        <form action={generate} className="tiles" aria-label="Make study material">
+                          <input type="hidden" name="subject_id" value={topic.subject_id} />
+                          <input type="hidden" name="chapter_id" value={topic.id} />
+                          {Object.entries(STUDIO_KIND).map(([k, label]) => (
+                            <button key={k} type="submit" name="kind" value={k} className="tile">
+                              <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d={ICON[k]} />
+                              </svg>
+                              {label}
+                            </button>
+                          ))}
+                        </form>
+                        {artifactList(
+                          'Made by you',
+                          artifacts.filter((a) => a.owner_scope === 'student'),
+                        )}
+                        {artifactList(
+                          'From your teachers',
+                          artifacts.filter((a) => a.owner_scope === 'institute'),
+                        )}
+                        <p className="small muted">
+                          Made by AI from your teachers&apos; notes for this topic, just for you. Practice quizzes never
+                          affect your rank.
+                        </p>
+                      </section>
+                    </div>
+                  ),
+                },
+              ]
+            : []),
         ]}
       />
     </>

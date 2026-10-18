@@ -2,6 +2,11 @@ const ERRORS: Record<string, string> = {
   denied: 'You are not allowed to do that.',
   duplicate: 'That name is already used.',
   invalid: 'Please check the values and try again.',
+  plan_unclear:
+    'The AI could not tell what to make. Name the topics, how many questions of each kind and the level, e.g. "10 MCQs + 5 theory on Networking and HTML, medium".',
+  plan_too_many: 'That is too much for one request: at most 4 topic-and-type parts and 40 questions. Send it in parts.',
+  plan_refused: 'The AI could not work on this request. Try writing it differently.',
+  no_topics: 'This subject has no topics yet. Add topics (with published notes) first.',
   failed: 'Something went wrong. Please try again.',
   in_use: 'It is still used somewhere, so it cannot be deleted.',
   question_in_use:
@@ -50,10 +55,11 @@ const OK: Record<string, string> = {
   approved: 'Approved. It can now be added to tests.',
   notes_written: 'AI notes written. Read and edit them below, then publish them when they are ready.',
   notes_saved: 'Saved as a new version. Students keep the current one until it is processed.',
-  ai_test_made:
-    'AI test made as a draft. Open each question to check it (MCQs whose answers match can be approved here), then schedule it.',
-  ai_test_partial:
-    'AI test made as a draft, but one kind of question could not be made. Check the questions, then schedule it.',
+  ai_questions_added:
+    'AI questions added. Open each one to check it (MCQs whose answers match can be approved here), then schedule the test.',
+  ai_questions_partial:
+    'AI questions added, but some could not be made (a topic without published notes, or the AI found nothing usable). Check them, then schedule the test.',
+  question_added: 'Question added to the test and saved in the question bank.',
   moved: 'Moved. The old batch stays in their history (read-only).',
 };
 

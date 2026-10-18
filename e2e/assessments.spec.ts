@@ -1,4 +1,4 @@
-// Phase 7 journeys: question bank (4 types) → test → student attempt with autosave → checking → release → review,
+// Phase 7 journeys: test with typed questions (4 types, saved in the bank, ADR-042) → student attempt with autosave → checking → release → review,
 // ranks and progress (AC7.7, AC7.8, AC7.9), cross-tenant probes (T-E2E-ISO-01), CSV headers (T-SEC-05) and axe.
 // Needs `npm run seed:demo`.
 import AxeBuilder from '@axe-core/playwright';
@@ -40,70 +40,70 @@ test('teacher builds a mixed test, student takes it, teacher checks and releases
     written: `E2E ${tag} written: state Newton's first law`,
   };
 
-  // ---- teacher1 (JEE 2027 Morning) writes one question of each type
+  // ---- teacher1 (JEE 2027 Morning) makes a test that is open now (India time) for a subject (ADR-042)
   await login(page, DEMO, 'teacher1@demo.test');
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Tests' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tests');
   await noSeriousA11yIssues(page);
-  await page.getByRole('main').getByRole('link', { name: 'Question bank' }).click();
-  // Subject names repeat per batch, so the bank labels them with their batch (ADR-038).
-  await page
-    .getByRole('navigation', { name: 'Subjects' })
-    .getByRole('link', { name: 'Physics · JEE 2027 Morning' })
-    .click();
-  await expect(page.getByRole('heading', { name: /^Physics · JEE 2027 Morning \(\d+\)$/ })).toBeVisible();
-  const form = page.getByRole('region', { name: 'New question' });
-
-  await form.getByLabel('Question', { exact: true }).fill(stems.single);
-  await form.getByLabel('Option A', { exact: true }).fill('2');
-  await form.getByLabel('Option B', { exact: true }).fill('3');
-  await form.getByLabel('Option A is correct').check();
-  await form.getByRole('button', { name: 'Add question' }).click();
-  await expect(page.getByRole('status')).toHaveText('Saved.');
-
-  await form.getByRole('combobox', { name: 'Type' }).selectOption('multi');
-  await form.getByLabel('Question', { exact: true }).fill(stems.multi);
-  for (const [l, v] of [
-    ['A', '2'],
-    ['B', '3'],
-    ['C', '4'],
-  ])
-    await form.getByLabel(`Option ${l}`, { exact: true }).fill(v!);
-  await form.getByLabel('Option A is correct').check();
-  await form.getByLabel('Option C is correct').check();
-  await form.getByRole('button', { name: 'Add question' }).click();
-  await expect(page.getByRole('link', { name: stems.multi })).toBeVisible();
-
-  await form.getByRole('combobox', { name: 'Type' }).selectOption('numerical');
-  await form.getByLabel('Question', { exact: true }).fill(stems.numerical);
-  await form.getByLabel('Correct answer').fill('9.8');
-  await form.getByLabel('Allowed error (±)').fill('0.1');
-  await form.getByRole('button', { name: 'Add question' }).click();
-  await expect(page.getByRole('link', { name: stems.numerical })).toBeVisible();
-
-  await form.getByRole('combobox', { name: 'Type' }).selectOption('written');
-  await form.getByLabel('Question', { exact: true }).fill(stems.written);
-  await form.getByLabel(/^Model answer/).fill('A body stays at rest or in uniform motion unless a net force acts.');
-  await form.getByRole('button', { name: 'Add question' }).click();
-  await expect(page.getByRole('link', { name: stems.written })).toBeVisible();
-  await noSeriousA11yIssues(page);
-
-  // ---- a test that is open now (India time), for the JEE batch
-  await page.goto(`${DEMO}/tests`);
   await page.getByLabel('Title').fill(`E2E Test ${tag}`);
   await page.getByLabel('Opens (India time)').fill(istInput(-2));
   await page.getByLabel('Closes (India time)').fill(istInput(60));
   await page.getByLabel('Duration (minutes)').fill('30');
-  await page.getByLabel('JEE 2027 Morning').check();
+  // Subject names repeat per batch, so the list labels them with their batch (ADR-038).
+  await page.getByLabel('Subject (and its batch)').selectOption({ label: 'Physics · JEE 2027 Morning' });
   await page.getByRole('button', { name: 'Create test' }).click();
   await expect(page).toHaveURL(new RegExp(`/tests/${UUID.source}$`));
   const testId = page.url().match(UUID)![0];
-  for (const stem of Object.values(stems)) {
-    const value = await page.locator('select[name="question_id"] option', { hasText: stem }).getAttribute('value');
-    await page.getByRole('combobox', { name: 'Add from the bank' }).selectOption(value!);
-    await page.getByRole('button', { name: 'Add question' }).click();
+
+  // ---- and types one question of each type on the test page
+  const form = page.getByRole('form', { name: 'Type a question' });
+  const add = async (fill: () => Promise<void>, stem: string) => {
+    if (!(await form.isVisible())) await page.getByText('Type a question', { exact: true }).click();
+    await fill();
+    await form.getByRole('button', { name: 'Add question' }).click();
+    await expect(page.getByRole('status')).toHaveText('Question added to the test and saved in the question bank.');
     await expect(page.getByRole('region', { name: 'Questions' }).getByRole('link', { name: stem })).toBeVisible();
-  }
+  };
+  await add(async () => {
+    await form.getByLabel('Question', { exact: true }).fill(stems.single);
+    await form.getByLabel('Option A', { exact: true }).fill('2');
+    await form.getByLabel('Option B', { exact: true }).fill('3');
+    await form.getByLabel('Option A is correct').check();
+  }, stems.single);
+  await add(async () => {
+    await form.getByRole('combobox', { name: 'Type' }).selectOption('multi');
+    await form.getByLabel('Question', { exact: true }).fill(stems.multi);
+    for (const [l, v] of [
+      ['A', '2'],
+      ['B', '3'],
+      ['C', '4'],
+    ])
+      await form.getByLabel(`Option ${l}`, { exact: true }).fill(v!);
+    await form.getByLabel('Option A is correct').check();
+    await form.getByLabel('Option C is correct').check();
+  }, stems.multi);
+  await add(async () => {
+    await form.getByRole('combobox', { name: 'Type' }).selectOption('numerical');
+    await form.getByLabel('Question', { exact: true }).fill(stems.numerical);
+    await form.getByLabel('Correct answer').fill('9.8');
+    await form.getByLabel('Allowed error (±)').fill('0.1');
+  }, stems.numerical);
+  await add(async () => {
+    await form.getByRole('combobox', { name: 'Type' }).selectOption('written');
+    await form.getByLabel('Question', { exact: true }).fill(stems.written);
+    await form.getByLabel(/^Model answer/).fill('A body stays at rest or in uniform motion unless a net force acts.');
+  }, stems.written);
+  await noSeriousA11yIssues(page);
+
+  // The typed questions are saved in the bank too, for reuse.
+  await page.goto(`${DEMO}/tests`);
+  await page.getByRole('main').getByRole('link', { name: 'Question bank' }).click();
+  await page
+    .getByRole('navigation', { name: 'Subjects' })
+    .getByRole('link', { name: 'Physics · JEE 2027 Morning' })
+    .click();
+  for (const stem of Object.values(stems)) await expect(page.getByRole('link', { name: stem })).toBeVisible();
+  await page.goto(`${DEMO}/tests/${testId}`);
   await page.getByRole('button', { name: 'Schedule' }).click();
   await expect(page.getByRole('status')).toHaveText('Test scheduled. Students see it on their home page.');
   await expect(page.getByText('Open now')).toBeVisible();

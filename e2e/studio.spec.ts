@@ -40,11 +40,13 @@ async function generate(page: Page, chapter: string, kind: string) {
 }
 
 test('teachers have no Smart Study; students see teacher material and reuse their own (AC9.2)', async ({ browser }) => {
-  // Teachers' AI is AI notes + AI test only (ADR-039): no Smart Study tab, and the database refuses student AI to staff.
+  // Teachers' AI is AI notes + AI questions on the Tests page (ADR-039, ADR-042): the topic page has only Subtopics,
+  // and the database refuses student AI to staff.
   const teacher = await (await browser.newContext()).newPage();
   await login(teacher, 'teacher1@demo.test');
   await teacher.goto(`${DEMO}/topics/${await topic('Rotational Motion')}`);
-  await expect(teacher.getByRole('tab', { name: 'AI test' })).toBeVisible();
+  await expect(teacher.getByRole('tab', { name: 'Subtopics' })).toBeVisible();
+  await expect(teacher.getByRole('tab', { name: 'AI test' })).toHaveCount(0);
   await expect(teacher.getByRole('tab', { name: 'Smart Study' })).toHaveCount(0);
   const { id: inst } = (await sql(`select id from institutes where slug = 'demo'`)).rows[0];
   const staffApi = await signedIn('teacher1@demo.test');

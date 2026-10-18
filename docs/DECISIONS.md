@@ -458,6 +458,9 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
   in one transaction.
 - **Disadvantages:** several Opus calls run inside one server action (≤ 4 parts × 2 calls); on Vercel this needs a
   longer `maxDuration` [U] or a worker job later. Old multi-batch tests stay as they are.
+- **Built** (session 36, branch `r12-new-test`): New test form = subject list grouped by batch; Fill panel on the
+  draft test page; topic page AI test tab and the bank's New question form removed; E2E `question-gen`,
+  `assessments`, `studio` rewritten for the new journey.
 
 ### ADR-043 One-click batch switcher, Home after switching, Smart Study tiles (R1.2 items 2–4, founder 2026-10-18)
 - **Switcher:** choosing a batch in the dropdown submits at once (small client component; a `<noscript>` "Show"

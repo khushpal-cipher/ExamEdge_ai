@@ -1,92 +1,96 @@
 'use server';
 
-// AI-made questions (ADR-032, ADR-039: made as an AI test inside a topic). The institute comes from the host and every read/write runs in the staff member's
+// AI-made questions (ADR-032; R1.2: made on a draft test's page from the teacher's request, ADR-042). The institute comes from the host and every read/write runs in the staff member's
 // own session: RLS decides which notes they may use and where the questions go; the database stores them as drafts.
 import { redirect } from 'next/navigation';
 import { AiBlocked } from '@examedge/core/ai/gateway';
-import {
-  generateQuestions as generate,
-  keyOf,
-  MAX_COUNT,
-  QuestionError,
-  secondOf,
-  type GenType,
-} from '@examedge/core/ai/questions';
+import { MAX_REQUEST, PlanError, planTest } from '@examedge/core/ai/plan';
+import { generateQuestions as generate, keyOf, QuestionError, secondOf } from '@examedge/core/ai/questions';
 import { log } from '@examedge/core/log';
 import { webMeter } from '@/lib/meter';
 import { chapterNotes } from '@/lib/notes';
 import { isUuid, requireMember, STAFF } from '@/lib/tenant';
 import { done } from '../form';
 
-const IST = '+05:30';
-
-// AI test (ADR-039): MCQs and/or theory questions made from a topic's published notes, stored with a new draft test
-// for the subject's own batch. The teacher checks every question and schedules the test (scheduling refuses
-// unapproved questions). Default times: tomorrow 10:00–11:00 India time; the teacher changes them on the test page.
-export async function makeAiTest(form: FormData) {
+// "With AI" on a draft test's page (ADR-042): the teacher's request → a plan over the test subject's topics → each
+// part's questions from that topic's published notes → added to the test in one transaction. The teacher checks every
+// AI question and schedules the test (scheduling refuses unapproved questions).
+export async function addAiQuestions(form: FormData) {
   const { institute, db } = await requireMember(STAFF);
-  const chapter = form.get('chapter_id');
-  if (!isUuid(chapter)) redirect('/subjects');
-  const here = `/topics/${chapter}`;
+  const test = form.get('test_id');
+  if (!isUuid(test)) redirect('/tests');
+  const here = `/tests/${test}`;
   const back = (code: string): never => redirect(`${here}?error=${code}`);
-  const difficulty = String(form.get('difficulty'));
-  const counts = { single: Number(form.get('mcq')) || 0, written: Number(form.get('theory')) || 0 };
-  const asked = (Object.entries(counts) as [GenType, number][]).filter(([, n]) => n > 0);
-  if (!['easy', 'medium', 'hard'].includes(difficulty) || !asked.length || asked.some(([, n]) => n > MAX_COUNT))
-    back('invalid');
+  const request = String(form.get('request') ?? '').slice(0, MAX_REQUEST);
+  if (!request.trim()) back('plan_unclear');
 
-  // RLS: the topic is visible only to staff of this institute.
-  const { data: ch } = await db
-    .from('chapters')
-    .select('name, subject_id')
+  // RLS: the test is visible to staff who may see it; the RPC re-checks that the caller may manage this draft.
+  const { data: t } = await db
+    .from('tests')
+    .select('subject_id, status')
     .eq('institute_id', institute.id)
-    .eq('id', chapter)
+    .eq('id', test)
     .maybeSingle();
-  if (!ch) back('denied');
-  const { sources } = await chapterNotes(db, institute.id, chapter as string);
-  if (!sources.length) back('no_sources');
+  if (!t?.subject_id || t.status !== 'draft') back('denied');
+  const { data: topics } = await db
+    .from('chapters')
+    .select('id, name')
+    .eq('institute_id', institute.id)
+    .eq('subject_id', t!.subject_id)
+    .order('position')
+    .order('name');
+  if (!topics?.length) back('no_topics');
 
   const meter = webMeter(db, institute.id);
+  let plan;
+  try {
+    plan = await planTest(meter, { request, topics: topics!.map((c) => c.name) });
+  } catch (e) {
+    if (e instanceof AiBlocked) back(e.reason);
+    if (e instanceof PlanError) back(`plan_${e.reason}`);
+    throw e;
+  }
   const items = [];
   let missing = false;
-  for (const [type, count] of asked) {
+  let noNotes = false;
+  for (const part of plan.parts) {
+    const topic = topics![part.topic]!;
+    const { sources } = await chapterNotes(db, institute.id, topic.id);
+    if (!sources.length) {
+      missing = noNotes = true;
+      continue;
+    }
     try {
-      const made = await generate(meter, { type, count, difficulty, chapter: ch!.name, sources });
-      if (!made.solved && type !== 'written') log.warn('questions.second_solve_failed', { institute: institute.id });
+      const { type, count } = part;
+      const made = await generate(meter, { type, count, difficulty: plan.difficulty, chapter: topic.name, sources });
+      if (!made.solved && part.type !== 'written')
+        log.warn('questions.second_solve_failed', { institute: institute.id });
       for (const q of made.questions)
         items.push({
-          type,
+          origin: 'ai',
+          chapter_id: topic.id,
+          type: part.type,
           stem: q.stem,
           options: q.options,
           explanation: q.explanation,
-          difficulty,
+          difficulty: plan.difficulty,
           verification: q.verification,
-          key: keyOf(type, q),
-          second_solve: secondOf(type, q.second),
-          marks: type === 'written' ? 5 : 4,
+          key: keyOf(part.type, q),
+          second_solve: secondOf(part.type, q.second),
+          marks: part.type === 'written' ? 5 : 4,
         });
     } catch (e) {
       if (e instanceof AiBlocked) back(e.reason);
       if (!(e instanceof QuestionError))
-        log.error('questions.generate_failed', { institute: institute.id, type, error: e });
+        log.error('questions.generate_failed', { institute: institute.id, type: part.type, error: e });
       missing = true;
     }
   }
-  if (!items.length) back('no_questions');
+  if (!items.length) back(noNotes ? 'no_sources' : 'no_questions');
 
-  const day = new Date(Date.now() + 86_400_000).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-  const { data: test, error } = await db.rpc('add_ai_test', {
-    inst: institute.id,
-    subject: ch!.subject_id,
-    chapter,
-    title: `${ch!.name} — AI test`,
-    opens: `${day}T10:00:00${IST}`,
-    closes: `${day}T11:00:00${IST}`,
-    seconds: 3600,
-    items,
-  });
+  const { error } = await db.rpc('add_test_questions', { inst: institute.id, test, items });
   if (error) done(here, error);
-  redirect(`/tests/${test}?ok=${missing ? 'ai_test_partial' : 'ai_test_made'}`);
+  redirect(`${here}?ok=${missing ? 'ai_questions_partial' : 'ai_questions_added'}`);
 }
 
 // Approves a checked AI draft; the database refuses one whose second answer differed or is missing.

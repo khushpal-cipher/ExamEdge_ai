@@ -16,15 +16,8 @@ const num = (form: FormData, key: string) => {
 };
 
 // ---------------------------------------------------------------- question bank
-export async function saveQuestion(form: FormData) {
-  const { institute, db } = await requireMember(STAFF);
-  const id = form.get('question_id');
-  const subject = form.get('subject_id');
-  const chapter = form.get('chapter_id');
-  const type = text(form, 'type');
-  const back = isUuid(subject) ? `/questions?subject=${subject}` : '/questions';
-  if (!isUuid(subject) || !TYPES.includes(type)) done(back, { code: '23514' });
-
+// A question's fields and key from the question form (bank edit page and "Type a question" on a test page).
+function fromForm(form: FormData, type: string) {
   const options = ['single', 'multi'].includes(type)
     ? OPTION_IDS.map((o) => ({ id: o, text: text(form, `option_${o}`, 1000) })).filter((o) => o.text)
     : [];
@@ -37,14 +30,26 @@ export async function saveQuestion(form: FormData) {
         ? { value: num(form, 'value'), ...(tolerance ? { tolerance_abs: Math.abs(tolerance) } : {}) }
         : { correct };
   const row = {
-    subject_id: subject,
-    chapter_id: isUuid(chapter) ? chapter : null,
     type,
     stem: text(form, 'stem', 5000),
     options,
     explanation: text(form, 'explanation', 5000),
     difficulty: ['easy', 'medium', 'hard'].includes(text(form, 'difficulty')) ? text(form, 'difficulty') : 'medium',
   };
+  return { key, row };
+}
+
+export async function saveQuestion(form: FormData) {
+  const { institute, db } = await requireMember(STAFF);
+  const id = form.get('question_id');
+  const subject = form.get('subject_id');
+  const chapter = form.get('chapter_id');
+  const type = text(form, 'type');
+  const back = isUuid(subject) ? `/questions?subject=${subject}` : '/questions';
+  if (!isUuid(subject) || !TYPES.includes(type)) done(back, { code: '23514' });
+
+  const { key, row: fields } = fromForm(form, type);
+  const row = { subject_id: subject, chapter_id: isUuid(chapter) ? chapter : null, ...fields };
 
   let questionId = isUuid(id) ? id : null;
   if (questionId) {
@@ -100,14 +105,26 @@ function times(form: FormData) {
   return { opens_at: opens, closes_at: closes, duration_seconds: Math.round(minutes) * 60 };
 }
 
+// A test belongs to one subject and its batch (ADR-042); it is filled on its own page.
 export async function createTest(form: FormData) {
   const { institute, db } = await requireMember(STAFF);
   const when = times(form);
   if (!when) redirect('/tests?error=time');
+  const subjectId = form.get('subject_id');
+  if (!isUuid(subjectId)) done('/tests', { code: '23514' });
+  // RLS: the subject must be readable; the audience insert below checks that the caller teaches its batch.
+  const { data: subject } = await db
+    .from('subjects')
+    .select('id, batch_id')
+    .eq('institute_id', institute.id)
+    .eq('id', subjectId)
+    .maybeSingle();
+  if (!subject) done('/tests', { code: '42501' });
   const { data, error } = await db
     .from('tests')
     .insert({
       institute_id: institute.id,
+      subject_id: subject!.id,
       title: text(form, 'title', 200),
       shuffle_questions: form.get('shuffle') === 'on',
       ...when,
@@ -115,14 +132,35 @@ export async function createTest(form: FormData) {
     .select('id')
     .single();
   if (error) done('/tests', error);
-  const batches = form.getAll('batch_id').filter(isUuid);
-  if (batches.length) {
-    const { error: e } = await db
-      .from('test_audience')
-      .insert(batches.map((b) => ({ test_id: data!.id, batch_id: b, institute_id: institute.id })));
-    if (e) done(`/tests/${data!.id}`, e);
+  const { error: e } = await db
+    .from('test_audience')
+    .insert({ test_id: data!.id, batch_id: subject!.batch_id, institute_id: institute.id });
+  if (e) {
+    // Not the caller's batch: remove the empty draft again.
+    await db.from('tests').delete().eq('institute_id', institute.id).eq('id', data!.id);
+    done('/tests', e);
   }
   redirect(`/tests/${data!.id}`);
+}
+
+// "Type a question" on a draft test (ADR-042): saved in the bank (approved, teacher-verified) and added to the test in
+// one transaction; the database checks the test, the topic and the key.
+export async function addTypedQuestion(form: FormData) {
+  const { institute, db } = await requireMember(STAFF);
+  const test = form.get('test_id');
+  const chapter = form.get('chapter_id');
+  const type = text(form, 'type');
+  if (!isUuid(test)) done('/tests', { code: '23514' });
+  const here = `/tests/${test}`;
+  const marks = num(form, 'marks');
+  if (!isUuid(chapter) || !TYPES.includes(type) || !marks || marks <= 0) done(here, { code: '23514' });
+  const { key, row } = fromForm(form, type);
+  const { error } = await db.rpc('add_test_questions', {
+    inst: institute.id,
+    test,
+    items: [{ ...row, origin: 'teacher', chapter_id: chapter, key, marks }],
+  });
+  done(here, error, 'question_added');
 }
 
 export async function updateTest(form: FormData) {

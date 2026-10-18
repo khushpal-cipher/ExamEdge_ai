@@ -1,4 +1,4 @@
-// Real providers (tutor, Studio, OCR, bank questions, AI notes): Claude through the official SDK (ADR-008). Used only when AI_PROVIDER=anthropic and
+// Real providers (tutor, Studio, OCR, bank questions, AI notes, test plans): Claude through the official SDK (ADR-008). Used only when AI_PROVIDER=anthropic and
 // ANTHROPIC_API_KEY is set — BLOCKED until the founder creates a key; tested against a recorded stream (claude.test.ts).
 // Passages go in as search_result blocks with citations on, so every citation names the passage it came from.
 import Anthropic from '@anthropic-ai/sdk';
@@ -6,6 +6,7 @@ import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import type { z } from 'zod';
 import { notesMessage, type NotesProvider } from './notes';
 import { PAGE_OUT, type OcrProvider } from './ocr';
+import { PLAN_SCHEMA, planMessage, type PlanProvider } from './plan';
 import { DRAFT_SCHEMA, solveMessage, SOLVE_SCHEMA, writeMessage, type QuestionProvider } from './questions';
 import type { StudioInput, StudioOutput, StudioProvider } from './studio';
 import type { Generation, TutorInput, TutorProvider } from './tutor';
@@ -229,6 +230,36 @@ export function claudeNotes(client = new Anthropic({ maxRetries: 1 })): NotesPro
       });
       return {
         markdown: msg.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join(''),
+        refused: msg.stop_reason === 'refusal',
+        usage: {
+          input_tokens: msg.usage.input_tokens,
+          output_tokens: msg.usage.output_tokens,
+          cache_read_tokens: msg.usage.cache_read_input_tokens ?? 0,
+          cache_write_tokens: msg.usage.cache_creation_input_tokens ?? 0,
+        },
+      };
+    },
+  };
+}
+
+// Test request → plan (ADR-042): Haiku, structured output, effort low (a small extraction). Haiku has no server-side
+// fallback; a refusal is shown to the teacher. BLOCKED like the tutor (no key); tested against a recorded reply.
+export function claudePlan(client = new Anthropic({ maxRetries: 1 })): PlanProvider {
+  const model = 'claude-haiku-5-5';
+  const maxOutput = 4_000;
+  return {
+    model,
+    maxOutput,
+    async plan({ request, topics, system }) {
+      const msg = await client.beta.messages.parse({
+        model,
+        max_tokens: maxOutput,
+        system,
+        output_config: { effort: 'low', format: betaZodOutputFormat(PLAN_SCHEMA) },
+        messages: [{ role: 'user', content: planMessage(request, topics) }],
+      });
+      return {
+        content: msg.parsed_output,
         refused: msg.stop_reason === 'refusal',
         usage: {
           input_tokens: msg.usage.input_tokens,
