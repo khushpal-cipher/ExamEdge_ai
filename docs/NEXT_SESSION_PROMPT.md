@@ -63,6 +63,9 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
   or manual questions, one-click batch switcher, Home after switching, NotebookLM-style Smart Study tiles) and its
   build order are in PROGRESS.md ("R1.2 founder change list"). The founder said GO (session 35): build it all
   (ADR-042, ADR-043). Charges/bill and payment gateway wait until the founder decides prices at the end.
+- Session 36 (2026-10-18): R1.2 is merged and done; the founder also asked (and got) "Add questions" first on the
+  draft test page and a teacher's uploaded notes publishing themselves (ADR-044; AI notes still wait for the
+  teacher). Next: ask the founder for the next change list or ADR-041 part 2 (bill).
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full

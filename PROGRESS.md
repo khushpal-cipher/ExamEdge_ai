@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-18 (session 36)
+Last updated: 2026-10-18 (session 36, final handoff)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -25,6 +25,10 @@ Last updated: 2026-10-18 (session 36)
 **R1.1 step 8 MERGED** (PR #25, squash `f0b1ec5`, CI green run 39107064953: check incl. pgTAP + E2E + secrets, 2026-10-18). **R1.1 is DONE** (all 8 steps); only ADR-041 part 2 (charges/bill) waits for the founder.
 **R1.2 steps 1–3 MERGED** (PR #26, squash `ed98a0c`, CI run 39116328717 green, 2026-10-18).
 **R1.2 item 1 MERGED** (PR #27, squash `6956c98`, CI run 39118383486 green on `6397d00`: unit 164, pgTAP 1347, integration 28, E2E 29/29 against the production build, secrets, 2026-10-18). **R1.2 is DONE**; only ADR-041 part 2 (charges/bill) waits for the founder.
+**Founder follow-ups MERGED** (session 36, 2026-10-18): PR #28 (`ac20bed`, CI green run 39119531263) — draft test page
+shows "Add questions" (AI box + Type a question) first, hint on the New test form; PR #29 (`3261716`, CI green run
+39120779329) — a teacher's uploaded notes publish themselves to the subject's batch once read, AI notes still wait
+(ADR-044, migration 24 applied locally, pgTAP 1352). `main` = `3261716`.
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
@@ -117,10 +121,19 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 37)
-1. `cd ~/Documents/startup/examedge_ai && git checkout main && git pull`; `docker info`, `supabase status`.
-2. R1.1 and R1.2 are merged and done. Restart the stale `next dev` on :3000 (`npm run dev`) before the founder tests.
-3. Ask the founder for the next change list, or for ADR-041 part 2 (charges per institute + bill page; payment
+1. `cd ~/Documents/startup/examedge_ai && git checkout main && git pull` (`main` = `3261716`); `docker info`,
+   `supabase status`. Local DB has migrations up to 24 (founder data — never reset without asking).
+2. Nothing is in progress. R1.1, R1.2 and the session-36 founder follow-ups are merged. `next dev` on :3000 was
+   restarted in session 36 (preview `web`); the worker from 14:05 still runs (`npm run dev:worker`, see launch notes).
+3. Founder answers given in session 36 (no build needed): manual entry = draft test page → **Type a question**
+   (type MCQ → options A–D + tick correct; Written → model answer for the teacher; students get their own answer box);
+   theory answers are marked on Tests → test → **Check written answers**; results release only when all are marked.
+   The founder's old "sql" notes (class 10 · computer · logic) were uploaded before ADR-044 → still "Not published";
+   the founder publishes them by hand once.
+4. Ask the founder for the next change list, or for ADR-041 part 2 (charges per institute + bill page; payment
    gateway = paid account → ask first). Phase 10 cloud parts stay BLOCKED (see Blocked).
+5. Possible small follow-up (not asked for): a test made for one subject still shows "Batches taking the test"
+   checkboxes in Settings (could add another batch) — ask the founder before changing.
 
 ## R1.2 founder change list (session 34, 2026-10-18) — founder said GO in session 35
 R1.1 is merged and done (`main` = `f0b1ec5`). The founder described these changes in session 34 and said "that's all the
@@ -437,6 +450,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 36b | 2026-10-18 | PR #26/#27 merged (R1.2 done); founder follow-ups: Add questions at the top of a draft test (PR #28 `ac20bed`), teacher notes publish themselves (ADR-044, PR #29 `3261716`); stale :3000 dev server restarted | `3261716` |
 | 36 | 2026-10-18 | R1.2 item 1 web part finished (topic page fixed, New test subject picker, bank form removed, E2E rewritten, label width fix); local gate green, browser check at 375 px; PR #26 merge refused by the auto-mode classifier | see `git log` |
 | 35 | 2026-10-18 | Founder: GO for R1.2. Steps 1–3 (ADR-042/043, one-click switcher → Home, Smart Study tiles) on PR #26, CI green, not merged. Item 1: migration 23 (`tests.subject_id`, `add_test_questions`, `add_ai_test` dropped; pgTAP 1347) applied locally, core `planTest` (10 unit tests); web part WIP (typecheck fails on the topic page) | WIP commit on `r12-new-test` |
 | 34 | 2026-10-18 | R1.1 step 8: local gate, browser check per role at 375 px, 3 fixes (past-batch test page, teacher bank filter, wording); PR #25 CI green, merged `f0b1ec5` → R1.1 done. Founder's R1.2 change list recorded + planned (not started) | `f0b1ec5` |
