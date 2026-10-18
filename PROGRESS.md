@@ -20,8 +20,8 @@ Last updated: 2026-10-18 (session 33)
 **R1.1 step 2 MERGED** (PR #20, squash `17459e5`, CI green check + secrets, 2026-10-17): ExamEdge library removed.
 **R1.1 steps 3+4 MERGED** (PR #21, squash `22ac7f3`, CI green run 39052604720 on `98546f6`: unit 147, pgTAP 1298, integration 26, E2E 26/26, 2026-10-17).
 **R1.1 step 5 MERGED** (PR #22, squash `0cc9a2e`, CI green run 39088703249: check + secrets, 2026-10-18): AI notes + AI test (ADR-039).
-**R1.1 step 6 (C2 Contest + C1 batch switcher) BUILT** on branch `r11-contest`, PR #23: second locator fix pushed (session 33), CI pending (see In progress).
-**R1.1 step 7 (D2 part 1: platform AI tokens + cost) BUILT** on branch `r11-platform-usage` (cut from `r11-contest`, commit `c432887`): local gate green except E2E; PR after #23 merges.
+**R1.1 step 6 MERGED** (PR #23, squash `061dadf`, CI green run 39091413903: check incl. E2E + secrets, 2026-10-18): Contest page + batch switcher (ADR-040).
+**R1.1 step 7 (D2 part 1: platform AI tokens + cost) BUILT** on branch `r11-platform-usage` (rebased onto `main` `061dadf`, commit `3dc3ec9`): local gate green except E2E; PR #24 open, CI → merge.
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
@@ -95,13 +95,13 @@ ADR-040. DONE + TESTED:
   (1) `getByRole('region', { name: 'Results' })` also matched "Finished · waiting for results" (substring) →
   `exact: true`; (2) My progress `getByText('Mixed Test 2').first()` hit the chart's hidden SVG `<title>` tooltip →
   checks the table link (`getByRole('link', { name: 'Mixed Test 2', exact: true })`). No assertion weakened.
-  Commit `2d41986`, pushed; CI run 39091413903 started (result not yet seen when this was written).
+  Commit `2d41986`; CI run 39091413903 green → `gh pr merge 23 --squash` = `061dadf` (session 33).
 NEXT: `gh pr checks 23`; if green → `gh pr merge 23 --squash`, record merge commit + run id here,
 `git checkout main && git pull`. If E2E still fails: `gh run view <run> --log-failed`, fix (never weaken), push.
 
 ### R1.1 step 7 — D2 part 1: platform AI tokens + cost per institute (session 33, 2026-10-18), branch `r11-platform-usage`
-ADR-041. Branch cut from `r11-contest` (`2d41986`) → after #23 squash-merges: `git rebase --onto main 2d41986`.
-DONE + TESTED (commit `c432887`):
+ADR-041. Rebased onto `main` (`061dadf`) after #23 merged.
+DONE + TESTED (commit `3dc3ec9`):
 - Migration `20261103000022_platform_usage.sql` — **applied to the founder's local DB** with `supabase migration up`:
   `public.platform_usage()` (invoker; RLS on `usage_records` decides: platform admin with MFA = every institute,
   owner/admin = own, others none) → `institute_id, input_tokens, output_tokens, cost_micro_usd` this India month;
@@ -433,12 +433,11 @@ Steps 3–7 depend on step 1; step 4 depends on step 3 — re-verify step 3's RL
 (https://github.com/khushpal-cipher/ExamEdge_ai/pull/21), Auto-fix on, NOT merged.** First CI run (39051354988)
 failed only at `format:check` on `.claude/launch.json` (fixed in the handoff commit), so **E2E has not run yet**.
 **Next exact action (session 33):**
-1. Step 6: PR #23 — check CI on `2d41986` (run 39091413903), squash-merge, record (In progress → NEXT).
-2. Step 7: `git checkout r11-platform-usage && git rebase --onto main 2d41986 && git push -f`, open PR, CI, merge.
+1. Step 6 merged (#23). Step 7: PR #24 — `gh pr checks 24`; green → `gh pr merge 24 --squash`, record here.
 3. Then step 8 (full gate + per-role browser check at 375 px).
 **R1.1 progress (8 build steps):** 1 ADRs ✅ merged · 2 library removed ✅ merged · 3 DB structure ✅ merged (#21) ·
 4 topic page / upload / topic-only practice ✅ merged (#21) · 5 AI notes + AI test ✅ merged (#22) · 6 Contest page +
-batch switcher 🟡 built on `r11-contest`, PR #23 CI left · 7 platform tokens + cost 🟡 built on `r11-platform-usage`, PR left · 8 full gate + per-role browser
+batch switcher ✅ merged (#23) · 7 platform tokens + cost 🟡 built on `r11-platform-usage`, PR left · 8 full gate + per-role browser
 check ⬜. ≈ 5.5 of 8 steps done; by founder groups: E, A, B done; C built (PR #23, CI fix pushed); D not started.
 After merge: steps 5 (B1 AI notes, B2 AI test), 6 (C2 Contest
 page + C1 batch switcher), 7 (D2 platform tokens + cost), 8. Teachers still have the tutor/Studio on the topic page
