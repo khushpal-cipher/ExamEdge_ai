@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { rootHost } from '@/lib/tenant';
 import { usd } from '@/lib/usage';
 import { signOut } from '../actions';
-import { setGlobalAi } from './actions';
+import { setGlobalAi, setInrRate } from './actions';
 import { SignIn } from '../sign-in';
 import { CreateInstitute } from './create-form';
 import { Mfa } from './mfa';
@@ -41,10 +41,11 @@ export default async function Platform({ searchParams }: { searchParams: Promise
   }
 
   // RLS: rows appear only for platform admins with an aal2 session.
-  const [{ data: institutes }, { data: aiOn }, { data: usage }] = await Promise.all([
+  const [{ data: institutes }, { data: aiOn }, { data: usage }, { data: rate }] = await Promise.all([
     db.from('institutes').select('id, slug, name, status, created_at').order('created_at', { ascending: false }),
     db.rpc('ai_enabled'),
     db.rpc('platform_usage'), // this India month, ADR-041
+    db.rpc('inr_per_usd'),
   ]);
   const used = new Map<string, string>(
     (usage ?? []).map(
@@ -80,6 +81,25 @@ export default async function Platform({ searchParams }: { searchParams: Promise
           </button>
         </form>
         <p className="small muted">Emergency switch: blocks every AI call of every institute from the next request.</p>
+      </section>
+      <section className="card stack" aria-labelledby="bill">
+        <h2 id="bill">Institute bills</h2>
+        {error === 'rate' && (
+          <p role="alert" className="alert">
+            Could not save the rate. Enter a number above 0, sign in again and retry.
+          </p>
+        )}
+        <form action={setInrRate} className="inline">
+          <label>
+            ₹ per US$
+            <input name="rate" type="number" min={0.01} step={0.01} required defaultValue={rate ?? ''} />
+          </label>
+          <button type="submit">Save rate</button>
+        </form>
+        <p className="small muted">
+          Each institute&apos;s Bill page shows this month&apos;s AI cost × this rate, in ₹.
+          {rate == null && ' Not set yet: institutes see "Not available yet".'}
+        </p>
       </section>
       <section className="card stack" aria-labelledby="new">
         <h2 id="new">New institute</h2>

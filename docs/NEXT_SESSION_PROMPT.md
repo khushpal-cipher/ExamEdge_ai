@@ -66,6 +66,10 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
 - Session 36 (2026-10-18): R1.2 is merged and done; the founder also asked (and got) "Add questions" first on the
   draft test page and a teacher's uploaded notes publishing themselves (ADR-044; AI notes still wait for the
   teacher). Next: ask the founder for the next change list or ADR-041 part 2 (bill).
+- Session 37 (2026-10-18): founder asked for negative marks on typed questions, an optional theory model answer,
+  JEE Advanced marking for multi-correct MCQs (ADR-045) and the owner's "AI usage" page as a ₹ Bill (rate set by the
+  platform admin; commission later). Built on PR #30 and PR #31 (stacked), CI green, waiting for the founder's
+  "merge". Open: how MCQ-only tests should show results (PROGRESS.md "Next exact action").
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full

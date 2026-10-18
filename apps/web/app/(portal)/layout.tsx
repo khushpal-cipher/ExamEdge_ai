@@ -37,7 +37,7 @@ export default async function PortalLayout({ children }: { children: React.React
     member.role === 'student'
       ? STUDENT_NAV
       : MANAGERS.includes(member.role)
-        ? [...STAFF_NAV, ['/usage', 'AI usage']]
+        ? [...STAFF_NAV, ['/usage', 'Bill']]
         : STAFF_NAV;
   return (
     <div className="shell" style={brandStyle(branding.color)}>

@@ -423,8 +423,12 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
 - **Now (D2 part 1):** the platform "All institutes" table shows each institute's AI use this month (India time):
   tokens (input + output) and real cost, from `usage_records` (platform admins already read every row; counts only,
   no student data, TH-15). One invoker SQL function aggregates it.
-- **Waits for the founder's formula:** the per-institute commission field, the institute's "This month's AI charge:
-  ₹X" (D1) and hiding the owner's `/usage` page. The owner keeps today's usage page until then.
+- **Waits for the founder's formula:** the per-institute commission field. **Built (founder, 2026-10-18, session 37):**
+  the owner/admin "AI usage" page is now **Bill** (`/usage`): only "This month's AI charge: ₹X" (+ AI on/off), no
+  tokens, features, dollars or budget banners. ₹X = this India month's AI cost × one rate the platform admin sets
+  ("₹ per US$", `private.settings.inr_per_usd`, `set_inr_per_usd` aal2 + audited); until it is set the bill says "Not
+  available yet". `public.institute_bill(inst)` is invoker (RLS on `usage_records`). Migration 27, pgTAP `240_bill.sql`.
+  Owners can still read their own `usage_records` through the API (RLS unchanged); only the page hides them.
 - **Built (step 7, part 1):** migration `20261103000022_platform_usage.sql` (`public.platform_usage()`, invoker; pending
   calls count at their reservation like `usage_summary`), column "AI this month" on `/platform`, pgTAP
   `210_platform_usage.sql`, E2E in `portals.spec.ts` (platform) and `usage.spec.ts` (Rival sees only its own row).

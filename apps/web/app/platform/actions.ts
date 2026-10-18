@@ -206,3 +206,12 @@ export async function setGlobalAi(form: FormData) {
   if (error) log.error('platform.set_ai_enabled_failed', { code: error.code });
   redirect(error ? '/?error=ai' : '/');
 }
+
+// ₹ per US$ for every institute's monthly bill (ADR-041 part 2); the database checks MFA and that it is above 0.
+export async function setInrRate(form: FormData) {
+  const db = await requireAal2();
+  const rate = Number(form.get('rate'));
+  const { error } = Number.isFinite(rate) ? await db.rpc('set_inr_per_usd', { rate }) : { error: { code: '22P02' } };
+  if (error) log.error('platform.set_inr_per_usd_failed', { code: error.code });
+  redirect(error ? '/?error=rate' : '/');
+}
