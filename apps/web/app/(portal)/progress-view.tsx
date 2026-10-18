@@ -85,18 +85,8 @@ function Trend({ tests }: { tests: Progress['tests'] }) {
 function Bar({ value }: { value: number | null }) {
   const v = Math.max(0, Math.min(100, value ?? 0));
   return (
-    <span
-      aria-hidden="true"
-      style={{
-        display: 'inline-block',
-        width: 120,
-        height: 8,
-        background: 'var(--soft)',
-        borderRadius: 4,
-        verticalAlign: 'middle',
-      }}
-    >
-      <span style={{ display: 'block', width: `${v}%`, height: 8, background: 'var(--accent-ink)', borderRadius: 4 }} />
+    <span aria-hidden="true" className="meter inline">
+      <span style={{ width: `${v}%` }} />
     </span>
   );
 }
