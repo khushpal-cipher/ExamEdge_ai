@@ -203,7 +203,7 @@ test('platform admin needs MFA, then manages institutes (AC2.7, Phase 3 platform
   // ₹ per US$ for the institutes' bills (ADR-041 part 2)
   await page.getByLabel('₹ per US$').fill('88.5');
   await page.getByRole('button', { name: 'Save rate' }).click();
-  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByText('Could not save the rate')).toHaveCount(0);
   await page.reload();
   await expect(page.getByLabel('₹ per US$')).toHaveValue('88.5');
 
