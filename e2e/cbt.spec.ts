@@ -28,11 +28,11 @@ test('CBT test: full screen, warnings, the 3rd submits it; only staff switch it 
   await page.getByLabel('Closes (India time)').fill(istInput(60));
   await page.getByLabel('Duration (minutes)').fill('30');
   await page.getByLabel('Subject (and its batch)').selectOption({ label: 'Physics · JEE 2027 Morning' });
-  await page.getByLabel(/^CBT mode/).check();
+  await page.getByLabel(/CBT mode/).check();
   await page.getByRole('button', { name: 'Create test' }).click();
   await expect(page).toHaveURL(new RegExp(`/tests/${UUID.source}$`));
   const testId = page.url().match(UUID)![0];
-  await expect(page.getByLabel(/^CBT mode/)).toBeChecked(); // Settings shows it too
+  await expect(page.getByLabel(/CBT mode/)).toBeChecked(); // Settings shows it too
   const form = page.getByRole('form', { name: 'Type a question' });
   if (!(await form.isVisible())) await page.getByText('Type a question', { exact: true }).click();
   await form.getByLabel('Question', { exact: true }).fill(stem);
@@ -59,7 +59,7 @@ test('CBT test: full screen, warnings, the 3rd submits it; only staff switch it 
   const student = await (await browser.newContext()).newPage();
   await login(student, 'student01@demo.test');
   await student.goto(`${DEMO}/tests/${testId}`);
-  await expect(student.getByText('CBT test:')).toBeVisible();
+  await expect(student.getByText('CBT test:', { exact: true })).toBeVisible();
   await student.getByRole('button', { name: 'Start test in full screen' }).click();
   await expect(student.getByRole('timer')).toContainText('Time left');
   await expect.poll(() => fullscreen(student)).toBe(true);
