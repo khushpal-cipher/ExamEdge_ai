@@ -118,7 +118,7 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 ### 4.4 AI conversations and generated content
 
 **conversations** (S) — `user_id`, `subject_id`, `chapter_id` (R1.1: Smart Study chats are per topic; composite FKs), `title`, `created_at` (no `deleted_at`: a deleted chat is gone; ADR-026). Index `(institute_id, user_id, created_at desc)`.
-- S/I/D owner (any active member; insert only on a subject the caller can read). Staff: none — counts per subject via `tutor_activity(inst, student)` (definer, same callers as `student_progress`), pending Q-03.
+- S/I/D owner (any active member; insert only on a subject the caller can read). Staff: none — counts per subject via `tutor_activity(inst, student, batch default null)` (definer, same callers as `student_progress`), pending Q-03.
 
 **messages** (S) — `conversation_id` (composite FK), `role` (`user|assistant`), `content`, `citations jsonb` (list of `{source_kind, document_id, title, page_start, page_end, cited_text}`), `answer_labels jsonb` (`[{label: notes|general, citations: [index]}]` per paragraph; old rows may say `library`, ADR-037), `model`, `usage_record_id`, `feedback` (`up|down|null`), `created_at`.
 - S/I owner (rows written by the server in the user's session after the answer is complete); U `feedback` only. Retention 12 months then deleted daily by `purge_expired()` (chats left empty go too) [A, Q-06].
@@ -161,9 +161,12 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 - I/U via `save_answer` RPC only: checks caller owns attempt, `status='in_progress'`, `now() < deadline_at` (DB clock), question belongs to the test. Students cannot set `is_correct/marks_awarded` (column privileges).
 - Objective answers (single/multi/numerical) are marked automatically. Written answers are marked **only by a teacher** of that batch (or admin) via `grade_answer` RPC: `0 ≤ marks ≤ max` (half marks allowed), optional comment, audited. Changing marks after release recalculates both ranks.
 
-**practice_attempts** (S) — `user_id`, `artifact_id` (composite FK; the student's own or a published quiz), `answers jsonb` (`{question id: option id}`, only the quiz's ids), `score`, `max_score`, `completed_at`. No insert grant: written only by definer `submit_practice(art, answers)`, which grades in SQL and returns the per-question result. S owner only; staff get counts/averages per chapter via `practice_activity(inst, student)` (definer, same callers as `student_progress`). Never counts for rank.
+**practice_attempts** (S) — `user_id`, `artifact_id` (composite FK; the student's own or a published quiz), `answers jsonb` (`{question id: option id}`, only the quiz's ids), `score`, `max_score`, `completed_at`. No insert grant: written only by definer `submit_practice(art, answers)`, which grades in SQL and returns the per-question result. S owner only; staff get counts/averages per chapter via `practice_activity(inst, student, batch default null)` (definer, same callers as `student_progress`; `batch` = one batch's subjects, ADR-040). Never counts for rank.
 
 **batch_standings** (T) — pk `(batch_id, user_id)`, `institute_id`, `average_percentage numeric(5,2)`, `total_marks`, `total_max_marks`, `tests_counted`, `tests_missed`, `overall_rank`, `updated_at`. Recomputed by the release job whenever a test's results are released or regraded. S: staff of the batch; students see their own row and the batch rank list.
+
+Progress page: `student_progress(inst, student, batch default null)` (definer; the student's batch switcher passes the
+selected batch, ADR-040): released tests that closed after the student joined and opened before they left.
 
 Ranking rules (ADR-012, ADR-016) — **two ranks, both from institute-conducted tests only** (self-made practice quizzes never count):
 - **Test rank:** `rank() over (partition by test_id order by score desc, (submitted_at - started_at) asc)` where score = auto MCQ/numerical marks + teacher marks for written answers; computed when results are released.

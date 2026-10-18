@@ -279,7 +279,8 @@ export async function startAttempt(form: FormData) {
   const id = form.get('test_id');
   if (!isUuid(id)) redirect('/home');
   const { error } = await db.rpc('start_attempt', { t: id });
-  redirect(`/tests/${id}${error ? '?error=closed' : ''}`);
+  if (error) redirect(`/tests/${id}?error=${error.message === 'not_current_member' ? 'past_batch' : 'closed'}`);
+  redirect(`/tests/${id}`);
 }
 
 // Called from the test page on every change (autosave). Returns instead of redirecting.

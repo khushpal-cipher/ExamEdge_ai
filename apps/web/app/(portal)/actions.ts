@@ -3,10 +3,11 @@
 // Staff Server Functions. Each one re-derives the institute from the host and re-checks the caller's role
 // (requireMember); RLS then enforces the same rules again in the database. Ids from forms are only ever used
 // together with that server-side institute id.
-import { headers } from 'next/headers';
-import { revalidatePath } from 'next/cache';
+import { cookies, headers } from 'next/headers';
+import { refresh, revalidatePath } from 'next/cache';
 import { done, text } from './form';
 import { sendInvites } from '@/lib/email';
+import { BATCH_COOKIE, studentBatches } from '@/lib/student';
 import { currentHost, hostname, isUuid, MANAGERS, requireMember, STAFF } from '@/lib/tenant';
 
 // ---------------------------------------------------------------- batches
@@ -318,4 +319,13 @@ export async function createInvitations(_prev: InviteState, form: FormData): Pro
   for (const r of results) if (r.link) r.emailed = sent.has(r.email);
   revalidatePath('/people');
   return { results };
+}
+
+// ---------------------------------------------------------------- student batch switcher (ADR-040)
+export async function chooseBatch(form: FormData) {
+  const { list } = await studentBatches(); // requires a student of this institute
+  const id = form.get('batch');
+  if (typeof id !== 'string' || !list.some((b) => b.id === id)) return;
+  (await cookies()).set(BATCH_COOKIE, id, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 400 * 24 * 3600 });
+  refresh();
 }

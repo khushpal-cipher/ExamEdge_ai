@@ -408,11 +408,16 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
   batches; the choice is kept in a cookie and only selects among the student's own batches (RLS decides).
 - **Built so far:** `batch_members.left_at`, `start_attempt` refusal, standings (migration 18); promotion =
   invoker RPC `move_students(from, to, members)` (migration 19, one statement, RLS: owner/admin) behind "Move students
-  to another batch" on the batch page. The batch switcher and the Contest page are not built yet.
+  to another batch" on the batch page.
 - **Contest page** (`/contests`, student sidebar next to Home / My progress): every institute test of the selected
   batch — upcoming, live (Start), finished (waiting for results), results (marks, test rank). Practice quizzes never
   appear there.
-- **Built:** —
+- **Built (step 6):** switcher in the student sidebar (shown with 2+ batches; cookie `batch`, httpOnly, only one of
+  the student's own `batch_members` rows, else the current batch). Home, Contest and My progress show the selected
+  batch; a batch lists only the tests held while the student was in it (`closes_at` after joining, `opens_at` before
+  leaving — the same rule as the overall rank). `student_progress`, `tutor_activity`, `practice_activity` take an
+  optional `batch` (migration `20261102000021_batch_view.sql`); `student_progress` now also skips tests opened after
+  the student left (before, they showed as missed). Starting a test of a past batch says so (`past_batch`).
 
 ### ADR-041 AI use per institute for the platform; the institute's bill waits (R1.1 group D)
 - **Now (D2 part 1):** the platform "All institutes" table shows each institute's AI use this month (India time):

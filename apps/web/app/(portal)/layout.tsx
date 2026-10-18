@@ -1,6 +1,8 @@
 import { brandStyle, logoUrl } from '@/lib/brand';
+import { studentBatches } from '@/lib/student';
 import { MANAGERS, requireMember } from '@/lib/tenant';
 import { signOut } from '../actions';
+import { chooseBatch } from './actions';
 import { NavLink } from '../nav-link';
 
 const STAFF_NAV = [
@@ -13,6 +15,7 @@ const STAFF_NAV = [
 ];
 const STUDENT_NAV = [
   ['/home', 'Home'],
+  ['/contests', 'Contest'],
   ['/progress', 'My progress'],
 ];
 
@@ -29,6 +32,7 @@ export default async function PortalLayout({ children }: { children: React.React
   const { data: me } = await db.from('profiles').select('full_name').eq('user_id', member.userId).maybeSingle();
   const branding = institute.branding as { color?: string; logo?: string };
   const logo = logoUrl(branding.logo);
+  const batches = member.role === 'student' ? await studentBatches() : null;
   const nav =
     member.role === 'student'
       ? STUDENT_NAV
@@ -52,6 +56,22 @@ export default async function PortalLayout({ children }: { children: React.React
             <small>{member.role === 'student' ? 'Student portal' : 'Staff portal'}</small>
           </span>
         </a>
+        {batches && batches.list.length > 1 && (
+          <form action={chooseBatch} className="switcher">
+            <label>
+              Batch
+              <select name="batch" defaultValue={batches.selected!.id} key={batches.selected!.id}>
+                {batches.list.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                    {b.leftAt ? ' (past)' : ''}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button type="submit">Show</button>
+          </form>
+        )}
         <nav className="nav" aria-label="Main">
           {nav.map(([href, label]) => (
             <NavLink key={href} href={href!}>

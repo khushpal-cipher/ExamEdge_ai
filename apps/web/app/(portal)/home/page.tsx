@@ -1,52 +1,51 @@
 import Link from 'next/link';
 import { formatTime, PHASE_LABEL, requestTime, testPhase } from '@/lib/assess';
+import { batchTests, studentBatches } from '@/lib/student';
 import { requireMember } from '@/lib/tenant';
 
 export default async function StudentHome() {
   const { institute, member, db } = await requireMember(['student']);
-  // RLS returns only the student's own batches and the subjects/chapters of those batches (AC3.4).
-  const [
-    { data: me },
-    { data: batches },
-    { data: subjects },
-    { data: tests },
-    { data: attempts },
-    { data: standings },
-  ] = await Promise.all([
-    db.from('profiles').select('full_name').eq('user_id', member.userId).maybeSingle(),
-    db.from('batches').select('name').eq('institute_id', institute.id).is('archived_at', null).order('name'),
+  const { selected } = await studentBatches();
+  const first = (
+    await db.from('profiles').select('full_name').eq('user_id', member.userId).maybeSingle()
+  ).data?.full_name?.split(' ')[0];
+  const hello = (
+    <div>
+      <h1>{first ? `Hello, ${first}` : 'Hello'}</h1>
+      <p className="muted">
+        {selected
+          ? `${selected.name}${selected.leftAt ? ' · past batch: your own year, read-only for tests' : ''}`
+          : 'You are not in a batch yet.'}
+      </p>
+    </div>
+  );
+  if (!selected) return <div className="top">{hello}</div>;
+  // RLS: only the student's own batches (current or past) and their subjects (AC3.4, ADR-040).
+  const [{ data: subjects }, tests, { data: attempts }, { data: standings }] = await Promise.all([
     db
       .from('subjects')
-      .select('id, name, batches(name), chapters(count)')
+      .select('id, name, chapters(count)')
       .eq('institute_id', institute.id)
+      .eq('batch_id', selected.id)
       .order('name'),
-    // RLS: only scheduled or released tests of the student's batches.
-    db
-      .from('tests')
-      .select('id, title, status, opens_at, closes_at')
-      .eq('institute_id', institute.id)
-      .in('status', ['scheduled', 'results_released'])
-      .order('opens_at', { ascending: false })
-      .limit(20),
+    batchTests(selected),
     db.from('test_attempts').select('test_id, rank, status').eq('user_id', member.userId),
-    db.from('batch_standings').select('overall_rank, average_percentage, batch_id').eq('user_id', member.userId),
+    db
+      .from('batch_standings')
+      .select('overall_rank, average_percentage, batch_id')
+      .eq('user_id', member.userId)
+      .eq('batch_id', selected.id),
   ]);
   const now = requestTime();
   const mine = new Map((attempts ?? []).map((a) => [a.test_id, a]));
-  const upcoming = (tests ?? [])
+  const upcoming = tests
     .filter((t) => ['upcoming', 'open'].includes(testPhase(t, now)))
     .sort((a, b) => a.opens_at.localeCompare(b.opens_at));
-  const released = (tests ?? []).filter((t) => t.status === 'results_released');
+  const released = tests.filter((t) => t.status === 'results_released');
   const lastRanked = released.find((t) => mine.get(t.id)?.rank);
-  const first = me?.full_name?.split(' ')[0];
   return (
     <>
-      <div className="top">
-        <div>
-          <h1>{first ? `Hello, ${first}` : 'Hello'}</h1>
-          <p className="muted">{(batches ?? []).map((b) => b.name).join(' · ') || 'You are not in a batch yet.'}</p>
-        </div>
-      </div>
+      <div className="top">{hello}</div>
       <section className="card stack" aria-labelledby="my-subjects">
         <h2 id="my-subjects">My subjects</h2>
         {!subjects?.length ? (
@@ -56,10 +55,7 @@ export default async function StudentHome() {
             {subjects.map((s) => (
               <Link key={s.id} href={`/subjects/${s.id}`} className="card tile">
                 <h3>{s.name}</h3>
-                <p className="muted small">
-                  {(s.batches as unknown as { name: string }).name} ·{' '}
-                  {(s.chapters as unknown as { count: number }[])[0]?.count ?? 0} topics
-                </p>
+                <p className="muted small">{(s.chapters as unknown as { count: number }[])[0]?.count ?? 0} topics</p>
               </Link>
             ))}
           </div>
@@ -84,10 +80,12 @@ export default async function StudentHome() {
                         · {phase === 'open' ? `closes ${formatTime(t.closes_at)}` : formatTime(t.opens_at)}
                       </span>
                     </span>
-                    {phase === 'open' ? (
+                    {phase === 'open' && (started || !selected.leftAt) ? (
                       <Link href={`/tests/${t.id}`} className="button primary">
                         {started ? 'Continue' : 'Start'}
                       </Link>
+                    ) : phase === 'open' ? (
+                      <span className="badge">Past batch</span>
                     ) : (
                       <span className="badge">{PHASE_LABEL[phase]}</span>
                     )}
