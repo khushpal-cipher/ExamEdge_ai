@@ -127,6 +127,7 @@ export async function createTest(form: FormData) {
       subject_id: subject!.id,
       title: text(form, 'title', 200),
       shuffle_questions: form.get('shuffle') === 'on',
+      cbt: form.get('cbt') === 'on',
       ...when,
     })
     .select('id')
@@ -173,7 +174,12 @@ export async function updateTest(form: FormData) {
   if (!when) redirect(`/tests/${id}?error=time`);
   const { error } = await db
     .from('tests')
-    .update({ title: text(form, 'title', 200), shuffle_questions: form.get('shuffle') === 'on', ...when })
+    .update({
+      title: text(form, 'title', 200),
+      shuffle_questions: form.get('shuffle') === 'on',
+      cbt: form.get('cbt') === 'on',
+      ...when,
+    })
     .eq('institute_id', institute.id)
     .eq('id', id);
   done(`/tests/${id}`, error);
@@ -329,6 +335,14 @@ export async function saveAnswer(attempt: string, question: string, response: un
   if (!isUuid(attempt) || !isUuid(question)) return { ok: false };
   const { error } = await db.rpc('save_answer', { a: attempt, q: question, response: response ?? null });
   return { ok: !error };
+}
+
+// CBT (ADR-048): one warning for leaving full screen / the tab; the database submits the attempt on the 3rd.
+export async function cbtWarning(attempt: string): Promise<{ count: number | null }> {
+  const { db } = await requireMember(['student']);
+  if (!isUuid(attempt)) return { count: null };
+  const { data, error } = await db.rpc('cbt_warning', { a: attempt });
+  return { count: error ? null : (data as number) };
 }
 
 export async function submitAttempt(form: FormData) {

@@ -70,6 +70,10 @@ library is gone.
    - Every AI-made MCQ or numerical question is **solved a second time by a different AI model**. If the two answers don't match, the question is flagged and the teacher must fix it. AI theory questions come with a model answer; the teacher checks and saves each one.
 2. **Build the test**: pick questions and set the marks, negative marking, duration (e.g. 60 minutes), start and end time, which batches take it, and when results are released.
 3. Click **Schedule**. Students see "Upcoming test" on their home page.
+4. **CBT mode** (tick box on New test and in Settings, only for tests made by staff — never for students' own
+   practice quizzes): the test runs in full screen. Leaving full screen, switching to another tab or app, or reloading
+   the page is a warning; on the 3rd warning the test is submitted automatically. Students must use Google Chrome. The
+   rank list and the CSV show each student's warnings. (ADR-048)
 
 ### D. During and after the test
 - The test opens at the start time. Each student's timer is controlled by the server, so changing the phone clock doesn't help.
@@ -183,6 +187,9 @@ again (R1.2, ADR-043).
 1. Click **Start** when the test opens. The timer starts.
 2. MCQs are clicked, numerical answers typed as numbers, and theory answers typed in a text box. Every answer saves automatically. If the internet drops, the student reconnects and continues within the same time limit.
 3. Click **Submit**, or the test auto-submits at the deadline.
+   - **CBT test:** "Start test in full screen". The questions show only in full screen; leaving it, switching tab or
+     app, or reloading shows "Warning 1 of 3" with **Return to full screen**; the 3rd warning submits the test (answers
+     already given are kept). Safari, Firefox and iPhones are refused: "Open it in Google Chrome".
 4. Right after submitting, the student sees their own marks so far and which questions they got right or wrong (with the marks for each). Theory answers show the student's own answer and, once a teacher has checked it, its marks. Correct answers appear once the test's closing time passes (not earlier, so nobody can pass them to classmates still writing). (ADR-046)
 5. After the teacher releases results: final marks, teacher comments, model answers, **test rank** and updated **overall rank**.
 

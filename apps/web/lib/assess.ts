@@ -64,3 +64,6 @@ export function toCsv(rows: (string | number | null | undefined)[][]): string {
 
 export const pct = (score: number | null | undefined, max: number | null | undefined) =>
   score == null || !max ? null : Math.round((score / max) * 10000) / 100;
+
+// CBT tests (ADR-048): the warning that submits the attempt; same number as public.cbt_warning().
+export const CBT_WARNINGS = 3;

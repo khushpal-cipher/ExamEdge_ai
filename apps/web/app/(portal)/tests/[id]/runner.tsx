@@ -1,7 +1,9 @@
 'use client';
 
-import { startTransition, useEffect, useRef, useState } from 'react';
-import { saveAnswer, submitAttempt } from '../actions';
+import { useRouter } from 'next/navigation';
+import { startTransition, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { cbtWarning, saveAnswer, submitAttempt } from '../actions';
+import { CBT_WARNINGS } from '@/lib/assess';
 
 export type RunnerQuestion = {
   question_id: string;
@@ -22,6 +24,37 @@ const clock = (ms: number) => {
   const ss = String(s % 60).padStart(2, '0');
   return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 };
+// CBT (ADR-048): Google Chrome or a browser built on it, with the full-screen API (founder: students use Chrome).
+// Safari, Firefox and iPhone browsers cannot keep the test in full screen, so they are refused.
+export function cbtBrowserOk() {
+  const brands = (navigator as Navigator & { userAgentData?: { brands: { brand: string }[] } }).userAgentData?.brands;
+  return document.fullscreenEnabled && !!brands?.some((b) => b.brand === 'Google Chrome' || b.brand === 'Chromium');
+}
+const never = () => () => {};
+// null while rendering on the server (unknown until the browser runs)
+const useCbtBrowser = () => useSyncExternalStore(never, cbtBrowserOk, () => null);
+
+// "Start test" of a CBT test: full screen is asked for in the click itself (browsers allow it only there).
+export function CbtStart() {
+  const ok = useCbtBrowser();
+  if (ok === false)
+    return (
+      <p role="alert" className="alert">
+        This test runs in full screen. Open it in Google Chrome on a computer or an Android phone.
+      </p>
+    );
+  return (
+    <button
+      type="submit"
+      className="primary"
+      disabled={!ok}
+      onClick={() => void document.documentElement.requestFullscreen().catch(() => {})}
+    >
+      Start test in full screen
+    </button>
+  );
+}
+
 const blank = (v: unknown) => v == null || v === '' || (Array.isArray(v) && v.length === 0);
 
 // The deadline comes from the database; the browser clock is only used for the countdown, corrected by the
@@ -32,12 +65,16 @@ export function Runner({
   deadline,
   serverNow,
   questions,
+  cbt = false,
+  warnings: initialWarnings = 0,
 }: {
   testId: string;
   attemptId: string;
   deadline: string;
   serverNow: string;
   questions: RunnerQuestion[];
+  cbt?: boolean;
+  warnings?: number;
 }) {
   const [answers, setAnswers] = useState<Record<string, unknown>>(() =>
     Object.fromEntries(questions.map((q) => [q.question_id, q.response])),
@@ -49,6 +86,14 @@ export function Runner({
   const pending = useRef(new Set<string>());
   const latest = useRef(answers);
   const submitting = useRef(false);
+  const router = useRouter();
+  // CBT: `away` covers the questions until the page is in full screen again; one warning per time away.
+  const [away, setAway] = useState(cbt);
+  const [warnings, setWarnings] = useState(initialWarnings);
+  const browserOk = useCbtBrowser() !== false;
+  const leaving = useRef(false);
+  const asking = useRef(false); // the submit confirm() takes focus from the page
+  const started = useRef(false);
 
   useEffect(() => {
     const offset = Date.parse(serverNow) - Date.now();
@@ -65,6 +110,69 @@ export function Runner({
     tick();
     return () => clearInterval(id);
   }, [deadline, serverNow]);
+
+  useEffect(() => {
+    if (!cbt) return;
+    const key = `cbt-${attemptId}`;
+    const ok = cbtBrowserOk();
+    if (!started.current) {
+      started.current = true; // React runs effects twice in development; count a reload only once
+      // Back on this page after a reload or another page = the student left the test.
+      if (sessionStorage.getItem(key)) leave();
+      else {
+        leaving.current = true; // nothing counts before the questions were first shown in full screen
+        if (ok && document.fullscreenElement) void enter();
+      }
+    }
+    const onFullscreen = () => !document.fullscreenElement && leave();
+    const onVisibility = () => document.hidden && leave();
+    document.addEventListener('fullscreenchange', onFullscreen);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('blur', leave);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFullscreen);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('blur', leave);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- set up once per attempt; handlers read refs
+  }, [cbt, attemptId]);
+
+  async function enter() {
+    if (!document.fullscreenElement) {
+      const ok = await document.documentElement.requestFullscreen().then(
+        () => true,
+        () => false,
+      );
+      if (!ok) return;
+    }
+    sessionStorage.setItem(`cbt-${attemptId}`, '1');
+    leaving.current = false;
+    setAway(false);
+  }
+  function leave() {
+    if (leaving.current || asking.current || submitting.current) return;
+    leaving.current = true;
+    setAway(true);
+    void warn();
+  }
+  // Pending answers are saved first: the 3rd warning submits the attempt in the database.
+  async function warn() {
+    await flush();
+    const res = await cbtWarning(attemptId).catch(() => ({ count: null }));
+    if (res.count != null && res.count < CBT_WARNINGS) return setWarnings(res.count);
+    if (res.count != null) {
+      submitting.current = true;
+      sessionStorage.removeItem(`cbt-${attemptId}`);
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+    }
+    router.refresh(); // submitted, or the attempt already ended (deadline): the page shows the result
+  }
+  function flush() {
+    const ids = [...pending.current];
+    pending.current.clear();
+    ids.forEach((id) => clearTimeout(timers.current[id]));
+    return Promise.all(ids.map((id) => save(id, latest.current[id])));
+  }
 
   async function save(qid: string, value: unknown) {
     setState((s) => ({ ...s, [qid]: 'saving' }));
@@ -84,7 +192,39 @@ export function Runner({
 
   const unanswered = questions.filter((q) => blank(answers[q.question_id])).length;
   return (
-    <div className="stack">
+    // A CBT test covers the whole page (no menu), so other pages of the portal cannot be opened during it.
+    <div className={cbt ? 'stack cbt-run' : 'stack'}>
+      {cbt && (away || !browserOk) && (
+        <div className="cbt-cover" role="alertdialog" aria-modal="true" aria-labelledby="cbt-title">
+          <div className="card stack">
+            <h2 id="cbt-title">
+              {!browserOk
+                ? 'Open this test in Google Chrome'
+                : warnings
+                  ? `Warning ${warnings} of ${CBT_WARNINGS}`
+                  : 'This test runs in full screen'}
+            </h2>
+            {!browserOk ? (
+              <p>This test runs in full screen. Open it in Google Chrome on a computer or an Android phone.</p>
+            ) : (
+              <p>
+                {warnings
+                  ? 'You left full screen or switched to another tab or app. '
+                  : 'Leaving full screen or switching to another tab or app counts as a warning. '}
+                On warning {CBT_WARNINGS} your test is submitted automatically.
+                {warnings === CBT_WARNINGS - 1 ? ' One more warning submits your test.' : ''}
+              </p>
+            )}
+            {browserOk && (
+              <div>
+                <button type="button" className="primary" onClick={() => void enter()}>
+                  {warnings ? 'Return to full screen' : 'Enter full screen'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       <div
         className="card row"
         role="timer"
@@ -191,21 +331,21 @@ export function Runner({
           e.preventDefault();
           if (submitting.current) return;
           const auto = left != null && left <= 0;
-          if (
-            !auto &&
-            !confirm(unanswered ? `${unanswered} questions are unanswered. Submit anyway?` : 'Submit the test?')
-          )
-            return;
+          asking.current = true;
+          const sure =
+            auto || confirm(unanswered ? `${unanswered} questions are unanswered. Submit anyway?` : 'Submit the test?');
+          // focus comes back after the dialog closes; a blur from it is not the student leaving
+          setTimeout(() => (asking.current = false), 500);
+          if (!sure) return;
           // Save anything still waiting for its autosave delay, then submit. Called directly: after preventDefault a
           // second requestSubmit() does not run a form `action` again.
           submitting.current = true;
           const data = new FormData(e.currentTarget);
-          const ids = [...pending.current];
-          pending.current.clear();
-          ids.forEach((id) => clearTimeout(timers.current[id]));
-          void Promise.all(ids.map((id) => save(id, latest.current[id]))).finally(() =>
-            startTransition(() => submitAttempt(data)),
-          );
+          if (cbt) {
+            sessionStorage.removeItem(`cbt-${attemptId}`);
+            if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+          }
+          void flush().finally(() => startTransition(() => submitAttempt(data)));
         }}
       >
         <input type="hidden" name="test_id" value={testId} />

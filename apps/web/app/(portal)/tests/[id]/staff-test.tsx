@@ -26,6 +26,7 @@ export type Test = {
   closes_at: string;
   duration_seconds: number;
   shuffle_questions: boolean;
+  cbt: boolean;
   created_by: string | null;
   subject_id: string | null;
 };
@@ -52,7 +53,7 @@ export async function StaffTest({ ctx, test }: { ctx: Ctx; test: Test }) {
       .order('position'),
     db
       .from('test_attempts')
-      .select('id, user_id, status, score, max_score, rank, started_at, submitted_at')
+      .select('id, user_id, status, score, max_score, rank, started_at, submitted_at, cbt_warnings')
       .eq('institute_id', institute.id)
       .eq('test_id', test.id)
       .order('rank', { nullsFirst: false }),
@@ -325,6 +326,10 @@ function Settings({
           <input type="checkbox" name="shuffle" defaultChecked={test.shuffle_questions} /> Shuffle question order for
           each student
         </label>
+        <label className="row" style={{ display: 'flex' }}>
+          <input type="checkbox" name="cbt" defaultChecked={test.cbt} /> CBT mode: full screen; leaving it or switching
+          tab or app is a warning, the 3rd warning submits the test (students must use Google Chrome)
+        </label>
         <div>
           <button type="submit">Save settings</button>
         </div>
@@ -447,6 +452,7 @@ type Attempt = {
   rank: number | null;
   started_at: string;
   submitted_at: string | null;
+  cbt_warnings: number;
 };
 
 async function Results({ test, attempts, ctx }: { test: Test; attempts: Attempt[]; ctx: Ctx }) {
@@ -469,6 +475,7 @@ async function Results({ test, attempts, ctx }: { test: Test; attempts: Attempt[
               <th>Score</th>
               <th>%</th>
               <th>Time taken</th>
+              {test.cbt && <th>CBT warnings</th>}
             </tr>
           </thead>
           <tbody>
@@ -488,6 +495,7 @@ async function Results({ test, attempts, ctx }: { test: Test; attempts: Attempt[
                     ? formatDuration((Date.parse(a.submitted_at) - Date.parse(a.started_at)) / 1000)
                     : '—'}
                 </td>
+                {test.cbt && <td>{a.cbt_warnings}</td>}
               </tr>
             ))}
           </tbody>
