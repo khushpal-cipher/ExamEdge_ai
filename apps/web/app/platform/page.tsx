@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { rootHost } from '@/lib/tenant';
+import { usd } from '@/lib/usage';
 import { signOut } from '../actions';
 import { setGlobalAi } from './actions';
 import { SignIn } from '../sign-in';
@@ -40,10 +41,19 @@ export default async function Platform({ searchParams }: { searchParams: Promise
   }
 
   // RLS: rows appear only for platform admins with an aal2 session.
-  const [{ data: institutes }, { data: aiOn }] = await Promise.all([
+  const [{ data: institutes }, { data: aiOn }, { data: usage }] = await Promise.all([
     db.from('institutes').select('id, slug, name, status, created_at').order('created_at', { ascending: false }),
     db.rpc('ai_enabled'),
+    db.rpc('platform_usage'), // this India month, ADR-041
   ]);
+  const used = new Map<string, string>(
+    (usage ?? []).map(
+      (u: { institute_id: string; input_tokens: number; output_tokens: number; cost_micro_usd: number }) => [
+        u.institute_id,
+        `${(Number(u.input_tokens) + Number(u.output_tokens)).toLocaleString('en-IN')} tokens · ${usd(Number(u.cost_micro_usd))}`,
+      ],
+    ),
+  );
   return (
     <>
       <div className="top">
@@ -88,6 +98,7 @@ export default async function Platform({ searchParams }: { searchParams: Promise
                   <th>Address</th>
                   <th>Status</th>
                   <th>Created</th>
+                  <th>AI this month</th>
                 </tr>
               </thead>
               <tbody>
@@ -103,6 +114,7 @@ export default async function Platform({ searchParams }: { searchParams: Promise
                       <span className={`badge ${i.status === 'suspended' ? 'bad' : 'good'}`}>{i.status}</span>
                     </td>
                     <td>{new Date(i.created_at).toLocaleDateString('en-IN')}</td>
+                    <td>{used.get(i.id) ?? '0 tokens · $0.00'}</td>
                   </tr>
                 ))}
               </tbody>

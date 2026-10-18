@@ -208,6 +208,10 @@ test('platform admin needs MFA, then manages institutes (AC2.7, Phase 3 platform
     new RegExp(`^http://gamma-${tag}\\.localhost:3000/invite/[0-9a-f]{64}$`),
   );
   await expect(page.getByRole('link', { name: `Gamma ${tag}` })).toBeVisible(); // list updates without a reload
+  // AI this month per institute (ADR-041): Demo's seeded use is counted, a new institute has none.
+  const row = (name: string) => page.getByRole('row').filter({ has: page.getByRole('link', { name, exact: true }) });
+  await expect(row('Demo Classes')).toContainText(/[1-9][\d,]* tokens · \$\d+\.\d{2}/);
+  await expect(row(`Gamma ${tag}`)).toContainText('0 tokens · $0.00');
   // React resets the form after a successful action, so fill every field again.
   await page.getByLabel('Institute name').fill(`Delta ${tag}`);
   await page.getByLabel('Web address (subdomain)').fill('admin');

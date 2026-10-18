@@ -425,7 +425,9 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
   no student data, TH-15). One invoker SQL function aggregates it.
 - **Waits for the founder's formula:** the per-institute commission field, the institute's "This month's AI charge:
   ₹X" (D1) and hiding the owner's `/usage` page. The owner keeps today's usage page until then.
-- **Built:** —
+- **Built (step 7, part 1):** migration `20261103000022_platform_usage.sql` (`public.platform_usage()`, invoker; pending
+  calls count at their reservation like `usage_summary`), column "AI this month" on `/platform`, pgTAP
+  `210_platform_usage.sql`, E2E in `portals.spec.ts` (platform) and `usage.spec.ts` (Rival sees only its own row).
 
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
