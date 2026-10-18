@@ -570,3 +570,10 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
 | R-19 | Overengineering risk: Redis, separate vector DB, microservices, multi-LLM routing at launch | Removed from MVP |
 | R-20 | Docker not installed → local Supabase stack impossible | Q-11 before Phase 1 |
 | R-21 | `examedge_ai/` is ignored by the parent git repo (`.gitignore` allowlists only `vulnops-validation/`) — work here is not version-controlled | Q-10: separate repository (Phase 1 Task 1) |
+
+### ADR-049 UI redesign: Brilliant-like layout, own indigo + saffron theme (founder, 2026-10-19)
+- **Decision:** the founder found the UI "very bad" and picked brilliant.org (of five references) as the layout and
+  feel reference, but not its colours. ExamEdge's theme is deep indigo `#2D2A7A` + saffron `#F2A93B` on warm
+  off-white, with a dark mode. Fonts stay Poppins + Lora. CSS/markup only, no new dependency.
+- **Plan and token table:** `docs/UI_REDESIGN_PLAN.md` (branch `r13-ui`; the founder sees student Home + test page
+  before the rest is restyled).

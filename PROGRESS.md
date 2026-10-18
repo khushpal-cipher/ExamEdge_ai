@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-19 (session 40)
+Last updated: 2026-10-19 (session 40, handoff)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -139,6 +139,17 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 41)
+**UI redesign (R1.3, ADR-049) — APPROVED by the founder, not started.** Branch `r13-ui` (from `main` `c24db29`)
+holds only the plan: `docs/UI_REDESIGN_PLAN.md` (reference brilliant.org for layout/feel; own colours deep indigo
+`#2D2A7A` + saffron `#F2A93B`, dark mode, Poppins + Lora; 7 steps with model/effort). Founder gave a free hand on
+how to build it and asked to study brilliant.org and use a design skill (`impeccable` or `frontend-design`).
+Steps:
+1. `git checkout r13-ui && git pull`; `docker info`; `supabase status`.
+2. Do plan step 1 (study brilliant.org in the built-in browser; tokens in `globals.css`) and step 2 (shell + building
+   blocks), then show the founder student Home + the test page (light/dark, 375/1280 px screenshots) and wait for "ok".
+3. Then plan steps 3–7; PR into `main`; CI green; ask "merge?".
+
+## Previous next action (session 41, before the UI request) — history
 State (2026-10-19, session 40): **PR #34 `r12-cbt` MERGED** into `main` as `c0c46ca` (squash; CI run 39155901063
 green on `43825c7`: check + secrets, incl. E2E `cbt.spec.ts` and `assessments.spec.ts`). It holds CBT mode
 (ADR-048, migration 32) plus the session 40 founder fixes: submit asked on the page (no `confirm()`), one question

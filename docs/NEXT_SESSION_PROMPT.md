@@ -77,7 +77,11 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
 - Session 39 (2026-10-18/19): #32 and #33 merged. Founder asked for CBT tests (ADR-048, PR #34): a "CBT mode" tick
   box for staff on New test/Settings (never on students' practice quizzes); the test runs in full screen; leaving
   full screen, switching tab/app or reloading is a warning; the 3rd submits the test; Google Chrome only; teachers see
-  warnings on results. Waiting for CI green and the founder's "merge" (PROGRESS.md "Next exact action").
+  warnings on results. Merged in session 40 (`c0c46ca`) with the founder's fixes: submit asked on the page, one
+  question per page with Previous/Next, CBT blocks copy/paste as a warning.
+- Session 40 (2026-10-19): founder approved a UI redesign (ADR-049): brilliant.org as the layout/feel reference,
+  own theme deep indigo + saffron (not Brilliant's colours), dark mode, free hand on the build. Plan:
+  docs/UI_REDESIGN_PLAN.md on branch `r13-ui`; show the founder student Home + test page before restyling the rest.
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full
