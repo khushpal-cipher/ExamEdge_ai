@@ -76,7 +76,10 @@ test('Rival users cannot reach Demo notes (AC4.4, T-SEC-07)', async ({ page }) =
   const { rows } = await sql(
     `select d.id, v.storage_path from documents d join document_versions v on v.id = d.current_version_id
      join institutes i on i.id = d.institute_id join subjects s on s.id = d.subject_id
-     where i.slug = 'demo' and s.name = 'Physics' and d.status = 'published' limit 1`,
+     join batches b on b.id = s.batch_id
+     where i.slug = 'demo' and s.name = 'Physics' and b.name = 'JEE 2027 Morning' and d.status = 'published'
+       and d.deleted_at is null
+     order by d.created_at limit 1`,
   );
   const { id, storage_path } = rows[0];
 

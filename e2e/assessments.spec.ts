@@ -86,7 +86,7 @@ test('teacher builds a mixed test, student takes it, teacher checks and releases
   await add(async () => {
     await form.getByRole('combobox', { name: 'Type' }).selectOption('numerical');
     await form.getByLabel('Question', { exact: true }).fill(stems.numerical);
-    await form.getByLabel('Correct answer').fill('9.8');
+    await form.getByLabel('Correct answer', { exact: true }).fill('9.8');
     await form.getByLabel('Allowed error (±)').fill('0.1');
   }, stems.numerical);
   await add(async () => {
