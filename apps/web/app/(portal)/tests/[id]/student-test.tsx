@@ -42,6 +42,11 @@ function answerKey(r: Review) {
   return letters(r.key.correct) ?? '';
 }
 
+const START_ERRORS: Record<string, string> = {
+  closed: 'This test is not open right now.',
+  past_batch: 'You have moved to a new batch, so tests of this batch can no longer be started.',
+};
+
 export async function StudentTest({ ctx, test, error }: { ctx: Ctx; test: Test; error?: string }) {
   const { db, member } = ctx;
   const phase = testPhase(test);
@@ -105,9 +110,9 @@ export async function StudentTest({ ctx, test, error }: { ctx: Ctx; test: Test; 
           </p>
         </div>
       </div>
-      {error === 'closed' && (
+      {error && START_ERRORS[error] && (
         <p role="alert" className="alert">
-          This test is not open right now.
+          {START_ERRORS[error]}
         </p>
       )}
       {body}
