@@ -442,9 +442,14 @@ bank lists only subjects of batches the teacher teaches (same UI filter as Subje
 Browser (prod build :3001, 375 px, scrollWidth ≤ 375): student1 home/Contest/progress/topic + Smart Study tab; student2
 (NEET) → JEE maths subject/topic 404; student1 on vedam → "not a member"; teacher.jee dashboard/subjects/topic
 (Upload notes, Write notes with AI, AI test tab)/bank/tests/batches. No rows added. Pane was left signed in as
-teacher.jee on newtown (was student1). NEXT: rerun full gate on the branch, open PR into main, CI green, merge, mark
-R1.1 done. Small copy left: "Chapter strength" on progress page, "1 subtopics" plural; tutor/AI notes not re-clicked
-(covered by E2E).
+teacher.jee on newtown (was student1). Then (same session, after the limit reset): "Topic strength" label + singular "1 topic"/"1 subtopic" (commit after
+`02fd0de`). Final local gate: format, lint, typecheck, unit 154, int 28/28, build + check-bundle ok; pgTAP 070 (tests
+17, 27) + 130 (test 6) FAILED locally only because the founder uploaded a new file "sql" in newtown at 09:33 IST that
+sits queued (worker not running) — those tests count queued jobs/files across the whole DB; the same suite passed
+(1334) on `main` earlier this session with no code change to the DB since. Not touched (founder's upload). CI runs
+pgTAP on a clean DB. **PR #25 opened** (https://github.com/khushpal-cipher/ExamEdge_ai/pull/25), Auto-fix on.
+NEXT: CI on PR #25 green → `gh pr merge 25 --squash`, record commit + run id, then R1.1 is done (only ADR-041 part 2
+waits for the founder's commission formula). Tutor/AI notes not re-clicked (covered by E2E).
 **Next exact action (session 34):** steps 1–7 are merged (`main` = `4f3f78a`). Do step 8 only:
 1. `git checkout main && git pull && git checkout -b r11-final-check`.
 2. Local gate: `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:db`,
