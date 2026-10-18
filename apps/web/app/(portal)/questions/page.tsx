@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { TYPE_SHORT } from '@/lib/assess';
 import { isUuid, requireMember, STAFF } from '@/lib/tenant';
 import { deleteQuestion } from '../tests/actions';
-import { approveQuestion, generateQuestions } from './actions';
+import { approveQuestion } from './actions';
 import { AiBadge } from './ai-badge';
 import { Flash } from '../flash';
 import { QuestionForm } from './question-form';
@@ -65,52 +65,6 @@ export default async function QuestionBank({
               </Link>
             ))}
           </nav>
-          <section className="card stack" aria-labelledby="ai-questions">
-            <h2 id="ai-questions">Make questions with AI</h2>
-            {!subject.chapters.length ? (
-              <p className="empty">Add a chapter to {subject.name} first.</p>
-            ) : (
-              <form action={generateQuestions} className="inline" aria-label="Make questions with AI">
-                <input type="hidden" name="subject_id" value={subject.id} />
-                <label>
-                  Chapter
-                  <select name="chapter_id" required>
-                    {subject.chapters.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Type
-                  <select name="type">
-                    <option value="single">MCQ — one correct</option>
-                    <option value="multi">MCQ — more than one correct</option>
-                    <option value="numerical">Numerical answer</option>
-                  </select>
-                </label>
-                <label>
-                  How many
-                  <input name="count" type="number" min={1} max={20} defaultValue={10} required />
-                </label>
-                <label>
-                  Difficulty
-                  <select name="difficulty" defaultValue="medium">
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
-                  </select>
-                </label>
-                <button type="submit">Generate</button>
-              </form>
-            )}
-            <p className="small muted">
-              Made by AI from the chapter&apos;s published notes. A second AI solves every question again without the
-              answer key; if the two answers differ, the question is flagged and you must fix it before using it. Every
-              AI question stays a draft until you approve it.
-            </p>
-          </section>
           <section className="card stack" aria-labelledby="new-question">
             <h2 id="new-question">New question</h2>
             <QuestionForm key={subject.id} subjects={list} subjectId={subject.id} />

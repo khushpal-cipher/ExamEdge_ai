@@ -4,17 +4,20 @@ import { STUDIO_KIND } from '@/lib/studio';
 import { isUuid, opensBatch, requireMember } from '@/lib/tenant';
 import { addSubtopic, deleteSubtopic, renameSubtopic } from '../../actions';
 import { Flash, type Search } from '../../flash';
+import { writeAiNotes } from '../../documents/actions';
 import { DOCUMENT_STATUS, VERSION_STATUS } from '../../documents/status';
 import { Upload } from '../../documents/upload';
+import { makeAiTest } from '../../questions/actions';
 import { generate } from '../../studio/actions';
 import { Tutor, type ChatMessage } from '../../subjects/[id]/tutor';
 import { Tabs } from './tabs';
 
-type Doc = { id: string; title: string; status: string; subtopic_id: string };
+type Doc = { id: string; title: string; status: string; subtopic_id: string; kind: string };
 type Artifact = { id: string; owner_scope: string; kind: string; status: string };
 type Subtopic = { id: string; name: string; position: number };
 
-// The topic page (ADR-038): Subtopics (notes, uploaded inside a subtopic) | Smart Study (AI over the whole topic).
+// The topic page (ADR-038): Subtopics (notes, uploaded or written with AI inside a subtopic) | Smart Study (students:
+// the AI over the whole topic) or AI test (staff, ADR-039).
 export default async function TopicPage(props: { params: Promise<{ id: string }>; searchParams: Search }) {
   const m = await requireMember();
   const { institute, member, db } = m;
@@ -36,29 +39,33 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
   const [{ data: docRows }, { data: chat }, { data: artifactRows }] = await Promise.all([
     db
       .from('documents')
-      .select('id, title, status, subtopic_id')
+      .select('id, title, status, subtopic_id, kind')
       .eq('institute_id', institute.id)
       .eq('chapter_id', id)
       .is('deleted_at', null)
       .order('title'),
-    // RLS: a chat is readable by its owner only.
-    db
-      .from('conversations')
-      .select('id, messages(id, role, content, citations, answer_labels, feedback, created_at)')
-      .eq('institute_id', institute.id)
-      .eq('chapter_id', id)
-      .eq('user_id', member.userId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    // RLS: students see their own artifacts and those published to their batches; staff see institute artifacts.
-    db
-      .from('generated_artifacts')
-      .select('id, owner_scope, kind, status')
-      .eq('institute_id', institute.id)
-      .eq('chapter_id', id)
-      .order('created_at', { ascending: false })
-      .limit(50),
+    // RLS: a chat is readable by its owner only. Staff have no Smart Study (ADR-039).
+    !student
+      ? Promise.resolve({ data: null })
+      : db
+          .from('conversations')
+          .select('id, messages(id, role, content, citations, answer_labels, feedback, created_at)')
+          .eq('institute_id', institute.id)
+          .eq('chapter_id', id)
+          .eq('user_id', member.userId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+    // RLS: students see their own artifacts and those published to their batches.
+    !student
+      ? Promise.resolve({ data: null })
+      : db
+          .from('generated_artifacts')
+          .select('id, owner_scope, kind, status')
+          .eq('institute_id', institute.id)
+          .eq('chapter_id', id)
+          .order('created_at', { ascending: false })
+          .limit(50),
   ]);
   const docs = (docRows ?? []) as Doc[];
   // Staff also see the latest file's processing state.
@@ -89,11 +96,6 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
               <Link href={`/studio/${a.id}`}>
                 {STUDIO_KIND[a.kind]}: {topic.name}
               </Link>
-              {!student && a.status !== 'published' && (
-                <span className={`badge ${a.status === 'draft' ? 'warn' : 'bad'}`}>
-                  {a.status === 'draft' ? 'Draft' : 'Withdrawn'}
-                </span>
-              )}
             </li>
           ))}
         </ul>
@@ -104,9 +106,13 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
     if (student)
       return (
         <li key={d.id}>
-          <a href={`/documents/${d.id}/file`} target="_blank" rel="noopener">
-            {d.title}
-          </a>
+          {d.kind === 'ai_notes' ? (
+            <Link href={`/notes/${d.id}`}>{d.title}</Link>
+          ) : (
+            <a href={`/documents/${d.id}/file`} target="_blank" rel="noopener">
+              {d.title}
+            </a>
+          )}
         </li>
       );
     const processing = latest.get(d.id);
@@ -132,118 +138,183 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
       </div>
       <Flash searchParams={props.searchParams} />
       <Tabs
-        subtopics={
-          <div className="stack">
-            {subtopics.length === 0 && (
-              <p className="empty card">
-                {student ? 'Your teachers have not added notes for this topic yet.' : 'Add a subtopic to upload notes.'}
-              </p>
-            )}
-            {subtopics.map((s) => {
-              const notes = docs.filter((d) => d.subtopic_id === s.id);
-              return (
-                <section key={s.id} className="card stack" aria-labelledby={`st-${s.id}`}>
-                  <h2 id={`st-${s.id}`}>{s.name}</h2>
-                  {notes.length === 0 ? (
-                    <p className="empty small">{student ? 'No notes yet.' : 'No notes uploaded yet.'}</p>
-                  ) : (
-                    <ul className="stack" style={{ listStyle: 'none', padding: 0, margin: 0 }} aria-label="Notes">
-                      {notes.map(docItem)}
-                    </ul>
-                  )}
-                  {!student && (
-                    <>
-                      <details>
-                        <summary className="button primary">Upload notes</summary>
-                        <Upload subjectId={topic.subject_id} chapterId={topic.id} subtopicId={s.id} />
-                      </details>
-                      <div className="row small">
-                        <form action={renameSubtopic} className="row">
-                          <input type="hidden" name="chapter_id" value={topic.id} />
-                          <input type="hidden" name="subtopic_id" value={s.id} />
-                          <label className="sr-only" htmlFor={`s-${s.id}`}>
-                            Subtopic name
-                          </label>
-                          <input id={`s-${s.id}`} name="name" defaultValue={s.name} required maxLength={200} />
-                          <button type="submit">Rename</button>
-                        </form>
-                        <form action={deleteSubtopic}>
-                          <input type="hidden" name="chapter_id" value={topic.id} />
-                          <input type="hidden" name="subtopic_id" value={s.id} />
-                          <button type="submit" className="link" aria-label={`Delete ${s.name}`}>
-                            Delete
-                          </button>
-                        </form>
-                      </div>
-                    </>
-                  )}
-                </section>
-              );
-            })}
-            {!student && (
-              <form action={addSubtopic} className="inline card">
-                <input type="hidden" name="subject_id" value={topic.subject_id} />
-                <input type="hidden" name="chapter_id" value={topic.id} />
-                <label>
-                  New subtopic
-                  <input name="name" required maxLength={200} placeholder="Bayes theorem" />
-                </label>
-                <button type="submit">Add subtopic</button>
-              </form>
-            )}
-          </div>
-        }
-        study={
-          <div className="study">
-            <section className="card stack">
-              <Tutor
-                key={chat?.id ?? 'new'}
-                subjectId={topic.subject_id}
-                topicId={topic.id}
-                topicName={topic.name}
-                conversationId={chat?.id ?? null}
-                messages={messages}
-              />
-            </section>
-            <section className="card stack" aria-labelledby="tools">
-              <h2 id="tools">Study tools</h2>
-              {student ? (
-                <>
-                  {artifactList(
-                    'From your teachers',
-                    artifacts.filter((a) => a.owner_scope === 'institute'),
-                  )}
-                  {artifactList(
-                    'Made by you',
-                    artifacts.filter((a) => a.owner_scope === 'student'),
-                  )}
-                </>
-              ) : (
-                artifactList('Study material', artifacts)
-              )}
-              <form action={generate} className="stack" aria-label="Make study material">
-                <input type="hidden" name="subject_id" value={topic.subject_id} />
-                <input type="hidden" name="chapter_id" value={topic.id} />
-                <label className="stack small">
-                  Make
-                  <select name="kind">
-                    {Object.entries(STUDIO_KIND).map(([k, label]) => (
-                      <option key={k} value={k}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button type="submit">Generate</button>
-              </form>
-              <p className="small muted">
-                {student
-                  ? "Made by AI from your teachers' notes for this topic, just for you. Practice quizzes never affect your rank."
-                  : 'Made by AI from the published notes of this topic. Students see it only after you approve and publish it.'}
-              </p>
-            </section>
-          </div>
-        }
+        tabs={[
+          {
+            key: 'subtopics',
+            label: 'Subtopics',
+            content: (
+              <div className="stack">
+                {subtopics.length === 0 && (
+                  <p className="empty card">
+                    {student
+                      ? 'Your teachers have not added notes for this topic yet.'
+                      : 'Add a subtopic to upload notes.'}
+                  </p>
+                )}
+                {subtopics.map((s) => {
+                  const notes = docs.filter((d) => d.subtopic_id === s.id);
+                  return (
+                    <section key={s.id} className="card stack" aria-labelledby={`st-${s.id}`}>
+                      <h2 id={`st-${s.id}`}>{s.name}</h2>
+                      {notes.length === 0 ? (
+                        <p className="empty small">{student ? 'No notes yet.' : 'No notes uploaded yet.'}</p>
+                      ) : (
+                        <ul className="stack" style={{ listStyle: 'none', padding: 0, margin: 0 }} aria-label="Notes">
+                          {notes.map(docItem)}
+                        </ul>
+                      )}
+                      {!student && (
+                        <>
+                          <details>
+                            <summary className="button primary">Upload notes</summary>
+                            <Upload subjectId={topic.subject_id} chapterId={topic.id} subtopicId={s.id} />
+                          </details>
+                          <details>
+                            <summary className="button">Write notes with AI</summary>
+                            <form action={writeAiNotes} className="stack" aria-label={`Write notes with AI: ${s.name}`}>
+                              <input type="hidden" name="chapter_id" value={topic.id} />
+                              <input type="hidden" name="subtopic_id" value={s.id} />
+                              <label className="stack">
+                                Title
+                                <input name="title" required maxLength={200} defaultValue={`AI notes: ${s.name}`} />
+                              </label>
+                              <label className="stack">
+                                Explain this subtopic in your own words
+                                <textarea name="explanation" required maxLength={5000} rows={6} />
+                              </label>
+                              <button type="submit" className="primary">
+                                Write notes
+                              </button>
+                              <p className="small muted">
+                                The AI writes detailed notes from your explanation. They stay a draft: you read and edit
+                                them, then publish them to the batch like uploaded notes.
+                              </p>
+                            </form>
+                          </details>
+                          <div className="row small">
+                            <form action={renameSubtopic} className="row">
+                              <input type="hidden" name="chapter_id" value={topic.id} />
+                              <input type="hidden" name="subtopic_id" value={s.id} />
+                              <label className="sr-only" htmlFor={`s-${s.id}`}>
+                                Subtopic name
+                              </label>
+                              <input id={`s-${s.id}`} name="name" defaultValue={s.name} required maxLength={200} />
+                              <button type="submit">Rename</button>
+                            </form>
+                            <form action={deleteSubtopic}>
+                              <input type="hidden" name="chapter_id" value={topic.id} />
+                              <input type="hidden" name="subtopic_id" value={s.id} />
+                              <button type="submit" className="link" aria-label={`Delete ${s.name}`}>
+                                Delete
+                              </button>
+                            </form>
+                          </div>
+                        </>
+                      )}
+                    </section>
+                  );
+                })}
+                {!student && (
+                  <form action={addSubtopic} className="inline card">
+                    <input type="hidden" name="subject_id" value={topic.subject_id} />
+                    <input type="hidden" name="chapter_id" value={topic.id} />
+                    <label>
+                      New subtopic
+                      <input name="name" required maxLength={200} placeholder="Bayes theorem" />
+                    </label>
+                    <button type="submit">Add subtopic</button>
+                  </form>
+                )}
+              </div>
+            ),
+          },
+          student
+            ? {
+                key: 'study',
+                label: 'Smart Study',
+                content: (
+                  <div className="study">
+                    <section className="card stack">
+                      <Tutor
+                        key={chat?.id ?? 'new'}
+                        subjectId={topic.subject_id}
+                        topicId={topic.id}
+                        topicName={topic.name}
+                        conversationId={chat?.id ?? null}
+                        messages={messages}
+                      />
+                    </section>
+                    <section className="card stack" aria-labelledby="tools">
+                      <h2 id="tools">Study tools</h2>
+                      {artifactList(
+                        'From your teachers',
+                        artifacts.filter((a) => a.owner_scope === 'institute'),
+                      )}
+                      {artifactList(
+                        'Made by you',
+                        artifacts.filter((a) => a.owner_scope === 'student'),
+                      )}
+                      <form action={generate} className="stack" aria-label="Make study material">
+                        <input type="hidden" name="subject_id" value={topic.subject_id} />
+                        <input type="hidden" name="chapter_id" value={topic.id} />
+                        <label className="stack small">
+                          Make
+                          <select name="kind">
+                            {Object.entries(STUDIO_KIND).map(([k, label]) => (
+                              <option key={k} value={k}>
+                                {label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <button type="submit">Generate</button>
+                      </form>
+                      <p className="small muted">
+                        Made by AI from your teachers&apos; notes for this topic, just for you. Practice quizzes never
+                        affect your rank.
+                      </p>
+                    </section>
+                  </div>
+                ),
+              }
+            : {
+                key: 'test',
+                label: 'AI test',
+                content: (
+                  <section className="card stack" aria-labelledby="ai-test">
+                    <h2 id="ai-test">Make a test with AI</h2>
+                    <form action={makeAiTest} className="inline" aria-label="Make a test with AI">
+                      <input type="hidden" name="chapter_id" value={topic.id} />
+                      <label>
+                        MCQs
+                        <input name="mcq" type="number" min={0} max={20} defaultValue={10} required />
+                      </label>
+                      <label>
+                        Theory questions
+                        <input name="theory" type="number" min={0} max={20} defaultValue={5} required />
+                      </label>
+                      <label>
+                        Difficulty
+                        <select name="difficulty" defaultValue="medium">
+                          <option value="easy">Easy</option>
+                          <option value="medium">Medium</option>
+                          <option value="hard">Hard</option>
+                        </select>
+                      </label>
+                      <button type="submit" className="primary">
+                        Make test
+                      </button>
+                    </form>
+                    <p className="small muted">
+                      Made by AI from this topic&apos;s published notes into a new draft test for this subject&apos;s
+                      batch. A second AI solves every MCQ again without the answer key; a question whose answers differ
+                      is flagged. Theory questions come with a model answer: open each one, check it and save it. The
+                      test can be scheduled only when every question is approved.
+                    </p>
+                  </section>
+                ),
+              },
+        ]}
       />
     </>
   );

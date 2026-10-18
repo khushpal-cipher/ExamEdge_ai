@@ -69,8 +69,8 @@ select is((select input_tokens from public.usage_records where id = (select id f
 
 -- ---------------------------------------------------------------- staff
 select tests.login('teacher1@alpha.test');
-select is((select count(*) from generate_series(1, 5) g, public.ai_reserve(tests.inst('alpha'), 'tutor', 'fake', 'fake', 10) r
-  where r.blocked is null), 5::bigint, 'staff are not limited by student daily counters');
+select is((select count(*) from generate_series(1, 5) g, public.ai_reserve(tests.inst('alpha'), 'notes_gen', 'fake', 'fake', 10) r
+  where r.blocked is null), 5::bigint, 'staff features use no student daily counter (ADR-039: staff no longer use the tutor)');
 select is((select count(*) from public.usage_counters), 0::bigint, 'staff calls create no counters');
 select is((select count(*) from public.usage_records), 0::bigint, 'teacher reads no usage records');
 
@@ -95,14 +95,14 @@ update public.institute_quotas set monthly_ai_budget_micro_usd = 100 + (
   select sum(case when outcome = 'pending' then reserved_micro_usd else cost_micro_usd end) from public.usage_records
   where institute_id = tests.inst('alpha')) where institute_id = tests.inst('alpha');
 select tests.login('owner@alpha.test');
-select is((select blocked from public.ai_reserve(tests.inst('alpha'), 'tutor', 'fake', 'fake', 60)), null,
+select is((select blocked from public.ai_reserve(tests.inst('alpha'), 'notes_gen', 'fake', 'fake', 60)), null,
   'reserve within the budget');
-select is((select blocked from public.ai_reserve(tests.inst('alpha'), 'tutor', 'fake', 'fake', 60)), 'budget',
+select is((select blocked from public.ai_reserve(tests.inst('alpha'), 'notes_gen', 'fake', 'fake', 60)), 'budget',
   'pending reservations count, so the budget blocks the next call');
 select tests.logout();
 update public.institute_quotas set hard_stop = false where institute_id = tests.inst('alpha');
 select tests.login('owner@alpha.test');
-select is((select blocked from public.ai_reserve(tests.inst('alpha'), 'tutor', 'fake', 'fake', 60)), null,
+select is((select blocked from public.ai_reserve(tests.inst('alpha'), 'notes_gen', 'fake', 'fake', 60)), null,
   'without hard stop the budget does not block');
 select tests.logout();
 select is((select count(*) from public.usage_records where outcome = 'quota_blocked' and institute_id = tests.inst('alpha')
@@ -111,7 +111,7 @@ select is((select count(*) from public.usage_records where outcome = 'quota_bloc
 -- ---------------------------------------------------------------- kill switches (AC5.4)
 update public.institute_quotas set ai_enabled = false where institute_id = tests.inst('alpha');
 select tests.login('owner@alpha.test');
-select is((select blocked from public.ai_reserve(tests.inst('alpha'), 'tutor', 'fake', 'fake', 1)), 'ai_disabled',
+select is((select blocked from public.ai_reserve(tests.inst('alpha'), 'notes_gen', 'fake', 'fake', 1)), 'ai_disabled',
   'institute AI switch off blocks staff');
 select tests.login('student2@alpha.test');
 select is((select blocked from public.ai_reserve(tests.inst('alpha'), 'tutor', 'fake', 'fake', 1)), 'ai_disabled',
@@ -130,7 +130,7 @@ select tests.login('root@examedge.test', 'aal2');
 select lives_ok($$ select public.set_ai_enabled(false) $$, 'platform admin with MFA turns AI off everywhere');
 select is(public.ai_enabled(), false, 'global switch reads off');
 select tests.login('owner@bravo.test');
-select is((select blocked from public.ai_reserve(tests.inst('bravo'), 'tutor', 'fake', 'fake', 1)), 'ai_disabled',
+select is((select blocked from public.ai_reserve(tests.inst('bravo'), 'notes_gen', 'fake', 'fake', 1)), 'ai_disabled',
   'global switch blocks every institute at once');
 select tests.logout();
 select is((select count(*) from public.audit_events where action = 'platform.ai_enabled'

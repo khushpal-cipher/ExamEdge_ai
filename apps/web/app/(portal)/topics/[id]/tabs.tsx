@@ -2,19 +2,14 @@
 
 import { useState } from 'react';
 
-const TABS = [
-  ['subtopics', 'Subtopics'],
-  ['study', 'Smart Study'],
-] as const;
-type Tab = (typeof TABS)[number][0];
-
-// The topic page's two tabs (ADR-038); Subtopics first, so notes and "Upload notes" are what a phone opens on.
-export function Tabs(props: Record<Tab, React.ReactNode>) {
-  const [tab, setTab] = useState<Tab>('subtopics');
+// The topic page's tabs (ADR-038, ADR-039): Subtopics first, so notes and "Upload notes" are what a phone opens on;
+// then Smart Study (students) or AI test (staff).
+export function Tabs({ tabs }: { tabs: { key: string; label: string; content: React.ReactNode }[] }) {
+  const [tab, setTab] = useState(tabs[0]!.key);
   return (
     <>
       <div className="tabs always" role="tablist" aria-label="Topic sections">
-        {TABS.map(([key, label]) => (
+        {tabs.map(({ key, label }) => (
           <button
             key={key}
             type="button"
@@ -28,9 +23,9 @@ export function Tabs(props: Record<Tab, React.ReactNode>) {
           </button>
         ))}
       </div>
-      {TABS.map(([key]) => (
+      {tabs.map(({ key, content }) => (
         <div key={key} id={`pane-${key}`} role="tabpanel" aria-labelledby={`tab-${key}`} hidden={tab !== key}>
-          {props[key]}
+          {content}
         </div>
       ))}
     </>

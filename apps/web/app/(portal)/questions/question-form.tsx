@@ -28,10 +28,12 @@ export function QuestionForm({
   subjects,
   initial,
   subjectId,
+  back,
 }: {
   subjects: Subject[];
   initial?: QuestionInit;
   subjectId?: string;
+  back?: string;
 }) {
   const [type, setType] = useState(initial?.type ?? 'single');
   const [subject, setSubject] = useState(initial?.subject_id ?? subjectId ?? subjects[0]?.id ?? '');
@@ -41,6 +43,7 @@ export function QuestionForm({
   return (
     <form action={saveQuestion} className="stack">
       {initial && <input type="hidden" name="question_id" value={initial.id} />}
+      {back && <input type="hidden" name="back" value={back} />}
       <div className="inline">
         <label>
           Subject

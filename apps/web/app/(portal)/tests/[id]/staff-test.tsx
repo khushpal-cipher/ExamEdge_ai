@@ -12,6 +12,8 @@ import {
   updateTestQuestion,
 } from '../actions';
 import { teachableBatches } from '../batches';
+import { approveQuestion } from '../../questions/actions';
+import { AiBadge } from '../../questions/ai-badge';
 
 type Ctx = Awaited<ReturnType<typeof requireMember>>;
 export type Test = {
@@ -29,7 +31,7 @@ type TQ = {
   position: number;
   marks: number;
   negative_marks: number;
-  questions: { stem: string; type: string };
+  questions: { stem: string; type: string; status: string; verification: string };
 };
 
 const short = (s: string, n = 80) => (s.length > n ? `${s.slice(0, n)}…` : s);
@@ -42,7 +44,7 @@ export async function StaffTest({ ctx, test }: { ctx: Ctx; test: Test }) {
     db.from('test_audience').select('batch_id, batches(name)').eq('test_id', test.id),
     db
       .from('test_questions')
-      .select('question_id, position, marks, negative_marks, questions(stem, type)')
+      .select('question_id, position, marks, negative_marks, questions(stem, type, status, verification)')
       .eq('test_id', test.id)
       .order('position'),
     db
@@ -187,6 +189,20 @@ export async function StaffTest({ ctx, test }: { ctx: Ctx; test: Test }) {
                     <td>{i + 1}</td>
                     <td>
                       <Link href={`/questions/${q.question_id}`}>{short(q.questions.stem)}</Link>
+                      {q.questions.status === 'draft' && (
+                        <div className="row small">
+                          <AiBadge verification={q.questions.verification} />
+                          {q.questions.verification === 'dual_solve_agree' && (
+                            <form action={approveQuestion}>
+                              <input type="hidden" name="question_id" value={q.question_id} />
+                              <input type="hidden" name="back" value={`/tests/${test.id}`} />
+                              <button type="submit" className="link" aria-label={`Approve question ${i + 1}`}>
+                                Approve
+                              </button>
+                            </form>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td>{TYPE_SHORT[q.questions.type]}</td>
                     {phase === 'draft' && canManage ? (

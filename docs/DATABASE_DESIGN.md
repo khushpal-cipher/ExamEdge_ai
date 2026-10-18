@@ -97,7 +97,7 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 
 ### 4.3 Documents and retrieval (T)
 
-**documents** — `subject_id`, `chapter_id`, `subtopic_id` (R1.1: both `not null`, composite FKs; ADR-038), `title`, `current_version_id`, `status` (`draft|published|withdrawn`), `published_at`, `withdrawn_at`, `deleted_at`, `created_by`.
+**documents** — `subject_id`, `chapter_id`, `subtopic_id` (R1.1: both `not null`, composite FKs; ADR-038), `kind` (`file|ai_notes`, set on insert; AI notes = a Markdown version, ADR-039), `title`, `current_version_id`, `status` (`draft|published|withdrawn`), `published_at`, `withdrawn_at`, `deleted_at`, `created_by`.
 - Index `(institute_id, subject_id) where deleted_at is null`.
 - S `private.can_read_document(id)`. I/U staff. D: soft delete by staff; after 30 days the daily purge deletes the files (worker service account, Storage API) and then the rows (ADR-031).
 
@@ -139,7 +139,7 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 
 **questions** (T) — `subject_id`, `chapter_id`, `type` (`single|multi|numerical|written`; written = theory answer typed by the student, checked by a teacher), `stem` (Markdown + LaTeX), `options jsonb` (`[{id, text}]`), `explanation`, `difficulty`, `origin` (`teacher|ai|library`), `verification` (`unverified|dual_solve_agree|dual_solve_disagree|teacher_verified`), `status` (`draft|approved|retired`), `created_by`.
 - Trigger: no UPDATE of `stem/options` once referenced by a non-draft test (edit = new question) — preserves grading integrity.
-- Trigger `review` (ADR-032): `origin = 'ai'` rows are inserted as `draft`; `approved` is refused while `verification` is `unverified` or `dual_solve_disagree`; `verification` can only change to `teacher_verified`. AI questions are stored with their keys by `add_ai_questions(inst, subject, chapter, items)` (invoker, one transaction).
+- Trigger `review` (ADR-032): `origin = 'ai'` rows are inserted as `draft`; `approved` is refused while `verification` is `unverified` or `dual_solve_disagree`; `verification` can only change to `teacher_verified`. AI questions are stored with their keys by `add_ai_questions(inst, subject, chapter, items)` (invoker, one transaction). AI test (ADR-039): `add_ai_test(inst, subject, chapter, title, opens, closes, seconds, items)` (invoker, one transaction) stores the questions + keys, a **draft** test for the subject's own batch and its `test_questions` (`marks` per item; the web uses MCQ 4, theory 5).
 - S staff. Students **never** select questions directly; they get stems/options through `get_attempt_questions(attempt_id)` RPC.
 
 **question_keys** (T) — pk `question_id`, `institute_id`, `key jsonb` (`{correct:[optionIds]}`, `{value, tolerance_abs|tolerance_pct, unit}`, or for written questions `{model_answer, max_marks}` — the teacher's reference answer, a guide only, never auto-graded), `second_solve jsonb` (AI questions: the blind second answer, `{correct}` or `{value}`; null if it did not run).
@@ -179,7 +179,7 @@ Ranking rules (ADR-012, ADR-016) — **two ranks, both from institute-conducted 
 
 **usage_counters** (O) — pk `(institute_id, user_id, day, counter_key)` (`day` = India date; `counter_key` `messages|premium_messages|generations`), `value int`. Students only; updated with `insert … on conflict do update set value = value + 1 where value < limit returning value` inside the reservation (atomic). S own row; owner/admin of institute. Rows older than 35 days purged daily by `purge_expired()` (worker, ADR-029).
 
-**private.ai_features** — feature → `who` (`member|worker`), `counter_key`, `max_reserve_micro_usd`. **private.settings** — one row, platform-wide `ai_enabled` (changed only by `set_ai_enabled`, aal2 platform admin, audited).
+**private.ai_features** — feature → `who` (`member|worker`), `counter_key`, `max_reserve_micro_usd`. `ai_reserve` refuses `question_gen` and `notes_gen` (staff AI: AI test, AI notes ≤ 0.5 USD) to students and `tutor`, `tutor_premium`, `generation` (Smart Study) to staff (ADR-039). **private.settings** — one row, platform-wide `ai_enabled` (changed only by `set_ai_enabled`, aal2 platform admin, audited).
 
 **activity_events** (S/O) — `user_id`, `type` (`login|document_opened|tutor_message|practice_completed|test_submitted|artifact_generated`), `subject_id`, `ref_id`, `created_at`. **No free text.** Retention 12 months [A, legal Q-01]. S own rows; staff aggregates only via functions.
 

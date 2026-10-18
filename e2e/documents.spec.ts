@@ -2,12 +2,8 @@
 // withdraw hides it at once (AC4.3); cross-tenant probes (AC4.4 web side) and signed URL rules (T-SEC-07).
 // The worker runs in-process with `drain()`, as the worker role with its service account. Needs `npm run seed:demo`.
 import { expect, test, type Page } from '@playwright/test';
-import pg from 'pg';
-import { drain } from '../apps/worker/src/ingest';
-import { workerDownloader } from '../apps/worker/src/storage';
 import { makePdf } from '../scripts/make-pdf';
-import { localWorkerEnv } from '../scripts/local-supabase';
-import { demoSignIn, demoTopic, env, signedIn, sql } from './helpers';
+import { demoSignIn, demoTopic, runWorker, signedIn, sql } from './helpers';
 
 const DEMO = 'http://demo.localhost:3000';
 const RIVAL = 'http://rival.localhost:3000';
@@ -17,16 +13,6 @@ async function login(page: Page, base: string, email: string) {
   await page.goto(`${base}/`);
   await demoSignIn(page, email);
   await expect(page).toHaveURL(/\/(home|dashboard)$/);
-}
-
-async function runWorker() {
-  const workerEnv = localWorkerEnv(env as Record<string, string>);
-  const pool = new pg.Pool({ connectionString: workerEnv.WORKER_DATABASE_URL, max: 2 });
-  try {
-    await drain({ pool, download: await workerDownloader(workerEnv) });
-  } finally {
-    await pool.end();
-  }
 }
 
 test('teacher uploads, publishes and withdraws notes; student access follows (AC4.3)', async ({ page, browser }) => {

@@ -1,7 +1,10 @@
 import type { Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
+import pg from 'pg';
+import { drain } from '../apps/worker/src/ingest';
+import { workerDownloader } from '../apps/worker/src/storage';
 import { DEMO_PASSWORD } from '../packages/core/src/demo';
-import { localSupabase } from '../scripts/local-supabase';
+import { localSupabase, localWorkerEnv } from '../scripts/local-supabase';
 
 export const { env, admin } = localSupabase();
 
@@ -46,4 +49,15 @@ export async function demoTopic(subject: string, topic: string | null = null, ba
     [subject, topic, batch],
   );
   return rows[0] as { subject: string; topic: string };
+}
+
+// Processes every queued document version in-process, as the worker role with its service account.
+export async function runWorker() {
+  const workerEnv = localWorkerEnv(env as Record<string, string>);
+  const pool = new pg.Pool({ connectionString: workerEnv.WORKER_DATABASE_URL, max: 2 });
+  try {
+    await drain({ pool, download: await workerDownloader(workerEnv) });
+  } finally {
+    await pool.end();
+  }
 }
