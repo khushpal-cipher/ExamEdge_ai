@@ -98,6 +98,13 @@ export async function StaffTest({ ctx, test }: { ctx: Ctx; test: Test }) {
         )}
       </div>
 
+      {phase === 'draft' && canManage && test.subject_id && (
+        <section className="card stack" aria-labelledby="fill">
+          <h2 id="fill">Add questions</h2>
+          <Fill ctx={ctx} test={test} />
+        </section>
+      )}
+
       {canManage && (phase === 'draft' || phase === 'upcoming') && (
         <Settings
           test={test}
@@ -257,7 +264,6 @@ export async function StaffTest({ ctx, test }: { ctx: Ctx; test: Test }) {
             </table>
           </div>
         )}
-        {phase === 'draft' && canManage && test.subject_id && <Fill ctx={ctx} test={test} />}
         {phase === 'draft' && canManage && (
           <AddQuestion ctx={ctx} test={test} have={new Set(questions.map((q) => q.question_id))} />
         )}
