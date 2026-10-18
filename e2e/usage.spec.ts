@@ -37,6 +37,9 @@ test('usage records stay inside their institute (T-ISO-02 for metering)', async 
   const rival = await signedIn('owner@rival.test');
   expect((await rival.from('usage_records').select('id').eq('institute_id', demo)).data).toEqual([]);
   expect((await rival.rpc('usage_summary', { inst: demo })).data).toEqual([]);
+  const own = ((await rival.rpc('platform_usage')).data ?? []) as { institute_id: string }[];
+  expect(own.length).toBe(1);
+  expect(own.map((r) => r.institute_id)).not.toContain(demo); // the platform table's numbers: own institute only
   const { error } = await rival.rpc('ai_reserve', { inst: demo, feat: 'tutor', prov: 'fake', mdl: 'fake', reserve: 1 });
   expect(error?.message).toBe('not_allowed');
   const student = await signedIn('student01@demo.test');
