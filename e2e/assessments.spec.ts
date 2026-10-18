@@ -121,29 +121,40 @@ test('teacher builds a mixed test, student takes it, teacher checks and releases
   await student.getByRole('button', { name: 'Start test' }).click();
   await expect(student.getByRole('timer')).toContainText('Time left');
   const q = (n: number) => student.getByRole('group', { name: new RegExp(`^Question ${n}\\b`) });
+  // one question on screen at a time; Previous / Next move between them
+  const next = () => student.getByRole('button', { name: 'Next', exact: true }).click();
+  await expect(student.getByRole('button', { name: 'Previous', exact: true })).toBeDisabled();
   await q(1).getByLabel('A. 2').check();
   await expect(q(1).getByRole('status')).toHaveText('Saved');
+  await next();
+  await expect(q(1)).toHaveCount(0);
   await q(2).getByLabel('A. 2').check();
   await expect(q(2).getByRole('status')).toHaveText('Saved');
   await q(2).getByLabel('C. 4').check();
   await expect(q(2).getByRole('status')).toHaveText('Saved');
+  await next();
   await q(3).getByLabel('Your answer').fill('9.81');
   await expect(q(3).getByRole('status')).toHaveText('Saved');
+  await next();
+  await expect(student.getByRole('button', { name: 'Next', exact: true })).toBeDisabled();
   await q(4).getByLabel('Your answer').fill('An object keeps its state of motion unless a force acts on it.');
   await expect(q(4).getByRole('status')).toHaveText('Saved');
   await noSeriousA11yIssues(student);
 
   await student.reload();
   await expect(q(1).getByLabel('A. 2')).toBeChecked();
+  await next();
   await expect(q(2).getByLabel('A. 2')).toBeChecked();
   await expect(q(2).getByLabel('B. 3')).not.toBeChecked();
   await expect(q(2).getByLabel('C. 4')).toBeChecked();
+  await next();
   await expect(q(3).getByLabel('Your answer')).toHaveValue('9.81');
+  await next();
   await expect(q(4).getByLabel('Your answer')).toHaveValue(
     'An object keeps its state of motion unless a force acts on it.',
   );
-  student.once('dialog', (d) => void d.accept());
   await student.getByRole('button', { name: 'Submit test' }).click();
+  await student.getByRole('button', { name: 'Submit now' }).click();
   await expect(student.getByText(/^Submitted\./)).toBeVisible();
   // ADR-046: own marks at once; correct answers only after closing time; rank only with release.
   await expect(student.locator('.stat').filter({ hasText: 'Marks so far' })).toContainText('12 / 16');

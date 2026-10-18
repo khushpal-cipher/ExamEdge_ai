@@ -17,7 +17,7 @@ export default async function TestPage({
   // RLS: staff see tests they may manage or that target their batches; students only scheduled tests of their batch.
   const { data: test } = await ctx.db
     .from('tests')
-    .select('id, title, status, opens_at, closes_at, duration_seconds, shuffle_questions, created_by, subject_id')
+    .select('id, title, status, opens_at, closes_at, duration_seconds, shuffle_questions, cbt, created_by, subject_id')
     .eq('institute_id', ctx.institute.id)
     .eq('id', id)
     .maybeSingle();

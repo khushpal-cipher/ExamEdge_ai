@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-18 (session 39)
+Last updated: 2026-10-19 (session 39, handoff)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -35,13 +35,17 @@ green, after merging `main` into `r12-bill` because force-push is not allowed) �
 **Session 38 work MERGED** (session 39, founder said "merge #32 and #33"): PR #32 (`16b7547`) instant result
 (ADR-046); then `main` merged into `r12-reviews` (`e2a01b4`; PROGRESS kept from `r12-reviews`, DECISIONS kept both ADRs;
 pgTAP Files=25 Tests=1435 PASS, typecheck PASS), CI run 39147981293 green, PR #33 (`03afbca`) reviews + replies
-(ADR-047). `main` = `03afbca`. Nothing open.
+(ADR-047). `main` = `03afbca`.
+**Session 39 (open, NOT merged):** PR #34 CBT tests (ADR-048), branch `r12-cbt`. First CI run 39153129147 failed
+only on the new E2E locator (fixed in `b61f991`, CI re-running at handoff). Founder has not said "merge" for #34.
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-19 | Test page fixes (founder, session 40), branch `r12-cbt` | (1) Bug: "Submit test" used `confirm()`; Chrome leaves full screen for that popup, and leaves during it were ignored → after Cancel the test ran outside full screen with no warning. Now the question is asked on the page ("Submit now" / "Keep working"), the `asking` ref is gone. (2) One question per page with Previous / Next ("Question n of N"), all tests. (3) CBT: copy, cut and paste are blocked and each try is a warning (same 3-warning count). Files: `tests/[id]/runner.tsx`; E2E `assessments.spec.ts` (Next/Previous, Submit now), `cbt.spec.ts` (Keep working keeps full screen; 3rd warning = paste → `auto_submitted`; the reload-as-warning step was replaced, it was hand-checked in session 39); ADR-048 updated. format, lint + forbidden, typecheck PASS; unit 163/163; build + bundle PASS. Headless Chromium on the founder's `next dev` :3000 (newtown, teacher.jee → temporary 2-question CBT test in jee 2027 maths, student1, 375 px): Q1 only shown, Previous disabled; Next → Q2, Next disabled; Previous → Q1 answer kept; Submit test → on-page question → Keep working → still full screen, no warning; blur → Warning 1 of 3; paste blocked → Warning 2 of 3; Submit now → Submitted; scrollWidth 375; 0 page errors. Temporary test + 2 questions **deleted** (0 left). int/pgTAP not rerun (no DB or server-code change). E2E → CI. |
+| 2026-10-18 | CBT tests (founder, ADR-048), branch `r12-cbt` | Founder chose: tab/app switch counts too; students told to use Chrome (others refused); teacher sees warnings on results. Migration `20261113000032_cbt.sql` (`tests.cbt`, `test_attempts.cbt_warnings`, definer `cbt_warning`, `guard_test` freezes `cbt` once open) applied with `supabase migration up`. pgTAP new `260_cbt.sql` + allowlist: `npx supabase test db` Files=26 Tests=1456 PASS. format, lint + forbidden, typecheck PASS; unit 163/163; int 28/28; build + bundle PASS. E2E new `cbt.spec.ts` → CI (demo seed). Browser (`web-prod-3001` on :3002, newtown): temporary CBT test for class 10 (SQL); student2 sees the CBT note + "Start test in full screen"; the in-app pane refuses full screen → questions stay covered (fail-safe). Headless Chromium script on the same build at 375 px (scrollWidth 375, no page errors): Enter → full screen; leave full screen → "Warning 1 of 3" (DB 1); blur → "Warning 2 of 3" + "One more warning…"; reload → `auto_submitted`, 3, answer `["a"]` kept, notice shown (bug found + fixed: `CBT_WARNINGS` imported from a client module into a server page was a proxy → moved to `lib/assess.ts`). teacher.jee: CBT tick box on New test. Temporary test, question, attempt **deleted** (0 left). |
 | 2026-10-18 | Student sees own result right after submit (founder, ADR-046), branch `r12-instant-result` | Founder chose: marks + right/wrong at once, correct answers at closing time (key-sharing risk), theory = own answer + marks once checked, rank after release. Migration `20261109000028_instant_result.sql` (`private.get_attempt_review`) applied with `supabase migration up`. pgTAP `060` +6 (after submit: live marks, no keys; still writing / another student's attempt refused; after close: −negative, blank 0, keys, no model answer, no rank; checked-before-release written marks + comment): `npx supabase test db` Files=24 Tests=1378 PASS. format, lint + forbidden, typecheck PASS; unit 163/163; int 28/28; build + bundle PASS. E2E `assessments.spec.ts` (Marks so far 12 / 16, After release, Not checked yet, 3× key-after-close note; after close 3× Correct answer, no Model answer) → CI (:3000 held by the founder's `next dev`). Browser (founder's `next dev` :3000, newtown, student2): temporary copy of "jhj" with a submitted attempt → "-1 / 4", "After release", "Correct answer: shown after the test closes"; after moving its close time → "Correct answer: A", 375 px scrollWidth 375; released "jhj" unchanged (rank 1). Temporary test **deleted** (tests 5, attempts 1, answers 1 = before). PR #32; CI first failed on `getByText('Not checked yet')` (also in the notice) → `exact: true`, run 39147007384 green on `8c20c74`. |
 | 2026-10-18 | Student reviews, read only by owner/admin (founder, ADR-047), branch `r12-reviews` (from `main` `8499b5e`; independent of PR #32) | Founder: Review tab for students, Reviews tab for owner/admin only, student may hide their name (then no `user_id` stored), text only. Migration `20261110000029_reviews.sql` applied with `psql -1 -f` + a `supabase_migrations.schema_migrations` row (`supabase migration up` refused: migration 28 is applied locally but not on this branch). pgTAP new `250_reviews.sql` + fixture row in `test_helpers.sql` (reloaded with `psql -f`): `npx supabase test db` Files=25 Tests=1412 PASS (isolation matrix incl. reviews). format, lint + forbidden, typecheck PASS; unit 163/163; int 28/28; build + bundle PASS. E2E new `reviews.spec.ts` → CI. Browser (founder's `next dev` :3000, newtown): student2 sees "Review" in the sidebar, sent an anonymous review → flash, stored with `user_id` null + batch neet 2027, 375 px scrollWidth 375; teacher.jee: no Reviews link, `/reviews` 404. Temporary review **deleted**; the founder's own two "hello!" reviews kept. Owner page not clicked (founder's Google sign-in) → E2E. |
 | 2026-10-18 | Owner/admin reply to reviews (founder, same PR #33) | Migration `20261111000030_review_replies.sql` (`reply`, `replied_at`, `replied_by` stamped by trigger `stamp_reply`; U(`reply`) owner/admin; student reads own named rows) applied with `psql -1 -f` + history row. pgTAP `250` now 26 tests (owner replies incl. anonymous, cannot edit body or forge `replied_by`, empty reply rejected, remove clears stamps, student reads reply, teacher/student cannot reply): Files=25 Tests=1423 PASS. typecheck, lint, format, unit 163, build + bundle PASS. E2E `reviews.spec.ts` extended (owner replies → student sees it; hidden review not in the student's list) → CI. Browser: student2 page lists "Your reviews" with the founder's own live reply "asdhk" (founder tested the owner reply form on :3000; DB stamped `replied_by`/`replied_at`). Temporary "TMP named review" **deleted**. |
@@ -135,14 +139,32 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 40)
-State (2026-10-18, session 39): `main` = `03afbca`; PR #32 and #33 merged; no open PR. Local DB has migrations up
-to 31 (all on `main` now). Founder's own reviews/replies in the local DB are real data — keep them.
-1. `git checkout main && git pull`; `docker info`; `supabase status`.
-2. Founder still to do: set "₹ per US$" at admin.localhost:3000 → Institute bills. Commission per institute: ask for
+State at handoff (2026-10-19, session 39): `main` = `86b677a` (PR #32 `16b7547` + PR #33 `03afbca` merged this
+session, then the PROGRESS commit). **One PR open: #34 `r12-cbt`** (https://github.com/khushpal-cipher/ExamEdge_ai/pull/34),
+CBT tests (ADR-048, migration 32), commits `44fadcb` (DB), `7b19a9c` (web, docs, E2E), `b61f991` (E2E fix).
+- CI run 39153129147 (`7b19a9c`): check failed, only `e2e/cbt.spec.ts:31` — `getByLabel(/^CBT mode/)` never matched
+  because Playwright tests the regex on the raw label text, which starts with a space (" CBT mode: …"). Fixed in
+  `b61f991` (`/CBT mode/`, plus `exact: true` on the "CBT test:" note); reproduced the cause locally against the
+  production build. **The rest of `cbt.spec.ts` has not run in CI yet** (it stopped at line 31). The student part
+  (full screen → 3 warnings → auto-submit, answer kept) was checked by hand with headless Chromium on the production
+  build (see Completed). Auto-fix is on for the session's PRs.
+- Local working tree: branch `r12-cbt` (the founder's `next dev` on :3000 serves it, so CBT is visible there).
+  Local DB has migrations up to 32 (32 = CBT, applied with `supabase migration up`; it is not on `main` yet).
+- Founder's own reviews/replies in the local DB are real data — keep them. Never reset the DB without asking.
+- Force-push is blocked: never rebase; update a branch by merging `main` into it.
+
+Steps:
+1. `git checkout r12-cbt && git pull`; `docker info`; `supabase status`.
+2. `gh pr checks 34`. If red: `gh run view <id> --log-failed`, fix (never weaken an assertion), push. If green: ask
+   the founder "merge #34?"; on yes `gh pr merge 34 --squash`, record the merge commit here, `git checkout main && git pull`.
+3. Founder may try CBT on :3000 (Google Chrome, not the in-app pane, which refuses full screen): teacher.jee →
+   Tests → New test (a class 10 subject) → tick **CBT mode** → add a question → Schedule; student2 opens it in Chrome.
+4. Founder still to do: set "₹ per US$" at admin.localhost:3000 → Institute bills. Commission per institute: ask for
    the formula when they are ready (ADR-041).
-3. Optional, ask first: "End test now" button for teachers; test Settings still shows "Batches taking the test"
-   checkboxes; reviews: delete/hide, notify the student of a reply.
-4. Otherwise ask the founder for the next change list. Phase 10 cloud parts stay BLOCKED (see Blocked).
+5. Optional, ask first: teacher sees CBT warnings only after release (rank list + CSV) — a live count during the
+   test was not asked; "End test now" button; test Settings still shows "Batches taking the test" checkboxes;
+   reviews: delete/hide, notify the student of a reply.
+6. Otherwise ask the founder for the next change list. Phase 10 cloud parts stay BLOCKED (see Blocked).
 
 ## Next exact action (session 39) — history
 State at handoff (2026-10-18, session 38): `main` = `8499b5e` (PR #30 + #31 merged this session). **Two PRs open,
@@ -531,6 +553,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 39 | 2026-10-18/19 | Founder said merge: PR #32 (`16b7547`) and #33 (`03afbca`) merged after merging `main` into `r12-reviews` (pgTAP 1435). Founder asked for CBT tests: full screen, tab/app switch + reload count, 3rd warning auto-submits, Chrome only, warnings on results (ADR-048, migration 32, pgTAP 1456, E2E `cbt.spec.ts`); PR #34, first CI failed on an E2E locator, fixed | `b61f991` (branch `r12-cbt`) |
 | 37 | 2026-10-18 | Founder: "Type a question" gets negative marks; theory model answer optional (migration 25); multi-correct = JEE Advanced marking (migration 26, ADR-045); owner "AI usage" → ₹ Bill at a platform-set rate (migration 27); pgTAP 1372; MCQ-only results question answered (release is manual) — decision open | branches `r12-typed-marks` (PR #30), `r12-bill` |
 | 36b | 2026-10-18 | PR #26/#27 merged (R1.2 done); founder follow-ups: Add questions at the top of a draft test (PR #28 `ac20bed`), teacher notes publish themselves (ADR-044, PR #29 `3261716`); stale :3000 dev server restarted | `3261716` |
 | 36 | 2026-10-18 | R1.2 item 1 web part finished (topic page fixed, New test subject picker, bank form removed, E2E rewritten, label width fix); local gate green, browser check at 375 px; PR #26 merge refused by the auto-mode classifier | see `git log` |

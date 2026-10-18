@@ -524,6 +524,27 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
   (migration 31, see above). Migration 30.
 - **Not built (not asked):** delete/hide, star rating, limits per student, notifications of a reply.
 
+### ADR-048 CBT tests: full screen, 3 warnings, then auto-submit (founder, 2026-10-18)
+- **Decision:** "CBT mode" is a tick box on New test and in a test's Settings (owner/admin/teacher only; practice
+  quizzes are another table and never have it). On a CBT test the student's page asks for full screen at "Start test
+  in full screen"; the test then fills the whole page (no menu) and the questions are covered whenever the page is not
+  in full screen. Leaving full screen, switching tab or app (page hidden or window blur — founder chose to count it),
+  reloading/leaving the page and coming back, or trying to copy, cut or paste (blocked; founder, 2026-10-19) is one
+  warning; warning 3 submits the attempt (`auto_submitted`). The submit question is asked on the page, not with a
+  browser `confirm()` popup (Chrome leaves full screen for it; founder found the gap, 2026-10-19).
+  Teachers see the count per student in the rank list and the CSV.
+- **Where it is counted:** `test_attempts.cbt_warnings` (0–3), changed only by definer `cbt_warning(attempt)` (own
+  running attempt of a CBT test; the 3rd submits it), so a reload cannot reset it. `tests.cbt` cannot change once the
+  test is open (`guard_test`). Migration 32, pgTAP `260_cbt.sql`, E2E `cbt.spec.ts`. The page saves pending answers
+  before each warning, so the 3rd one keeps them.
+- **Browser:** the founder tells students to use Google Chrome. The page accepts browsers that report the "Google
+  Chrome" or "Chromium" brand (`navigator.userAgentData`, so also Edge and other Chrome-based browsers — a Chrome-only
+  name check would also refuse the automated test browser) with the full-screen API; Safari, Firefox and every iPhone
+  browser get "Open it in Google Chrome". `userAgentData` exists only on https or localhost, so a phone opening the
+  local app by LAN IP over http is refused too.
+- **Limits (a browser cannot prevent these):** a second device or a phone camera; a student can still open developer
+  tools. It discourages copying; it does not make it impossible.
+
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
 | # | Issue found | Resolution |

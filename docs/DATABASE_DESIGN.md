@@ -151,6 +151,7 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 - Separate table so no student-visible policy can ever expose keys. S/I/U staff only. Students: none, ever. Post-release answers shown via `get_attempt_review(attempt_id)` RPC that checks `results_release_at <= now()`.
 
 **tests** (T) — `subject_id` (R1.2, ADR-042: nullable, composite FK → subjects, `on delete set null`; a test made on the Tests page belongs to one subject and its batch), `title`, `opens_at`, `closes_at`, `duration_seconds`, `marking jsonb` (default marks/negative), `shuffle_questions bool`, `results_release_at`, `status` (`draft|scheduled|closed|grading|results_released|cancelled`), `created_by`.
+- `cbt boolean` (ADR-048, staff set it; cannot change once the test is open).
 - Checks: `closes_at > opens_at`; `results_release_at >= closes_at`.
 - A test with written questions moves `closed → grading`; results can be released only when every written answer has teacher marks (enforced in the `release_results` RPC).
 - S staff (teachers: tests targeting their batches); students: tests whose audience includes their batch and `status <> 'draft'`.
@@ -160,6 +161,7 @@ Format: **purpose · keys · columns · indexes/constraints · deletion · acces
 
 **test_attempts** (S) — `test_id`, `user_id`, `membership_id`, `started_at`, `deadline_at` (server: `least(started_at + duration, closes_at)`), `submitted_at`, `status` (`in_progress|submitted|auto_submitted|graded`), `score`, `max_score`, `rank`, `percentile`, `question_order int[]`.
 - `unique (test_id, user_id)` (single attempt). Index `(institute_id, test_id, score desc)`.
+- `cbt_warnings int` 0–3 (ADR-048): only definer `cbt_warning(attempt)` raises it (caller's own running attempt of a CBT test); the 3rd sets `auto_submitted`.
 - S own attempt; S staff (teachers only for their batches). I via `start_attempt` RPC only. U via `submit_attempt` RPC / worker. Rank written only by release job.
 
 **attempt_answers** (S) — pk `(attempt_id, question_id)`, `institute_id`, `response jsonb` (option ids, a number, or typed text for written questions), `answered_at`, `is_correct`, `marks_awarded`, `graded_by`, `graded_at`, `teacher_comment`.

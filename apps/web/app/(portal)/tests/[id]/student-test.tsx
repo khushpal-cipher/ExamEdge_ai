@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { formatDuration, formatTime, pct, requestTime, testPhase } from '@/lib/assess';
+import { CBT_WARNINGS, formatDuration, formatTime, pct, requestTime, testPhase } from '@/lib/assess';
 import { studentBatches } from '@/lib/student';
 import type { requireMember } from '@/lib/tenant';
 import { startAttempt } from '../actions';
-import { Runner, type RunnerQuestion } from './runner';
+import { CbtStart, Runner, type RunnerQuestion } from './runner';
 import type { Test } from './staff-test';
 
 type Ctx = Awaited<ReturnType<typeof requireMember>>;
@@ -73,7 +73,7 @@ export async function StudentTest({ ctx, test, error }: { ctx: Ctx; test: Test; 
   const phase = testPhase(test);
   const { data: attempt } = await db
     .from('test_attempts')
-    .select('id, status, deadline_at, score, max_score, rank, started_at, submitted_at')
+    .select('id, status, deadline_at, score, max_score, rank, started_at, submitted_at, cbt_warnings')
     .eq('test_id', test.id)
     .eq('user_id', member.userId)
     .maybeSingle();
@@ -90,6 +90,8 @@ export async function StudentTest({ ctx, test, error }: { ctx: Ctx; test: Test; 
         deadline={attempt!.deadline_at}
         serverNow={new Date().toISOString()}
         questions={(questions ?? []) as RunnerQuestion[]}
+        cbt={test.cbt}
+        warnings={attempt!.cbt_warnings}
       />
     );
   } else if (attempt) body = <ReviewView ctx={ctx} attempt={attempt} test={test} released={phase === 'released'} />;
@@ -102,11 +104,21 @@ export async function StudentTest({ ctx, test, error }: { ctx: Ctx; test: Test; 
           {formatTime(test.closes_at)}, whichever comes first). Answers save automatically; if your internet drops, come
           back to this page and continue.
         </p>
+        {test.cbt && (
+          <p className="notice">
+            <b>CBT test:</b> it runs in full screen. Leaving full screen or switching to another tab or app is a
+            warning; on warning {CBT_WARNINGS} your test is submitted automatically. Use Google Chrome.
+          </p>
+        )}
         <form action={startAttempt}>
           <input type="hidden" name="test_id" value={test.id} />
-          <button type="submit" className="primary">
-            Start test
-          </button>
+          {test.cbt ? (
+            <CbtStart />
+          ) : (
+            <button type="submit" className="primary">
+              Start test
+            </button>
+          )}
         </form>
       </section>
     );
@@ -144,7 +156,14 @@ async function ReviewView({
   released,
 }: {
   ctx: Ctx;
-  attempt: { id: string; score: number | null; max_score: number | null; rank: number | null };
+  attempt: {
+    id: string;
+    status: string;
+    score: number | null;
+    max_score: number | null;
+    rank: number | null;
+    cbt_warnings: number;
+  };
   test: Test;
   released: boolean;
 }) {
@@ -156,6 +175,11 @@ async function ReviewView({
   const max = released ? attempt.max_score : rows.reduce((s, r) => s + Number(r.marks), 0);
   return (
     <>
+      {attempt.cbt_warnings >= CBT_WARNINGS && (
+        <p className="alert">
+          Your test was submitted automatically after {CBT_WARNINGS} warnings for leaving full screen.
+        </p>
+      )}
       {!released && (
         <p className="notice">
           Submitted.{' '}

@@ -83,6 +83,10 @@ export default async function Tests({ searchParams }: { searchParams: Search }) 
           <label className="row" style={{ display: 'flex' }}>
             <input type="checkbox" name="shuffle" /> Shuffle question order for each student
           </label>
+          <label className="row" style={{ display: 'flex' }}>
+            <input type="checkbox" name="cbt" /> CBT mode: the test runs in full screen; leaving it or switching tab or
+            app is a warning, and the 3rd warning submits the test (students must use Google Chrome)
+          </label>
           <div>
             <button type="submit" className="primary">
               Create test

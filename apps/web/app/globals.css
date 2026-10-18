@@ -504,3 +504,25 @@ th {
     display: block;
   }
 }
+
+/* CBT test (ADR-048): the test fills the page; the cover hides the questions while not in full screen. */
+.cbt-run {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  overflow: auto;
+  padding: 16px;
+  background: var(--bg);
+}
+.cbt-cover {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: var(--bg);
+}
+.cbt-cover > .card {
+  max-width: 520px;
+}
