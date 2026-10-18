@@ -82,6 +82,10 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
 - Session 40 (2026-10-19): founder approved a UI redesign (ADR-049): brilliant.org as the layout/feel reference,
   own theme deep indigo + saffron (not Brilliant's colours), dark mode, free hand on the build. Plan:
   docs/UI_REDESIGN_PLAN.md on branch `r13-ui`; show the founder student Home + test page before restyling the rest.
+- Session 41 (2026-10-19): founder replaced the theme with their palette #3368A0 / #66A3BF / #C8DFDB / #F2EFE7, fonts
+  Plus Jakarta Sans + Source Serif 4, "workbook" layout, calmer links/buttons — PR #35 open. Founder then asked: light
+  theme only, and fix font sizes, sidebar, button placement and spacing ("too close") — the 8 steps are in
+  PROGRESS.md "Next exact action (session 42)"; build them on `r13-ui`, then ask "merge #35?".
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full

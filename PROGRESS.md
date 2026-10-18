@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-19 (session 41)
+Last updated: 2026-10-19 (session 41, handoff)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -36,7 +36,8 @@ green, after merging `main` into `r12-bill` because force-push is not allowed) �
 (ADR-046); then `main` merged into `r12-reviews` (`e2a01b4`; PROGRESS kept from `r12-reviews`, DECISIONS kept both ADRs;
 pgTAP Files=25 Tests=1435 PASS, typecheck PASS), CI run 39147981293 green, PR #33 (`03afbca`) reviews + replies
 (ADR-047). `main` = `03afbca`.
-**Session 39 (open, NOT merged):** PR #34 CBT tests (ADR-048), branch `r12-cbt`. First CI run 39153129147 failed
+**Session 41 (open, NOT merged):** PR #35 `r13-ui` UI redesign (ADR-049), waiting for the founder's polish list (Next exact action) and "merge".
+**Session 39 (merged in 40):** PR #34 CBT tests (ADR-048), branch `r12-cbt`. First CI run 39153129147 failed
 only on the new E2E locator (fixed in `b61f991`, CI re-running at handoff). Founder has not said "merge" for #34.
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
@@ -142,6 +143,71 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 42)
+**State:** `r13-ui` pushed, **PR #35 open** (https://github.com/khushpal-cipher/ExamEdge_ai/pull/35), Auto-fix on;
+founder has NOT said "merge". Founder palette `#3368A0/#66A3BF/#C8DFDB/#F2EFE7` + Plus Jakarta Sans / Source Serif 4
+are approved. Founder review (2026-10-19, screenshots of Tests, Contest, platform Institutes, staff pages): "keep the
+**light theme**; the font style, font size, the sidebar and the place of buttons are not perfect; things are too
+close to each other." Fix all of it on `r13-ui` (same PR), CSS + markup only, keep every E2E role/label and the
+`.stat` / `.side` classes. Do the steps in order; after each, screenshot at 375 / 768 / 1280 (light only) with the
+Playwright pattern below, fix, run format + lint + typecheck + build, commit, push.
+
+Step 1: Light theme only — delete the `@media (prefers-color-scheme: dark)` block in `globals.css`, set
+`color-scheme: light` on `:root`, update ADR-049 ("light only, founder").
+→ Model: haiku → Effort: low → Why: delete one block + doc line.
+
+Step 2: Type scale and font sizes. Body 16 px (line-height 1.6); UI text in tables, lists, labels 15 px; captions
+and hints min 14 px (no 12–13 px except badges at 13 px); `th` 13→14 px semibold, sentence case; h2 22 px, h3 18 px;
+page h1 serif 40–44 px desktop / 32 px phone; breadcrumb ("Batches", "Tests" above titles) 14 px muted, not tiny blue;
+stat numbers 36 px. Check Plus Jakarta weights: only 400/500/600/700 used, no 650 (snap to 600).
+→ Model: opus → Effort: high → Why: sets the visual system every later step depends on (founder's main complaint).
+
+Step 3: Spacing system. Use the `--s*` scale everywhere: form fields 20–24 px apart (label→input 8 px, field→next
+label 20 px — today forms put fields in nested grids/inline divs so the `form.stack` gap does not reach them; fix by
+`label + label`, `.stack > label` margins or wrapping fields), 24 px between the last field and the submit row;
+submit button never touches an input (platform "Create institute", Tests "Create test"); hint text after a button
+gets 12 px gap or goes on its own line below; section rhythm: 48 px between sections, 16 px under each h2; cards
+padding 24 px desktop / 16 px phone; table cell padding 14 px vertical.
+→ Model: sonnet → Effort: medium → Why: mechanical CSS once the scale exists; verify every form page.
+
+Step 4: Sidebar. Width 248 px; brand block with 40 px logo; batch switcher compact (label above a 40 px select, 24 px
+below it); nav items 44 px tall, 15 px, 4 px gap, active = mint fill + 3 px blue bar (keep); bottom user block: name,
+role and a full-width quiet "Sign out" with clear space (dev-only Next indicator overlaps it — not a bug, but leave
+24 px bottom padding); phone: top bar brand + Sign out, nav as scrolling tabs, batch row — check at 375 and 768
+(768 should still be the phone layout or a narrow 200 px sidebar, decide by screenshot).
+→ Model: sonnet → Effort: medium → Why: one component, visible on every page.
+
+Step 5: Buttons and their placement. Rules: one primary per page section; page actions sit next to the title on the
+same baseline (not floating far right on wide screens — keep `.top` within the content width); secondary = mint fill
++ blue text (keep), destructive actions (Turn AI off, Delete, Withdraw) get a red-outline style `.danger` (markup:
+add the class only, no logic); inline forms (`form.inline`: "₹ per US$" + Save rate, New subtopic + Add) align
+input and button bottoms at the same 44 px height; button groups 12 px apart; `Export CSV` next to its table heading;
+"Previous / Next / Submit" in the runner: Submit sits at the right of the nav row on desktop.
+→ Model: sonnet → Effort: medium → Why: needs judgement page by page; no logic change.
+
+Step 6: Content width and lists. Main content max 960 px; forms max 560 px; text lines ≤ 72ch; lists like Contest
+"Results" become rows with dividers, title left + score/rank right but within 760 px so they do not drift apart on
+wide screens; tables keep full section width, numbers right-aligned (`td.num`/th classes in markup where numeric).
+→ Model: sonnet → Effort: medium → Why: layout per page, markup classes only.
+
+Step 7: Page pass — every page at 375/768/1280 light: student Home, Contest, My progress, Review, subject, topic
+(Subtopics + Smart Study tiles + tutor), test runner (temporary copy of "jhj" via SQL, delete after; tests count must
+stay 10), result page; staff Dashboard, Batches, batch page, Subjects, topic, Tests (new + draft + check answers),
+Question bank + edit, People (3 tabs), Documents/notes, student progress, Reviews, Bill; platform Institutes
+(admin.localhost, needs founder MFA → check markup by CSS only or ask founder for a screenshot); sign-in, invite.
+Fix what the shared CSS misses; send the founder before/after screenshots.
+→ Model: sonnet → Effort: medium → Why: verification sweep; depends on steps 2–6, re-verify step 2 sizes here.
+
+Step 8: Gate + merge. `npm run format:check`, lint, typecheck, unit, build; E2E in CI on PR #35 (local :3000 is the
+founder's `next dev`, no demo seed); record evidence here; ask the founder "merge #35?".
+→ Model: sonnet → Effort: medium → Why: standard gate; never weaken a failing test.
+
+How to screenshot: Playwright script (chromium, `colorScheme: 'light'`, viewport 375/768/1280), open
+`http://newtown.localhost:3000/`, fill "Demo user email" (student1@newtown.test = class 10 with tests,
+student2 = neet 2027, teacher.jee@newtown.test = staff), click "Sign in as demo user", `waitForURL(/\/(home|dashboard)/)`,
+then visit pages; save screenshots in the session scratchpad (never commit them); log `scrollWidth` = viewport.
+
+## Previous next action (session 42 draft) — history
+
 **UI redesign on `r13-ui`: founder's palette + new type system built for the shell, shared components, entry pages,
 student Home and the test runner; founder approved the look ("keep this type of UI").** Next: plan steps 3–4
 (remaining student pages: subject/topic, Smart Study, result, My progress, Review, Contest; staff pages: batches,
