@@ -499,6 +499,16 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
   the quarter keeps it exact for 4-mark questions and proportional for other marks.
 - **Note:** a test released before this keeps its stored marks until a teacher clicks Recalculate.
 
+### ADR-046 Students see their own result right after submitting (founder, 2026-10-18)
+- **Decision:** amends ADR-023 (nothing before release). Right after submitting (or at the deadline) the student's
+  test page shows their marks so far, each question right/wrong with its marks, and written answers with the
+  teacher's marks once checked ("Not checked yet" before). Correct answers and explanations of objective questions
+  appear only once the test's closing time passes; a written question's model answer and both ranks still come only
+  with "Release results". `private.get_attempt_review` (migration 28) marks objective answers live with the same
+  `grade_objective` (or the teacher's override) that release uses; pgTAP `060_assessments.sql`, E2E `assessments.spec.ts`.
+- **Why keys wait for closing time:** students start at different times inside the test window; an early finisher
+  who saw the key could pass it to classmates still writing (founder chose this over showing keys at once).
+
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
 | # | Issue found | Resolution |

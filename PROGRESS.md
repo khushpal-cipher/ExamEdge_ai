@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-18 (session 37, handoff)
+Last updated: 2026-10-18 (session 38)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -29,12 +29,16 @@ Last updated: 2026-10-18 (session 37, handoff)
 shows "Add questions" (AI box + Type a question) first, hint on the New test form; PR #29 (`3261716`, CI green run
 39120779329) — a teacher's uploaded notes publish themselves to the subject's batch once read, AI notes still wait
 (ADR-044, migration 24 applied locally, pgTAP 1352). `main` = `3261716`.
+**Session 37 work MERGED** (session 38, founder said "merge both"): PR #30 (`4e27872`, CI run 39138871672 green) —
+negative marks + optional model answer + JEE Advanced multi-correct (ADR-045); PR #31 (`8499b5e`, CI run 39140952256
+green, after merging `main` into `r12-bill` because force-push is not allowed) — ₹ Bill (ADR-041 part 2). `main` = `8499b5e`.
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-18 | Student sees own result right after submit (founder, ADR-046), branch `r12-instant-result` | Founder chose: marks + right/wrong at once, correct answers at closing time (key-sharing risk), theory = own answer + marks once checked, rank after release. Migration `20261109000028_instant_result.sql` (`private.get_attempt_review`) applied with `supabase migration up`. pgTAP `060` +6 (after submit: live marks, no keys; still writing / another student's attempt refused; after close: −negative, blank 0, keys, no model answer, no rank; checked-before-release written marks + comment): `npx supabase test db` Files=24 Tests=1378 PASS. format, lint + forbidden, typecheck PASS; unit 163/163; int 28/28; build + bundle PASS. E2E `assessments.spec.ts` (Marks so far 12 / 16, After release, Not checked yet, 3× key-after-close note; after close 3× Correct answer, no Model answer) → CI (:3000 held by the founder's `next dev`). Browser (founder's `next dev` :3000, newtown, student2): temporary copy of "jhj" with a submitted attempt → "-1 / 4", "After release", "Correct answer: shown after the test closes"; after moving its close time → "Correct answer: A", 375 px scrollWidth 375; released "jhj" unchanged (rank 1). Temporary test **deleted** (tests 5, attempts 1, answers 1 = before). |
 | 2026-10-18 | Owner/admin "AI usage" → **Bill** in ₹ (founder, ADR-041 part 2 first step), branch `r12-bill` (stacked on `r12-typed-marks`) | Founder chose: platform admin sets "₹ per US$"; commission later. Migration `20261108000027_bill.sql` (`settings.inr_per_usd`, `set_inr_per_usd` aal2 + audit, `inr_per_usd()`, `institute_bill(inst)`), applied with `supabase migration up` (+ the `public.inr_per_usd()` wrapper run by hand with `psql`, same SQL as the file). Local: format, lint, typecheck PASS; unit 163/163 (budget-level helper + its test removed with the old page); pgTAP Files=24 Tests=1372 PASS (new `240_bill.sql`, allowlist +2); int 28/28; build + bundle PASS. E2E `usage.spec.ts` (owner Bill ₹ only, no tokens/$) + `portals.spec.ts` (platform saves the rate) → CI. Browser (`web-prod-3001`, teacher.jee): no Bill link, `/usage` 404. Owner page and platform form **not clicked in the browser** (founder's Google/MFA sign-in) → E2E in CI. |
 | 2026-10-18 | Multiple-correct MCQs marked like JEE Advanced (founder chose it over split-by-count, ADR-045), on `r12-typed-marks` / PR #30 | Migration `20261107000026_multi_partial_marks.sql` (`grade_objective`: all right = full, only right but not all = marks/4 each, any wrong = −negative, blank 0); pgTAP `060` old "subset = no partial marks" assertion replaced by 7 new-rule cases (founder changed the rule); 1361 PASS. Form hint under the options. PR #30 CI first failed on 2 E2E selectors (new label also matched "Correct answer"; documents test picked a soft-deleted/NEET note — that one also failed on `main` since ADR-044): fixed in `005337c`. |
 | 2026-10-18 | Type a question: negative marks + optional model answer (founder, session 37), branch `r12-typed-marks` | Migration `20261106000025_typed_negative_marks.sql` (`add_test_questions` reads `negative_marks`) applied with `supabase migration up`; form: "Marks for a correct answer" + "Negative marks for a wrong answer" (not for theory), model answer optional; check + review pages hide an empty model answer. Local: format, lint + forbidden, typecheck PASS; unit 164/164; `npx supabase test db` Files=23 Tests=1355 PASS (3 new in `220`); `npm run test:int` 28/28; `npm run build` + bundle scan PASS. E2E `assessments.spec.ts` updated (MCQ −1 shown in the table, theory added with no model answer) → CI (:3000 held by another `next dev`). Browser (`web-prod-3001`, newtown, teacher.jee "Amit Verma"): temporary draft test on maths · jee 2027 → typed MCQ with negative 1 → stored `marks 4, negative_marks 1`; theory with blank model answer → stored `{"model_answer": ""}`, no negative field shown; 375 px scrollWidth 375. Temporary test + 2 questions **deleted** (tests 2, questions 3 = before). |
@@ -123,7 +127,15 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 38)
+## Next exact action (session 39)
+1. `git checkout r12-instant-result && git pull`; `docker info`; `supabase status`. Local DB has migrations up to 28.
+2. If its PR (ADR-046, instant result) is green and not merged: ask the founder "merge?"; on yes `gh pr merge <n> --squash`.
+   Force-push is blocked by the auto-mode classifier: to update a branch after `main` moved, merge `main` into it.
+3. Founder still to do: set "₹ per US$" at admin.localhost:3000 → Institute bills (Bill says "Not available yet"
+   until then). Commission per institute: ask for the formula when they are ready (ADR-041).
+4. Optional, ask first: "End test now" button for teachers; Settings still shows "Batches taking the test" checkboxes.
+
+## Next exact action (session 38) — history (done: #30, #31 merged; MCQ result → ADR-046)
 State at handoff (2026-10-18, session 37): **two PRs open, both CI green, NOT merged** (founder has not said merge):
 - PR #30 `r12-typed-marks` → `main` (CI run 39138871672 green): "Type a question" negative marks (accepts "1" or
   "-1", stored as the amount taken off), optional theory model answer (migration 25), multi-correct MCQs marked like
