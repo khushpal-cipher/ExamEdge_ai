@@ -104,9 +104,11 @@ export default async function Check({
       <section className="card stack" aria-labelledby="question">
         <h2 id="question">Question ({current.marks} marks)</h2>
         <p style={{ whiteSpace: 'pre-wrap' }}>{current.questions.stem}</p>
-        <p className="notice" style={{ whiteSpace: 'pre-wrap' }}>
-          <b>Model answer (guide):</b> {current.questions.question_keys?.key.model_answer}
-        </p>
+        {current.questions.question_keys?.key.model_answer && (
+          <p className="notice" style={{ whiteSpace: 'pre-wrap' }}>
+            <b>Model answer (guide):</b> {current.questions.question_keys.key.model_answer}
+          </p>
+        )}
       </section>
       {mine.length === 0 && <p className="empty">No student answered this question.</p>}
       {mine.map((a, i) => {

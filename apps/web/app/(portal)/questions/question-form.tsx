@@ -139,8 +139,8 @@ export function QuestionForm({
       )}
       {type === 'written' && (
         <label>
-          Model answer (a guide for checking; never used to mark automatically)
-          <textarea name="model_answer" required maxLength={5000} rows={3} defaultValue={initial?.key?.model_answer} />
+          Model answer (optional: a guide for checking; never used to mark automatically)
+          <textarea name="model_answer" maxLength={5000} rows={3} defaultValue={initial?.key?.model_answer} />
         </label>
       )}
       <label>
@@ -148,10 +148,19 @@ export function QuestionForm({
         <textarea name="explanation" maxLength={5000} rows={2} defaultValue={initial?.explanation} />
       </label>
       {testId && (
-        <label>
-          Marks
-          <input name="marks" type="number" min={0.5} step={0.5} defaultValue={4} required style={{ width: 80 }} />
-        </label>
+        <div className="inline">
+          <label>
+            Marks for a correct answer
+            <input name="marks" type="number" min={0.5} step={0.5} defaultValue={4} required style={{ width: 80 }} />
+          </label>
+          {/* theory answers are marked by the teacher, so negative marking applies to the auto-marked types only */}
+          {type !== 'written' && (
+            <label>
+              Negative marks for a wrong answer
+              <input name="negative_marks" type="number" min={0} step={0.25} defaultValue={0} style={{ width: 80 }} />
+            </label>
+          )}
+        </div>
       )}
       <div>
         <button type="submit" className="primary">

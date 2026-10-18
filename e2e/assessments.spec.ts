@@ -69,6 +69,7 @@ test('teacher builds a mixed test, student takes it, teacher checks and releases
     await form.getByLabel('Option A', { exact: true }).fill('2');
     await form.getByLabel('Option B', { exact: true }).fill('3');
     await form.getByLabel('Option A is correct').check();
+    await form.getByLabel('Negative marks for a wrong answer').fill('1');
   }, stems.single);
   await add(async () => {
     await form.getByRole('combobox', { name: 'Type' }).selectOption('multi');
@@ -91,8 +92,12 @@ test('teacher builds a mixed test, student takes it, teacher checks and releases
   await add(async () => {
     await form.getByRole('combobox', { name: 'Type' }).selectOption('written');
     await form.getByLabel('Question', { exact: true }).fill(stems.written);
-    await form.getByLabel(/^Model answer/).fill('A body stays at rest or in uniform motion unless a net force acts.');
+    // The model answer is optional (founder, 2026-10-18): left blank here.
+    await expect(form.getByLabel(/^Model answer \(optional/)).toBeVisible();
+    await expect(form.getByLabel('Negative marks for a wrong answer')).toHaveCount(0);
   }, stems.written);
+  await expect(page.getByLabel('Negative marks for question 1')).toHaveValue(/^1(\.0+)?$/);
+  await expect(page.getByLabel('Negative marks for question 2')).toHaveValue(/^0(\.0+)?$/);
   await noSeriousA11yIssues(page);
 
   // The typed questions are saved in the bank too, for reuse.

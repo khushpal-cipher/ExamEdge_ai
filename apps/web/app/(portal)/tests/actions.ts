@@ -153,12 +153,13 @@ export async function addTypedQuestion(form: FormData) {
   if (!isUuid(test)) done('/tests', { code: '23514' });
   const here = `/tests/${test}`;
   const marks = num(form, 'marks');
+  const negative = type === 'written' ? 0 : (num(form, 'negative_marks') ?? 0);
   if (!isUuid(chapter) || !TYPES.includes(type) || !marks || marks <= 0) done(here, { code: '23514' });
   const { key, row } = fromForm(form, type);
   const { error } = await db.rpc('add_test_questions', {
     inst: institute.id,
     test,
-    items: [{ ...row, origin: 'teacher', chapter_id: chapter, key, marks }],
+    items: [{ ...row, origin: 'teacher', chapter_id: chapter, key, marks, negative_marks: negative }],
   });
   done(here, error, 'question_added');
 }

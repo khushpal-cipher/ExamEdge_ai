@@ -461,6 +461,11 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
 - **Built** (session 36, branch `r12-new-test`): New test form = subject list grouped by batch; Fill panel on the
   draft test page; topic page AI test tab and the bank's New question form removed; E2E `question-gen`,
   `assessments`, `studio` rewritten for the new journey.
+- **Founder follow-up (session 37):** "Type a question" also takes **negative marks for a wrong answer** (MCQ and
+  numerical; theory is marked by the teacher) — `add_test_questions` reads `negative_marks` per item (migration 25,
+  default 0, column check 0 ≤ it ≤ marks). A typed theory question's **model answer is optional** (the key check
+  already accepted an empty string; the form no longer requires it, and the checking and review pages hide an empty
+  one). AI theory questions still come with a model answer.
 
 ### ADR-043 One-click batch switcher, Home after switching, Smart Study tiles (R1.2 items 2–4, founder 2026-10-18)
 - **Switcher:** choosing a batch in the dropdown submits at once (small client component; a `<noscript>` "Show"

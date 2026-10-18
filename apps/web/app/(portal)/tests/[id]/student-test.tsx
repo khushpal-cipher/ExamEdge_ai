@@ -186,10 +186,12 @@ async function ReviewView({
             <b>Your answer:</b>{' '}
             <span style={{ whiteSpace: 'pre-wrap' }}>{shown(r.type, r.response) ?? 'Not answered'}</span>
           </p>
-          <p>
-            <b>{r.type === 'written' ? 'Model answer' : 'Correct answer'}:</b>{' '}
-            <span style={{ whiteSpace: 'pre-wrap' }}>{answerKey(r)}</span>
-          </p>
+          {answerKey(r) && (
+            <p>
+              <b>{r.type === 'written' ? 'Model answer' : 'Correct answer'}:</b>{' '}
+              <span style={{ whiteSpace: 'pre-wrap' }}>{answerKey(r)}</span>
+            </p>
+          )}
           {r.explanation && <p className="muted">{r.explanation}</p>}
           {r.teacher_comment && (
             <p className="notice">

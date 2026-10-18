@@ -70,6 +70,25 @@ select is((select count(*)::int from public.test_questions where test_id = (sele
 select is((select count(*)::int from public.questions where stem in ('Bad key', 'No origin')), 0,
   'not even in the bank');
 
+-- Founder (migration 25): typed questions carry their own negative marks; a theory question's model answer is optional.
+select is(public.add_test_questions((select inst from ids), (select id from t), jsonb_build_array(
+  jsonb_build_object('origin', 'teacher', 'chapter_id', (select rotation from ids), 'type', 'single',
+    'stem', 'Typed MCQ', 'marks', 4, 'negative_marks', 1,
+    'options', '[{"id":"a","text":"A"},{"id":"b","text":"B"}]'::jsonb, 'key', '{"correct":["b"]}'::jsonb),
+  jsonb_build_object('origin', 'teacher', 'chapter_id', (select rotation from ids), 'type', 'written',
+    'stem', 'Typed theory', 'marks', 5, 'key', '{"model_answer":""}'::jsonb))), 2,
+  'a typed MCQ with negative marks and a theory question without a model answer are added');
+select results_eq(
+  $$ select q.stem, tq.marks, tq.negative_marks from public.test_questions tq
+     join public.questions q on q.id = tq.question_id
+     where tq.test_id = (select id from t) and q.stem like 'Typed %' order by tq.position $$,
+  $$ values ('Typed numerical', 2.0, 0.0), ('Typed MCQ', 4.0, 1.0), ('Typed theory', 5.0, 0.0) $$,
+  'negative marks are stored per question (default 0)');
+select throws_ok($$ select public.add_test_questions(inst, (select id from t), jsonb_build_array(jsonb_build_object(
+  'origin', 'teacher', 'chapter_id', rotation, 'type', 'numerical', 'stem', 'Too negative', 'marks', 2,
+  'negative_marks', 3, 'key', '{"value": 1}'::jsonb))) from ids $$,
+  '23514', null, 'negative marks above the question''s marks are refused');
+
 -- A test without a subject (made before R1.2) and a scheduled test take no questions this way.
 select lives_ok($$ insert into public.tests (institute_id, title, opens_at, closes_at, duration_seconds)
   select inst, 'Old test', now() + interval '1 day', now() + interval '1 day 1 hour', 3600 from ids $$, 'an old-style test');
