@@ -12,7 +12,19 @@ select is(private.grade_objective('single', '{"correct":["a"]}', '["b"]', 4, 1),
 select is(private.grade_objective('single', '{"correct":["a"]}', null, 4, 1), 0.0, 'single: blank (null) = 0');
 select is(private.grade_objective('single', '{"correct":["a"]}', '[]', 4, 1), 0.0, 'single: blank ([]) = 0');
 select is(private.grade_objective('multi', '{"correct":["c","a"]}', '["a","c"]', 4, 1), 4.0, 'multi: exact set, any order');
-select is(private.grade_objective('multi', '{"correct":["a","c"]}', '["a"]', 4, 1), -1.0, 'multi: subset = no partial marks');
+select is(private.grade_objective('multi', '{"correct":["a","c"]}', '["a"]', 4, 2), 1.0,
+  'multi (JEE Advanced, migration 26): one right option of two, none wrong = +1');
+select is(private.grade_objective('multi', '{"correct":["a","b","c"]}', '["a","c"]', 4, 2), 2.0,
+  'multi: two right options of three = +2');
+select is(private.grade_objective('multi', '{"correct":["a","b","c","d"]}', '["a","b","d"]', 4, 2), 3.0,
+  'multi: three right options of four = +3');
+select is(private.grade_objective('multi', '{"correct":["a","c"]}', '["c","a","a"]', 4, 2), 4.0,
+  'multi: all right options (repeats ignored) = full');
+select is(private.grade_objective('multi', '{"correct":["a","c"]}', '["a","b"]', 4, 2), -2.0,
+  'multi: a wrong option picked = negative, even with a right one');
+select is(private.grade_objective('multi', '{"correct":["a","c"]}', '["a"]', 8, 0), 2.0,
+  'multi: partial = marks / 4 per right option');
+select is(private.grade_objective('multi', '{"correct":["a","c"]}', '"a"', 4, 2), -2.0, 'multi: not a list = wrong');
 select is(private.grade_objective('multi', '{"correct":["a","c"]}', '["a","b","c"]', 4, 1), -1.0, 'multi: superset = wrong');
 select is(private.grade_objective('numerical', '{"value":9.8,"tolerance_abs":0.1}', '9.85', 4, 1), 4.0,
   'numerical: inside absolute tolerance');

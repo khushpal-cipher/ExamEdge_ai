@@ -461,6 +461,11 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
 - **Built** (session 36, branch `r12-new-test`): New test form = subject list grouped by batch; Fill panel on the
   draft test page; topic page AI test tab and the bank's New question form removed; E2E `question-gen`,
   `assessments`, `studio` rewritten for the new journey.
+- **Founder follow-up (session 37):** "Type a question" also takes **negative marks for a wrong answer** (MCQ and
+  numerical; theory is marked by the teacher) — `add_test_questions` reads `negative_marks` per item (migration 25,
+  default 0, column check 0 ≤ it ≤ marks). A typed theory question's **model answer is optional** (the key check
+  already accepted an empty string; the form no longer requires it, and the checking and review pages hide an empty
+  one). AI theory questions still come with a model answer.
 
 ### ADR-043 One-click batch switcher, Home after switching, Smart Study tiles (R1.2 items 2–4, founder 2026-10-18)
 - **Switcher:** choosing a batch in the dropdown submits at once (small client component; a `<noscript>` "Show"
@@ -480,6 +485,15 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
 - **Why in the trigger:** the database already refuses `published` without a current version; publishing at upload
   time would fail, and the worker should not decide audiences. Covered by pgTAP `230_notes_autopublish.sql` and E2E
   `documents.spec.ts`.
+
+### ADR-045 Multiple-correct MCQs marked like JEE Advanced (founder, 2026-10-18)
+- **Decision:** replaces ADR-023's "exact set or nothing". Only correct options picked: all of them = full marks,
+  otherwise marks ÷ 4 per correct option picked (+1 each on a 4-mark question, like JEE Advanced's +3/+2/+1); any wrong
+  option picked = −negative marks (the teacher sets them per question, e.g. 2); blank = 0. Single-correct and
+  numerical unchanged. `private.grade_objective` (migration 26), pgTAP `060_assessments.sql`.
+- **Why the quarter:** the founder chose JEE Advanced's rule over splitting marks by the number of correct options;
+  the quarter keeps it exact for 4-mark questions and proportional for other marks.
+- **Note:** a test released before this keeps its stored marks until a teacher clicks Recalculate.
 
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 

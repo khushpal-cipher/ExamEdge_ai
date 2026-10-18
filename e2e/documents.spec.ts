@@ -76,7 +76,11 @@ test('Rival users cannot reach Demo notes (AC4.4, T-SEC-07)', async ({ page }) =
   const { rows } = await sql(
     `select d.id, v.storage_path from documents d join document_versions v on v.id = d.current_version_id
      join institutes i on i.id = d.institute_id join subjects s on s.id = d.subject_id
-     where i.slug = 'demo' and s.name = 'Physics' and d.status = 'published' limit 1`,
+     join batches b on b.id = s.batch_id join document_audience a on a.document_id = d.id and a.batch_id = b.id
+     join storage.objects o on o.bucket_id = 'documents' and o.name = v.storage_path
+     where i.slug = 'demo' and s.name = 'Physics' and b.name = 'JEE 2027 Morning' and d.status = 'published'
+       and d.deleted_at is null and v.processing_status = 'ready'
+     order by d.created_at limit 1`,
   );
   const { id, storage_path } = rows[0];
 
@@ -92,6 +96,7 @@ test('Rival users cannot reach Demo notes (AC4.4, T-SEC-07)', async ({ page }) =
   // a signed URL stops working once it expires
   const demo = await signedIn('student01@demo.test');
   const fresh = await demo.storage.from('documents').createSignedUrl(storage_path, 60);
+  expect(fresh.error?.message ?? null).toBeNull();
   expect((await fetch(fresh.data!.signedUrl)).status).toBe(200);
   const { data, error } = await demo.storage.from('documents').createSignedUrl(storage_path, 1);
   expect(error).toBeNull();

@@ -60,8 +60,9 @@ library is gone.
    - **With AI**: write what you want in the box, e.g. "10 MCQs + 5 theory questions on Networking and HTML, medium".
      The AI finds those topics in the subject and makes the questions from each topic's published notes (MCQ 4 marks,
      theory 5 marks by default). Send another request to add more.
-   - **Manual**: type a question right there (MCQ: question, options, correct option; numerical: answer and allowed
-     error; theory: question and model answer), with its topic and marks.
+   - **Manual**: type a question right there (MCQ: question, options A–D, tick the correct one; numerical: answer and
+     allowed error; theory: the question, and a model answer only if the teacher wants one), with its topic, its marks
+     for a correct answer and, for MCQ/numerical, negative marks for a wrong answer.
    Every question made here is also saved in the **Question bank** (list, edit, approve), and questions can still be
    added from the bank. Opening a question from the test and saving it brings the teacher back to the test.
    - Question types: single-correct MCQ, multi-correct MCQ, numerical answer, and **theory (written) questions** where the student types the answer. One test can mix them, for example 10 MCQs and 5 theory questions.
@@ -74,6 +75,8 @@ library is gone.
 - The test opens at the start time. Each student's timer is controlled by the server, so changing the phone clock doesn't help.
 - After the deadline, answers can't be saved.
 - **MCQs and numerical questions are marked automatically**, including negative marks and numerical answers within an allowed range.
+  Multiple-correct MCQs are marked like JEE Advanced (founder, ADR-045): all correct options = full marks (+4); only
+  correct options but not all = +1 each (a quarter of the marks); any wrong option = the negative marks (e.g. −2).
 - **Theory answers are checked by the teacher.** The test shows "Waiting for checking". The teacher opens **Check answers**:
   - one theory question at a time, going through every student's answer
   - the screen shows the question, the teacher's model answer and the student's typed answer
