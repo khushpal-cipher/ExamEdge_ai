@@ -15,6 +15,7 @@ import { isUuid, requireMember, STAFF } from '@/lib/tenant';
 const TYPES = ['application/pdf', 'image/png', 'image/jpeg'];
 const MAX_BYTES = 50 * 1024 * 1024;
 
+type Db = Awaited<ReturnType<typeof requireMember>>['db'];
 export type UploadTicket = { error: string } | { documentId: string; versionId: string; signedUrl: string };
 
 // Step 1: create the document (or a new version of an existing one) and a signed upload URL for its file.
@@ -77,13 +78,33 @@ export async function startUpload(form: FormData): Promise<UploadTicket> {
 export async function confirmUpload(versionId: string) {
   const { institute, db } = await requireMember(STAFF);
   if (!isUuid(versionId)) return { error: 'invalid' };
-  const { error } = await db
+  const { data, error } = await db
     .from('document_versions')
     .update({ processing_status: 'queued' })
     .eq('institute_id', institute.id)
     .eq('id', versionId)
-    .eq('processing_status', 'uploading');
-  return error ? { error: 'Could not queue the file.' } : {};
+    .eq('processing_status', 'uploading')
+    .select('document_id')
+    .maybeSingle();
+  if (error) return { error: 'Could not queue the file.' };
+  if (data) await publishUpload(db, institute.id, data.document_id as string);
+  return {};
+}
+
+// A teacher's own notes need no check (founder, R1.2): a new uploaded document gets its subject's batch as audience
+// now, and the database publishes it when the worker has read the file (migration 24). AI notes stay drafts until
+// the teacher publishes them (ADR-039).
+async function publishUpload(db: Db, inst: string, doc: string) {
+  const { data: d } = await db
+    .from('documents')
+    .select('status, kind, subjects(batch_id)')
+    .eq('institute_id', inst)
+    .eq('id', doc)
+    .maybeSingle();
+  const batch = (d?.subjects as unknown as { batch_id: string } | null)?.batch_id;
+  if (d?.status !== 'draft' || d.kind !== 'file' || !batch) return;
+  // RLS refuses a batch the caller may not publish to; the teacher can still choose batches on the notes page.
+  await db.from('document_audience').insert({ institute_id: inst, document_id: doc, batch_id: batch });
 }
 
 // Retry a failed version or reprocess a ready one (e.g. after a chunker change).
@@ -175,7 +196,6 @@ export async function deleteDocument(form: FormData) {
 }
 
 // ---------------------------------------------------------------- AI notes (ADR-039)
-type Db = Awaited<ReturnType<typeof requireMember>>['db'];
 
 // Stores Markdown as the document's next version, uploaded in the teacher's own session (the storage policy allows
 // only this version's path), then hands it to the worker like any upload. Returns an error code or null.

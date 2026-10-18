@@ -471,6 +471,16 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
   the same `generate` action). Below: "Made by you" and "From your teachers" for this topic, to open again. Audio,
   video, slides, reports, infographics and data tables are later (not built).
 
+### ADR-044 A teacher's uploaded notes publish themselves (R1.2, founder 2026-10-18)
+- **Decision:** a teacher's own uploaded notes need no check. The upload (`confirmUpload`) adds the subject's batch as
+  the audience (RLS-checked, as a manual publish would be); the `documents` guard trigger (migration 24) publishes a
+  `draft` `file` document when the worker makes its first version current, so students never get a link before the
+  file is readable. AI notes (`ai_notes`) still stay drafts until the teacher reads and publishes them (ADR-039).
+  A withdrawn document is not republished by a new version.
+- **Why in the trigger:** the database already refuses `published` without a current version; publishing at upload
+  time would fail, and the worker should not decide audiences. Covered by pgTAP `230_notes_autopublish.sql` and E2E
+  `documents.spec.ts`.
+
 ## Review log (skeptical principal-engineer pass, 2026-10-14)
 
 | # | Issue found | Resolution |

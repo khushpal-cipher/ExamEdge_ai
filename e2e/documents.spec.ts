@@ -1,4 +1,4 @@
-// Phase 4 journeys: teacher uploads notes → worker reads them → publish to a batch → student opens the file →
+// Phase 4 journeys: teacher uploads notes (published to the subject's batch at once) → worker reads them → student opens the file →
 // withdraw hides it at once (AC4.3); cross-tenant probes (AC4.4 web side) and signed URL rules (T-SEC-07).
 // The worker runs in-process with `drain()`, as the worker role with its service account. Needs `npm run seed:demo`.
 import { expect, test, type Page } from '@playwright/test';
@@ -15,7 +15,10 @@ async function login(page: Page, base: string, email: string) {
   await expect(page).toHaveURL(/\/(home|dashboard)$/);
 }
 
-test('teacher uploads, publishes and withdraws notes; student access follows (AC4.3)', async ({ page, browser }) => {
+test('teacher uploads notes (published at once) and withdraws them; student access follows (AC4.3)', async ({
+  page,
+  browser,
+}) => {
   test.setTimeout(90_000);
   const title = `E2E notes ${Date.now().toString(36)}`;
   const { topic } = await demoTopic('Physics', 'Units and Measurement');
@@ -43,9 +46,13 @@ test('teacher uploads, publishes and withdraws notes; student access follows (AC
   const chunks = await sql(`select count(*)::int as n from document_chunks where document_id = $1`, [doc]);
   expect(chunks.rows[0].n).toBeGreaterThan(0);
 
-  await page.getByLabel('JEE 2027 Morning').check();
-  await page.getByRole('button', { name: 'Publish' }).click();
-  await expect(page).toHaveURL(/\?ok=published$/);
+  // A teacher's own notes are published to the subject's batch by the upload itself (no check step).
+  const audience = await sql(
+    `select d.status, b.name from documents d join document_audience a on a.document_id = d.id
+     join batches b on b.id = a.batch_id where d.id = $1`,
+    [doc],
+  );
+  expect(audience.rows).toEqual([{ status: 'published', name: 'JEE 2027 Morning' }]);
 
   // student01 is in JEE 2027 Morning: sees the notes and opens the file
   const student = await (await browser.newContext()).newPage();
