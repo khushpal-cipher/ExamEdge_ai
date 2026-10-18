@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-19 (session 39, handoff)
+Last updated: 2026-10-19 (session 40)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -138,7 +138,22 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 40)
+## Next exact action (session 41)
+State (2026-10-19, session 40): **PR #34 `r12-cbt` MERGED** into `main` as `c0c46ca` (squash; CI run 39155901063
+green on `43825c7`: check + secrets, incl. E2E `cbt.spec.ts` and `assessments.spec.ts`). It holds CBT mode
+(ADR-048, migration 32) plus the session 40 founder fixes: submit asked on the page (no `confirm()`), one question
+per page with Previous / Next, CBT blocks copy/cut/paste as a warning. No PR open. Local DB = `main` (migrations to 32).
+Steps:
+1. `git checkout main && git pull`; `docker info`; `supabase status`. Restart the founder's `next dev` on :3000 only
+   if it serves a stale build.
+2. Founder may try CBT in Google Chrome on :3000 (the in-app pane refuses full screen).
+3. Founder still to do: "₹ per US$" at admin.localhost:3000 → Institute bills; commission formula when ready (ADR-041).
+4. Optional, ask first: question palette (jump to question n, answered/unanswered marks) on the test page; live CBT
+   warning count for teachers; "End test now"; test Settings "Batches taking the test" checkboxes; reviews
+   delete/hide + reply notification.
+5. Otherwise ask the founder for the next change list. Phase 10 cloud parts stay BLOCKED (see Blocked).
+
+## Next exact action (session 40) — history
 State at handoff (2026-10-19, session 39): `main` = `86b677a` (PR #32 `16b7547` + PR #33 `03afbca` merged this
 session, then the PROGRESS commit). **One PR open: #34 `r12-cbt`** (https://github.com/khushpal-cipher/ExamEdge_ai/pull/34),
 CBT tests (ADR-048, migration 32), commits `44fadcb` (DB), `7b19a9c` (web, docs, E2E), `b61f991` (E2E fix).
