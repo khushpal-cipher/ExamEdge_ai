@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-18 (session 38, handoff)
+Last updated: 2026-10-18 (session 39)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -32,7 +32,10 @@ shows "Add questions" (AI box + Type a question) first, hint on the New test for
 **Session 37 work MERGED** (session 38, founder said "merge both"): PR #30 (`4e27872`, CI run 39138871672 green) —
 negative marks + optional model answer + JEE Advanced multi-correct (ADR-045); PR #31 (`8499b5e`, CI run 39140952256
 green, after merging `main` into `r12-bill` because force-push is not allowed) — ₹ Bill (ADR-041 part 2). `main` = `8499b5e`.
-**Session 38 (open, CI green, NOT merged):** PR #32 instant result (ADR-046), PR #33 student reviews + replies (ADR-047).
+**Session 38 work MERGED** (session 39, founder said "merge #32 and #33"): PR #32 (`16b7547`) instant result
+(ADR-046); then `main` merged into `r12-reviews` (`e2a01b4`; PROGRESS kept from `r12-reviews`, DECISIONS kept both ADRs;
+pgTAP Files=25 Tests=1435 PASS, typecheck PASS), CI run 39147981293 green, PR #33 (`03afbca`) reviews + replies
+(ADR-047). `main` = `03afbca`. Nothing open.
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
@@ -131,7 +134,17 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 39)
+## Next exact action (session 40)
+State (2026-10-18, session 39): `main` = `03afbca`; PR #32 and #33 merged; no open PR. Local DB has migrations up
+to 31 (all on `main` now). Founder's own reviews/replies in the local DB are real data — keep them.
+1. `git checkout main && git pull`; `docker info`; `supabase status`.
+2. Founder still to do: set "₹ per US$" at admin.localhost:3000 → Institute bills. Commission per institute: ask for
+   the formula when they are ready (ADR-041).
+3. Optional, ask first: "End test now" button for teachers; test Settings still shows "Batches taking the test"
+   checkboxes; reviews: delete/hide, notify the student of a reply.
+4. Otherwise ask the founder for the next change list. Phase 10 cloud parts stay BLOCKED (see Blocked).
+
+## Next exact action (session 39) — history
 State at handoff (2026-10-18, session 38): `main` = `8499b5e` (PR #30 + #31 merged this session). **Two PRs open,
 both CI green, NOT merged** (founder has not said "merge" for these):
 - PR #32 `r12-instant-result` (CI run 39147007384 green on `8c20c74`): students see their own marks + right/wrong right
