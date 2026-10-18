@@ -1,8 +1,8 @@
-// Phase 5: institute AI usage page (owner/admin only) and its tenant isolation. Needs `npm run seed:demo`
-// (the seed's document ingestion is metered, so Demo and Rival both have usage this month).
+// Phase 5 + ADR-041 part 2: the institute's Bill page (owner/admin only, ₹ only) and metering isolation. Needs
+// `npm run seed:demo` (the seed's document ingestion is metered, so Demo and Rival both have usage this month).
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { demoSignIn, signedIn, instituteId } from './helpers';
+import { demoSignIn, signedIn, instituteId, sql } from './helpers';
 
 const DEMO = 'http://demo.localhost:3000';
 
@@ -12,19 +12,22 @@ async function login(page: Page, email: string) {
   await expect(page).toHaveURL(/\/(home|dashboard)$/);
 }
 
-test('owner sees this month’s AI usage and budget; teachers and students do not', async ({ page }) => {
+test('owner sees this month’s AI bill in ₹ only; teachers and students do not', async ({ page }) => {
+  await sql(`update private.settings set inr_per_usd = 90 where id`);
   await login(page, 'owner@demo.test');
-  await page.getByRole('link', { name: 'AI usage' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('AI usage');
-  await expect(page.getByRole('cell', { name: 'Indexing notes' })).toBeVisible();
-  await expect(page.getByText('of $20.00 budget')).toBeVisible();
+  await page.getByRole('link', { name: 'Bill' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Bill');
+  await expect(page.locator('.stat').filter({ hasText: "This month's AI charge" }).locator('b')).toHaveText(
+    /^₹[\d,]+\.\d{2}$/,
+  );
+  await expect(page.getByText(/tokens|\$/)).toHaveCount(0);
   await expect(page.getByText('On', { exact: true })).toBeVisible();
   const { violations } = await new AxeBuilder({ page }).analyze();
   expect(violations.filter((v) => v.impact === 'critical' || v.impact === 'serious')).toEqual([]);
 
   await page.context().clearCookies();
   await login(page, 'teacher1@demo.test');
-  await expect(page.getByRole('link', { name: 'AI usage' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Bill' })).toHaveCount(0);
   expect((await page.goto(`${DEMO}/usage`))?.status()).toBe(404);
 
   await page.context().clearCookies();

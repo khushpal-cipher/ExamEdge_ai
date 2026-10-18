@@ -194,8 +194,9 @@ Each student has a daily AI limit (for example 40 doubts a day). When it's reach
 
 ## Part 4 — Your side (platform owner)
 - Add new institutes, set their web address, logo and limits.
-- See each institute's AI use this month in the "All institutes" table: tokens and real cost. Later (formula not
-  decided yet): a commission per institute, and the institute sees only "This month's AI charge: ₹X".
+- See each institute's AI use this month in the "All institutes" table: tokens and real cost. Set one rate,
+  "₹ per US$": each institute's owner and admins see a **Bill** page with only "This month's AI charge: ₹X" (AI cost ×
+  rate). Later (formula not decided yet): a commission per institute on top.
 - There is **no ExamEdge library** (removed in R1.1): ExamEdge shares no content with institutes.
 - Emergency switch to turn AI off if costs spike.
 - You **can't** casually open an institute's private data. Support access needs a special, time-limited session that is recorded and shown to the institute owner.

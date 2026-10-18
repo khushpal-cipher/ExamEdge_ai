@@ -35,6 +35,8 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-18 | Owner/admin "AI usage" → **Bill** in ₹ (founder, ADR-041 part 2 first step), branch `r12-bill` (stacked on `r12-typed-marks`) | Founder chose: platform admin sets "₹ per US$"; commission later. Migration `20261108000027_bill.sql` (`settings.inr_per_usd`, `set_inr_per_usd` aal2 + audit, `inr_per_usd()`, `institute_bill(inst)`), applied with `supabase migration up` (+ the `public.inr_per_usd()` wrapper run by hand with `psql`, same SQL as the file). Local: format, lint, typecheck PASS; unit 163/163 (budget-level helper + its test removed with the old page); pgTAP Files=24 Tests=1372 PASS (new `240_bill.sql`, allowlist +2); int 28/28; build + bundle PASS. E2E `usage.spec.ts` (owner Bill ₹ only, no tokens/$) + `portals.spec.ts` (platform saves the rate) → CI. Browser (`web-prod-3001`, teacher.jee): no Bill link, `/usage` 404. Owner page and platform form **not clicked in the browser** (founder's Google/MFA sign-in) → E2E in CI. |
+| 2026-10-18 | Multiple-correct MCQs marked like JEE Advanced (founder chose it over split-by-count, ADR-045), on `r12-typed-marks` / PR #30 | Migration `20261107000026_multi_partial_marks.sql` (`grade_objective`: all right = full, only right but not all = marks/4 each, any wrong = −negative, blank 0); pgTAP `060` old "subset = no partial marks" assertion replaced by 7 new-rule cases (founder changed the rule); 1361 PASS. Form hint under the options. PR #30 CI first failed on 2 E2E selectors (new label also matched "Correct answer"; documents test picked a soft-deleted/NEET note — that one also failed on `main` since ADR-044): fixed in `005337c`. |
 | 2026-10-18 | Type a question: negative marks + optional model answer (founder, session 37), branch `r12-typed-marks` | Migration `20261106000025_typed_negative_marks.sql` (`add_test_questions` reads `negative_marks`) applied with `supabase migration up`; form: "Marks for a correct answer" + "Negative marks for a wrong answer" (not for theory), model answer optional; check + review pages hide an empty model answer. Local: format, lint + forbidden, typecheck PASS; unit 164/164; `npx supabase test db` Files=23 Tests=1355 PASS (3 new in `220`); `npm run test:int` 28/28; `npm run build` + bundle scan PASS. E2E `assessments.spec.ts` updated (MCQ −1 shown in the table, theory added with no model answer) → CI (:3000 held by another `next dev`). Browser (`web-prod-3001`, newtown, teacher.jee "Amit Verma"): temporary draft test on maths · jee 2027 → typed MCQ with negative 1 → stored `marks 4, negative_marks 1`; theory with blank model answer → stored `{"model_answer": ""}`, no negative field shown; 375 px scrollWidth 375. Temporary test + 2 questions **deleted** (tests 2, questions 3 = before). |
 | 2026-10-18 | Teacher-uploaded notes publish themselves (ADR-044, founder), branch `r12-notes-autopublish` | Migration `20261105000024_notes_autopublish.sql` applied locally (`supabase migration up`); `confirmUpload` adds the subject's batch as audience. Local: format, lint, typecheck, unit 164, pgTAP Files=23 Tests=1352 PASS (new `230`), int 28, build + bundle PASS; E2E `documents.spec.ts` updated (→ CI). Browser (`next dev` :3000 + worker, newtown, teacher.jee): uploaded a 1-page PDF to probability → after processing `published`, audience jee 2027; then soft-deleted like the app (chunks removed). PR #28 (draft page: Add questions at the top) merged `ac20bed`. Founder's earlier "sql" notes (class 10 · logic) stay "Not published" (uploaded before this change) — publish by hand on its notes page. |
 | 2026-10-18 | Draft test page: "Add questions" (AI box + Type a question) moved to the top, hint on New test form (founder could not find them) | Founder screenshot: boxes are on the page after Create test, below Settings, and the :3000 `next dev` was stale (restarted via preview `web`). Local: format, lint, typecheck, unit PASS; browser (newtown, teacher.jee, `next dev`): headings Add questions → Settings → Questions; check test deleted (tests 0). PR + CI below. |
@@ -122,13 +124,16 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 38)
-1. PR for `r12-typed-marks` (see Completed): if not merged yet, check its CI and merge when green.
-2. **Founder question answered (session 37), product decision open:** a test with only MCQ/numerical questions does
+1. PR #30 (`r12-typed-marks`: negative marks, optional model answer, JEE Advanced multi marking) — Auto-fix is on;
+   merge when CI is green. Then the bill PR (`r12-bill`, stacked on it): retarget to `main` if GitHub did not, CI
+   green, merge. Founder still has to set "₹ per US$" in the platform admin (admin.localhost → Institute bills).
+2. Commission per institute: ask the founder for the formula when they are ready (ADR-041).
+3. **Founder question answered (session 37), product decision open:** a test with only MCQ/numerical questions does
    **not** show marks right after submit today — results (marks + ranks) appear only when a teacher clicks
    **Release results** (ADR-023: ranks need everyone's answers; release is manual). Ask the founder whether MCQ-only
    tests should release by themselves (e.g. at the close time, so ranks are fair) or show the student's own score at
    submit with ranks later. Do not build before the answer.
-3. Then items 4–5 of the session-37 list below.
+4. Then items 4–5 of the session-37 list below.
 
 ## Next exact action (session 37) — history
 1. `cd ~/Documents/startup/examedge_ai && git checkout main && git pull` (`main` = `3261716`); `docker info`,
@@ -460,7 +465,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
-| 37 | 2026-10-18 | Founder: "Type a question" gets negative marks; theory model answer optional (migration 25, pgTAP 1355); MCQ-only results question answered (release is manual) — decision open | branch `r12-typed-marks` |
+| 37 | 2026-10-18 | Founder: "Type a question" gets negative marks; theory model answer optional (migration 25); multi-correct = JEE Advanced marking (migration 26, ADR-045); owner "AI usage" → ₹ Bill at a platform-set rate (migration 27); pgTAP 1372; MCQ-only results question answered (release is manual) — decision open | branches `r12-typed-marks` (PR #30), `r12-bill` |
 | 36b | 2026-10-18 | PR #26/#27 merged (R1.2 done); founder follow-ups: Add questions at the top of a draft test (PR #28 `ac20bed`), teacher notes publish themselves (ADR-044, PR #29 `3261716`); stale :3000 dev server restarted | `3261716` |
 | 36 | 2026-10-18 | R1.2 item 1 web part finished (topic page fixed, New test subject picker, bank form removed, E2E rewritten, label width fix); local gate green, browser check at 375 px; PR #26 merge refused by the auto-mode classifier | see `git log` |
 | 35 | 2026-10-18 | Founder: GO for R1.2. Steps 1–3 (ADR-042/043, one-click switcher → Home, Smart Study tiles) on PR #26, CI green, not merged. Item 1: migration 23 (`tests.subject_id`, `add_test_questions`, `add_ai_test` dropped; pgTAP 1347) applied locally, core `planTest` (10 unit tests); web part WIP (typecheck fails on the topic page) | WIP commit on `r12-new-test` |
