@@ -78,7 +78,9 @@ export async function saveQuestion(form: FormData) {
       .eq('origin', 'ai');
     if (reviewError) done(`/questions/${questionId}`, reviewError);
   }
-  done(back);
+  // A question opened from a test goes back to that test.
+  const test = String(form.get('back') ?? '');
+  done(/^\/tests\/[0-9a-f-]{36}$/.test(test) ? test : back);
 }
 
 export async function deleteQuestion(form: FormData) {

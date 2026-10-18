@@ -39,7 +39,10 @@ export default async function EditQuestion({
   const keys = q.question_keys as unknown as { key: QuestionInit['key']; second_solve: Answer } | null;
   const initial = { ...q, key: keys?.key ?? null } as QuestionInit;
   const review = q.origin === 'ai' && q.status === 'draft';
-  const used = (q.test_questions as unknown[]).length;
+  const tests = q.test_questions as unknown as { test_id: string }[];
+  const used = tests.length;
+  // Opened from its only test (e.g. an AI test): saving or approving returns there.
+  const back = used === 1 ? `/tests/${tests[0]!.test_id}` : undefined;
   return (
     <>
       <div className="top">
@@ -72,7 +75,7 @@ export default async function EditQuestion({
           {q.verification === 'dual_solve_agree' && (
             <form action={approveQuestion}>
               <input type="hidden" name="question_id" value={q.id} />
-              <input type="hidden" name="back" value={`/questions/${q.id}`} />
+              <input type="hidden" name="back" value={back ?? `/questions/${q.id}`} />
               <button type="submit" className="primary">
                 Approve as it is
               </button>
@@ -88,6 +91,7 @@ export default async function EditQuestion({
             chapters: [...(s.chapters ?? [])].sort((a, b) => a.position - b.position),
           }))}
           initial={initial}
+          back={back}
         />
       </section>
     </>

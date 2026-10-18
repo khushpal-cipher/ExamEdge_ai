@@ -8,7 +8,7 @@ const ERRORS: Record<string, string> = {
     'This question is used in a scheduled test. Create a new question instead (the answer key can still be fixed).',
   test_has_no_questions: 'Add at least one question before scheduling.',
   test_has_no_batches: 'Choose at least one batch before scheduling.',
-  test_question_not_ready: 'Every question needs a valid answer key before scheduling.',
+  test_question_not_ready: 'Every question must be approved and have a valid answer key before scheduling.',
   test_has_attempts: 'Students have already started this test, so it cannot go back to draft.',
   test_already_open: 'The test has opened; its times can no longer change.',
   test_not_closed: 'Results can be released only after the test closes.',

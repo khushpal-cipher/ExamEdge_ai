@@ -306,7 +306,7 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
                       </button>
                     </form>
                     <p className="small muted">
-                      Made by AI from this topic&apos;s published notes into a new draft test for {topic.name}&apos;s
+                      Made by AI from this topic&apos;s published notes into a new draft test for this subject&apos;s
                       batch. A second AI solves every MCQ again without the answer key; a question whose answers differ
                       is flagged. Theory questions come with a model answer: open each one, check it and save it. The
                       test can be scheduled only when every question is approved.

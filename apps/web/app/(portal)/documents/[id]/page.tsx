@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { MAX_NOTES } from '@examedge/core/ai/notes';
 import { formatTime } from '@/lib/assess';
+import { Markdown } from '@/lib/markdown';
 import { isUuid, requireMember, STAFF } from '@/lib/tenant';
 import { Flash, type Search } from '../../flash';
-import { deleteDocument, publishDocument, requeueVersion, withdrawDocument } from '../actions';
+import { deleteDocument, publishDocument, requeueVersion, saveAiNotes, withdrawDocument } from '../actions';
 import { DOCUMENT_STATUS, ERROR_TEXT, VERSION_STATUS } from '../status';
 import { Upload } from '../upload';
 import { AutoRefresh } from './auto-refresh';
@@ -16,6 +18,7 @@ type Version = {
   page_count: number | null;
   extraction_method: string | null;
   created_at: string;
+  storage_path: string;
 };
 const METHOD: Record<string, string> = { text_layer: 'Text', ocr: 'Scanned (OCR)', mixed: 'Text + scanned' };
 
@@ -25,7 +28,7 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
   if (!isUuid(id)) notFound();
   const { data: doc } = await db
     .from('documents')
-    .select('id, title, status, subject_id, chapter_id, current_version_id, published_at, deleted_at')
+    .select('id, title, kind, status, subject_id, chapter_id, current_version_id, published_at, deleted_at')
     .eq('institute_id', institute.id)
     .eq('id', id)
     .is('deleted_at', null)
@@ -37,7 +40,7 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
       db.from('subjects').select('name').eq('institute_id', institute.id).eq('id', doc.subject_id).single(),
       db
         .from('document_versions')
-        .select('id, version, processing_status, error_code, page_count, extraction_method, created_at')
+        .select('id, version, processing_status, error_code, page_count, extraction_method, created_at, storage_path')
         .eq('institute_id', institute.id)
         .eq('document_id', id)
         .order('version', { ascending: false }),
@@ -62,6 +65,11 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
   const rows = (versions ?? []) as Version[];
   const busy = rows.some((v) => ['queued', 'processing'].includes(v.processing_status));
   const [statusLabel, statusTone] = DOCUMENT_STATUS[doc.status]!;
+  // AI notes are edited here: the newest stored version (it may still be processing), not only the live one.
+  const aiNotes = doc.kind === 'ai_notes';
+  const newest = aiNotes ? rows.find((v) => v.processing_status !== 'uploading') : undefined;
+  const blob = newest ? (await db.storage.from('documents').download(newest.storage_path)).data : null;
+  const markdown = blob && blob.size <= MAX_NOTES * 4 ? await blob.text() : '';
 
   return (
     <>
@@ -79,13 +87,43 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
             )}
           </p>
         </div>
-        {doc.current_version_id && (
-          <a className="button" href={`/documents/${id}/file`} target="_blank" rel="noopener">
-            Open file
-          </a>
-        )}
+        {doc.current_version_id &&
+          (aiNotes ? (
+            <Link className="button" href={`/notes/${id}`}>
+              Open notes page
+            </Link>
+          ) : (
+            <a className="button" href={`/documents/${id}/file`} target="_blank" rel="noopener">
+              Open file
+            </a>
+          ))}
       </div>
       <Flash searchParams={props.searchParams} />
+
+      {aiNotes && (
+        <section className="card stack" aria-labelledby="notes">
+          <h2 id="notes">Notes</h2>
+          {markdown ? <Markdown text={markdown} /> : <p className="empty">These notes could not be loaded.</p>}
+          <details>
+            <summary>Edit notes</summary>
+            <form action={saveAiNotes} className="stack">
+              <input type="hidden" name="document_id" value={id} />
+              <label className="stack">
+                Notes (Markdown)
+                <textarea name="markdown" rows={20} required maxLength={MAX_NOTES} defaultValue={markdown} />
+              </label>
+              <p className="small muted">
+                Saving makes a new version; students keep the current one until it is ready.
+              </p>
+              <div className="row">
+                <button type="submit" className="primary">
+                  Save
+                </button>
+              </div>
+            </form>
+          </details>
+        </section>
+      )}
 
       <section className="card stack" aria-labelledby="who">
         <h2 id="who">Who can see it</h2>
@@ -168,9 +206,13 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
             </tbody>
           </table>
         </div>
-        <h3>Upload a new version</h3>
-        <p className="small muted">Students keep seeing the current file until the new one is ready.</p>
-        <Upload documentId={id} />
+        {!aiNotes && (
+          <>
+            <h3>Upload a new version</h3>
+            <p className="small muted">Students keep seeing the current file until the new one is ready.</p>
+            <Upload documentId={id} />
+          </>
+        )}
       </section>
 
       <form action={deleteDocument}>

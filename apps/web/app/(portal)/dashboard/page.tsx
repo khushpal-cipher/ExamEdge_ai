@@ -87,7 +87,8 @@ export default async function Dashboard() {
       <section className="card stack" aria-labelledby="next">
         <h2 id="next">Where things are</h2>
         <p className="empty">
-          Notes, the AI tutor and Studio are inside each subject. Tests, checking and rank lists are under Tests.
+          Notes, AI notes and AI tests are inside each subject&apos;s topics. Tests, checking and rank lists are under
+          Tests.
         </p>
       </section>
     </>
