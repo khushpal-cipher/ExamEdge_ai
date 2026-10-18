@@ -37,7 +37,7 @@ test('teacher writes AI notes, edits and publishes them; only students of the ba
     await expect(page).toHaveURL(new RegExp(`/documents/${UUID.source}\\?ok=notes_written$`));
     doc = page.url().match(UUID)![0];
     const id = doc;
-    await expect(page.getByRole('heading', { name: 'Notes' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Notes', exact: true })).toBeVisible();
     await expect(page.getByText('Gravitation pulls every two masses together.').first()).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Upload a new version' })).toHaveCount(0);
     const usage = await sql(

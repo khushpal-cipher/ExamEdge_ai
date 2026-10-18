@@ -20,6 +20,7 @@ const one = async (query: string, params: unknown[] = []) => (await sql(query, p
 test('AI test: a draft of MCQs + theory; flagged and theory questions need the teacher before scheduling', async ({
   browser,
 }) => {
+  test.setTimeout(120_000);
   const { subject, topic } = await demoTopic('Physics', 'Rotational Motion');
   const { id: inst } = await one(`select id from institutes where slug = 'demo'`);
   const { start } = await one('select now() as start');

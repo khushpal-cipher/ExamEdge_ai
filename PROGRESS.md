@@ -115,7 +115,13 @@ DONE in session 31 (2026-10-18), commit `edaff6c` + docs/PROGRESS commit:
 5. Gate (2026-10-18, before the PR): `npm run format:check` PASS, `npm run lint` PASS (+ forbidden ok),
    `npm run typecheck` PASS, `npm test` 154/154, `npm run test:db` Files=19 Tests=1321 PASS, `npm run test:int` 28/28,
    `npm run build` + `check-bundle: ok`. E2E → CI on the PR.
-NEXT: open PR `r11-teacher-ai` → main, CI green (fix E2E if it fails, never weaken), squash-merge, record here.
+6. **PR #22 opened** (https://github.com/khushpal-cipher/ExamEdge_ai/pull/22), Auto-fix on. First CI run
+   39088288336: `secrets` pass, `check` **failed at E2E** (2 tests, test code only): `ai-notes.spec.ts:40`
+   `getByRole('heading', { name: 'Notes' })` also matched the h1 "AI notes …" → `exact: true`;
+   `question-gen.spec.ts` hit the default 30 s test timeout (long journey) → `test.setTimeout(120_000)` like
+   `assessments.spec.ts`. No assertion changed. Fix pushed in the session-31 handoff commit; **CI on it not yet seen.**
+NEXT: `gh pr checks 22`; if green → squash-merge (`gh pr merge 22 --squash`), record the merge commit + run id here,
+`git checkout main && git pull`. If E2E still fails: `gh run view <run> --log-failed`, fix (never weaken), push.
 
 ### R1.1 founder change list (session 27, 2026-10-17) — build order in "Next exact action"
 - Step 1 MERGED (#19), step 2 MERGED (#20). Step 3 DB part committed on `r11-structure` (`58de935`, pushed).
@@ -362,7 +368,8 @@ Steps 3–7 depend on step 1; step 4 depends on step 3 — re-verify step 3's RL
 (https://github.com/khushpal-cipher/ExamEdge_ai/pull/21), Auto-fix on, NOT merged.** First CI run (39051354988)
 failed only at `format:check` on `.claude/launch.json` (fixed in the handoff commit), so **E2E has not run yet**.
 **Next exact action (session 31):**
-1. Step 5 is built (session 31): finish its PR (In progress → NEXT): CI green, squash-merge, record.
+1. Step 5 is built (session 31): PR #22, first CI failed on 2 E2E test-code issues, fixed and pushed (In progress →
+   item 6 / NEXT): check CI, squash-merge, record.
 2. After step 5 merges: step 6 (C2 Contest page + C1 batch switcher), step 7 (D2 platform tokens + cost), step 8.
 **R1.1 progress (8 build steps):** 1 ADRs ✅ merged · 2 library removed ✅ merged · 3 DB structure ✅ merged (#21) ·
 4 topic page / upload / topic-only practice ✅ merged (#21) · 5 AI notes + AI test 🟡 built on `r11-teacher-ai`, local
