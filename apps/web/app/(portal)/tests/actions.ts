@@ -153,7 +153,8 @@ export async function addTypedQuestion(form: FormData) {
   if (!isUuid(test)) done('/tests', { code: '23514' });
   const here = `/tests/${test}`;
   const marks = num(form, 'marks');
-  const negative = type === 'written' ? 0 : (num(form, 'negative_marks') ?? 0);
+  // "1" and "-1" both mean one mark taken off for a wrong answer
+  const negative = type === 'written' ? 0 : Math.abs(num(form, 'negative_marks') ?? 0);
   if (!isUuid(chapter) || !TYPES.includes(type) || !marks || marks <= 0) done(here, { code: '23514' });
   const { key, row } = fromForm(form, type);
   const { error } = await db.rpc('add_test_questions', {
@@ -228,7 +229,7 @@ export async function addTestQuestion(form: FormData) {
     institute_id: institute.id,
     position: (last?.position ?? 0) + 1,
     marks: num(form, 'marks') ?? 4,
-    negative_marks: num(form, 'negative_marks') ?? 0,
+    negative_marks: Math.abs(num(form, 'negative_marks') ?? 0),
   });
   done(`/tests/${id}`, error);
 }
@@ -240,7 +241,7 @@ export async function updateTestQuestion(form: FormData) {
   if (!isUuid(id) || !isUuid(question)) done('/tests', { code: '23514' });
   const { error } = await db
     .from('test_questions')
-    .update({ marks: num(form, 'marks') ?? 0, negative_marks: num(form, 'negative_marks') ?? 0 })
+    .update({ marks: num(form, 'marks') ?? 0, negative_marks: Math.abs(num(form, 'negative_marks') ?? 0) })
     .eq('institute_id', institute.id)
     .eq('test_id', id)
     .eq('question_id', question);

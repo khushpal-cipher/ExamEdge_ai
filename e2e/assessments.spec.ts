@@ -69,7 +69,7 @@ test('teacher builds a mixed test, student takes it, teacher checks and releases
     await form.getByLabel('Option A', { exact: true }).fill('2');
     await form.getByLabel('Option B', { exact: true }).fill('3');
     await form.getByLabel('Option A is correct').check();
-    await form.getByLabel('Negative marks for a wrong answer').fill('1');
+    await form.getByLabel('Negative marks for a wrong answer').fill('-1'); // typed as minus: stored as 1;
   }, stems.single);
   await add(async () => {
     await form.getByRole('combobox', { name: 'Type' }).selectOption('multi');

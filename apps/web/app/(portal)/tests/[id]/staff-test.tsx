@@ -233,7 +233,6 @@ export async function StaffTest({ ctx, test }: { ctx: Ctx; test: Test }) {
                             <input
                               name="negative_marks"
                               type="number"
-                              min={0}
                               step={0.25}
                               defaultValue={q.negative_marks}
                               aria-label={`Negative marks for question ${i + 1}`}
@@ -430,7 +429,7 @@ async function AddQuestion({ ctx, test, have }: { ctx: Ctx; test: Test; have: Se
       </label>
       <label>
         Negative
-        <input name="negative_marks" type="number" min={0} step={0.25} defaultValue={0} style={{ width: 80 }} />
+        <input name="negative_marks" type="number" step={0.25} defaultValue={0} style={{ width: 80 }} />
       </label>
       <button type="submit" className="primary">
         Add question

@@ -163,7 +163,7 @@ export function QuestionForm({
           {type !== 'written' && (
             <label>
               Negative marks for a wrong answer
-              <input name="negative_marks" type="number" min={0} step={0.25} defaultValue={0} style={{ width: 80 }} />
+              <input name="negative_marks" type="number" step={0.25} defaultValue={0} style={{ width: 80 }} />
             </label>
           )}
         </div>
