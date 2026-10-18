@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-18 (session 39)
+Last updated: 2026-10-19 (session 39, handoff)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -36,7 +36,8 @@ green, after merging `main` into `r12-bill` because force-push is not allowed) �
 (ADR-046); then `main` merged into `r12-reviews` (`e2a01b4`; PROGRESS kept from `r12-reviews`, DECISIONS kept both ADRs;
 pgTAP Files=25 Tests=1435 PASS, typecheck PASS), CI run 39147981293 green, PR #33 (`03afbca`) reviews + replies
 (ADR-047). `main` = `03afbca`.
-**Session 39 (open):** CBT tests (ADR-048) on branch `r12-cbt`, PR below.
+**Session 39 (open, NOT merged):** PR #34 CBT tests (ADR-048), branch `r12-cbt`. First CI run 39153129147 failed
+only on the new E2E locator (fixed in `b61f991`, CI re-running at handoff). Founder has not said "merge" for #34.
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
@@ -137,15 +138,32 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 40)
-State (2026-10-18, session 39): `main` = `03afbca`; PR #32 and #33 merged. CBT PR (`r12-cbt`, ADR-048) open —
-merge only when the founder says so; migration 32 is applied to the local DB. Local DB has migrations up
-to 31 (all on `main` now). Founder's own reviews/replies in the local DB are real data — keep them.
-1. `git checkout main && git pull`; `docker info`; `supabase status`.
-2. Founder still to do: set "₹ per US$" at admin.localhost:3000 → Institute bills. Commission per institute: ask for
+State at handoff (2026-10-19, session 39): `main` = `86b677a` (PR #32 `16b7547` + PR #33 `03afbca` merged this
+session, then the PROGRESS commit). **One PR open: #34 `r12-cbt`** (https://github.com/khushpal-cipher/ExamEdge_ai/pull/34),
+CBT tests (ADR-048, migration 32), commits `44fadcb` (DB), `7b19a9c` (web, docs, E2E), `b61f991` (E2E fix).
+- CI run 39153129147 (`7b19a9c`): check failed, only `e2e/cbt.spec.ts:31` — `getByLabel(/^CBT mode/)` never matched
+  because Playwright tests the regex on the raw label text, which starts with a space (" CBT mode: …"). Fixed in
+  `b61f991` (`/CBT mode/`, plus `exact: true` on the "CBT test:" note); reproduced the cause locally against the
+  production build. **The rest of `cbt.spec.ts` has not run in CI yet** (it stopped at line 31). The student part
+  (full screen → 3 warnings → auto-submit, answer kept) was checked by hand with headless Chromium on the production
+  build (see Completed). Auto-fix is on for the session's PRs.
+- Local working tree: branch `r12-cbt` (the founder's `next dev` on :3000 serves it, so CBT is visible there).
+  Local DB has migrations up to 32 (32 = CBT, applied with `supabase migration up`; it is not on `main` yet).
+- Founder's own reviews/replies in the local DB are real data — keep them. Never reset the DB without asking.
+- Force-push is blocked: never rebase; update a branch by merging `main` into it.
+
+Steps:
+1. `git checkout r12-cbt && git pull`; `docker info`; `supabase status`.
+2. `gh pr checks 34`. If red: `gh run view <id> --log-failed`, fix (never weaken an assertion), push. If green: ask
+   the founder "merge #34?"; on yes `gh pr merge 34 --squash`, record the merge commit here, `git checkout main && git pull`.
+3. Founder may try CBT on :3000 (Google Chrome, not the in-app pane, which refuses full screen): teacher.jee →
+   Tests → New test (a class 10 subject) → tick **CBT mode** → add a question → Schedule; student2 opens it in Chrome.
+4. Founder still to do: set "₹ per US$" at admin.localhost:3000 → Institute bills. Commission per institute: ask for
    the formula when they are ready (ADR-041).
-3. Optional, ask first: "End test now" button for teachers; test Settings still shows "Batches taking the test"
-   checkboxes; reviews: delete/hide, notify the student of a reply.
-4. Otherwise ask the founder for the next change list. Phase 10 cloud parts stay BLOCKED (see Blocked).
+5. Optional, ask first: teacher sees CBT warnings only after release (rank list + CSV) — a live count during the
+   test was not asked; "End test now" button; test Settings still shows "Batches taking the test" checkboxes;
+   reviews: delete/hide, notify the student of a reply.
+6. Otherwise ask the founder for the next change list. Phase 10 cloud parts stay BLOCKED (see Blocked).
 
 ## Next exact action (session 39) — history
 State at handoff (2026-10-18, session 38): `main` = `8499b5e` (PR #30 + #31 merged this session). **Two PRs open,
@@ -534,6 +552,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 39 | 2026-10-18/19 | Founder said merge: PR #32 (`16b7547`) and #33 (`03afbca`) merged after merging `main` into `r12-reviews` (pgTAP 1435). Founder asked for CBT tests: full screen, tab/app switch + reload count, 3rd warning auto-submits, Chrome only, warnings on results (ADR-048, migration 32, pgTAP 1456, E2E `cbt.spec.ts`); PR #34, first CI failed on an E2E locator, fixed | `b61f991` (branch `r12-cbt`) |
 | 37 | 2026-10-18 | Founder: "Type a question" gets negative marks; theory model answer optional (migration 25); multi-correct = JEE Advanced marking (migration 26, ADR-045); owner "AI usage" → ₹ Bill at a platform-set rate (migration 27); pgTAP 1372; MCQ-only results question answered (release is manual) — decision open | branches `r12-typed-marks` (PR #30), `r12-bill` |
 | 36b | 2026-10-18 | PR #26/#27 merged (R1.2 done); founder follow-ups: Add questions at the top of a draft test (PR #28 `ac20bed`), teacher notes publish themselves (ADR-044, PR #29 `3261716`); stale :3000 dev server restarted | `3261716` |
 | 36 | 2026-10-18 | R1.2 item 1 web part finished (topic page fixed, New test subject picker, bank form removed, E2E rewritten, label width fix); local gate green, browser check at 375 px; PR #26 merge refused by the auto-mode classifier | see `git log` |

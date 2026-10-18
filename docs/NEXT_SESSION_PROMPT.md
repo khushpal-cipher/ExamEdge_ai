@@ -74,6 +74,10 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
   right/wrong right after submitting, correct answers only after closing time, rank with release (ADR-046, PR #32);
   student reviews of the coaching readable and answerable only by owner/admin, with "Hide my name" that still lets
   the student read the reply (ADR-047, PR #33). Both CI green, waiting for the founder's "merge".
+- Session 39 (2026-10-18/19): #32 and #33 merged. Founder asked for CBT tests (ADR-048, PR #34): a "CBT mode" tick
+  box for staff on New test/Settings (never on students' practice quizzes); the test runs in full screen; leaving
+  full screen, switching tab/app or reloading is a warning; the 3rd submits the test; Google Chrome only; teachers see
+  warnings on results. Waiting for CI green and the founder's "merge" (PROGRESS.md "Next exact action").
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full
