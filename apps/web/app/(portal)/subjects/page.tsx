@@ -56,7 +56,9 @@ export default async function Subjects({ searchParams }: { searchParams: Search 
                 .map((s) => (
                   <li key={s.id}>
                     <Link href={`/subjects/${s.id}`}>{s.name}</Link>{' '}
-                    <span className="small muted">{s.chapters[0]?.count ?? 0} topics</span>
+                    <span className="small muted">
+                      {s.chapters[0]?.count ?? 0} topic{s.chapters[0]?.count === 1 ? '' : 's'}
+                    </span>
                   </li>
                 ))}
             </ul>

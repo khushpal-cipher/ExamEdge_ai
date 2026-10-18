@@ -133,7 +133,9 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
             <Link href={`/subjects/${topic.subject_id}`}>{subject.name}</Link>
           </p>
           <h1>{topic.name}</h1>
-          <p className="muted">{subtopics.length} subtopics</p>
+          <p className="muted">
+            {subtopics.length} subtopic{subtopics.length === 1 ? '' : 's'}
+          </p>
         </div>
       </div>
       <Flash searchParams={props.searchParams} />

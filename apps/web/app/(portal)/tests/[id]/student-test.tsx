@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { formatDuration, formatTime, pct, requestTime, testPhase } from '@/lib/assess';
+import { studentBatches } from '@/lib/student';
 import type { requireMember } from '@/lib/tenant';
 import { startAttempt } from '../actions';
 import { Runner, type RunnerQuestion } from './runner';
@@ -42,10 +43,22 @@ function answerKey(r: Review) {
   return letters(r.key.correct) ?? '';
 }
 
-const START_ERRORS: Record<string, string> = {
-  closed: 'This test is not open right now.',
-  past_batch: 'You have moved to a new batch, so tests of this batch can no longer be started.',
-};
+const START_ERRORS: Record<string, string> = { closed: 'This test is not open right now.' };
+// Also the answer to ?error=past_batch (start refused): the body shows it, so it is not in START_ERRORS.
+const PAST_BATCH = 'You have moved to a new batch, so tests of this batch can no longer be started.';
+
+// Same rule as start_attempt's not_current_member: the student must still be in one of the test's batches.
+async function inCurrentBatch({ db }: Ctx, testId: string) {
+  const current = (await studentBatches()).list.filter((b) => !b.leftAt).map((b) => b.id);
+  const { data, error } = await db
+    .from('test_audience')
+    .select('batch_id')
+    .eq('test_id', testId)
+    .in('batch_id', current)
+    .limit(1);
+  if (error) throw error;
+  return data.length > 0;
+}
 
 export async function StudentTest({ ctx, test, error }: { ctx: Ctx; test: Test; error?: string }) {
   const { db, member } = ctx;
@@ -78,6 +91,7 @@ export async function StudentTest({ ctx, test, error }: { ctx: Ctx; test: Test; 
         Submitted. Your marks and rank appear here after your teachers check the written answers and release results.
       </p>
     );
+  else if (phase === 'open' && !(await inCurrentBatch(ctx, test.id))) body = <p className="notice">{PAST_BATCH}</p>;
   else if (phase === 'open')
     body = (
       <section className="card stack">

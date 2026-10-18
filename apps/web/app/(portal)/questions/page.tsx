@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { TYPE_SHORT } from '@/lib/assess';
-import { isUuid, requireMember, STAFF } from '@/lib/tenant';
+import { isUuid, MANAGERS, requireMember, STAFF } from '@/lib/tenant';
 import { deleteQuestion } from '../tests/actions';
 import { approveQuestion } from './actions';
 import { AiBadge } from './ai-badge';
@@ -12,18 +12,26 @@ export default async function QuestionBank({
 }: {
   searchParams: Promise<{ subject?: string; ok?: string; error?: string }>;
 }) {
-  const { institute, db } = await requireMember(STAFF);
+  const { institute, member, db } = await requireMember(STAFF);
   const { subject: wanted } = await searchParams;
-  const { data: subjects } = await db
-    .from('subjects')
-    .select('id, name, batches(name), chapters(id, name, position)')
-    .eq('institute_id', institute.id)
-    .order('name');
-  const list = (subjects ?? []).map((s) => ({
-    ...s,
-    name: `${s.name} · ${(s.batches as unknown as { name: string }).name}`,
-    chapters: [...(s.chapters ?? [])].sort((a, b) => a.position - b.position),
-  }));
+  const [{ data: subjects }, { data: mine }] = await Promise.all([
+    db
+      .from('subjects')
+      .select('id, name, batch_id, batches(name), chapters(id, name, position)')
+      .eq('institute_id', institute.id)
+      .order('name'),
+    db.from('batch_members').select('batch_id').eq('institute_id', institute.id).eq('membership_id', member.id),
+  ]);
+  // Teachers see only subjects of the batches they teach (UI filter, as on the Subjects page; ADR-038).
+  const teaching = new Set((mine ?? []).map((r) => r.batch_id));
+  const manager = MANAGERS.includes(member.role);
+  const list = (subjects ?? [])
+    .filter((s) => manager || teaching.has(s.batch_id))
+    .map((s) => ({
+      ...s,
+      name: `${s.name} · ${(s.batches as unknown as { name: string }).name}`,
+      chapters: [...(s.chapters ?? [])].sort((a, b) => a.position - b.position),
+    }));
   const subject = list.find((s) => s.id === wanted) ?? list[0];
   const { data: questions } =
     subject && isUuid(subject.id)
@@ -82,7 +90,7 @@ export default async function QuestionBank({
                     <tr>
                       <th>Question</th>
                       <th>Type</th>
-                      <th>Chapter</th>
+                      <th>Topic</th>
                       <th>Used in tests</th>
                       <th>
                         <span className="sr-only">Actions</span>
