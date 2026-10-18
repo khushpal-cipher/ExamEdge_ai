@@ -15,6 +15,14 @@ import { Tabs } from './tabs';
 type Doc = { id: string; title: string; status: string; subtopic_id: string; kind: string };
 type Artifact = { id: string; owner_scope: string; kind: string; status: string };
 type Subtopic = { id: string; name: string; position: number };
+// Smart Study tile icons (24×24 outline paths), NotebookLM Studio style (ADR-043).
+const ICON: Record<string, string> = {
+  summary: 'M6 3h9l3 3v15H6zM9 9h6M9 13h6M9 17h4',
+  flashcards: 'M4 7h12v12H4zM8 7V4h12v12h-4',
+  mind_map:
+    'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM4 4h2v2H4zM18 4h2v2h-2zM4 18h2v2H4zM18 18h2v2h-2zM6 6l4 4M18 6l-4 4M6 18l4-4M18 18l-4-4',
+  quiz: 'M4 4h16v16H4zM9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5V14M12 17h.01',
+};
 
 // The topic page (ADR-038): Subtopics (notes, uploaded or written with AI inside a subtopic) | Smart Study (students:
 // the AI over the whole topic) or AI test (staff, ADR-039).
@@ -248,29 +256,26 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
                     </section>
                     <section className="card stack" aria-labelledby="tools">
                       <h2 id="tools">Study tools</h2>
-                      {artifactList(
-                        'From your teachers',
-                        artifacts.filter((a) => a.owner_scope === 'institute'),
-                      )}
+                      <form action={generate} className="tiles" aria-label="Make study material">
+                        <input type="hidden" name="subject_id" value={topic.subject_id} />
+                        <input type="hidden" name="chapter_id" value={topic.id} />
+                        {Object.entries(STUDIO_KIND).map(([k, label]) => (
+                          <button key={k} type="submit" name="kind" value={k} className="tile">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d={ICON[k]} />
+                            </svg>
+                            {label}
+                          </button>
+                        ))}
+                      </form>
                       {artifactList(
                         'Made by you',
                         artifacts.filter((a) => a.owner_scope === 'student'),
                       )}
-                      <form action={generate} className="stack" aria-label="Make study material">
-                        <input type="hidden" name="subject_id" value={topic.subject_id} />
-                        <input type="hidden" name="chapter_id" value={topic.id} />
-                        <label className="stack small">
-                          Make
-                          <select name="kind">
-                            {Object.entries(STUDIO_KIND).map(([k, label]) => (
-                              <option key={k} value={k}>
-                                {label}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <button type="submit">Generate</button>
-                      </form>
+                      {artifactList(
+                        'From your teachers',
+                        artifacts.filter((a) => a.owner_scope === 'institute'),
+                      )}
                       <p className="small muted">
                         Made by AI from your teachers&apos; notes for this topic, just for you. Practice quizzes never
                         affect your rank.

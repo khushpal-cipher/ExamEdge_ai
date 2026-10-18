@@ -4,7 +4,8 @@
 // (requireMember); RLS then enforces the same rules again in the database. Ids from forms are only ever used
 // together with that server-side institute id.
 import { cookies, headers } from 'next/headers';
-import { refresh, revalidatePath } from 'next/cache';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { done, text } from './form';
 import { sendInvites } from '@/lib/email';
 import { BATCH_COOKIE, studentBatches } from '@/lib/student';
@@ -327,5 +328,6 @@ export async function chooseBatch(form: FormData) {
   const id = form.get('batch');
   if (typeof id !== 'string' || !list.some((b) => b.id === id)) return;
   (await cookies()).set(BATCH_COOKIE, id, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 400 * 24 * 3600 });
-  refresh();
+  // Home of the chosen batch: the page the student was on may belong to the other batch (ADR-043).
+  redirect('/home');
 }

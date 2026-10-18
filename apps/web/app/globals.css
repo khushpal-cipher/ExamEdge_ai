@@ -361,6 +361,40 @@ th {
   gap: 14px;
   align-items: start;
 }
+/* Smart Study tools as NotebookLM-style tiles (ADR-043). */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 84px;
+  padding: 12px;
+  text-align: left;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+.tile:hover {
+  border-color: var(--accent);
+}
+.tile svg {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  border-radius: 8px;
+  background: var(--accent);
+  fill: none;
+  stroke: var(--on-accent);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .pills {
   display: flex;
   flex-wrap: wrap;
