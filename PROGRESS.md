@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-18 (session 33, handoff)
+Last updated: 2026-10-18 (session 34)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -22,13 +22,15 @@ Last updated: 2026-10-18 (session 33, handoff)
 **R1.1 step 5 MERGED** (PR #22, squash `0cc9a2e`, CI green run 39088703249: check + secrets, 2026-10-18): AI notes + AI test (ADR-039).
 **R1.1 step 6 MERGED** (PR #23, squash `061dadf`, CI green run 39091413903: check incl. E2E + secrets, 2026-10-18): Contest page + batch switcher (ADR-040).
 **R1.1 step 7 MERGED** (PR #24, squash `4f3f78a`, CI green run 39091772704: check incl. E2E + secrets, 2026-10-18): platform "All institutes" shows AI tokens + cost this month per institute (ADR-041 part 1).
-**R1.1 next: step 8 only** (full gate + per-role browser check at 375 px) — see "Next exact action (session 34)".
+**R1.1 step 8 MERGED** (PR #25, squash `f0b1ec5`, CI green run 39107064953: check incl. pgTAP + E2E + secrets, 2026-10-18). **R1.1 is DONE** (all 8 steps); only ADR-041 part 2 (charges/bill) waits for the founder.
+**R1.2 = founder change list (session 34)** — planned, NOT started; see "Next exact action (session 35)".
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-18 | R1.1 step 8 merged (PR #25) | Past-batch test page shows the reason instead of "Start test" (+E2E in `contests.spec.ts`); teacher question bank lists only subjects of their batches; "Topic" / "Topic strength" wording; singular "1 topic"/"1 subtopic"; `launch.json` `web-attach`. Local: format, lint, typecheck, unit 154, int 28, build + bundle ok; pgTAP 1334 on `c5df7cd`. CI run 39107064953 green (incl. pgTAP + E2E); `gh pr merge 25 --squash` → `f0b1ec5`. |
 | 2026-10-18 | R1.1 step 7 merged (PR #24) | `public.platform_usage()` + "AI this month" column on `/platform`; pgTAP 1334 PASS, unit 154, int 28, build PASS locally; CI run 39091772704 green (incl. E2E); `gh pr merge 24 --squash` → `4f3f78a`. |
 | 2026-10-18 | R1.1 step 6 merged (PR #23) | E2E locator fixes (`exact: true` region name; table link instead of chart `<title>`), commit `2d41986`; CI run 39091413903 green; `gh pr merge 23 --squash` → `061dadf`. |
 | 2026-10-18 | R1.1 step 5 merged (PR #22) | Second CI run 39088703249 on `e439730` green (check incl. E2E against the production build, secrets); `gh pr merge 22 --squash` → `0cc9a2e`. |
@@ -337,7 +339,51 @@ DONE + TESTED (2026-10-16, session 19):
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 28)
+## Next exact action (session 35) — R1.2 founder change list (session 34, 2026-10-18)
+R1.1 is merged and done (`main` = `f0b1ec5`). The founder described these changes in session 34 and said "that's all the
+changes"; **build only after the founder says go** (they approved the plan's direction, not the start).
+Each item: what the founder wants → how it is today → build notes.
+
+**1. New test on the Tests page (replaces the topic's "AI test" tab and the bank's "Add question" form)**
+- Founder wants: Tests → New test: the teacher picks **batch + subject** only (no topic picker), sets **date, time,
+  duration**, then fills it one of two ways: **With AI** = a chat box where the teacher writes which topics, how many
+  questions, which types and how hard ("10 MCQs + 5 theory on Networking and HTML, medium"); **Manual** = type the
+  questions on the same page (MCQ: stem, options, correct; theory: question + model answer). Then review → Schedule.
+  Remove the **AI test** tab from the topic page and the **Add question** form from the question bank (bank stays as
+  the store: list, edit, approve; questions made on the test page are saved there for reuse).
+- Today: topic page tab "AI test" (`makeAiTest`, counts + difficulty, one topic, default tomorrow 10:00–11:00);
+  bank "New question" form; Tests page "New test" (title, times, batches) + add questions from the bank.
+- Build notes: AI request = free text → gateway call that turns it into a spec (topics of that subject by name,
+  counts per type, difficulty), validated against the subject's real topics, then the existing `generate` per topic
+  with that topic's notes; `add_ai_test` is per chapter today → new/extended RPC for a subject-level test with
+  questions from several topics (composite FKs, RLS, pgTAP). Prompt injection: the chat text is the teacher's own
+  request, never shown to students; keep metering (`question_gen`) and the staff-only rule. Manual = server action
+  that inserts questions (+ keys) and `test_questions` in one RPC.
+**2. Batch switcher: one click** — picking a batch in the dropdown switches at once (no "Show" button).
+  Today: select + Show (`chooseBatch` form). Build: submit on change (small client component; keep a no-JS fallback).
+**3. After switching batch → Home of the new batch** — today the student stays on the old batch's subject page
+  (founder saw "computer" of Class 10 after switching to jee 2027). Build: `chooseBatch` redirects to `/home`.
+**4. Smart Study tools look like NotebookLM "Studio"** (founder's screenshots) — today: "Make" dropdown (Summary,
+  Flashcards, Mind map, Practice quiz) + Generate. Build: a grid of tiles with icons in the site's colours, one per
+  tool, tap = make; below it the list of what the student already made for this topic (open again). Audio, video,
+  slides, reports, infographic, data table = later, not now.
+**Waiting for the founder (do not build):** owner sidebar "AI usage" → renamed to a bill that shows only "how much to
+pay this month" (no tokens), then a payment gateway — the founder decides each institute's charge **at the end, when
+the website is fully ready** (ADR-041 part 2). Paid gateway account = ask first.
+
+**Build order (model/effort per founder rule):**
+1. ADR(s) for items 1–4 + HOW_IT_WORKS / DATABASE_DESIGN / AI_PIPELINE updates; design the AI chat → test-spec
+   contract and the subject-level test RPC → Model: opus · Effort: high · Why: planning + data model + AI design.
+2. Items 2 + 3 (switcher auto-submit, redirect to Home) + E2E → sonnet · low · Why: small, clear UI change.
+3. Item 4 Smart Study tiles + "made before" list (+ 375 px, axe) → sonnet · medium · Why: UI restructure, reuse Studio actions.
+4. Item 1 DB part: migration (subject-level AI test / manual test RPC), RLS + pgTAP isolation → opus · high · Why:
+   tenancy/RLS on core tables, answer keys must stay hidden from students. Depends on step 1 — re-verify the design first.
+5. Item 1 app part: New test page (batch → subject, times, With AI / Manual), remove topic AI test tab + bank Add
+   question form, seed/E2E updates → sonnet · high · Why: AI gateway, metering, approval flow, many files.
+6. Full gate (TEST_STRATEGY §6), browser check per role at 375 px, PR, CI, merge → sonnet · medium.
+Steps 2 and 3 do not depend on 1 and can go first; step 5 depends on step 4.
+
+## Next exact action (session 28) — history (R1.1, done)
 **Founder's change list "R1.1" (session 26, 2026-10-17) — APPROVED: the founder said start building (session 27).**
 The founder collects every finding first; then one plan, one branch per group, everything fixed together.
 Each item: what the founder wants → how it is today → build notes.
@@ -435,21 +481,6 @@ Steps 3–7 depend on step 1; step 4 depends on step 3 — re-verify step 3's RL
 **Status (session 28 handoff): steps 3 + 4 built on `r11-structure`; PR #21 open
 (https://github.com/khushpal-cipher/ExamEdge_ai/pull/21), Auto-fix on, NOT merged.** First CI run (39051354988)
 failed only at `format:check` on `.claude/launch.json` (fixed in the handoff commit), so **E2E has not run yet**.
-**Session 34 (2026-10-18), branch `r11-final-check` (step 8, NOT finished — usage limit):** local gate on `c5df7cd` green
-(format, lint, typecheck, unit 154, pgTAP Files=21 Tests=1334, int 28/28, build + check-bundle ok). Fixed: test page no
-longer shows "Start test" for a past batch's open test (shows the reason; E2E added in `contests.spec.ts`); question
-bank lists only subjects of batches the teacher teaches (same UI filter as Subjects); bank column "Chapter" → "Topic".
-Browser (prod build :3001, 375 px, scrollWidth ≤ 375): student1 home/Contest/progress/topic + Smart Study tab; student2
-(NEET) → JEE maths subject/topic 404; student1 on vedam → "not a member"; teacher.jee dashboard/subjects/topic
-(Upload notes, Write notes with AI, AI test tab)/bank/tests/batches. No rows added. Pane was left signed in as
-teacher.jee on newtown (was student1). Then (same session, after the limit reset): "Topic strength" label + singular "1 topic"/"1 subtopic" (commit after
-`02fd0de`). Final local gate: format, lint, typecheck, unit 154, int 28/28, build + check-bundle ok; pgTAP 070 (tests
-17, 27) + 130 (test 6) FAILED locally only because the founder uploaded a new file "sql" in newtown at 09:33 IST that
-sits queued (worker not running) — those tests count queued jobs/files across the whole DB; the same suite passed
-(1334) on `main` earlier this session with no code change to the DB since. Not touched (founder's upload). CI runs
-pgTAP on a clean DB. **PR #25 opened** (https://github.com/khushpal-cipher/ExamEdge_ai/pull/25), Auto-fix on.
-NEXT: CI on PR #25 green → `gh pr merge 25 --squash`, record commit + run id, then R1.1 is done (only ADR-041 part 2
-waits for the founder's commission formula). Tutor/AI notes not re-clicked (covered by E2E).
 **Next exact action (session 34):** steps 1–7 are merged (`main` = `4f3f78a`). Do step 8 only:
 1. `git checkout main && git pull && git checkout -b r11-final-check`.
 2. Local gate: `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:db`,
@@ -623,6 +654,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 34 | 2026-10-18 | R1.1 step 8: local gate, browser check per role at 375 px, 3 fixes (past-batch test page, teacher bank filter, wording); PR #25 CI green, merged `f0b1ec5` → R1.1 done. Founder's R1.2 change list recorded + planned (not started) | `f0b1ec5` |
 | 32 | 2026-10-18 | PR #22 merged (`0cc9a2e`). Step 6: migration 21 (progress per batch, skip tests after leaving), Contest page, batch switcher, E2E; browser check with temporary rows (4 fixes); local gate green; PR #23 first CI failed on 2 E2E locators in the new spec, fixed and pushed | `6533b04` (branch `r11-contest`) |
 | 31 | 2026-10-18 | Step 5 finished: AI notes edit on the document page, browser check (3 copy fixes + return-to-test after saving a question), E2E (AI test rewrite, AI notes journey, Studio teacher test), docs; local gate green except E2E (CI) | see `git log` (branch `r11-teacher-ai`) |
 | 30 | 2026-10-17 | PR #21 E2E fixed (`demoTopic` batch order) and merged `22ac7f3`. Step 5: notes unit tests, written AI questions (`questions-v2`), worker Markdown, web AI notes / AI test / `/notes` page / bank form removed (typecheck + lint + unit green; no browser check, no E2E yet) | see `git log` (branch `r11-teacher-ai`) |
