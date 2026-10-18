@@ -138,7 +138,8 @@ State at handoff (2026-10-18, session 37): **two PRs open, both CI green, NOT me
   teacher.jee@newtown.test after 20:45 and check My progress.
 
 Steps:
-1. `git checkout r12-typed-marks && git pull`; `docker info`; `supabase status`.
+1. Stay on `r12-bill` (it holds this PROGRESS.md and both PRs): `git checkout r12-bill && git pull`; `docker info`;
+   `supabase status`.
 2. Ask the founder "merge #30 and #31?". On yes: `gh pr merge 30 --squash --delete-branch`; then retarget #31
    (`gh pr edit 31 --base main`), rebase `r12-bill` onto `main` if needed (drop #30's commits), push, wait for CI
    (Auto-fix is on), `gh pr merge 31 --squash`. Record merge commits here.
