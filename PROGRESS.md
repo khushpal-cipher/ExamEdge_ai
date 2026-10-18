@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-18 (session 33)
+Last updated: 2026-10-18 (session 33, handoff)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -21,13 +21,16 @@ Last updated: 2026-10-18 (session 33)
 **R1.1 steps 3+4 MERGED** (PR #21, squash `22ac7f3`, CI green run 39052604720 on `98546f6`: unit 147, pgTAP 1298, integration 26, E2E 26/26, 2026-10-17).
 **R1.1 step 5 MERGED** (PR #22, squash `0cc9a2e`, CI green run 39088703249: check + secrets, 2026-10-18): AI notes + AI test (ADR-039).
 **R1.1 step 6 MERGED** (PR #23, squash `061dadf`, CI green run 39091413903: check incl. E2E + secrets, 2026-10-18): Contest page + batch switcher (ADR-040).
-**R1.1 step 7 (D2 part 1: platform AI tokens + cost) BUILT** on branch `r11-platform-usage` (rebased onto `main` `061dadf`, commit `3dc3ec9`): local gate green except E2E; PR #24 open, CI → merge.
+**R1.1 step 7 MERGED** (PR #24, squash `4f3f78a`, CI green run 39091772704: check incl. E2E + secrets, 2026-10-18): platform "All institutes" shows AI tokens + cost this month per institute (ADR-041 part 1).
+**R1.1 next: step 8 only** (full gate + per-role browser check at 375 px) — see "Next exact action (session 34)".
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
 
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-18 | R1.1 step 7 merged (PR #24) | `public.platform_usage()` + "AI this month" column on `/platform`; pgTAP 1334 PASS, unit 154, int 28, build PASS locally; CI run 39091772704 green (incl. E2E); `gh pr merge 24 --squash` → `4f3f78a`. |
+| 2026-10-18 | R1.1 step 6 merged (PR #23) | E2E locator fixes (`exact: true` region name; table link instead of chart `<title>`), commit `2d41986`; CI run 39091413903 green; `gh pr merge 23 --squash` → `061dadf`. |
 | 2026-10-18 | R1.1 step 5 merged (PR #22) | Second CI run 39088703249 on `e439730` green (check incl. E2E against the production build, secrets); `gh pr merge 22 --squash` → `0cc9a2e`. |
 | 2026-10-17 | R1.1 steps 3+4 merged (PR #21) | The 6 E2E failures had one cause: `e2e/helpers.ts` `demoTopic` ordered batches by `created_at`, but the seed creates all batches in one transaction (equal `created_at`), so it sometimes picked NEET's empty Physics copy (teacher1/student05 not members → 404, no notes → `no_sources`). Fix: pick the subject by batch name (`JEE 2027 Morning`), commit `98546f6`; no assertion changed. CI run 39052604720 green (E2E 26/26); squash-merged `22ac7f3`. |
 | 2026-10-17 | R1.1 steps 3+4 app part (ADR-038, ADR-040), branch `r11-structure` commit `debaaae` — NOT merged | Migration `20261031000019_topic_scope.sql` (`conversations.chapter_id`, `match_chunks(..., topic)`, invoker `move_students`), applied with `supabase migration up`; new pgTAP `180_topic_scope.sql`. Web: batch create form takes subjects (comma-separated) + "Add subject" and "Move students to another batch" on the batch page; Subjects = per batch (teachers: own batches); subject page = topic list (+ reported answers); new `/topics/<id>` with tabs Subtopics (notes per subtopic, "Upload notes" inside each subtopic) and Smart Study (topic tutor + study tools); audience pickers read the subject's batch; question bank labels "Physics · JEE 2027 Morning". Seed, worker int fixtures, E2E specs (portals, documents, tutor, studio, question-gen, assessments) updated. Local: format, lint + forbidden, typecheck PASS; unit 147/147; `npm run test:db` Files=18 Tests=1298 PASS; `npm run test:int` 26/26; `npm run build` + bundle scan PASS. **E2E NOT run locally** (founder DB, no demo seed) → CI. Browser (production build `next start -p 3001`, newtown, 375 px): student Riya home → maths → probability topic, both tabs, scrollWidth 375; teacher.jee Subjects shows only jee 2027, added + deleted a temporary subtopic, Upload form opens inside it; teacher.neet → maths subject 404 (founder finding A3 fixed); no server errors. Owner pages not clicked in the browser (founder's Google account) — covered by E2E `portals.spec.ts` in CI. |
@@ -56,7 +59,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 | 2026-10-15 | Phase 3 local gate green | After `supabase db reset && npm run seed:demo`: `npm run check` exit 0 — format, lint + forbidden, typecheck, unit 18/18, pgTAP Files=6 Tests=394 PASS, build, E2E 12/12 (commit `9ecd143`). `npm run audit` → ok. Then aal check switched to `getClaims()` (ADR-022): typecheck, format, lint, build, platform E2E 1/1 pass. Fixes: `done()` redirect used `?` twice on `/people?tab=invitations` (flash lost, real bug); E2E waits for client navigation and refills the form React resets. Browser check (session 6): owner dashboard; student01 home + Physics workspace at 375 px, scrollWidth 375; owner@rival.test → Demo subject id 404; admin.localhost sign-in; demo.localhost/platform 404. |
 
 ## In progress
-### R1.1 step 6 — C2 Contest page + C1 batch switcher (session 32, 2026-10-18), branch `r11-contest`
+### R1.1 step 6 — C2 Contest page + C1 batch switcher (session 32, 2026-10-18) — MERGED (PR #23, `061dadf`)
 ADR-040. DONE + TESTED:
 - Migration `20261102000021_batch_view.sql` (**applied to the founder's local DB** with `supabase migration up`):
   `student_progress`, `tutor_activity`, `practice_activity` take an optional `batch` (null = all, teachers'
@@ -99,7 +102,7 @@ ADR-040. DONE + TESTED:
 NEXT: `gh pr checks 23`; if green → `gh pr merge 23 --squash`, record merge commit + run id here,
 `git checkout main && git pull`. If E2E still fails: `gh run view <run> --log-failed`, fix (never weaken), push.
 
-### R1.1 step 7 — D2 part 1: platform AI tokens + cost per institute (session 33, 2026-10-18), branch `r11-platform-usage`
+### R1.1 step 7 — D2 part 1: platform AI tokens + cost per institute (session 33, 2026-10-18) — MERGED (PR #24, `4f3f78a`, CI run 39091772704)
 ADR-041. Rebased onto `main` (`061dadf`) after #23 merged.
 DONE + TESTED (commit `3dc3ec9`):
 - Migration `20261103000022_platform_usage.sql` — **applied to the founder's local DB** with `supabase migration up`:
@@ -432,13 +435,25 @@ Steps 3–7 depend on step 1; step 4 depends on step 3 — re-verify step 3's RL
 **Status (session 28 handoff): steps 3 + 4 built on `r11-structure`; PR #21 open
 (https://github.com/khushpal-cipher/ExamEdge_ai/pull/21), Auto-fix on, NOT merged.** First CI run (39051354988)
 failed only at `format:check` on `.claude/launch.json` (fixed in the handoff commit), so **E2E has not run yet**.
-**Next exact action (session 33):**
-1. Step 6 merged (#23). Step 7: PR #24 — `gh pr checks 24`; green → `gh pr merge 24 --squash`, record here.
-3. Then step 8 (full gate + per-role browser check at 375 px).
+**Next exact action (session 34):** steps 1–7 are merged (`main` = `4f3f78a`). Do step 8 only:
+1. `git checkout main && git pull && git checkout -b r11-final-check`.
+2. Local gate: `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:db`,
+   `npm run test:int`, `npm run build`. E2E needs `npm run seed:demo` → the local DB holds the founder's institutes:
+   do NOT seed/reset without asking; E2E runs in CI on the PR (CI on `4f3f78a` was already green).
+3. Browser check with `npm run dev` (+ `npm run dev:worker`) on http://newtown.localhost:3000 at 375 px
+   (scrollWidth ≤ 375, no server errors): teacher (topics, subtopic upload, AI notes, AI test, question approve),
+   student (home, Contest, Smart Study tutor + tools, My progress, batch switcher when 2+ batches), cross-institute
+   404s. Owner and `/platform` need the founder's Google / MFA sign-in → covered by E2E (`portals.spec.ts`), say so.
+   Any temporary rows you add: remove them and record it.
+4. Fix what you find (with a test), commit, PR, CI green, merge; record here. Then R1.1 is done.
+5. Known small gap from step 6: the test page still shows "Start test" for a past batch's open test (DB refuses
+   with a message; Contest/Home hide it) — fix in step 8 if cheap.
+6. Waiting for the founder (do not build without the founder's formula): ADR-041 part 2 — per-institute commission, owner's
+   "This month's AI charge: ₹X", hiding the owner's `/usage` page.
 **R1.1 progress (8 build steps):** 1 ADRs ✅ merged · 2 library removed ✅ merged · 3 DB structure ✅ merged (#21) ·
 4 topic page / upload / topic-only practice ✅ merged (#21) · 5 AI notes + AI test ✅ merged (#22) · 6 Contest page +
-batch switcher ✅ merged (#23) · 7 platform tokens + cost 🟡 built on `r11-platform-usage`, PR left · 8 full gate + per-role browser
-check ⬜. ≈ 5.5 of 8 steps done; by founder groups: E, A, B done; C built (PR #23, CI fix pushed); D not started.
+batch switcher ✅ merged (#23) · 7 platform tokens + cost ✅ merged (#24) · 8 full gate + per-role browser
+check ⬜. 7 of 8 steps done; by founder groups: E, A, B, C done; D part 1 done, part 2 waits for the founder's formula.
 After merge: steps 5 (B1 AI notes, B2 AI test), 6 (C2 Contest
 page + C1 batch switcher), 7 (D2 platform tokens + cost), 8. Teachers still have the tutor/Studio on the topic page
 until step 5 removes them (ADR-039). The list below is the step 3/4 work list, kept for reference (done).
