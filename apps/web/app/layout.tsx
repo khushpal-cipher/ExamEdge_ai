@@ -7,7 +7,7 @@ const ui = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-ui' });
 const read = Source_Serif_4({ subsets: ['latin'], variable: '--font-read' });
 
 export const metadata: Metadata = {
-  title: 'ExamEdge AI',
+  title: { default: 'ExamEdge AI', template: '%s · ExamEdge AI' },
   description: 'AI learning platform for coaching institutes',
   robots: { index: false, follow: false },
 };

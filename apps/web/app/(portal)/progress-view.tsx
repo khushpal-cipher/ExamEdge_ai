@@ -294,26 +294,59 @@ export function ProgressView({
 
       <section className="card stack" aria-labelledby="practice">
         <h2 id="practice">Self practice and study activity</h2>
+        <h3>Doubts asked to the AI tutor</h3>
         {doubts.length ? (
-          <ul aria-label="Doubts asked to the AI tutor">
-            {doubts.map((d) => (
-              <li key={d.subject}>
-                {d.subject}: {d.doubts} {d.doubts === 1 ? 'doubt' : 'doubts'} asked, last on {formatTime(d.last_at)}
-              </li>
-            ))}
-          </ul>
+          <div className="table-wrap">
+            <table aria-label="Doubts asked to the AI tutor">
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th className="num">Doubts</th>
+                  <th>Last asked</th>
+                </tr>
+              </thead>
+              <tbody>
+                {doubts.map((d) => (
+                  <tr key={d.subject}>
+                    <td>{d.subject}</td>
+                    <td className="num">{d.doubts}</td>
+                    <td>{formatTime(d.last_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           <p className="muted">No doubts asked to the AI tutor yet.</p>
         )}
+        <h3>Practice quizzes</h3>
         {practice.length ? (
-          <ul aria-label="Practice quizzes">
-            {practice.map((q) => (
-              <li key={`${q.subject}/${q.chapter}`}>
-                {q.subject} · {q.chapter}: {q.quizzes} practice {q.quizzes === 1 ? 'quiz' : 'quizzes'}, average{' '}
-                {Number(q.average).toFixed(0)}%, last on {formatTime(q.last_at)}
-              </li>
-            ))}
-          </ul>
+          <div className="table-wrap">
+            <table aria-label="Practice quizzes">
+              <thead>
+                <tr>
+                  <th>Topic</th>
+                  <th className="num">Quizzes</th>
+                  <th className="num">Average</th>
+                  <th>Last practised</th>
+                </tr>
+              </thead>
+              <tbody>
+                {practice.map((q) => (
+                  <tr key={`${q.subject}/${q.chapter}`}>
+                    <td>
+                      {q.chapter}
+                      <br />
+                      <span className="small muted">{q.subject}</span>
+                    </td>
+                    <td className="num">{q.quizzes}</td>
+                    <td className="num">{Number(q.average).toFixed(0)}%</td>
+                    <td>{formatTime(q.last_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           <p className="muted">No practice quizzes taken yet.</p>
         )}

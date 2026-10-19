@@ -184,3 +184,5 @@ export default async function People({ searchParams }: { searchParams: Search })
     </>
   );
 }
+
+export const metadata = { title: 'People' };

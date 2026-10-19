@@ -110,3 +110,5 @@ export default async function Reviews({ searchParams }: { searchParams: Search }
     </>
   );
 }
+
+export const metadata = { title: 'Reviews' };

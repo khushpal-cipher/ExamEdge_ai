@@ -172,3 +172,5 @@ export default async function StudentHome() {
     </>
   );
 }
+
+export const metadata = { title: 'Home' };

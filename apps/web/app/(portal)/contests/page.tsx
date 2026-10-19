@@ -122,3 +122,5 @@ function Section({ id, title, children }: { id: string; title: string; children:
     </section>
   );
 }
+
+export const metadata = { title: 'Contest' };

@@ -143,3 +143,5 @@ export default async function Tests({ searchParams }: { searchParams: Search }) 
     </>
   );
 }
+
+export const metadata = { title: 'Tests' };

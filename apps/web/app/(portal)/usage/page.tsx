@@ -42,3 +42,5 @@ export default async function Bill() {
     </>
   );
 }
+
+export const metadata = { title: 'Bill' };

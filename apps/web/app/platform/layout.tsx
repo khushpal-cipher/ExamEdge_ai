@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { currentHost, isAdminHost } from '@/lib/tenant';
 
-export const metadata = { title: 'ExamEdge platform admin' };
+export const metadata = { title: 'Platform admin' };
 
 // proxy.ts already 404s /platform on other hosts; this keeps the guarantee if the matcher ever changes.
 export default async function PlatformLayout({ children }: { children: React.ReactNode }) {

@@ -94,3 +94,5 @@ export default async function Dashboard() {
     </>
   );
 }
+
+export const metadata = { title: 'Dashboard' };

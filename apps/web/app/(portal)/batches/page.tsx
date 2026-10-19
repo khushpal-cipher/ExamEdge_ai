@@ -100,3 +100,5 @@ export default async function Batches({ searchParams }: { searchParams: Search }
     </>
   );
 }
+
+export const metadata = { title: 'Batches' };

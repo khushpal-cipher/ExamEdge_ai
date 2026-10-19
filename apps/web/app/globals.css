@@ -52,7 +52,11 @@
   --r-sm: 6px;
   --r: 10px;
   --lift: 0 1px 0 rgb(23 34 46 / 4%), 0 8px 24px -12px rgb(23 34 46 / 18%);
-  --ease: 160ms cubic-bezier(0.2, 0, 0, 1);
+  --ease: 200ms cubic-bezier(0.2, 0.8, 0.2, 1); /* quick start, soft landing */
+  /* Raised surfaces: a white top highlight plus a soft, low shadow (light from above) */
+  --raised: inset 0 1px 0 #fff, 0 1px 2px rgb(23 34 46 / 6%);
+  --raised-hover: inset 0 1px 0 #fff, 0 2px 4px rgb(23 34 46 / 6%), 0 14px 30px -18px rgb(23 34 46 / 40%);
+  --btn-depth: inset 0 1px 0 rgb(255 255 255 / 16%), 0 1px 2px rgb(23 34 46 / 22%);
 }
 
 /* Base */
@@ -64,7 +68,12 @@ body {
   margin: 0;
 }
 body {
-  background: var(--bg);
+  /* A faint mint light at the top right gives the paper some depth; text sits on plain paper below it */
+  background:
+    radial-gradient(56rem 28rem at 100% -8rem, color-mix(in srgb, var(--mint) 45%, transparent), transparent 70%)
+      no-repeat,
+    var(--bg);
+  -webkit-tap-highlight-color: transparent;
   color: var(--ink);
   font-family: var(--font-ui), 'Helvetica Neue', Arial, sans-serif;
   font-size: var(--t-body);
@@ -85,8 +94,9 @@ h1 {
   font-family: var(--font-read), Georgia, serif;
   font-size: var(--t-h1);
   font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -0.015em;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
 }
 h2 {
   font-size: var(--t-h2);
@@ -102,6 +112,7 @@ h3 {
 p {
   margin: 0 0 var(--s2);
   max-width: 72ch;
+  text-wrap: pretty;
 }
 /* Links: blue + semibold, no underline; underline on hover, and always inside running text where it aids reading */
 a {
@@ -170,6 +181,11 @@ p:not(.top p) > a:not(.button),
   top: 0;
   height: 100vh;
 }
+/* Menu button (staff, phones only): three lines that turn into a cross */
+.burger {
+  display: none;
+}
+
 .brand {
   grid-area: brand;
   display: flex;
@@ -303,9 +319,11 @@ img.logo {
   border-top: 1px solid var(--line);
   border-radius: 0;
   padding: var(--s5) 0 0;
+  box-shadow: none;
 }
 .card {
-  background: var(--card);
+  background: linear-gradient(var(--card), color-mix(in srgb, var(--paper) 30%, var(--card)));
+  box-shadow: var(--raised);
   border: 1px solid var(--line);
   border-radius: var(--r);
   padding: var(--s5);
@@ -433,11 +451,28 @@ button.primary,
   background: var(--accent);
   border-color: var(--accent);
   color: var(--on-accent);
+  box-shadow: var(--btn-depth);
 }
 button.primary:hover:not(:disabled),
 .button.primary:hover {
   background: var(--accent-hover);
   border-color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow:
+    var(--btn-depth),
+    0 6px 14px -6px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+/* Google sign-in follows Google's button rules: white, grey outline, dark text, the full-colour G */
+button.google {
+  background: #fff;
+  border-color: #747775;
+  color: #1f1f1f;
+  gap: var(--s3);
+  box-shadow: var(--raised);
+}
+button.google:hover:not(:disabled) {
+  background: #f8f9fa;
+  box-shadow: var(--raised-hover);
 }
 button.link {
   border: 0;
@@ -724,7 +759,8 @@ tbody tr:hover td {
   text-align: left;
   text-decoration: none;
   color: inherit;
-  background: var(--card);
+  background: linear-gradient(var(--card), color-mix(in srgb, var(--paper) 30%, var(--card)));
+  box-shadow: var(--raised);
   border: 1px solid var(--line);
   border-radius: var(--r);
   font-weight: 600;
@@ -735,8 +771,8 @@ tbody tr:hover td {
 }
 .tile:hover {
   border-color: var(--accent);
-  box-shadow: var(--lift);
-  transform: translateY(-1px);
+  box-shadow: var(--raised-hover);
+  transform: translateY(-2px);
 }
 .tile h3 {
   margin: 0;
@@ -943,8 +979,11 @@ ul.choices > li {
     position: static;
     height: auto;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: 'brand me' 'switch switch' 'nav nav';
+    position: relative;
+    z-index: 10;
+    overflow: visible; /* the menu panel hangs below the header */
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: 'brand burger me' 'switch switch switch' 'nav nav nav';
     gap: var(--s3);
     padding: var(--s3) var(--s4) 0;
     border-right: 0;
@@ -977,6 +1016,108 @@ ul.choices > li {
   .nav a[aria-current='page'] {
     background: none;
     box-shadow: inset 0 -2px 0 var(--accent);
+  }
+  .side:has(.burger) {
+    padding-bottom: var(--s3);
+  }
+  .burger {
+    grid-area: burger;
+    display: grid;
+    place-items: center;
+    align-self: center;
+    width: 40px;
+    min-height: 40px;
+    padding: 0;
+  }
+  .burger > span[aria-hidden],
+  .burger > span[aria-hidden]::before,
+  .burger > span[aria-hidden]::after {
+    display: block;
+    width: 18px;
+    height: 2px;
+    border-radius: 1px;
+    background: currentColor;
+    transition:
+      transform var(--ease),
+      background var(--ease);
+  }
+  .burger > span[aria-hidden] {
+    position: relative;
+  }
+  .burger > span[aria-hidden]::before,
+  .burger > span[aria-hidden]::after {
+    content: '';
+    position: absolute;
+    left: 0;
+  }
+  .burger > span[aria-hidden]::before {
+    transform: translateY(-6px);
+  }
+  .burger > span[aria-hidden]::after {
+    transform: translateY(6px);
+  }
+  .burger[aria-expanded='true'] {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+  .burger[aria-expanded='true'] > span[aria-hidden] {
+    background: transparent;
+  }
+  .burger[aria-expanded='true'] > span[aria-hidden]::before {
+    transform: rotate(45deg);
+  }
+  .burger[aria-expanded='true'] > span[aria-hidden]::after {
+    transform: rotate(-45deg);
+  }
+  /* The menu panel drops from under the header; links are numbered like a table of contents */
+  .nav[data-collapsible] {
+    position: absolute;
+    top: calc(100% + var(--s2));
+    left: var(--s4);
+    right: var(--s4);
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: var(--s2);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    box-shadow: var(--raised-hover);
+    counter-reset: nav;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px) scale(0.98);
+    transform-origin: top right;
+    transition:
+      opacity var(--ease),
+      transform var(--ease),
+      visibility 0s linear 200ms;
+  }
+  .nav[data-collapsible][data-open] {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition:
+      opacity var(--ease),
+      transform var(--ease);
+  }
+  .nav[data-collapsible] a {
+    counter-increment: nav;
+    gap: var(--s3);
+    min-height: 44px;
+    padding: 0 var(--s3);
+    border-radius: var(--r-sm);
+    font-size: var(--t-body);
+  }
+  .nav[data-collapsible] a::before {
+    content: counter(nav, decimal-leading-zero);
+    font-size: var(--t-badge);
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+  }
+  .nav[data-collapsible] a[aria-current='page'] {
+    background: var(--chosen);
+    box-shadow: inset 3px 0 0 var(--accent);
   }
   .me {
     margin: 0;
@@ -1200,6 +1341,19 @@ body:has(.center) {
     radial-gradient(40rem 30rem at 85% 30%, color-mix(in srgb, var(--mint) 70%, transparent), transparent 70%),
     radial-gradient(30rem 24rem at 10% 90%, color-mix(in srgb, var(--blue-2) 18%, transparent), transparent 70%),
     var(--bg);
+}
+/* Faint drafting grid behind the entry page, fading out towards the centre so text stays on plain paper */
+body:has(.center)::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 56px 56px,
+    linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 56px 56px;
+  opacity: 0.55;
+  mask-image: radial-gradient(ellipse at center, transparent 30%, #000 85%);
 }
 .center h1::after {
   content: '';

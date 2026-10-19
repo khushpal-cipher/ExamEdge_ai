@@ -150,3 +150,5 @@ export default async function QuestionBank({
     </>
   );
 }
+
+export const metadata = { title: 'Question bank' };

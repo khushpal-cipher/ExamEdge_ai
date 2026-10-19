@@ -68,3 +68,5 @@ export default async function Subjects({ searchParams }: { searchParams: Search 
     </>
   );
 }
+
+export const metadata = { title: 'Subjects' };
