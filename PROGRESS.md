@@ -146,7 +146,7 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 46)
-**State (2026-10-19, end of session 44):** main = `be6e77c` (PRs #35 UI redesign + ADR-050, #36 Gemini test provider +
+**State (2026-10-19, session 45):** main = `5cb5327` (PR #38 KaTeX formulas, ADR-053, merged). Before that main = `be6e77c` (PRs #35 UI redesign + ADR-050, #36 Gemini test provider +
 tutor chat box, #37 AI question dropdown + Approve, all MERGED with founder's yes, CI green). Branch `r15-next`
 (`47cea0b` + this handoff) holds only PROGRESS / prompt notes; no PR opened for it (docs only: merge it with the next code
 PR or open a tiny PR). Nothing failing, nothing half-built.
@@ -169,6 +169,7 @@ PR or open a tiny PR). Nothing failing, nothing half-built.
    on a fresh database. Unit 185 and pgTAP 1459 pass locally.
 
 ## Session 45 (2026-10-19) — KaTeX formulas (ADR-053), branch `r15-next`
+- **MERGED** (founder's yes, 2026-10-19): PR #38 squash-merged into main as `5cb5327`; CI green (check 5m48s incl. e2e, secrets).
 - Founder saw AI quiz text like `$20\text{ N}$` and said "install it". `katex@0.19.0` added to `apps/web` (dev tool
   rule: free, MIT, logged in DECISIONS ADR-053). `lib/markdown.ts` typesets `$…$` / `$$…$$` (`trust: false`,
   `throwOnError: false`); new `MathText` (inline) and `clip` (labels that never cut a formula). Stems, options, model
