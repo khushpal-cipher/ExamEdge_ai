@@ -1478,3 +1478,34 @@ div.part[aria-current='true'] {
   padding-top: var(--s3);
   border-top: 1px solid var(--line);
 }
+
+/* A question opened in place on a test page (question-preview) */
+.preview {
+  min-width: min(36ch, 70vw); /* the table scrolls sideways on a phone instead of squeezing the question */
+}
+.preview > summary {
+  cursor: pointer;
+  color: var(--accent-ink);
+}
+.preview[open] > summary {
+  margin-bottom: var(--s3);
+}
+.preview .options {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--s2);
+}
+.preview .options li {
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+.preview .options li.right {
+  border-color: var(--good);
+  background: var(--good-soft);
+}
+.preview .options .badge {
+  margin-left: var(--s2);
+}

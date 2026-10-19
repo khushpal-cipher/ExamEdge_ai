@@ -145,6 +145,27 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
+## Next exact action (session 45b)
+**State:** PR #36 MERGED 2026-10-19 (`ed5ca6d`, founder said yes). Branch `r14-approve` (from main): AI question dropdown
+with Approve on the test page (ADR-052) — PR open, Auto-fix on. Local e2e still BLOCKED (no demo seed locally).
+1. Check the `r14-approve` PR's CI; fix until green; ask the founder before merging.
+2. Founder's friend `aaradhychinche@gmail.com` as platform admin: he signs in once at http://admin.localhost:3000 on
+   the founder's Mac (Google sign-in) so his account exists, then one row: `insert into private.platform_admins
+   (user_id, granted_by) select id, 'founder' from auth.users where email = 'aaradhychinche@gmail.com'`; he reloads and
+   scans the QR with his own phone (the app's own MFA setup). Not done yet: his account does not exist (checked
+   2026-10-19). Remote access for him needs a deployment (Phase 10, founder approval).
+3. Then the session-45 list below (Gemini in the app, e2e blocked).
+
+## Session 44b result (2026-10-19) — branch `r14-approve`
+- `questions/question-preview.tsx` (new): `<details>` per test question; `staff-test.tsx` uses it and now also reads
+  options, explanation and `question_keys(key, second_solve)` (staff only, RLS). `approveQuestion` sets
+  `teacher_verified` when the form says `checked` (sent only by the dropdown for differ / not-checked drafts).
+  `e2e/question-gen.spec.ts` approves via the dropdown (the flagged MCQ too).
+- **Evidence:** `npm run format:check`, `lint`, `typecheck` clean; `npm test` 185 passed; `npm run test:db` Files=26
+  Tests=1459 PASS (rolled back, no reset). Browser: newtown test "hb" as teacher.jee, dropdown opens with options,
+  correct answer marked, explanation, Edit, at 1280 px. Approve on a draft not clicked locally (newtown has no AI drafts);
+  the e2e covers it in CI.
+
 ## Next exact action (session 45)
 **State:** PR #35 MERGED into main 2026-10-19 (founder said yes), squash commit `3482e3e`. Branch `r13-gemini` has main
 merged in (`9757440`) and its PR into main is open (Gemini + chat box). Local DB has migration 34 (`gemini`) applied with

@@ -641,3 +641,14 @@ sitemap or robots.txt).
 - **Differences from Claude:** no citation blocks, so the tutor numbers passages and the model cites `[n]`; the tutor
   answer is not streamed (shows at once); `maxItems` is stripped from the JSON schema (Gemini rejected some schemas
   with it on 2026-10-19), the Zod check after the call still enforces the limits. One retry on 429/5xx.
+
+### ADR-052 Check and approve AI questions in place on the test page (founder, 2026-10-19)
+- **Decision (founder):** on a test's page a question opens as a dropdown that shows everything the edit page shows for
+  checking (question, options with the correct one marked, numerical answer, model answer, explanation, the second
+  AI's answer when it differs) with **Approve** and **Edit**. The teacher no longer has to open each question and press
+  Save to approve it.
+- **Changes ADR-032's review step:** a draft whose second AI answer differed, or that has no second answer (all
+  written questions), can now be approved from the dropdown as it is. That approval sets `verification =
+  teacher_verified`, which the database already allowed for a teacher (`private.guard_question_review`; pgTAP
+  `140_question_generation.sql`). The dropdown shows both answers and tells the teacher to approve only if the key is
+  right, otherwise Edit. Plain Approve on a question bank row is unchanged (answers-match drafts only).
