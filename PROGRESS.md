@@ -145,16 +145,28 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 45b)
-**State:** PR #36 MERGED 2026-10-19 (`ed5ca6d`, founder said yes). Branch `r14-approve` (from main): AI question dropdown
-with Approve on the test page (ADR-052) — PR #37 open (Auto-fix not turned on yet). Local e2e still BLOCKED (no demo seed locally).
-1. Check the `r14-approve` PR's CI; fix until green; ask the founder before merging.
+## Next exact action (session 46)
+**State:** PR #37 MERGED into main 2026-10-19 (`be6e77c`, founder said yes; CI green on `a848e48`, run 39224125433).
+PRs #35, #36, #37 all merged. Branch `r15-next` (from main) holds only this PROGRESS update. Local dev server runs with
+`AI_PROVIDER=gemini` (added to `apps/web/.env.local` 2026-10-19) and the worker was started with the local
+`WORKER_DATABASE_URL` (postgresql://worker:worker_local_only@127.0.0.1:54322/postgres); delete the line to go back to demo AI.
+1. Ask the founder what to build next (nothing open in the roadmap queue from this session).
 2. Founder's friend `aaradhychinche@gmail.com` as platform admin: he signs in once at http://admin.localhost:3000 on
    the founder's Mac (Google sign-in) so his account exists, then one row: `insert into private.platform_admins
    (user_id, granted_by) select id, 'founder' from auth.users where email = 'aaradhychinche@gmail.com'`; he reloads and
    scans the QR with his own phone (the app's own MFA setup). Not done yet: his account does not exist (checked
    2026-10-19). Remote access for him needs a deployment (Phase 10, founder approval).
 3. Then the session-45 list below (Gemini in the app, e2e blocked).
+
+## Session 44c (2026-10-19) — local test data on newtown (no code)
+- neet 2027 · physics: topics "Laws of Motion" and "Work, Energy and Power", each with Gemini-written notes from a
+  teacher explanation (AI notes, ADR-039), published to neet 2027 (worker chunked them: 30 and 33 chunks).
+- Test "NEET Physics Quiz 1" (id `df59ffa8-bf10-40ca-87d0-b2aa5517fc68`): 10 MCQ + 5 theory made with AI (Gemini),
+  CBT on, opens 19 Oct 15:00, closes 20 Oct 22:00 IST, 60 min; all 15 approved via the new dropdown (8 answers-match,
+  2 answers-differ checked by hand — keys right: 6√2 m/s², 6mg — and 5 theory → teacher_verified); scheduled; shows on
+  student2 (Aman Singh) Contest → Upcoming. One duplicate notes draft made by a double submit was deleted.
+- Founder Q: "ccc" not visible to Aman in class 10 — by design: he was moved to class 9 at 10:19 IST (class 10 became a
+  past batch); "ccc" opened 14:02, after he left.
 
 ## Session 44b result (2026-10-19) — branch `r14-approve`
 - `questions/question-preview.tsx` (new): `<details>` per test question; `staff-test.tsx` uses it and now also reads
