@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-19 (session 41, handoff)
+Last updated: 2026-10-19 (session 42)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -141,6 +141,22 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
+
+## Session 42 result (2026-10-19) — polish steps 1–6 built on `r13-ui`, commit `8ebab56`, PR #35
+- Done: step 1 light only; step 2 type scale (16/15/14/13 px, h2 22, h3 18, h1 32–44, stat 36, no 650 weight);
+  step 3 spacing (root cause of "too close": `div.inline` field rows had no CSS — `.inline` now styles any element,
+  20 px gaps; forms 560 px; 48 px between sections; 14 px table cells; hint next to "Create test" in a `.row`);
+  step 4 sidebar (248 px, 40 px logo, 44 px nav items, full-width Sign out, 24 px bottom padding; 768 px keeps the
+  phone layout — checked by screenshot, no overflow); step 5 `.danger` red-outline on 13 destructive buttons
+  (class only), 12 px gap in button rows, runner "Submit test" right-aligned under Previous/Next on desktop;
+  step 6 content max 960 px.
+- Evidence (2026-10-19, on `8ebab56`): `npm run format:check` PASS, `npm run lint` PASS, `npm run typecheck` PASS,
+  `npm test` 163/163 PASS, `npm run build` PASS + check-bundle ok. Screenshots 375/768/1280 light of student Home,
+  Contest, My progress, Review and staff Tests, Batches, Question bank, People: `scrollWidth` = viewport on all.
+- **Not done / unverified:** numbers right-aligned in tables (`td.num`) and Contest "Results" rows (student1 is now
+  in jee 2027 with no tests, so the list could not be seen); test runner, result page, check-answers, documents,
+  bill and platform pages not screenshotted (step 7); E2E not run locally (:3000 is the founder's `next dev`) → CI.
+- Next: step 7 page pass on the remaining pages, then step 8 (CI on PR #35, ask the founder "merge #35?").
 
 ## Next exact action (session 42)
 **State:** `r13-ui` pushed, **PR #35 open** (https://github.com/khushpal-cipher/ExamEdge_ai/pull/35), Auto-fix on;
