@@ -86,6 +86,10 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
   Plus Jakarta Sans + Source Serif 4, "workbook" layout, calmer links/buttons — PR #35 open. Founder then asked: light
   theme only, and fix font sizes, sidebar, button placement and spacing ("too close") — the 8 steps are in
   PROGRESS.md "Next exact action (session 42)"; build them on `r13-ui`, then ask "merge #35?".
+- Session 42 (2026-10-19): polish steps 1–6 built on PR #35, plus founder follow-ups (40 px controls, growing text
+  boxes, styled dropdown, Home at-a-glance band, status dots, toast, motion, entry page). Founder: "make your changes,
+  if I don't like them I will tell you to undo them" — undo only what they name. Next: PROGRESS.md "Next exact action
+  (session 43)" (CI, feedback, step 7 page pass, then ask "merge #35?").
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full

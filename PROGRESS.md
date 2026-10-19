@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-19 (session 42)
+Last updated: 2026-10-19 (session 42, handoff)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -36,7 +36,7 @@ green, after merging `main` into `r12-bill` because force-push is not allowed) �
 (ADR-046); then `main` merged into `r12-reviews` (`e2a01b4`; PROGRESS kept from `r12-reviews`, DECISIONS kept both ADRs;
 pgTAP Files=25 Tests=1435 PASS, typecheck PASS), CI run 39147981293 green, PR #33 (`03afbca`) reviews + replies
 (ADR-047). `main` = `03afbca`.
-**Session 41 (open, NOT merged):** PR #35 `r13-ui` UI redesign (ADR-049), waiting for the founder's polish list (Next exact action) and "merge".
+**Sessions 41–42 (open, NOT merged):** PR #35 `r13-ui` UI redesign + founder polish (ADR-049), head `b8d6cdb` + handoff commit; waiting for the founder's feedback/undo requests and "merge" (see Next exact action (session 43)).
 **Session 39 (merged in 40):** PR #34 CBT tests (ADR-048), branch `r12-cbt`. First CI run 39153129147 failed
 only on the new E2E locator (fixed in `b61f991`, CI re-running at handoff). Founder has not said "merge" for #34.
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
@@ -142,6 +142,22 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
+## Next exact action (session 43)
+**State:** branch `r13-ui`, PR #35 open (https://github.com/khushpal-cipher/ExamEdge_ai/pull/35), Auto-fix on, founder
+has NOT said "merge". Session 42 built the polish list (steps 1–6) and the founder's follow-ups (below). The founder
+said "make your changes, if I don't like them I will tell you to undo them".
+1. `git checkout r13-ui && git pull`; `docker info`; `supabase status`; check PR #35 CI (`gh pr checks 35`) — E2E on
+   the session 42 commits has not been seen green yet; fix any failure without weakening a test (watch: new Home
+   "At a glance" band adds text on /home; `.notice.toast` stays `role=status`; textareas now `field-sizing: content`).
+2. Ask the founder for feedback on the session 42 changes; undo only what they name (each idea is its own CSS block
+   in `globals.css` + small markup: `.hero` in `home/page.tsx`, `.tile .mark`, `td .badge[class]` dots, `.num`
+   columns, `.notice.toast` in `flash.tsx`, `rise`/`fill` animations, `body:has(.center)` entry background).
+3. Step 7 page pass still open: test runner (temporary copy of a test via SQL, delete after), result page, check
+   answers, documents/notes, student progress, Bill, platform pages, invite — screenshot 375/768/1280 light with the
+   scratchpad Playwright script pattern below, fix what the shared CSS misses. Contest "Results" rows not yet seen
+   with data (student1@newtown.test is now in jee 2027 with no tests).
+4. Step 8: gate (`npm run format:check`, lint, typecheck, `npm test`, `npm run build`), CI green, ask "merge #35?".
+
 ## Session 42 result (2026-10-19) — polish steps 1–6 built on `r13-ui`, commit `8ebab56`, PR #35
 - Done: step 1 light only; step 2 type scale (16/15/14/13 px, h2 22, h3 18, h1 32–44, stat 36, no 650 weight);
   step 3 spacing (root cause of "too close": `div.inline` field rows had no CSS — `.inline` now styles any element,
@@ -165,7 +181,7 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
   If the founder dislikes one, revert just that part.
 - Next: step 7 page pass on the remaining pages, then step 8 (CI on PR #35, ask the founder "merge #35?").
 
-## Next exact action (session 42)
+## Next exact action (session 42) — history
 **State:** `r13-ui` pushed, **PR #35 open** (https://github.com/khushpal-cipher/ExamEdge_ai/pull/35), Auto-fix on;
 founder has NOT said "merge". Founder palette `#3368A0/#66A3BF/#C8DFDB/#F2EFE7` + Plus Jakarta Sans / Source Serif 4
 are approved. Founder review (2026-10-19, screenshots of Tests, Contest, platform Institutes, staff pages): "keep the
@@ -679,6 +695,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 42 | 2026-10-19 | UI polish on PR #35: light only, type scale, spacing (`.inline` root cause), sidebar, `.danger` buttons, 960 px content; founder follow-ups: 40 px controls, growing text boxes, styled dropdown, Home at-a-glance band, empty states, status dots, right-aligned numbers, toast, motion, entry page. Gate green locally (E2E → CI) | `b8d6cdb` (branch `r13-ui`) |
 | 39 | 2026-10-18/19 | Founder said merge: PR #32 (`16b7547`) and #33 (`03afbca`) merged after merging `main` into `r12-reviews` (pgTAP 1435). Founder asked for CBT tests: full screen, tab/app switch + reload count, 3rd warning auto-submits, Chrome only, warnings on results (ADR-048, migration 32, pgTAP 1456, E2E `cbt.spec.ts`); PR #34, first CI failed on an E2E locator, fixed | `b61f991` (branch `r12-cbt`) |
 | 37 | 2026-10-18 | Founder: "Type a question" gets negative marks; theory model answer optional (migration 25); multi-correct = JEE Advanced marking (migration 26, ADR-045); owner "AI usage" → ₹ Bill at a platform-set rate (migration 27); pgTAP 1372; MCQ-only results question answered (release is manual) — decision open | branches `r12-typed-marks` (PR #30), `r12-bill` |
 | 36b | 2026-10-18 | PR #26/#27 merged (R1.2 done); founder follow-ups: Add questions at the top of a draft test (PR #28 `ac20bed`), teacher notes publish themselves (ADR-044, PR #29 `3261716`); stale :3000 dev server restarted | `3261716` |
