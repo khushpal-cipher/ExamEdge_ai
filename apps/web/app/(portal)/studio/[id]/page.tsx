@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Content, SourceRef } from '@examedge/core/ai/studio';
 import { formatTime } from '@/lib/assess';
 import { Markdown, MathText } from '@/lib/markdown';
-import { fieldLabel, STUDIO_KIND, textFields } from '@/lib/studio';
+import { BETA_KINDS, fieldLabel, STUDIO_KIND, textFields } from '@/lib/studio';
 import { isUuid, requireMember } from '@/lib/tenant';
 import { Flash, type Search } from '../../flash';
 import { deleteArtifact, editArtifact, publishArtifact, withdrawArtifact } from '../actions';
@@ -118,7 +118,13 @@ export default async function StudioArtifact(props: { params: Promise<{ id: stri
               {a.chapters.subjects.name} · {a.chapters.name}
             </Link>
           </p>
-          <h1>{title}</h1>
+          <h1>
+            {title}
+            {BETA_KINDS.has(a.kind) && <span className="badge"> Beta</span>}
+          </h1>
+          {BETA_KINDS.has(a.kind) && (
+            <p className="small muted">Beta: read aloud by your device&apos;s voice, so it may sound robotic.</p>
+          )}
           <p className="muted small">
             {refs.length
               ? "Made by AI from your institute's notes"

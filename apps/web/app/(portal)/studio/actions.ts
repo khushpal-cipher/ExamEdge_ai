@@ -46,13 +46,14 @@ export async function generate(form: FormData) {
   // RLS: students read only notes published to their batches; generation uses published notes for staff too.
   // No notes yet → the AI writes from general knowledge of the topic, labelled as such (ADR-050).
   const { ids, sources } = await chapterNotes(db, institute.id, chapter as string);
-  // Same kind, chapter and notes (chunk ids change when a note is replaced) → same artifact (AC9.2).
+  // Staff: same kind, chapter and notes (chunk ids change when a note is replaced) → same artifact (AC9.2). Students
+  // get a new one each time until their AI limit stops them (ADR-054).
   const inputHash = createHash('sha256')
     .update(JSON.stringify([kind, chapter, [...ids].sort()]))
     .digest('hex');
   const scope = student ? 'student' : 'institute';
   const existing = async () => {
-    let q = db
+    const q = db
       .from('generated_artifacts')
       .select('id')
       .eq('institute_id', institute.id)
@@ -60,10 +61,9 @@ export async function generate(form: FormData) {
       .eq('kind', kind)
       .eq('input_hash', inputHash)
       .eq('prompt_version', STUDIO_PROMPT_VERSION);
-    if (student) q = q.eq('owner_user_id', member.userId);
     return (await q.maybeSingle()).data?.id as string | undefined;
   };
-  const reuse = await existing();
+  const reuse = student ? undefined : await existing();
   if (reuse) redirect(`/studio/${reuse}?ok=reused`);
 
   let made;

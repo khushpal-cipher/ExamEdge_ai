@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Markdown, MathText } from '@/lib/markdown';
+import { brokenMath, Markdown, MathText, questionTexts } from '@/lib/markdown';
 import { approveQuestion } from './actions';
 import { AiBadge } from './ai-badge';
 
@@ -26,6 +26,7 @@ export function QuestionPreview({ q, label, back }: { q: PreviewQuestion; label:
   const second = q.question_keys?.second_solve ?? null;
   const correct = new Set(key?.correct ?? []);
   const draft = q.status === 'draft';
+  const broken = draft && brokenMath(...questionTexts({ ...q, model_answer: key?.model_answer }));
   return (
     <details className="preview">
       <summary>
@@ -33,7 +34,7 @@ export function QuestionPreview({ q, label, back }: { q: PreviewQuestion; label:
         {draft && (
           <>
             {' '}
-            <AiBadge verification={q.verification} />
+            <AiBadge verification={q.verification} broken={broken} />
           </>
         )}
       </summary>
@@ -67,6 +68,11 @@ export function QuestionPreview({ q, label, back }: { q: PreviewQuestion; label:
             <Markdown text={q.explanation} />
           </div>
         )}
+        {broken && (
+          <p className="alert">
+            A formula in this question cannot be drawn (shown in red). Edit the question to fix it before approving.
+          </p>
+        )}
         {draft && q.verification === 'dual_solve_disagree' && (
           <p className="alert">
             A second AI answered {shown(second)}, but the key says {shown(key)}. Approve only if the key is right;
@@ -77,7 +83,7 @@ export function QuestionPreview({ q, label, back }: { q: PreviewQuestion; label:
           <p className="small muted">The second AI check did not run for this question. Check it yourself.</p>
         )}
         <div className="row">
-          {draft && (
+          {draft && !broken && (
             <form action={approveQuestion}>
               <input type="hidden" name="question_id" value={q.id} />
               <input type="hidden" name="back" value={back} />

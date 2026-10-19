@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { Meter } from '@examedge/core/ai/gateway';
 import { SYSTEM_PROMPT, tutorAnswer, type Passage } from '@examedge/core/ai/tutor';
-import { clip, Markdown } from './markdown';
+import { brokenMath, clip, Markdown, questionTexts } from './markdown';
 
 const render = (text: string) => renderToStaticMarkup(createElement(Markdown, { text }));
 // Outside KaTeX output only these tags, and no attribute other than class="md|md-inline|math", may reach the page.
@@ -60,6 +60,13 @@ describe('Markdown renderer', () => {
   });
   it('shows a broken formula as text instead of failing', () => {
     expect(render('$\\frac{1}{$')).toContain('katex-error');
+  });
+  it('finds formulas KaTeX cannot draw (ADR-054)', () => {
+    expect(brokenMath('Tension is $20\\text{ N}$', null, '$$v^2 = u^2 + 2as$$')).toBe(false);
+    expect(brokenMath('Costs $5 only')).toBe(false);
+    expect(brokenMath('Energy $\\frac{1}{2mv^2$')).toBe(true);
+    expect(brokenMath(...questionTexts({ stem: 'ok', options: [{ text: '$\\sqrt{2$' }] }))).toBe(true);
+    expect(brokenMath(...questionTexts({ stem: 'ok', model_answer: '$x^{2$' }))).toBe(true);
   });
   it('clips labels without cutting a formula', () => {
     expect(clip('Mass $m = 0.4\\text{ kg}$ tied', 12)).toBe('Mass…');

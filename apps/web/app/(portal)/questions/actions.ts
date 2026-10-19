@@ -7,6 +7,7 @@ import { AiBlocked } from '@examedge/core/ai/gateway';
 import { MAX_REQUEST, PlanError, planTest } from '@examedge/core/ai/plan';
 import { generateQuestions as generate, keyOf, QuestionError, secondOf } from '@examedge/core/ai/questions';
 import { log } from '@examedge/core/log';
+import { brokenMath, questionTexts } from '@/lib/markdown';
 import { webMeter } from '@/lib/meter';
 import { chapterNotes } from '@/lib/notes';
 import { isUuid, requireMember, STAFF } from '@/lib/tenant';
@@ -88,9 +89,16 @@ export async function addAiQuestions(form: FormData) {
   }
   if (!items.length) back(noNotes ? 'no_sources' : 'no_questions');
 
+  // Checked as they are saved (ADR-054): a draft with a formula KaTeX cannot draw is flagged on the page and cannot be
+  // approved until a teacher fixes it.
+  const broken = items.filter((i) =>
+    brokenMath(...questionTexts({ ...i, model_answer: 'model_answer' in i.key ? i.key.model_answer : null })),
+  ).length;
+  if (broken) log.warn('questions.formula_broken', { institute: institute.id, count: broken });
+
   const { error } = await db.rpc('add_test_questions', { inst: institute.id, test, items });
   if (error) done(here, error);
-  redirect(`${here}?ok=${missing ? 'ai_questions_partial' : 'ai_questions_added'}`);
+  redirect(`${here}?ok=${broken ? 'ai_questions_formula' : missing ? 'ai_questions_partial' : 'ai_questions_added'}`);
 }
 
 // Approves a checked AI draft; without `checked` the database refuses one whose second answer differed or is missing.
@@ -102,6 +110,15 @@ export async function approveQuestion(form: FormData) {
     ? path
     : '/questions';
   if (!isUuid(id)) done(to, { code: '23514' });
+  const { data: q } = await db
+    .from('questions')
+    .select('stem, options, explanation, question_keys(key)')
+    .eq('institute_id', institute.id)
+    .eq('id', id)
+    .maybeSingle();
+  const key = (q?.question_keys as { key?: { model_answer?: string } } | null)?.key;
+  if (q && brokenMath(...questionTexts({ ...q, model_answer: key?.model_answer })))
+    done(to, { message: 'formula_broken' });
   const { error } = await db
     .from('questions')
     // `checked`: approved after seeing it in full (question-preview), so a teacher vouches for it (ADR-052).

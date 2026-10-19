@@ -168,6 +168,19 @@ PR or open a tiny PR). Nothing failing, nothing half-built.
 4. Local `npm run test:e2e` stays BLOCKED (no `demo` / `rival` institutes locally; seeding needs `db:reset`); CI runs e2e
    on a fresh database. Unit 185 and pgTAP 1459 pass locally.
 
+## Session 45b (2026-10-19) — AI progress, formula check, Beta, repeat study tools (ADR-054), branch `r15-next`
+- Founder asked: (1) flag AI questions whose formula cannot be drawn; (2) a NotebookLM-style "making it" state on every
+  AI feature; (3) Beta on audio/video overview; (4) students make a study tool again until the AI limit.
+- Built: `lib/markdown.ts` `brokenMath` / `questionTexts`; `addAiQuestions` flags on save (`ai_questions_formula`),
+  badge "formula broken, fix before use", Approve hidden + `approveQuestion` refuses (`formula_broken`);
+  `app/(portal)/making.tsx` on the 6 study tiles, Add questions with AI, Write notes with AI (buttons disabled while
+  pending); `BETA_KINDS` badges; migration 35 `studio_repeat` drops the per-student unique index, `studio/actions.ts`
+  reuses only for staff, student lists show the time each was made. pgTAP 110 + e2e studio.spec updated (ADR-054).
+- Evidence (2026-10-19): `supabase migration up` applied 35 locally (no reset); `npm run test:db` 1459 PASS; `npm test`
+  189 passed; format, lint (check-forbidden ok), typecheck ok; `npm run build` + check-bundle ok. Browser (teacher,
+  newtown topic page, POST blocked so no AI spend): "Making your notes…" with spinner, button disabled.
+- Unverified locally: student tiles + Beta badges in the browser (needs a student login), e2e BLOCKED locally (CI).
+
 ## Session 45 (2026-10-19) — KaTeX formulas (ADR-053), branch `r15-next`
 - **MERGED** (founder's yes, 2026-10-19): PR #38 squash-merged into main as `5cb5327`; CI green (check 5m48s incl. e2e, secrets).
 - Founder saw AI quiz text like `$20\text{ N}$` and said "install it". `katex@0.19.0` added to `apps/web` (dev tool

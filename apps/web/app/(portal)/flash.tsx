@@ -20,6 +20,7 @@ const ERRORS: Record<string, string> = {
   unmarked_answers: 'Some written answers are not checked yet. Check them all before releasing results.',
   invalid_marks: 'Marks must be whole or half marks between 0 and the maximum.',
   invalid_key: 'The answer key does not match the options.',
+  formula_broken: 'A formula in this question cannot be drawn (shown in red). Edit the question to fix it, then save.',
   question_not_verified:
     'The two AI answers to this question differ, or the second check did not run. Open it, fix it if needed and save it.',
   no_questions: 'The AI could not make usable questions from these notes. Try another topic or question type.',
@@ -59,6 +60,8 @@ const OK: Record<string, string> = {
     'AI questions added. Open each one to check it (MCQs whose answers match can be approved here), then schedule the test.',
   ai_questions_partial:
     'AI questions added, but some could not be made (a topic without published notes, or the AI found nothing usable). Check them, then schedule the test.',
+  ai_questions_formula:
+    'AI questions added. Some have a formula that cannot be drawn: they are marked "formula broken". Fix those, check the rest, then schedule the test.',
   question_added: 'Question added to the test and saved in the question bank.',
   reply_saved: 'Reply saved.',
   review_sent: 'Thank you. Your review was sent to the owner and admins.',

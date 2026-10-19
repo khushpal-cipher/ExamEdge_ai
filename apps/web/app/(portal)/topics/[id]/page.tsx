@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { STUDIO_KIND } from '@/lib/studio';
+import { formatTime } from '@/lib/assess';
+import { BETA_KINDS, STUDIO_KIND } from '@/lib/studio';
 import { isUuid, opensBatch, requireMember } from '@/lib/tenant';
 import { addSubtopic, deleteSubtopic, renameSubtopic } from '../../actions';
 import { Flash, type Search } from '../../flash';
+import { Making } from '../../making';
 import { writeAiNotes } from '../../documents/actions';
 import { DOCUMENT_STATUS, VERSION_STATUS } from '../../documents/status';
 import { Upload } from '../../documents/upload';
@@ -12,7 +14,7 @@ import { Tutor, type ChatMessage } from '../../subjects/[id]/tutor';
 import { Tabs } from './tabs';
 
 type Doc = { id: string; title: string; status: string; subtopic_id: string; kind: string };
-type Artifact = { id: string; owner_scope: string; kind: string; status: string };
+type Artifact = { id: string; owner_scope: string; kind: string; status: string; created_at: string };
 type Subtopic = { id: string; name: string; position: number };
 // Smart Study tile icons (24×24 outline paths), NotebookLM Studio style (ADR-043).
 const ICON: Record<string, string> = {
@@ -70,7 +72,7 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
       ? Promise.resolve({ data: null })
       : db
           .from('generated_artifacts')
-          .select('id, owner_scope, kind, status')
+          .select('id, owner_scope, kind, status, created_at')
           .eq('institute_id', institute.id)
           .eq('chapter_id', id)
           .order('created_at', { ascending: false })
@@ -105,6 +107,8 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
               <Link href={`/studio/${a.id}`}>
                 {STUDIO_KIND[a.kind]}: {topic.name}
               </Link>
+              {BETA_KINDS.has(a.kind) && <span className="badge"> Beta</span>}{' '}
+              <span className="small muted">{formatTime(a.created_at)}</span>
             </li>
           ))}
         </ul>
@@ -193,9 +197,19 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
                                 Explain this subtopic in your own words
                                 <textarea name="explanation" required maxLength={5000} rows={6} />
                               </label>
-                              <button type="submit" className="primary">
-                                Write notes
-                              </button>
+                              <Making
+                                what="your notes"
+                                steps={[
+                                  'Reading your explanation',
+                                  'Planning the headings',
+                                  'Writing detailed notes',
+                                  'Almost done',
+                                ]}
+                              >
+                                <button type="submit" className="primary">
+                                  Write notes
+                                </button>
+                              </Making>
                               <p className="small muted">
                                 The AI writes detailed notes from your explanation. They stay a draft: you read and edit
                                 them, then publish them to the batch like uploaded notes.
@@ -262,14 +276,30 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
                         <form action={generate} className="tiles" aria-label="Make study material">
                           <input type="hidden" name="subject_id" value={topic.subject_id} />
                           <input type="hidden" name="chapter_id" value={topic.id} />
-                          {Object.entries(STUDIO_KIND).map(([k, label]) => (
-                            <button key={k} type="submit" name="kind" value={k} className="tile">
-                              <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d={ICON[k]} />
-                              </svg>
-                              {label}
-                            </button>
-                          ))}
+                          <Making
+                            what="your study material"
+                            names={Object.fromEntries(
+                              Object.entries(STUDIO_KIND).map(([k, l]) => [k, `your ${l.toLowerCase()}`]),
+                            )}
+                            steps={[
+                              'Reading your teachers’ notes for this topic',
+                              'Picking the key ideas',
+                              'Writing it for you',
+                              'Almost done',
+                            ]}
+                          >
+                            {Object.entries(STUDIO_KIND).map(([k, label]) => (
+                              <button key={k} type="submit" name="kind" value={k} className="tile">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                  <path d={ICON[k]} />
+                                </svg>
+                                <span>
+                                  {label}
+                                  {BETA_KINDS.has(k) && <span className="badge"> Beta</span>}
+                                </span>
+                              </button>
+                            ))}
+                          </Making>
                         </form>
                         {artifactList(
                           'Made by you',

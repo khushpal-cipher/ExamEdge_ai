@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { formatDuration, formatTime, pct, PHASE_LABEL, testPhase, toLocalInput, TYPE_SHORT } from '@/lib/assess';
 import { MAX_REQUEST } from '@examedge/core/ai/plan';
 import { clip as short } from '@/lib/markdown';
+import { Making } from '../../making';
 import { MANAGERS, type requireMember } from '@/lib/tenant';
 import {
   addTestQuestion,
@@ -377,9 +378,20 @@ async function Fill({ ctx, test }: { ctx: Ctx; test: Test }) {
           />
         </label>
         <div className="row">
-          <button type="submit" className="primary">
-            Send
-          </button>
+          <Making
+            what="your questions"
+            steps={[
+              'Reading your request',
+              'Planning questions across the topics',
+              'Writing questions from your notes',
+              'A second AI is solving every MCQ to check the answers',
+              'Checking formulas and saving the questions',
+            ]}
+          >
+            <button type="submit" className="primary">
+              Send
+            </button>
+          </Making>
           <span className="small muted">
             Topics of {subject.name}: {chapters.map((c) => c.name).join(', ') || 'none yet'}. Questions are made from
             each topic&apos;s published notes; a second AI re-solves every MCQ and flags a mismatch.

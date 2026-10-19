@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { TYPE_SHORT } from '@/lib/assess';
-import { clip, MathText } from '@/lib/markdown';
+import { brokenMath, clip, MathText, questionTexts } from '@/lib/markdown';
 import { isUuid, MANAGERS, requireMember, STAFF } from '@/lib/tenant';
 import { deleteQuestion } from '../tests/actions';
 import { approveQuestion } from './actions';
@@ -38,7 +38,7 @@ export default async function QuestionBank({
       ? await db
           .from('questions')
           .select(
-            'id, type, stem, chapter_id, origin, status, verification, question_keys(question_id), test_questions(test_id)',
+            'id, type, stem, options, explanation, chapter_id, origin, status, verification, question_keys(question_id, key), test_questions(test_id)',
           )
           .eq('institute_id', institute.id)
           .eq('subject_id', subject.id)
@@ -106,7 +106,18 @@ export default async function QuestionBank({
                               <MathText text={clip(q.stem, 90)} />
                             </Link>{' '}
                             {!(q.question_keys as unknown) && <span className="badge bad">No answer key</span>}
-                            {q.status === 'draft' && <AiBadge verification={q.verification} />}
+                            {q.status === 'draft' && (
+                              <AiBadge
+                                verification={q.verification}
+                                broken={brokenMath(
+                                  ...questionTexts({
+                                    ...q,
+                                    model_answer: (q.question_keys as { key?: { model_answer?: string } } | null)?.key
+                                      ?.model_answer,
+                                  }),
+                                )}
+                              />
+                            )}
                           </td>
                           <td>{TYPE_SHORT[q.type]}</td>
                           <td>{(q.chapter_id && chapterName.get(q.chapter_id)) || '—'}</td>
