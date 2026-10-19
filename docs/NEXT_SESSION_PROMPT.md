@@ -100,6 +100,9 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
   questions open as a dropdown with Approve on the test page (ADR-052). Local test data on newtown (NEET Physics Quiz 1 with
   5 students' theory answers to check). Next: PROGRESS.md "Next exact action (session 46)" — ask the founder what to build
   next; their friend's platform-admin access needs his first sign-in.
+- Session 45 (2026-10-19): founder said merge; PRs #38 (KaTeX formulas, ADR-053) and #39 (ADR-054: "Making…" progress
+  on every AI button, broken-formula flag on AI questions, Beta audio/video overviews, students may make a study tool
+  again until the AI limit) merged. Next: PROGRESS.md "Next exact action (session 47)" — ask the founder what next.
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full
