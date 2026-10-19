@@ -95,6 +95,11 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
   teacher notes (general knowledge, labelled "General explanation"), plus Audio overview and Video overview (narrated
   slides) read by the free browser voice; a paid voice comes later. CI green. Next: PROGRESS.md "Next exact action
   (session 44)" — ask "merge #35?", then a test-only Gemini provider when the founder adds a free key.
+- Session 44 (2026-10-19): founder said merge; PRs #35, #36, #37 merged. #36 = Gemini free tier as a test-only provider
+  (ADR-051, `AI_PROVIDER=gemini`) + tutor chat box fixed above the screen bottom with Enter / send arrow; #37 = AI
+  questions open as a dropdown with Approve on the test page (ADR-052). Local test data on newtown (NEET Physics Quiz 1 with
+  5 students' theory answers to check). Next: PROGRESS.md "Next exact action (session 46)" — ask the founder what to build
+  next; their friend's platform-admin access needs his first sign-in.
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full

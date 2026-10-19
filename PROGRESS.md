@@ -146,17 +146,39 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 46)
-**State:** PR #37 MERGED into main 2026-10-19 (`be6e77c`, founder said yes; CI green on `a848e48`, run 39224125433).
-PRs #35, #36, #37 all merged. Branch `r15-next` (from main) holds only this PROGRESS update. Local dev server runs with
-`AI_PROVIDER=gemini` (added to `apps/web/.env.local` 2026-10-19) and the worker was started with the local
-`WORKER_DATABASE_URL` (postgresql://worker:worker_local_only@127.0.0.1:54322/postgres); delete the line to go back to demo AI.
-1. Ask the founder what to build next (nothing open in the roadmap queue from this session).
-2. Founder's friend `aaradhychinche@gmail.com` as platform admin: he signs in once at http://admin.localhost:3000 on
-   the founder's Mac (Google sign-in) so his account exists, then one row: `insert into private.platform_admins
-   (user_id, granted_by) select id, 'founder' from auth.users where email = 'aaradhychinche@gmail.com'`; he reloads and
-   scans the QR with his own phone (the app's own MFA setup). Not done yet: his account does not exist (checked
-   2026-10-19). Remote access for him needs a deployment (Phase 10, founder approval).
-3. Then the session-45 list below (Gemini in the app, e2e blocked).
+**State (2026-10-19, end of session 44):** main = `be6e77c` (PRs #35 UI redesign + ADR-050, #36 Gemini test provider +
+tutor chat box, #37 AI question dropdown + Approve, all MERGED with founder's yes, CI green). Branch `r15-next`
+(`47cea0b` + this handoff) holds only PROGRESS / prompt notes; no PR opened for it (docs only: merge it with the next code
+PR or open a tiny PR). Nothing failing, nothing half-built.
+1. `git switch main && git pull`; `docker info`; `supabase status` (never `db:reset` without asking: it holds the founder's
+   test institutes newtown / vedam / asjdfl). Local DB has migrations up to 34 (`gemini`).
+2. Local dev: `npm run dev` reads `apps/web/.env.local` which now has `AI_PROVIDER=gemini` + `GEMINI_API_KEY` (never print
+   it; test institutes only, ADR-051). Worker: `WORKER_DATABASE_URL=postgresql://worker:worker_local_only@127.0.0.1:54322/postgres
+   npm run dev:worker` (needed for notes processing / OCR). Delete the `AI_PROVIDER` line to go back to demo AI. Both
+   processes die with the session; restart them if the founder tests AI features.
+3. Ask the founder what to build next; likely topics they raised: (a) their friend `aaradhychinche@gmail.com` as platform
+   admin — he signs in once at http://admin.localhost:3000 (Google) on the founder's Mac so his account exists, then
+   `insert into private.platform_admins (user_id, granted_by) select id, 'founder' from auth.users where email =
+   'aaradhychinche@gmail.com'`; he scans the MFA QR with HIS phone (never the founder's). Account did not exist on
+   2026-10-19. Remote access for him needs a deployment (Phase 10, founder approval needed for accounts/hosting).
+   (b) the teacher theory-checking page: it already lists every student's answer per question (Q1–Q5 tabs, model answer,
+   marks + comment, hide names) — founder saw it with 5 students; ask if they want changes (e.g. all answers of one
+   student, bulk marks). (c) Not built, needs founder decision/money: paid voice (Sarvam), real MP4 video, Voyage
+   embeddings (Q-08), deployment (Phase 10).
+4. Local `npm run test:e2e` stays BLOCKED (no `demo` / `rival` institutes locally; seeding needs `db:reset`); CI runs e2e
+   on a fresh database. Unit 185 and pgTAP 1459 pass locally.
+
+## Session 44d (2026-10-19) — theory checking demo, local data only (no code, nothing committed)
+- Founder asked how a teacher checks theory answers with 5+ students. The existing page
+  `/tests/[id]/check` already does it, so no code was written. For the demo, 4 students were added with a one-off script
+  (kept outside the repo): priya.sharma, rohan.mehta, sneha.patel, vikram.singh `@newtown.test` (demo login, in neet 2027,
+  joined 3 days ago) with attempts on "NEET Physics Quiz 1": MCQs auto-marked (scores 36 / 32 / 16 / 12 of 65), 5 theory
+  answers each of varying quality, left unmarked. Aman Singh's 5 theory answers are placeholders already marked 0, so the
+  page shows "5 of 25 checked" and Release / Recalculate stays disabled until the founder marks the other 20.
+- Browser check (teacher.neet, 1280 px): Q1 tab shows the question, model answer and all 5 students' answers with marks box,
+  comment box and Save each.
+- Other founder answers this session: why "ccc" is not on Aman's class 10 Contest (he was moved to class 9 → class 10 is a
+  past batch); how to make a batch past (Batches → batch → Move students, owner/admin only).
 
 ## Session 44c (2026-10-19) — local test data on newtown (no code)
 - neet 2027 · physics: topics "Laws of Motion" and "Work, Energy and Power", each with Gemini-written notes from a
@@ -178,7 +200,7 @@ PRs #35, #36, #37 all merged. Branch `r15-next` (from main) holds only this PROG
   correct answer marked, explanation, Edit, at 1280 px. Approve on a draft not clicked locally (newtown has no AI drafts);
   the e2e covers it in CI.
 
-## Next exact action (session 45)
+## Next exact action (session 45) — history
 **State:** PR #35 MERGED into main 2026-10-19 (founder said yes), squash commit `3482e3e`. Branch `r13-gemini` has main
 merged in (`9757440`) and its PR into main is open (Gemini + chat box). Local DB has migration 34 (`gemini`) applied with
 `supabase migration up` (no reset).
