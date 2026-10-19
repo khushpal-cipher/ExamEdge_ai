@@ -147,7 +147,7 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 
 ## Next exact action (session 45b)
 **State:** PR #36 MERGED 2026-10-19 (`ed5ca6d`, founder said yes). Branch `r14-approve` (from main): AI question dropdown
-with Approve on the test page (ADR-052) — PR open, Auto-fix on. Local e2e still BLOCKED (no demo seed locally).
+with Approve on the test page (ADR-052) — PR #37 open (Auto-fix not turned on yet). Local e2e still BLOCKED (no demo seed locally).
 1. Check the `r14-approve` PR's CI; fix until green; ask the founder before merging.
 2. Founder's friend `aaradhychinche@gmail.com` as platform admin: he signs in once at http://admin.localhost:3000 on
    the founder's Mac (Google sign-in) so his account exists, then one row: `insert into private.platform_admins
