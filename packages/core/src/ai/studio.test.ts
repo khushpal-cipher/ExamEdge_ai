@@ -4,11 +4,12 @@ import { claudeStudio } from './claude';
 import { AiBlocked, type Meter } from './gateway';
 import {
   fakeContent,
+  fakeGeneral,
   fakeStudio,
   generateArtifact,
   KINDS,
   SCHEMAS,
-  StudioError,
+  studioPrompt,
   validateArtifact,
   type Source,
   type StudioProvider,
@@ -53,6 +54,10 @@ describe('demo generators (AC9.1, AC9.3)', () => {
   it.each(KINDS)('%s validates against its schema and cites a sent source everywhere', (kind) => {
     const content = fakeContent(kind, 'Rotational Motion', sources);
     expect(() => validateArtifact(kind, content, sources.length)).not.toThrow();
+  });
+
+  it.each(KINDS)('%s from general knowledge (no notes) validates with empty citations', (kind) => {
+    expect(() => validateArtifact(kind, fakeGeneral(kind, 'Thermodynamics', 'Physics'), 0)).not.toThrow();
   });
 
   it('summary: one section per document, each citing its pages', () => {
@@ -138,10 +143,24 @@ describe('generateArtifact (gateway path)', () => {
     });
   });
 
-  it('no sources → nothing reserved', async () => {
+  // ADR-050 (founder): without notes the AI writes from general knowledge; it is metered like any other generation.
+  it.each(KINDS)('no sources → %s from general knowledge, metered, no source refs', async (kind) => {
     const { meter, calls } = fakeMeter();
-    await expect(generateArtifact(meter, { kind: 'summary', chapter: 'x', sources: [] })).rejects.toThrow(StudioError);
-    expect(calls).toEqual([]);
+    const out = await generateArtifact(meter, { kind, chapter: 'Thermodynamics', subject: 'Physics', sources: [] });
+    expect(calls[0]!.slice(0, 2)).toEqual(['reserve', 'generation']);
+    expect(out.sourceRefs).toEqual([]);
+    expect(JSON.stringify(out.content)).toContain('Thermodynamics');
+  });
+
+  it('general-knowledge prompt asks for empty citations; notes prompt keeps the notes-only rule', () => {
+    expect(studioPrompt('summary', true)).toContain('no notes for this topic');
+    expect(studioPrompt('summary')).toContain('Use only the numbered sources');
+  });
+
+  it('with sources, a part without a citation is still rejected', () => {
+    const content = { sections: [{ heading: 'h', body: 'b', cites: [] }] };
+    expect(() => validateArtifact('summary', content, 3)).toThrow('invalid_citation');
+    expect(() => validateArtifact('summary', content, 0)).not.toThrow();
   });
 
   it('blocked → the provider is never called', async () => {

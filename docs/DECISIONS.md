@@ -606,3 +606,19 @@ taken: dark slabs, 3D objects, oversized display type, extra colours. The page "
 fading text failed axe colour-contrast in CI. "Continue with Google" follows Google's button rules (white, grey
 outline, full-colour G). Page titles use the template "Page · ExamEdge AI" (`noindex` stays: private portal, so no
 sitemap or robots.txt).
+
+### ADR-050 Smart Study without notes + audio/video overviews with the browser voice (founder, 2026-10-19)
+- **Decision (founder):** Summary, Flashcards, Mind map and Practice quiz must not depend on teacher notes. If a topic
+  has no published notes, the AI writes them from its own knowledge of the topic (subject + topic name, standard
+  syllabus). Such artifacts store no source refs and are labelled "General explanation, not from your institute's
+  notes", like the tutor's general answers. With notes, the old rule stays: every part cites a sent source.
+- **Decision (founder):** add **Audio overview** and **Video overview** (NotebookLM-like). For now the **free browser
+  voice** (Web Speech API, `speechSynthesis`, en-IN voice when the device has one) reads an AI-written script; the
+  video is narrated slides on the page (each slide highlighted while its narration is read). No audio or video file
+  is made or stored, no new vendor. A paid natural voice (e.g. Sarvam, R2 in the roadmap) replaces the browser voice
+  later — founder will choose it.
+- **Built:** migration `20261114000033_overviews.sql` (kind check + 2 kinds), `STUDIO_PROMPT_VERSION` studio-v2,
+  `GENERAL_PROMPT`, schemas `audio_overview` / `video_overview`, `(portal)/studio/[id]/speaker.tsx`.
+- **Risk:** general-knowledge material is not checked against the institute's syllabus; it is labelled, student
+  artifacts stay private, and institute artifacts still need a teacher's approval before students see them. Voice
+  quality and Hindi depend on the device.

@@ -4,6 +4,8 @@ export const STUDIO_KIND: Record<string, string> = {
   flashcards: 'Flashcards',
   mind_map: 'Mind map',
   quiz: 'Practice quiz',
+  audio_overview: 'Audio overview',
+  video_overview: 'Video overview',
 };
 
 const IS_ID = /(^|\.)id$/;

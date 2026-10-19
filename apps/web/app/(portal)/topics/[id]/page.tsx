@@ -21,6 +21,8 @@ const ICON: Record<string, string> = {
   mind_map:
     'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM4 4h2v2H4zM18 4h2v2h-2zM4 18h2v2H4zM18 18h2v2h-2zM6 6l4 4M18 6l-4 4M6 18l4-4M18 18l-4-4',
   quiz: 'M4 4h16v16H4zM9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5V14M12 17h.01',
+  audio_overview: 'M5 10v4M9 7v10M13 4v16M17 8v8M21 11v2',
+  video_overview: 'M3 6h13v12H3zM16 10l5-3v10l-5-3',
 };
 
 // The topic page (ADR-038): Subtopics (notes, uploaded or written with AI inside a subtopic) | Smart Study (students:
@@ -278,8 +280,9 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
                           artifacts.filter((a) => a.owner_scope === 'institute'),
                         )}
                         <p className="small muted">
-                          Made by AI from your teachers&apos; notes for this topic, just for you. Practice quizzes never
-                          affect your rank.
+                          Made by AI from your teachers&apos; notes for this topic, just for you; if there are no notes
+                          yet, from general knowledge of the topic. Overviews are read aloud by your device&apos;s
+                          voice. Practice quizzes never affect your rank.
                         </p>
                       </section>
                     </div>

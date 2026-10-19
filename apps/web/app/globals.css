@@ -1365,6 +1365,64 @@ body:has(.center)::before {
   background: var(--fill);
 }
 
+/* Audio / video overviews (ADR-050): player bar, slides, and the part being read */
+.speaker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3);
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  padding: var(--s3) 0;
+  background: var(--bg);
+}
+.slides {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--s5);
+}
+.slide {
+  display: grid;
+  gap: var(--s3);
+  align-content: start;
+  min-height: 280px;
+  padding: var(--s6);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: linear-gradient(var(--card), color-mix(in srgb, var(--paper) 30%, var(--card)));
+  box-shadow: var(--raised);
+}
+.slide h2 {
+  font-family: var(--font-read), Georgia, serif;
+  font-size: clamp(24px, 3vw, 32px);
+  margin: 0;
+}
+.slide ul {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: var(--t-read);
+}
+.part {
+  scroll-margin-top: 72px;
+  transition:
+    border-color var(--ease),
+    box-shadow var(--ease);
+}
+.part[aria-current='true'] {
+  border-color: var(--accent);
+  box-shadow:
+    inset 3px 0 0 var(--accent),
+    var(--raised-hover);
+}
+div.part[aria-current='true'] {
+  padding: var(--s4);
+  border-radius: var(--r);
+  background: var(--card);
+}
+
 /* Small layout helpers used instead of inline styles */
 .between {
   justify-content: space-between;

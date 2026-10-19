@@ -8,6 +8,7 @@ import { isUuid, requireMember } from '@/lib/tenant';
 import { Flash, type Search } from '../../flash';
 import { deleteArtifact, editArtifact, publishArtifact, withdrawArtifact } from '../actions';
 import { Quiz } from './quiz';
+import { Speaker } from './speaker';
 
 type Row = {
   id: string;
@@ -119,7 +120,10 @@ export default async function StudioArtifact(props: { params: Promise<{ id: stri
           </p>
           <h1>{title}</h1>
           <p className="muted small">
-            Made by AI from your institute&apos;s notes on {formatTime(a.created_at)}.{' '}
+            {refs.length
+              ? "Made by AI from your institute's notes"
+              : 'Made by AI from general knowledge (this topic had no notes yet)'}{' '}
+            on {formatTime(a.created_at)}.{' '}
             {a.owner_scope === 'student'
               ? 'Only you can see it.'
               : student
@@ -127,6 +131,9 @@ export default async function StudioArtifact(props: { params: Promise<{ id: stri
                 : 'Check it before publishing.'}
           </p>
           {staff && <span className={`badge ${STATUS[a.status]![1]}`}>{STATUS[a.status]![0]}</span>}
+          {!refs.length && (
+            <span className="badge warn">General explanation, not from your institute&apos;s notes</span>
+          )}{' '}
           {a.kind === 'quiz' && a.owner_scope === 'student' && (
             <span className="badge warn">AI practice, unverified</span>
           )}
@@ -157,6 +164,55 @@ export default async function StudioArtifact(props: { params: Promise<{ id: stri
                 </li>
               ))}
             </ul>
+          </>
+        )}
+        {a.kind === 'audio_overview' && (
+          <>
+            <Speaker
+              label="Audio overview player"
+              parts={(a.content as Content<'audio_overview'>).parts.map((p) => `${p.heading}. ${p.script}`)}
+            />
+            <p className="small muted">Read aloud by your device&apos;s voice. The script is below.</p>
+            {(a.content as Content<'audio_overview'>).parts.map((p, i) => (
+              <div key={i} id={`part-${i}`} className="stack part">
+                <h2>{p.heading}</h2>
+                <Markdown text={p.script} />
+                <Cites refs={refs} cites={p.cites} />
+              </div>
+            ))}
+          </>
+        )}
+        {a.kind === 'video_overview' && (
+          <>
+            <Speaker
+              label="Video overview player"
+              parts={(a.content as Content<'video_overview'>).slides.map((p) => `${p.title}. ${p.narration}`)}
+            />
+            <p className="small muted">Each slide is read aloud by your device&apos;s voice.</p>
+            <ol className="slides">
+              {(a.content as Content<'video_overview'>).slides.map((p, i) => (
+                <li key={i} id={`part-${i}`} className="slide part">
+                  <span className="small muted">
+                    Slide {i + 1} of {(a.content as Content<'video_overview'>).slides.length}
+                  </span>
+                  <h2>{p.title}</h2>
+                  {p.points.length > 0 && (
+                    <ul>
+                      {p.points.map((t, j) => (
+                        <li key={j}>
+                          <Markdown text={t} />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <details>
+                    <summary className="small">Narration</summary>
+                    <Markdown text={p.narration} />
+                  </details>
+                  <Cites refs={refs} cites={p.cites} />
+                </li>
+              ))}
+            </ol>
           </>
         )}
         {a.kind === 'mind_map' && <MindMap map={a.content as Content<'mind_map'>} refs={refs} />}
