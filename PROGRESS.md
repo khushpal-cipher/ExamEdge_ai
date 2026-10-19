@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-19 (session 42, handoff)
+Last updated: 2026-10-19 (session 43)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -45,6 +45,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-19 | Session 43 on `r13-ui` (PR #35) | `a98d60c` page pass: own 404 page (`app/not-found.tsx`, portal re-export; status stays 404), result-page options as rows, styled file picker. `dcf3383` CI fix: run 39197920047 failed 4 E2E on axe `color-contrast` because the page `rise` animation faded text in → movement only, no assertion changed. `740a016` founder UI refine (ADR-049 refine): raised surfaces, button depth, glow, entry grid, staff phone menu, Google G button, practice/doubt lists as tables (E2E `studio.spec.ts` now checks the table row, same facts), page titles. Evidence (2026-10-19, on `740a016`): format, lint + forbidden, typecheck PASS; `npm test` 163/163; `npm run build` + check-bundle ok. Headless Chromium on the founder's `next dev` :3000 (newtown): student2, teacher.jee, teacher.neet at 375/768/1280, scrollWidth = viewport everywhere, 0 page errors; staff menu at 375/768: opens (links visible), closes on navigation and Escape. Owner view checked with a temporary owner `tmp.owner@newtown.test` (all 3 batches, 4 staff, 2 students, New batch form) → **deleted** (0 tmp users). E2E not run locally (:3000 is the founder's dev) → CI. |
 | 2026-10-19 | UI redesign steps 3–6 (session 41), branch `r13-ui` | Founder: "update the buttons and the links". Links: semibold blue, no underline (underline on hover and inside running text/notes); secondary buttons = mint fill + blue text, no grey box; primary solid blue. Progress-page bars reuse `.meter` (inline colour styles gone; remaining inline styles are layout only). Checked headless at 1280 light: student Contest, My progress, Review; staff batch page, People, Question bank, student progress, released test, topic. lint + forbidden, typecheck, unit 163, build + bundle PASS; E2E → CI. |
 | 2026-10-19 | UI redesign with the founder's palette (ADR-049 update, session 41), branch `r13-ui` | Founder supplied palette `#3368A0/#66A3BF/#C8DFDB/#F2EFE7` + a full redesign brief, then said "keep this type of UI" on the Home screenshot. `globals.css` rewritten (tokens for colour/type/space/radius, dark mode, flat sections, pressable tiles, underlined tabs, runner `.runbar/.meter/.option/.runnav`, entry `.center` split, forms max 600 px, checkbox labels in one row, reduced motion); `layout.tsx` fonts Plus Jakarta Sans + Source Serif 4; markup: entry pages (`page.tsx`, `invite/[token]`), Home section order, runner classes (no logic), batch label `<span>`, brand colour only on the logo (`(portal)/layout.tsx`). Contrast by node script (all text ≥ 4.5, field borders ≥ 3). format, lint + forbidden, typecheck PASS; vitest 191/191; build + bundle PASS; E2E not run locally (:3000 held by founder's dev) → CI; E2E class locators `.stat`, `.side` kept. Headless Chromium on founder's `next dev` :3000 (newtown; student2 and teacher.jee): sign-in, Home, runner (temporary copy of "jhj", **deleted**, tests 10 = before), Dashboard, Tests at 375/768/1280 light + dark, scrollWidth = viewport, 0 page errors. |
 | 2026-10-19 | UI redesign steps 1+2 (ADR-049, session 41), branch `r13-ui` | `globals.css` only: indigo + saffron tokens, dark mode (`prefers-color-scheme`), Poppins 700 headings (h1 clamp 26–34 px), light sidebar with indigo active pill, 16 px cards, pressable 44 px buttons/tiles/answer options (3 px bottom edge, `color-mix` so an institute brand colour also works), chosen MCQ option highlighted via `:has(input:checked)`, `--focus` ring (indigo light / saffron dark), `.stack` no longer stretches empty boxes. No markup, logic or selector change. Contrast by script (node, WCAG formula): all text pairs ≥ 4.5 in light + dark; field borders 3.26–4.67; saffron alone fails 3:1 on the light page → used as focus ring only in dark. brilliant.org studied in the built-in browser (its CSS did not load in the pane; layout cues from structure). format, lint + forbidden, typecheck, build + bundle PASS; unit/pgTAP/int/E2E not rerun (CSS only) → step 7 + CI. Headless Chromium (Playwright) on the founder's `next dev` :3000, newtown, student2, light/dark × 375/1280: Home and a test page scrollWidth = viewport, 0 page errors; runner shown with a temporary copy of "jhj" (SQL, opened now) → started, option B chosen → **deleted** (tests 10 = before, 0 attempts left). Screenshots show newtown's own brand colour replacing indigo (Phase 3 branding) → asked the founder. |
@@ -142,21 +143,18 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 43)
-**State:** branch `r13-ui`, PR #35 open (https://github.com/khushpal-cipher/ExamEdge_ai/pull/35), Auto-fix on, founder
-has NOT said "merge". Session 42 built the polish list (steps 1–6) and the founder's follow-ups (below). The founder
-said "make your changes, if I don't like them I will tell you to undo them".
-1. `git checkout r13-ui && git pull`; `docker info`; `supabase status`; check PR #35 CI (`gh pr checks 35`) — E2E on
-   the session 42 commits has not been seen green yet; fix any failure without weakening a test (watch: new Home
-   "At a glance" band adds text on /home; `.notice.toast` stays `role=status`; textareas now `field-sizing: content`).
-2. Ask the founder for feedback on the session 42 changes; undo only what they name (each idea is its own CSS block
-   in `globals.css` + small markup: `.hero` in `home/page.tsx`, `.tile .mark`, `td .badge[class]` dots, `.num`
-   columns, `.notice.toast` in `flash.tsx`, `rise`/`fill` animations, `body:has(.center)` entry background).
-3. Step 7 page pass still open: test runner (temporary copy of a test via SQL, delete after), result page, check
-   answers, documents/notes, student progress, Bill, platform pages, invite — screenshot 375/768/1280 light with the
-   scratchpad Playwright script pattern below, fix what the shared CSS misses. Contest "Results" rows not yet seen
-   with data (student1@newtown.test is now in jee 2027 with no tests).
-4. Step 8: gate (`npm run format:check`, lint, typecheck, `npm test`, `npm run build`), CI green, ask "merge #35?".
+## Next exact action (session 44)
+**State:** branch `r13-ui`, PR #35 open, Auto-fix on, head `740a016` (+ this handoff). Founder has NOT said "merge".
+1. Check PR #35 CI (`gh pr checks 35`); E2E on `dcf3383`/`740a016` not seen green yet — fix without weakening a test.
+2. Founder feedback on the session 43 refine (undo only what they name: each part is its own block in `globals.css`;
+   menu = `(portal)/main-nav.tsx`).
+3. Founder's new requests (session 43), NOT built — need an ADR and the founder's answers first:
+   a. Smart Study Summary / Flashcards / Quiz / Mind map should work without teacher notes: AI writes from the topic
+      name and its own knowledge, labelled "General explanation (not from your institute's notes)" like the tutor.
+   b. Add **Audio overview** and **Video overview** tiles (NotebookLM-like). Roadmap had audio in R2 (Sarvam TTS,
+      paid, new vendor) and video in R3. Ask the founder: free browser voice (Web Speech API reading an AI script;
+      video = narrated slides in the page) now, or a paid voice vendor later.
+4. Then ask "merge #35?".
 
 ## Session 42 result (2026-10-19) — polish steps 1–6 built on `r13-ui`, commit `8ebab56`, PR #35
 - Done: step 1 light only; step 2 type scale (16/15/14/13 px, h2 22, h3 18, h1 32–44, stat 36, no 650 weight);

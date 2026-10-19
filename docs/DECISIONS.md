@@ -595,3 +595,14 @@ accent everywhere). No logic, DB or E2E selector change.
 fields (`.inline` now styles any element, not only `form.inline` — `div.inline` field rows had no gap at all), 48 px
 between page sections, 14 px table cell padding, forms max 560 px, page content max 960 px. Sidebar 248 px, 40 px
 logo, 44 px nav items, full-width quiet Sign out. Destructive actions get a red-outline `.danger` style (class only).
+
+**ADR-049 refine (founder, 2026-10-19, session 43):** founder asked to polish the UI using the techniques (not the maroon
+theme) of a 21st.dev "fintech landing" reference. Taken: raised surfaces (white top highlight + low soft shadow,
+lifting on hover), button depth on primary buttons, one easing `cubic-bezier(0.2, 0.8, 0.2, 1)` at 200 ms, tighter
+page titles (-0.025em, balanced lines), a faint mint glow at the top of every page, a fading drafting grid behind the
+entry page, and a menu button on phones for staff (6–8 links): an animated panel with numbered links that closes on
+navigation and Escape (`(portal)/main-nav.tsx`). Students keep the visible link row (4 links fit at 375 px). Not
+taken: dark slabs, 3D objects, oversized display type, extra colours. The page "rise" animation moves only (no fade):
+fading text failed axe colour-contrast in CI. "Continue with Google" follows Google's button rules (white, grey
+outline, full-colour G). Page titles use the template "Page · ExamEdge AI" (`noindex` stays: private portal, so no
+sitemap or robots.txt).
