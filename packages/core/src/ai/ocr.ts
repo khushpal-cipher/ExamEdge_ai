@@ -2,6 +2,7 @@
 // fixed, clearly marked text so the pipeline runs end to end; AI_PROVIDER=anthropic reads the page images with Claude
 // Haiku (claudeOcr). The worker renders each page to an image only once the batch's reservation has passed.
 import { claudeOcr } from './claude';
+import { geminiOcr } from './gemini';
 import { metered, type Meter } from './gateway';
 import { fakeTokens, type Model, type Usage } from './routing';
 
@@ -41,6 +42,7 @@ export function ocrProvider(env = process.env): OcrProvider {
   const p = env.AI_PROVIDER || 'fake';
   if (p === 'fake') return fakeOcr;
   if (p === 'anthropic') return claudeOcr();
+  if (p === 'gemini') return geminiOcr();
   throw new Error(`Unknown AI_PROVIDER "${p}"`);
 }
 

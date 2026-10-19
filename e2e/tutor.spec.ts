@@ -25,7 +25,7 @@ async function ask(page: Page, question: string) {
   const newChat = tutor.getByRole('button', { name: 'New chat' });
   if (await newChat.isVisible()) await newChat.click();
   await tutor.getByLabel('Your doubt').fill(question);
-  await tutor.getByRole('button', { name: 'Ask', exact: true }).click();
+  await tutor.getByRole('button', { name: 'Send', exact: true }).click();
   return tutor;
 }
 

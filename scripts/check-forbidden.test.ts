@@ -22,6 +22,9 @@ describe('check-forbidden (T-SEC-08)', () => {
     expect(findViolations('packages/core/src/ai/anthropic.ts', "import Anthropic from '@anthropic-ai/sdk'")).toEqual(
       [],
     );
+    expect(findViolations('apps/web/app/x.ts', "fetch('https://generativelanguage.googleapis.com/v1beta')")).toContain(
+      'provider-sdk-outside-gateway',
+    );
   });
 
   it('flags raw HTML injection and secret keys in runtime code', () => {

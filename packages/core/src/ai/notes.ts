@@ -2,6 +2,7 @@
 // notes in Markdown. The teacher reads and edits them before publishing; nothing here reaches students directly.
 // Demo mode (AI_PROVIDER unset or "fake") turns the explanation itself into notes, metered through the same path.
 import { claudeNotes } from './claude';
+import { geminiNotes } from './gemini';
 import { metered, type Meter } from './gateway';
 import { fakeTokens, maxTokens, type Model, type Usage } from './routing';
 
@@ -30,6 +31,7 @@ export function notesProvider(env = process.env): NotesProvider {
   const p = env.AI_PROVIDER || 'fake';
   if (p === 'fake') return fakeNotes;
   if (p === 'anthropic') return claudeNotes();
+  if (p === 'gemini') return geminiNotes();
   throw new Error(`AI provider "${p}" is not available`);
 }
 

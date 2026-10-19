@@ -17,7 +17,7 @@ export const rules: Rule[] = [
   {
     id: 'provider-sdk-outside-gateway',
     pattern:
-      /(from\s+|import\s*\(|require\s*\()\s*['"](@anthropic-ai\/sdk|voyageai|openai|@google\/genai)['"/]|api\.(anthropic|voyageai)\.com/,
+      /(from\s+|import\s*\(|require\s*\()\s*['"](@anthropic-ai\/sdk|voyageai|openai|@google\/genai)['"/]|api\.(anthropic|voyageai)\.com|generativelanguage\.googleapis\.com/,
     applies: (p) => inRuntime(p) && !p.startsWith('packages/core/src/ai/'),
   },
   { id: 'dangerouslySetInnerHTML', pattern: /dangerouslySetInnerHTML/, applies: (p) => p.startsWith('apps/web/') },
