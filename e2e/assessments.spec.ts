@@ -62,7 +62,7 @@ test('teacher builds a mixed test, student takes it, teacher checks and releases
     await fill();
     await form.getByRole('button', { name: 'Add question' }).click();
     await expect(page.getByRole('status')).toHaveText('Question added to the test and saved in the question bank.');
-    await expect(page.getByRole('region', { name: 'Questions' }).getByRole('link', { name: stem })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Questions' }).locator('summary', { hasText: stem })).toBeVisible();
   };
   await add(async () => {
     await form.getByLabel('Question', { exact: true }).fill(stems.single);

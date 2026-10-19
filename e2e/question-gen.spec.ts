@@ -91,9 +91,7 @@ test('AI test: a request adds MCQs + theory to a draft; flagged and theory quest
 
     const row = (stem: string) => teacher.getByRole('row').filter({ hasText: stem.slice(0, 40) });
     await expect(row(flagged.stem).getByText('answers differ, fix before use')).toBeVisible();
-    await expect(row(flagged.stem).getByRole('button', { name: /^Approve/ })).toHaveCount(0);
     await expect(row(theory[0]!.stem).getByText('not checked, check it')).toBeVisible();
-    await expect(row(theory[0]!.stem).getByRole('button', { name: /^Approve/ })).toHaveCount(0);
 
     // Not through the API either.
     const api = await signedIn('teacher1@demo.test');
@@ -107,18 +105,21 @@ test('AI test: a request adds MCQs + theory to a draft; flagged and theory quest
     await expect(teacher).toHaveURL(/error=test_question_not_ready$/);
     expect(await one('select status from tests where id = $1', [tst])).toEqual({ status: 'draft' });
 
-    // A matched MCQ is approved with one click on the test page.
+    // A question opens in place on the test page (founder, session 44); a matched MCQ is approved from there.
+    await row(matched.stem).locator('summary').click();
     await row(matched.stem)
       .getByRole('button', { name: /^Approve/ })
       .click();
     await expect(teacher.getByRole('status')).toHaveText('Approved. It can now be added to tests.');
     await expect(teacher).toHaveURL(new RegExp(`/tests/${tst}\\?ok=approved$`));
 
-    // The flagged MCQ shows both answers; saving it (after checking) approves it and returns to the test.
-    await teacher.goto(`${DEMO}/questions/${flagged.id}`);
-    await expect(teacher.getByText(/answered [A-D], but the key says [A-D]/)).toBeVisible();
-    await teacher.getByRole('button', { name: 'Save question' }).click();
-    await expect(teacher).toHaveURL(new RegExp(`/tests/${tst}\\?ok=saved$`));
+    // The flagged MCQ shows both answers in place; approving it there records the teacher's check (teacher_verified).
+    await row(flagged.stem).locator('summary').click();
+    await expect(row(flagged.stem).getByText(/answered [A-D], but the key says [A-D]/)).toBeVisible();
+    await row(flagged.stem)
+      .getByRole('button', { name: /^Approve/ })
+      .click();
+    await expect(teacher).toHaveURL(new RegExp(`/tests/${tst}\\?ok=approved$`));
     // A theory question shows its model answer; saving approves it.
     for (const q of theory) {
       await teacher.goto(`${DEMO}/questions/${q.id}`);

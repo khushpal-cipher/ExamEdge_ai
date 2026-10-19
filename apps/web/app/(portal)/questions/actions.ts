@@ -93,7 +93,7 @@ export async function addAiQuestions(form: FormData) {
   redirect(`${here}?ok=${missing ? 'ai_questions_partial' : 'ai_questions_added'}`);
 }
 
-// Approves a checked AI draft; the database refuses one whose second answer differed or is missing.
+// Approves a checked AI draft; without `checked` the database refuses one whose second answer differed or is missing.
 export async function approveQuestion(form: FormData) {
   const { institute, db } = await requireMember(STAFF);
   const id = form.get('question_id');
@@ -104,7 +104,8 @@ export async function approveQuestion(form: FormData) {
   if (!isUuid(id)) done(to, { code: '23514' });
   const { error } = await db
     .from('questions')
-    .update({ status: 'approved' })
+    // `checked`: approved after seeing it in full (question-preview), so a teacher vouches for it (ADR-052).
+    .update(form.get('checked') ? { status: 'approved', verification: 'teacher_verified' } : { status: 'approved' })
     .eq('institute_id', institute.id)
     .eq('id', id)
     .eq('status', 'draft');
