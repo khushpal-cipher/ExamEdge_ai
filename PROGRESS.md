@@ -146,10 +146,10 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 45)
-**State:** branch `r13-gemini` (cut from `r13-ui`, so it also holds PR #35's commits), pushed, no PR yet. PR #35 still
-open, founder has NOT said "merge". Local DB has migration 34 (`gemini`) applied with `supabase migration up` (no reset).
-1. Ask the founder: "merge #35?" On yes: `gh pr merge 35 --squash`, then rebase/merge `r13-gemini` onto main and open
-   its PR; otherwise open the `r13-gemini` PR into main stacked on #35.
+**State:** PR #35 MERGED into main 2026-10-19 (founder said yes), squash commit `3482e3e`. Branch `r13-gemini` has main
+merged in (`9757440`) and its PR into main is open (Gemini + chat box). Local DB has migration 34 (`gemini`) applied with
+`supabase migration up` (no reset).
+1. Check the `r13-gemini` PR's CI (`gh pr checks`), fix until green, then ask the founder before merging.
 2. Try Gemini in the app: founder adds `AI_PROVIDER=gemini` to `apps/web/.env.local` and restarts `npm run dev` (and
    `npm run dev:worker` for OCR / uploads); then click tutor, the 6 Smart Study tools, AI notes, AI questions and a test
    plan on newtown and record results. Only local test institutes (ADR-051 data rule).
