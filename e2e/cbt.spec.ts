@@ -40,7 +40,7 @@ test('CBT test: full screen, warnings, the 3rd submits it; only staff switch it 
   await form.getByLabel('Option B', { exact: true }).fill('5');
   await form.getByLabel('Option A is correct').check();
   await form.getByRole('button', { name: 'Add question' }).click();
-  await expect(page.getByRole('region', { name: 'Questions' }).getByRole('link', { name: stem })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Questions' }).locator('summary', { hasText: stem })).toBeVisible();
   await page.getByRole('button', { name: 'Schedule' }).click();
   await expect(page.getByText('Open now')).toBeVisible();
 
