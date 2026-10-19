@@ -625,3 +625,19 @@ sitemap or robots.txt).
 - **Tutor too (founder, same day):** when no notes match, the tutor says so in one sentence and then answers fully from
   standard textbook knowledge (prompt `tutor-v4`; the Claude request adds "(No passages from your notes matched.)").
   Uncited paragraphs were already labelled "General explanation"; demo mode now shows the same two-part shape.
+
+### ADR-051 Gemini free tier as a test-only AI provider (founder, 2026-10-19)
+- **Decision (founder):** add Google Gemini (free API key from AI Studio) so every AI feature can be tried locally
+  before paying for Claude. `AI_PROVIDER=gemini` + `GEMINI_API_KEY` (in `apps/web/.env.local`, read by web and worker).
+  Claude stays the production plan (ADR-008); `fake` stays the default; embeddings are untouched (`EMBEDDINGS_PROVIDER`).
+- **Data rule:** Google's pricing page (checked 2026-10-19) says free-tier content **is used to improve Google's
+  products**. Use it only with local test institutes, never real student or teacher data, and never in production.
+- **Built:** `packages/core/src/ai/gemini.ts` over the REST API with `fetch` (no new dependency; the forbidden-pattern
+  check now also keeps `generativelanguage.googleapis.com` inside `packages/core/src/ai`). Models (models.get,
+  2026-10-19, output limit 65,536): `gemini-3.5-flash-lite` where Claude uses Haiku (tutor, flashcards / mind map /
+  quiz, OCR, test plan, blind solver) and `gemini-3.8-flash` where Claude uses Sonnet/Opus (step-by-step tutor,
+  summary, overviews, question writer, AI notes). Metered through the same gateway as provider `google` at cost 0
+  (migration `20261115000034_gemini.sql`). Free-tier rate limits are per account and shown only in AI Studio [U].
+- **Differences from Claude:** no citation blocks, so the tutor numbers passages and the model cites `[n]`; the tutor
+  answer is not streamed (shows at once); `maxItems` is stripped from the JSON schema (Gemini rejected some schemas
+  with it on 2026-10-19), the Zod check after the call still enforces the limits. One retry on 429/5xx.

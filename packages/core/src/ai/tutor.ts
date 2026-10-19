@@ -4,6 +4,7 @@
 // Demo mode (AI_PROVIDER unset or "fake") answers by quoting the best-matching sentences of the retrieved passages,
 // so citations, labels, metering and quotas run the same code paths as the real provider.
 import { claudeTutor } from './claude';
+import { geminiTutor } from './gemini';
 import { words } from './embed';
 import { metered, type Meter } from './gateway';
 import { fakeTokens, maxTokens, type Model, type Usage } from './routing';
@@ -60,6 +61,7 @@ export function tutorProvider(premium: boolean, env = process.env): TutorProvide
   const p = env.AI_PROVIDER || 'fake';
   if (p === 'fake') return fakeTutor;
   if (p === 'anthropic') return claudeTutor(premium ? 'claude-sonnet-5-5' : 'claude-haiku-5-5');
+  if (p === 'gemini') return geminiTutor(premium);
   throw new Error(`AI provider "${p}" is not available`);
 }
 

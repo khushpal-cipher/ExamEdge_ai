@@ -5,6 +5,7 @@
 // Demo mode (AI_PROVIDER unset or "fake") parses the request with a few rules, metered like the real provider.
 import { z } from 'zod';
 import { claudePlan } from './claude';
+import { geminiPlan } from './gemini';
 import { metered, type Meter } from './gateway';
 import { fakeTokens, maxTokens, type Model, type Usage } from './routing';
 import { ALL_TYPES, MAX_COUNT, type GenType } from './questions';
@@ -42,6 +43,7 @@ export function planProvider(env = process.env): PlanProvider {
   const p = env.AI_PROVIDER || 'fake';
   if (p === 'fake') return fakePlanner;
   if (p === 'anthropic') return claudePlan();
+  if (p === 'gemini') return geminiPlan();
   throw new Error(`AI provider "${p}" is not available`);
 }
 

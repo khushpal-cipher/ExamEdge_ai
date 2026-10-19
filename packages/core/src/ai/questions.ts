@@ -8,6 +8,7 @@
 // looking them up in the notes, metered through the same gateway path as the real provider.
 import { z } from 'zod';
 import { claudeQuestions } from './claude';
+import { geminiQuestions } from './gemini';
 import { fnv1a, words } from './embed';
 import { metered, type Meter } from './gateway';
 import { fakeTokens, maxTokens, type Model, type Usage } from './routing';
@@ -127,6 +128,7 @@ export function questionProvider(env = process.env): QuestionProvider {
   const p = env.AI_PROVIDER || 'fake';
   if (p === 'fake') return fakeQuestions;
   if (p === 'anthropic') return claudeQuestions();
+  if (p === 'gemini') return geminiQuestions();
   throw new Error(`AI provider "${p}" is not available`);
 }
 

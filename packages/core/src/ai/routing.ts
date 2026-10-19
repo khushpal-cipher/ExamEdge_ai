@@ -17,6 +17,9 @@ export const MODELS = {
   'claude-sonnet-5-5': { provider: 'anthropic', prices: { in: 2000, out: 10000, cacheRead: 100, cacheWrite: 2500 } },
   'claude-opus-5-5': { provider: 'anthropic', prices: { in: 4000, out: 20000, cacheRead: 200, cacheWrite: 5000 } },
   'voyage-4': { provider: 'voyage', prices: { in: 60, out: 0, cacheRead: 0, cacheWrite: 0 } },
+  // Test only (ADR-051): Gemini free tier, cost 0.
+  'gemini-3.8-flash': { provider: 'google', prices: FREE },
+  'gemini-3.5-flash-lite': { provider: 'google', prices: FREE },
   // Demo mode: same code paths, metered with token estimates, cost 0.
   'fake-bow-1': { provider: 'fake', prices: FREE },
   'fake-ocr-1': { provider: 'fake', prices: FREE },
@@ -24,7 +27,7 @@ export const MODELS = {
   'fake-studio-1': { provider: 'fake', prices: FREE },
   'fake-questions-1': { provider: 'fake', prices: FREE },
   'fake-notes-1': { provider: 'fake', prices: FREE },
-} as const satisfies Record<string, { provider: 'anthropic' | 'voyage' | 'fake'; prices: Prices }>;
+} as const satisfies Record<string, { provider: 'anthropic' | 'google' | 'voyage' | 'fake'; prices: Prices }>;
 export type Model = keyof typeof MODELS;
 
 // Haiku costs 5× when the prompt (input + cache reads + cache writes) is over 100,000 tokens.

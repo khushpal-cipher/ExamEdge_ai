@@ -5,6 +5,7 @@
 // through the same gateway path as the real provider.
 import { z } from 'zod';
 import { claudeStudio } from './claude';
+import { geminiStudio } from './gemini';
 import { fnv1a, words } from './embed';
 import { metered, type Meter } from './gateway';
 import { fakeTokens, maxTokens, type Model, type Usage } from './routing';
@@ -155,10 +156,9 @@ export function studioProvider(kind: Kind, env = process.env): StudioProvider {
   if (p === 'fake') return fakeStudio;
   // Summaries need more judgement (Sonnet); the rest are small extraction tasks (Haiku), AI_PIPELINE §5.
   // Overviews explain like a summary does, so they get Sonnet too.
-  if (p === 'anthropic')
-    return claudeStudio(
-      kind === 'flashcards' || kind === 'mind_map' || kind === 'quiz' ? 'claude-haiku-5-5' : 'claude-sonnet-5-5',
-    );
+  const small = kind === 'flashcards' || kind === 'mind_map' || kind === 'quiz';
+  if (p === 'anthropic') return claudeStudio(small ? 'claude-haiku-5-5' : 'claude-sonnet-5-5');
+  if (p === 'gemini') return geminiStudio(small ? 'gemini-3.5-flash-lite' : 'gemini-3.8-flash');
   throw new Error(`AI provider "${p}" is not available`);
 }
 
