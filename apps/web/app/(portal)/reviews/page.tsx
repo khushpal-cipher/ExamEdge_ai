@@ -29,7 +29,7 @@ export default async function Reviews({ searchParams }: { searchParams: Search }
         <form action={sendReview} className="card stack">
           <label>
             Your review
-            <textarea name="body" rows={6} maxLength={2000} required />
+            <textarea name="body" rows={4} maxLength={2000} required />
           </label>
           <label className="row" style={{ display: 'flex' }}>
             <input type="checkbox" name="anonymous" /> Hide my name
