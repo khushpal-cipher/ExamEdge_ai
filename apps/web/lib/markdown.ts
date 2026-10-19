@@ -39,6 +39,31 @@ export function MathText({ text }: { text: string }) {
   return h('span', { className: 'md-inline' }, inline(text, 'i'));
 }
 
+// True when any $…$ formula in these texts cannot be drawn (it would show as red text), so an AI draft with one is
+// flagged and cannot be approved until a teacher fixes it (ADR-054).
+export function brokenMath(...texts: (string | null | undefined)[]) {
+  return texts.some((text) =>
+    (text ?? '').split(INLINE).some((t, i) => {
+      if (i % 2 === 0 || !t.startsWith('$')) return false;
+      const display = t.startsWith('$$');
+      try {
+        katex.renderToString(t.slice(display ? 2 : 1, display ? -2 : -1), { throwOnError: true, trust: false });
+        return false;
+      } catch {
+        return true;
+      }
+    }),
+  );
+}
+
+// The texts of a question that may hold formulas.
+export const questionTexts = (q: {
+  stem: string;
+  options?: { text: string }[] | null;
+  explanation?: string | null;
+  model_answer?: string | null;
+}) => [q.stem, q.explanation, q.model_answer, ...(q.options ?? []).map((o) => o.text)];
+
 // Shortens text for a one-line label without cutting a $…$ formula in half.
 export function clip(text: string, n = 80) {
   if (text.length <= n) return text;

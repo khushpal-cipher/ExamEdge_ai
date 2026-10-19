@@ -664,3 +664,19 @@ sitemap or robots.txt).
   event handlers, `href`/`src` and `javascript:`/`url(`, and keep the strict tag allow-list outside KaTeX output.
 - **Cost:** KaTeX CSS + fonts on every page; the KaTeX script ships to the browser only on the client-side test
   runner and Studio quiz. Formulas are not compiled on save yet (AI_PIPELINE §"Formulas" still open).
+
+### ADR-054 AI progress, formula check, Beta overviews, repeat study tools (founder, 2026-10-19)
+- **Progress (founder: "like NotebookLM", for every AI feature):** the 6 study tools, "Add questions with AI" and
+  "Write notes with AI" show "Making your …" with a spinner and changing steps while the request runs
+  (`app/(portal)/making.tsx`, `useFormStatus`). The buttons are disabled meanwhile, so a double click does not spend
+  AI twice. The steps advance on a timer (a guide, not real progress). The tutor already streams its answer.
+- **Formula check on save:** `brokenMath()` (`lib/markdown.ts`) runs KaTeX with `throwOnError: true` over a question's
+  stem, options, explanation and model answer. `addAiQuestions` counts broken drafts when saving them (log
+  `questions.formula_broken`, flash `ai_questions_formula`); the badge says "formula broken, fix before use", the
+  dropdown hides Approve and `approveQuestion` refuses it (`formula_broken`) until a teacher edits it. Flag only, no
+  automatic retry (no extra AI spend). The check reads the stored text, so it also covers older questions.
+- **Beta:** Audio overview and Video overview are labelled Beta (tiles, lists, artifact page) because the device voice
+  reads them.
+- **Students make study tools again (changes AC9.2 for students):** each click makes a new artifact until the AI limit
+  stops them (migration 35 drops `generated_artifacts_student_input`; lists show when each was made). Institute
+  artifacts keep one per input.

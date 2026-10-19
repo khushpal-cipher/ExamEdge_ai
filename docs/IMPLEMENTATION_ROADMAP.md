@@ -175,7 +175,7 @@ Legal/consent track (parallel from now) ─────────────�
 - **Objective:** summaries/study guides, flashcards, mind maps (institute-approved and student-personal).
 - **Dependencies:** P4, P5 (P8 optional).
 - **Tasks:** generated_artifacts migration + RLS; generators with schemas; approval workflow; reuse by input hash; renderers (flashcard viewer, markmap mind map [U: licence check], study guide).
-- **Acceptance:** AC9.1 every artifact validates against schema; AC9.2 identical institute request reuses existing artifact (no provider call); AC9.3 citations present per section; AC9.4 student artifacts private to owner (T-ISO-01 extended).
+- **Acceptance:** AC9.1 every artifact validates against schema; AC9.2 identical institute request reuses existing artifact (no provider call; students may make it again, ADR-054); AC9.3 citations present per section; AC9.4 student artifacts private to owner (T-ISO-01 extended).
 - **Complexity:** medium. → Model: sonnet · Effort: medium · Why: standard generation features.
 
 ---

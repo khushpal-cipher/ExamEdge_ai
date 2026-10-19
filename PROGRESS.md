@@ -146,7 +146,7 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 46)
-**State (2026-10-19, end of session 44):** main = `be6e77c` (PRs #35 UI redesign + ADR-050, #36 Gemini test provider +
+**State (2026-10-19, session 45):** main = `5cb5327` (PR #38 KaTeX formulas, ADR-053, merged). Before that main = `be6e77c` (PRs #35 UI redesign + ADR-050, #36 Gemini test provider +
 tutor chat box, #37 AI question dropdown + Approve, all MERGED with founder's yes, CI green). Branch `r15-next`
 (`47cea0b` + this handoff) holds only PROGRESS / prompt notes; no PR opened for it (docs only: merge it with the next code
 PR or open a tiny PR). Nothing failing, nothing half-built.
@@ -168,7 +168,21 @@ PR or open a tiny PR). Nothing failing, nothing half-built.
 4. Local `npm run test:e2e` stays BLOCKED (no `demo` / `rival` institutes locally; seeding needs `db:reset`); CI runs e2e
    on a fresh database. Unit 185 and pgTAP 1459 pass locally.
 
+## Session 45b (2026-10-19) — AI progress, formula check, Beta, repeat study tools (ADR-054), branch `r15-next`
+- Founder asked: (1) flag AI questions whose formula cannot be drawn; (2) a NotebookLM-style "making it" state on every
+  AI feature; (3) Beta on audio/video overview; (4) students make a study tool again until the AI limit.
+- Built: `lib/markdown.ts` `brokenMath` / `questionTexts`; `addAiQuestions` flags on save (`ai_questions_formula`),
+  badge "formula broken, fix before use", Approve hidden + `approveQuestion` refuses (`formula_broken`);
+  `app/(portal)/making.tsx` on the 6 study tiles, Add questions with AI, Write notes with AI (buttons disabled while
+  pending); `BETA_KINDS` badges; migration 35 `studio_repeat` drops the per-student unique index, `studio/actions.ts`
+  reuses only for staff, student lists show the time each was made. pgTAP 110 + e2e studio.spec updated (ADR-054).
+- Evidence (2026-10-19): `supabase migration up` applied 35 locally (no reset); `npm run test:db` 1459 PASS; `npm test`
+  189 passed; format, lint (check-forbidden ok), typecheck ok; `npm run build` + check-bundle ok. Browser (teacher,
+  newtown topic page, POST blocked so no AI spend): "Making your notes…" with spinner, button disabled.
+- Unverified locally: student tiles + Beta badges in the browser (needs a student login), e2e BLOCKED locally (CI).
+
 ## Session 45 (2026-10-19) — KaTeX formulas (ADR-053), branch `r15-next`
+- **MERGED** (founder's yes, 2026-10-19): PR #38 squash-merged into main as `5cb5327`; CI green (check 5m48s incl. e2e, secrets).
 - Founder saw AI quiz text like `$20\text{ N}$` and said "install it". `katex@0.19.0` added to `apps/web` (dev tool
   rule: free, MIT, logged in DECISIONS ADR-053). `lib/markdown.ts` typesets `$…$` / `$$…$$` (`trust: false`,
   `throwOnError: false`); new `MathText` (inline) and `clip` (labels that never cut a formula). Stems, options, model

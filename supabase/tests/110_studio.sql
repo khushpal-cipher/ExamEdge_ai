@@ -76,10 +76,10 @@ select throws_ok($$ insert into public.generated_artifacts (institute_id, owner_
   input_hash, prompt_version, model, content)
   select a, 'student', 'summary', physics, bonding, repeat('d', 64), 'studio-v1', 'fake', '{}' from ids $$,
   '23503', null, 'the chapter must belong to the subject');
-select throws_ok($$ insert into public.generated_artifacts (institute_id, owner_scope, kind, subject_id, chapter_id,
+select lives_ok($$ insert into public.generated_artifacts (institute_id, owner_scope, kind, subject_id, chapter_id,
   input_hash, prompt_version, model, content)
   select a, 'student', 'summary', physics, rotation, repeat('c', 64), 'studio-v1', 'fake', '{}' from ids $$,
-  '23505', null, 'the same request is stored once (reuse)');
+  'a student may make the same request again (ADR-054)');
 select is(tests.affected($$ update public.generated_artifacts set content = '{}' where id = (select own from ids) $$),
   0::bigint, 'a student artifact is not edited in place');
 select is(tests.affected($$ delete from public.generated_artifacts where id = (select own from ids) $$),

@@ -7,6 +7,8 @@ export const STUDIO_KIND: Record<string, string> = {
   audio_overview: 'Audio overview',
   video_overview: 'Video overview',
 };
+// Read by the device's voice, not a studio voice: labelled Beta so students know it is not polished (founder, ADR-054).
+export const BETA_KINDS = new Set(['audio_overview', 'video_overview']);
 
 const IS_ID = /(^|\.)id$/;
 

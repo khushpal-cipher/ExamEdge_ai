@@ -39,7 +39,9 @@ async function generate(page: Page, chapter: string, kind: string) {
   return { id: url.pathname.split('/').pop()!, ok: url.searchParams.get('ok') };
 }
 
-test('teachers have no Smart Study; students see teacher material and reuse their own (AC9.2)', async ({ browser }) => {
+test('teachers have no Smart Study; students see teacher material and make their own again (ADR-054)', async ({
+  browser,
+}) => {
   // Teachers' AI is AI notes + AI questions on the Tests page (ADR-039, ADR-042): the topic page has only Subtopics,
   // and the database refuses student AI to staff.
   const teacher = await (await browser.newContext()).newPage();
@@ -66,9 +68,10 @@ test('teachers have no Smart Study; students see teacher material and reuse thei
     .click();
   await expect(student.getByText('Checked and shared by your teachers.')).toBeVisible();
 
-  // AC9.2: asking again with the same notes reuses the student's own result without any AI use.
+  // ADR-054: asking again with the same notes makes a new one (counted against the AI limit), like NotebookLM.
   const before = await generations();
   const made = await generate(student, 'Laws of Motion', 'Mind map');
+  const ids = [made.id];
   try {
     expect(made.ok).toBe('generated');
     expect(await generations()).toBe(before + 1);
@@ -78,15 +81,17 @@ test('teachers have no Smart Study; students see teacher material and reuse thei
       student.getByRole('link', { name: /From your institute's notes: Laws of Motion/ }).first(),
     ).toBeVisible();
     const again = await generate(student, 'Laws of Motion', 'Mind map');
-    expect(again).toEqual({ id: made.id, ok: 'reused' });
-    expect(await generations()).toBe(before + 1);
+    ids.push(again.id);
+    expect(again.ok).toBe('generated');
+    expect(again.id).not.toBe(made.id);
+    expect(await generations()).toBe(before + 2);
 
     // A classmate cannot open it.
     const classmate = await (await browser.newContext()).newPage();
     await login(classmate, 'student05@demo.test');
     expect((await classmate.goto(`${DEMO}/studio/${made.id}`))?.status()).toBe(404);
   } finally {
-    await sql('delete from generated_artifacts where id = $1', [made.id]);
+    await sql('delete from generated_artifacts where id = any($1)', [ids]);
   }
 });
 

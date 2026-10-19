@@ -22,6 +22,7 @@ const NAMED = [
   'invalid_key',
   'document_no_batches',
   'document_not_ready',
+  'formula_broken',
 ];
 
 export function done(path: string, error?: { code?: string; message?: string } | null, okCode = 'saved'): never {

@@ -686,6 +686,39 @@ fieldset > legend {
 fieldset > legend + * {
   clear: both;
 }
+/* A wrapper that only disables its buttons while an AI form runs (making.tsx) */
+fieldset.bare {
+  display: contents;
+}
+fieldset.bare:disabled button {
+  opacity: 0.5;
+  cursor: progress;
+}
+.making {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: var(--s3);
+  align-items: flex-start;
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--soft);
+}
+.spinner {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border: 2px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* Tables: rules between rows, no boxes; scroll inside their section on phones */
 .table-wrap {
