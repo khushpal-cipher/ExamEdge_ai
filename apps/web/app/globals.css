@@ -1171,7 +1171,7 @@ td .badge:not(.good, .warn, .bad)::before {
     visibility: hidden;
   }
 }
-/* Pages settle in; progress bars fill from empty */
+/* Pages settle in (movement only: fading text would fail contrast while it runs); progress bars fill from empty */
 .main > * {
   animation: rise 320ms var(--ease) both;
 }
@@ -1183,7 +1183,6 @@ td .badge:not(.good, .warn, .bad)::before {
 }
 @keyframes rise {
   from {
-    opacity: 0;
     transform: translateY(6px);
   }
 }
