@@ -509,6 +509,19 @@ input[type='radio'] {
   accent-color: var(--accent);
   box-shadow: none;
 }
+/* File picker button looks like a secondary button */
+input[type='file']::file-selector-button {
+  font: inherit;
+  font-weight: 600;
+  margin-right: var(--s3);
+  padding: 4px 14px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--soft);
+  color: var(--accent-ink);
+  cursor: pointer;
+}
+
 /* Text boxes start at 3 lines and grow with what is typed (Chrome); other browsers use the rows attribute */
 textarea {
   line-height: 1.6;
@@ -818,6 +831,19 @@ label.option:has(> input) {
   transition:
     border-color var(--ease),
     background var(--ease);
+}
+/* Answer options on the result page: same rows as the runner, not bullets */
+ul.choices {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: var(--s2);
+}
+ul.choices > li {
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--card);
 }
 .option:hover {
   border-color: var(--field);
