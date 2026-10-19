@@ -145,7 +145,39 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 44)
+## Next exact action (session 45)
+**State:** branch `r13-gemini` (cut from `r13-ui`, so it also holds PR #35's commits), pushed, no PR yet. PR #35 still
+open, founder has NOT said "merge". Local DB has migration 34 (`gemini`) applied with `supabase migration up` (no reset).
+1. Ask the founder: "merge #35?" On yes: `gh pr merge 35 --squash`, then rebase/merge `r13-gemini` onto main and open
+   its PR; otherwise open the `r13-gemini` PR into main stacked on #35.
+2. Try Gemini in the app: founder adds `AI_PROVIDER=gemini` to `apps/web/.env.local` and restarts `npm run dev` (and
+   `npm run dev:worker` for OCR / uploads); then click tutor, the 6 Smart Study tools, AI notes, AI questions and a test
+   plan on newtown and record results. Only local test institutes (ADR-051 data rule).
+3. Local e2e is BLOCKED: the local DB has no `demo` / `rival` institutes (seed needs `npm run db:reset` first, which
+   would wipe newtown/vedam/asjdfl, so ask before). CI runs e2e on a fresh DB.
+
+## Session 44 result (2026-10-19) — branch `r13-gemini`
+- **Gemini test-only provider (ADR-051), `9373f03`:** `packages/core/src/ai/gemini.ts` (REST + fetch, no new
+  dependency) for tutor, 6 studio kinds, OCR, questions (writer 3.8-flash, blind solver 3.5-flash-lite), AI notes and
+  test plan; `routing.ts` models `gemini-3.8-flash` / `gemini-3.5-flash-lite` provider `google` at cost 0; migration
+  `20261115000034_gemini.sql` (usage_records provider check + 'google'); forbidden-pattern rule now also covers
+  `generativelanguage.googleapis.com`; `.env.example` + `GEMINI_API_KEY`. Facts checked on ai.google.dev 2026-10-19:
+  models list, pricing (these three are free; free-tier content is used to improve Google products), models.get
+  output limit 65,536. Free-tier rate limits only visible in AI Studio [U].
+- **Live check with the founder's key (2026-10-19, direct provider calls, not through the app UI):** tutor (cited [0]
+  → "notes" label), summary, flashcards, mind map, quiz, audio overview, video overview (general mode, all passed
+  `validateArtifact`), test plan (`checkPlan` ok), question writer (DRAFT_SCHEMA ok), AI notes, OCR of a test PNG — all
+  OK. Found and fixed: Gemini rejects some schemas with `maxItems` (400) → stripped before sending; 3.8-flash
+  returned 503 once → one retry.
+- **Tutor chat box (founder):** composer sticks 16px above the bottom of the screen, Enter sends, round send-arrow
+  button (aria-label "Send"); "Ask" and "Solve step by step" buttons removed (founder: same output; students can ask
+  for steps in words; `/api/tutor` keeps `premium` defaulting to false); page scrolls to the newest message.
+  Checked in the browser on newtown at 1280 and 375 px.
+- **Evidence:** `npm test` 185 passed (incl. 7 new `gemini.test.ts`); `npm run typecheck`, `npm run lint`
+  (check-forbidden ok), `npm run format:check` clean; `npm run secrets` git history clean (dir hits only in ignored
+  `.env*` and `.next/`). `npm run test:db` and local `test:e2e` NOT run (e2e BLOCKED, see above).
+
+## Next exact action (session 44) — history
 **State:** branch `r13-ui`, PR #35 open (https://github.com/khushpal-cipher/ExamEdge_ai/pull/35), Auto-fix on, CI green
 on `37d9f5f` (run 39202529367). Founder has NOT said "merge". Local DB has migration 33 (`overviews`) applied.
 1. `git checkout r13-ui && git pull`; `docker info`; `supabase status`; `gh pr checks 35` (the handoff commit runs CI

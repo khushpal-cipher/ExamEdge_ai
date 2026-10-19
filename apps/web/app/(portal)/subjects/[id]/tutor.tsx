@@ -134,14 +134,18 @@ export function Tutor(props: {
   const [streaming, setStreaming] = useState<string | null>(null);
   const [error, setError] = useState('');
   const input = useRef<HTMLInputElement>(null);
+  const end = useRef<HTMLDivElement>(null);
+  // Keep the newest message in view, like a chat app.
+  const toEnd = () => requestAnimationFrame(() => end.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }));
 
-  async function ask(premium: boolean) {
+  async function ask() {
     const question = draft.trim();
     if (!question || streaming !== null) return;
     setError('');
     setDraft('');
     setMessages((m) => [...m, { role: 'user', content: question, citations: [], answer_labels: [] }]);
     setStreaming('');
+    toEnd();
     let failed: string | null = FAILED;
     try {
       const res = await fetch('/api/tutor', {
@@ -152,7 +156,6 @@ export function Tutor(props: {
           topicId: props.topicId,
           conversationId: conversationId ?? undefined,
           question,
-          premium,
         }),
       });
       if (res.ok && res.body) {
@@ -185,6 +188,7 @@ export function Tutor(props: {
       setDraft(question);
     }
     input.current?.focus();
+    toEnd();
   }
 
   const busy = streaming !== null;
@@ -238,13 +242,13 @@ export function Tutor(props: {
           {error}
         </p>
       )}
+      {/* Stays at the bottom of the screen like a chat app; Enter sends. Step-by-step: the student asks for it in words. */}
       <form
-        className="stack"
+        className="composer"
         aria-label="Ask a doubt"
         onSubmit={(e) => {
           e.preventDefault();
-          const submitter = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
-          ask(submitter?.value === 'premium');
+          ask();
         }}
       >
         <label className="sr-only" htmlFor="doubt">
@@ -258,15 +262,20 @@ export function Tutor(props: {
           onChange={(e) => setDraft(e.target.value)}
           placeholder={`Ask a doubt about ${props.topicName}…`}
         />
-        <div className="row">
-          <button type="submit" className="primary" value="normal" disabled={busy || !draft.trim()}>
-            Ask
-          </button>
-          <button type="submit" value="premium" disabled={busy || !draft.trim()}>
-            Solve step by step
-          </button>
-        </div>
+        <button type="submit" className="primary" aria-label="Send" disabled={busy || !draft.trim()}>
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path
+              d="M12 19V5M5 12l7-7 7 7"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
       </form>
+      <div ref={end} />
     </>
   );
 }

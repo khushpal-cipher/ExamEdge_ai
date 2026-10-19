@@ -938,6 +938,48 @@ ul.choices > li {
   background: var(--chosen);
   overflow-wrap: anywhere;
 }
+.composer {
+  position: sticky;
+  bottom: var(--s4);
+  z-index: 2;
+  display: flex;
+  gap: var(--s2);
+  align-items: center;
+  padding: var(--s2);
+  margin-top: var(--s3);
+  background: var(--card);
+  border: 1px solid var(--field);
+  border-radius: 999px;
+  /* the second shadow paints page colour under the raised box, so answers do not show through the gap */
+  box-shadow:
+    var(--lift),
+    0 calc(var(--s4) + 8px) 0 0 var(--bg);
+}
+.composer input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding-left: var(--s3);
+}
+.composer input:focus,
+.composer input:focus-visible {
+  outline: none;
+  box-shadow: none; /* the composer shows the focus ring */
+}
+.composer:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.composer button {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
 .md {
   font-family: var(--font-read), Georgia, serif;
   font-size: 16px;
