@@ -169,6 +169,7 @@ PR or open a tiny PR). Nothing failing, nothing half-built.
    on a fresh database. Unit 185 and pgTAP 1459 pass locally.
 
 ## Session 45b (2026-10-19) — AI progress, formula check, Beta, repeat study tools (ADR-054), branch `r15-next`
+- **MERGED** (founder's yes, 2026-10-19): PR #39 squash-merged into main as `de1d810`; CI green (check 5m11s incl. e2e, secrets).
 - Founder asked: (1) flag AI questions whose formula cannot be drawn; (2) a NotebookLM-style "making it" state on every
   AI feature; (3) Beta on audio/video overview; (4) students make a study tool again until the AI limit.
 - Built: `lib/markdown.ts` `brokenMath` / `questionTexts`; `addAiQuestions` flags on save (`ai_questions_formula`),
