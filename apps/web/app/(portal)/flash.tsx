@@ -75,7 +75,8 @@ export async function Flash({ searchParams }: { searchParams: Promise<{ ok?: str
     );
   if (ok && OK[ok])
     return (
-      <p role="status" className="notice">
+      // Short confirmations float and fade away; longer ones stay because they say what to do next.
+      <p role="status" className={OK[ok].length <= 60 ? 'notice toast' : 'notice'}>
         {OK[ok]}
       </p>
     );

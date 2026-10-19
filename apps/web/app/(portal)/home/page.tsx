@@ -43,9 +43,38 @@ export default async function StudentHome() {
     .sort((a, b) => a.opens_at.localeCompare(b.opens_at));
   const released = tests.filter((t) => t.status === 'results_released');
   const lastRanked = released.find((t) => mine.get(t.id)?.rank);
+  const next = upcoming[0];
+  const overall = standings?.find((s) => s.overall_rank);
+  // Shown once when the page loads (no live ticking).
+  const until = (iso: string) => {
+    const m = Math.max(1, Math.round((Date.parse(iso) - now) / 60000));
+    if (m < 60) return `${m} min`;
+    if (m < 1440) return `${Math.floor(m / 60)} h ${m % 60} min`;
+    const d = Math.floor(m / 1440);
+    return `${d} day${d === 1 ? '' : 's'}`;
+  };
   return (
     <>
       <div className="top">{hello}</div>
+      <section className="hero" aria-label="At a glance">
+        <div className="stat">
+          <span>Next test</span>
+          <b>{!next ? '—' : testPhase(next, now) === 'open' ? 'Open now' : `in ${until(next.opens_at)}`}</b>
+          <span className="small">{next ? next.title : 'Nothing scheduled'}</span>
+        </div>
+        <div className="stat">
+          <span>Overall rank</span>
+          <b>{overall?.overall_rank ?? '—'}</b>
+          <span className="small">
+            {overall ? `average ${overall.average_percentage}%` : 'after your first result'}
+          </span>
+        </div>
+        <div className="stat">
+          <span>Last test rank</span>
+          <b>{lastRanked ? mine.get(lastRanked.id)?.rank : '—'}</b>
+          <span className="small">{lastRanked ? lastRanked.title : 'no results yet'}</span>
+        </div>
+      </section>
       <div className="grid">
         <section className="card stack" aria-labelledby="upcoming">
           <h2 id="upcoming">Upcoming tests</h2>
@@ -127,6 +156,9 @@ export default async function StudentHome() {
           <div className="grid">
             {subjects.map((s) => (
               <Link key={s.id} href={`/subjects/${s.id}`} className="card tile">
+                <span className="mark" aria-hidden="true">
+                  {s.name.slice(0, 1).toUpperCase()}
+                </span>
                 <h3>{s.name}</h3>
                 <p className="muted small">
                   {(s.chapters as unknown as { count: number }[])[0]?.count ?? 0} topic

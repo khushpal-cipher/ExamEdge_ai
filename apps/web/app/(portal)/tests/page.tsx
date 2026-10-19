@@ -107,8 +107,8 @@ export default async function Tests({ searchParams }: { searchParams: Search }) 
                   <th>Test</th>
                   <th>Batches</th>
                   <th>Opens</th>
-                  <th>Duration</th>
-                  <th>Questions</th>
+                  <th className="num">Duration</th>
+                  <th className="num">Questions</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -127,8 +127,8 @@ export default async function Tests({ searchParams }: { searchParams: Search }) 
                           .join(', ') || '—'}
                       </td>
                       <td>{formatTime(t.opens_at)}</td>
-                      <td>{formatDuration(t.duration_seconds)}</td>
-                      <td>{(t.test_questions as unknown as { count: number }[])[0]?.count ?? 0}</td>
+                      <td className="num">{formatDuration(t.duration_seconds)}</td>
+                      <td className="num">{(t.test_questions as unknown as { count: number }[])[0]?.count ?? 0}</td>
                       <td>
                         <span className={`badge ${BADGE[phase] ?? ''}`}>{PHASE_LABEL[phase]}</span>
                       </td>

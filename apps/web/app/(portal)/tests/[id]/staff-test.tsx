@@ -472,10 +472,10 @@ async function Results({ test, attempts, ctx }: { test: Test; attempts: Attempt[
             <tr>
               <th>Rank</th>
               <th>Student</th>
-              <th>Score</th>
-              <th>%</th>
-              <th>Time taken</th>
-              {test.cbt && <th>CBT warnings</th>}
+              <th className="num">Score</th>
+              <th className="num">%</th>
+              <th className="num">Time taken</th>
+              {test.cbt && <th className="num">CBT warnings</th>}
             </tr>
           </thead>
           <tbody>
@@ -486,16 +486,16 @@ async function Results({ test, attempts, ctx }: { test: Test; attempts: Attempt[
                   <Link href={`/students/${a.user_id}`}>{name.get(a.user_id) ?? 'Unnamed'}</Link>
                   {a.status === 'auto_submitted' && <span className="badge"> auto-submitted</span>}
                 </td>
-                <td>
+                <td className="num">
                   {a.score} / {a.max_score}
                 </td>
-                <td>{pct(a.score, a.max_score)}</td>
-                <td>
+                <td className="num">{pct(a.score, a.max_score)}</td>
+                <td className="num">
                   {a.submitted_at
                     ? formatDuration((Date.parse(a.submitted_at) - Date.parse(a.started_at)) / 1000)
                     : '—'}
                 </td>
-                {test.cbt && <td>{a.cbt_warnings}</td>}
+                {test.cbt && <td className="num">{a.cbt_warnings}</td>}
               </tr>
             ))}
           </tbody>

@@ -85,9 +85,9 @@ export async function Standings({ ctx, batch, sort }: { ctx: Ctx; batch: string;
                 <tr>
                   <th>Overall rank</th>
                   <th>Student</th>
-                  <th>Average %</th>
-                  <th>Last test{lastTitle ? ` (${lastTitle})` : ''}</th>
-                  <th>Tests missed</th>
+                  <th className="num">Average %</th>
+                  <th className="num">Last test{lastTitle ? ` (${lastTitle})` : ''}</th>
+                  <th className="num">Tests missed</th>
                 </tr>
               </thead>
               <tbody>
@@ -97,9 +97,9 @@ export async function Standings({ ctx, batch, sort }: { ctx: Ctx; batch: string;
                     <td>
                       <Link href={`/students/${r.user_id}`}>{r.name}</Link>
                     </td>
-                    <td>{r.tests_counted ? r.average_percentage : '—'}</td>
-                    <td>{r.last == null ? '—' : `${r.last}%`}</td>
-                    <td>{r.tests_missed}</td>
+                    <td className="num">{r.tests_counted ? r.average_percentage : '—'}</td>
+                    <td className="num">{r.last == null ? '—' : `${r.last}%`}</td>
+                    <td className="num">{r.tests_missed}</td>
                   </tr>
                 ))}
               </tbody>

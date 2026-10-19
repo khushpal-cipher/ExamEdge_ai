@@ -156,6 +156,13 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 - **Not done / unverified:** numbers right-aligned in tables (`td.num`) and Contest "Results" rows (student1 is now
   in jee 2027 with no tests, so the list could not be seen); test runner, result page, check-answers, documents,
   bill and platform pages not screenshotted (step 7); E2E not run locally (:3000 is the founder's `next dev`) → CI.
+- Founder follow-up (same session): text boxes grow with typing (3 lines min, `field-sizing`), 40 px buttons/inputs,
+  styled dropdown (own chevron; Chrome `appearance: base-select` list) — `13b05cf`. Then founder said "make your
+  changes, I will tell you to undo": Home "at a glance" band (next test / overall rank / last rank), dashed centred
+  empty states, subject letter marks, table status = dot + word, numbers right-aligned (Tests, test results,
+  standings), short confirmations as a fading toast (long ones stay), page rise + meter fill motion (off with reduced
+  motion), entry page mint background + rule under the name. Gate PASS (format, lint, typecheck, unit 163, build).
+  If the founder dislikes one, revert just that part.
 - Next: step 7 page pass on the remaining pages, then step 8 (CI on PR #35, ask the founder "merge #35?").
 
 ## Next exact action (session 42)

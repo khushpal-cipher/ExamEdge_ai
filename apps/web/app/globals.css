@@ -348,12 +348,14 @@ img.logo {
   font-variant-numeric: tabular-nums;
 }
 .empty {
-  border-left: 3px solid var(--fill);
-  border-radius: 0 var(--r-sm) var(--r-sm) 0;
-  padding: var(--s3) var(--s4);
+  border: 1px dashed var(--field);
+  border-radius: var(--r);
+  padding: var(--s5);
   color: var(--muted);
-  background: var(--soft);
+  background: color-mix(in srgb, var(--card) 55%, transparent);
+  text-align: center;
   margin: 0;
+  max-width: none;
 }
 .badge {
   display: inline-block;
@@ -973,6 +975,20 @@ label.option:has(> input) {
   .card {
     padding: var(--s4);
   }
+  .hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding: var(--s4) var(--s5);
+    gap: var(--s4);
+  }
+  .hero .stat:first-child {
+    grid-column: 1 / -1;
+  }
+  .notice.toast {
+    left: var(--s4);
+    right: var(--s4);
+    bottom: var(--s4);
+    max-width: none;
+  }
   .study,
   .center {
     grid-template-columns: minmax(0, 1fr);
@@ -1002,6 +1018,10 @@ label.option:has(> input) {
   *::before,
   *::after {
     transition: none !important;
+    animation: none !important;
+  }
+  .notice.toast {
+    position: static;
   }
 }
 
@@ -1037,6 +1057,133 @@ label.option:has(> input) {
 .cbt-cover > .card {
   max-width: 520px;
   box-shadow: var(--lift);
+}
+
+/* Home "at a glance" band: next test, overall rank, last rank */
+.hero {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s5);
+  padding: var(--s5) var(--s6);
+  border-radius: var(--r);
+  background: linear-gradient(135deg, var(--accent), #2b5888);
+  color: var(--on-accent);
+  box-shadow: var(--lift);
+}
+.hero .stat > span {
+  color: color-mix(in srgb, var(--on-accent) 80%, transparent);
+}
+.hero .stat > span:first-child {
+  font-size: var(--t-cap);
+  font-weight: 600;
+}
+.hero .stat > .small {
+  overflow-wrap: anywhere;
+}
+/* Subject tiles: a letter mark in mint */
+.tile .mark {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  background: var(--chosen);
+  color: var(--accent-ink);
+  font-family: var(--font-read), Georgia, serif;
+  font-size: 20px;
+  font-weight: 700;
+}
+/* Numbers line up on the right */
+th.num,
+td.num {
+  text-align: right;
+}
+/* In tables a status is a coloured dot and a word, not a filled pill */
+td .badge[class] {
+  background: none;
+  padding: 0;
+  font-size: var(--t-cap);
+}
+td .badge::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: 1px;
+}
+td .badge:not(.good, .warn, .bad)::before {
+  background: var(--field);
+}
+/* Short confirmations float at the bottom and fade away */
+.notice.toast {
+  position: fixed;
+  right: var(--s5);
+  bottom: var(--s5);
+  z-index: 30;
+  max-width: min(420px, calc(100vw - 32px));
+  border-radius: var(--r);
+  border-left-width: 4px;
+  box-shadow: var(--lift);
+  animation: toast 6s var(--ease) forwards;
+  pointer-events: none;
+}
+@keyframes toast {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  5%,
+  85% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+/* Pages settle in; progress bars fill from empty */
+.main > * {
+  animation: rise 320ms var(--ease) both;
+}
+.main > :nth-child(2) {
+  animation-delay: 40ms;
+}
+.main > :nth-child(n + 3) {
+  animation-delay: 80ms;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.meter > span {
+  animation: fill 700ms var(--ease) both;
+}
+@keyframes fill {
+  from {
+    width: 0;
+  }
+}
+/* Entry pages: a soft mint shape behind the sign-in card, a blue rule under the name */
+body:has(.center) {
+  background:
+    radial-gradient(40rem 30rem at 85% 30%, color-mix(in srgb, var(--mint) 70%, transparent), transparent 70%),
+    radial-gradient(30rem 24rem at 10% 90%, color-mix(in srgb, var(--blue-2) 18%, transparent), transparent 70%),
+    var(--bg);
+}
+.center h1::after {
+  content: '';
+  display: block;
+  width: 56px;
+  height: 4px;
+  margin-top: var(--s4);
+  border-radius: 2px;
+  background: var(--fill);
 }
 
 /* Small layout helpers used instead of inline styles */
