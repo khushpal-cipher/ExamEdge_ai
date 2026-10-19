@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-19 (session 43)
+Last updated: 2026-10-19 (session 43, handoff)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -36,7 +36,7 @@ green, after merging `main` into `r12-bill` because force-push is not allowed) �
 (ADR-046); then `main` merged into `r12-reviews` (`e2a01b4`; PROGRESS kept from `r12-reviews`, DECISIONS kept both ADRs;
 pgTAP Files=25 Tests=1435 PASS, typecheck PASS), CI run 39147981293 green, PR #33 (`03afbca`) reviews + replies
 (ADR-047). `main` = `03afbca`.
-**Sessions 41–42 (open, NOT merged):** PR #35 `r13-ui` UI redesign + founder polish (ADR-049), head `b8d6cdb` + handoff commit; waiting for the founder's feedback/undo requests and "merge" (see Next exact action (session 43)).
+**Sessions 41–43 (open, NOT merged):** PR #35 `r13-ui` UI redesign + polish + refine (ADR-049) and Smart Study without notes, audio/video overviews, tutor general answers (ADR-050); head `37d9f5f` + handoff commit, **CI green** (run 39202529367 on `37d9f5f`, check incl. E2E + secrets). Founder has NOT said "merge" (see Next exact action (session 44)).
 **Session 39 (merged in 40):** PR #34 CBT tests (ADR-048), branch `r12-cbt`. First CI run 39153129147 failed
 only on the new E2E locator (fixed in `b61f991`, CI re-running at handoff). Founder has not said "merge" for #34.
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
@@ -146,14 +146,41 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 44)
-**State:** branch `r13-ui`, PR #35 open, Auto-fix on, head `740a016` (+ this handoff). Founder has NOT said "merge".
-1. Check PR #35 CI (`gh pr checks 35`); E2E on `dcf3383`/`740a016` not seen green yet — fix without weakening a test.
-2. Founder feedback on the session 43 refine (undo only what they name: each part is its own block in `globals.css`;
-   menu = `(portal)/main-nav.tsx`).
-3. ADR-050 built (`6132d60`): founder to listen to an Audio/Video overview on a phone and in Chrome; tutor now answers
-   from general knowledge too (labelled). Paid voice
-   vendor later (founder decides; needs a DECISIONS entry).
-4. Then ask "merge #35?".
+**State:** branch `r13-ui`, PR #35 open (https://github.com/khushpal-cipher/ExamEdge_ai/pull/35), Auto-fix on, CI green
+on `37d9f5f` (run 39202529367). Founder has NOT said "merge". Local DB has migration 33 (`overviews`) applied.
+1. `git checkout r13-ui && git pull`; `docker info`; `supabase status`; `gh pr checks 35` (the handoff commit runs CI
+   again; fix any failure without weakening a test).
+2. Ask the founder: "merge #35?" (UI redesign + ADR-050). Merge only on their yes (`gh pr merge 35 --squash`), then
+   record the merge commit here.
+3. Founder's next topic (session 43 talk): a **free Gemini API key for testing only**. When the founder says the key is
+   in `apps/web/.env.local` as `GEMINI_API_KEY` (never in chat, repo is public): add a DECISIONS entry (Gemini =
+   test-only provider, free tier may train on inputs → only local test institutes, never real student data; paid
+   Claude stays the production plan), verify Gemini's current free-tier models/limits/SDK on Google's official docs
+   (mark [U] until checked; use `source-driven-development`), then add `AI_PROVIDER=gemini` behind the gateway in
+   `packages/core/src/ai` (the only place allowed to import an AI SDK; `scripts/check-forbidden.ts` rule
+   `provider-sdk-outside-gateway` must be updated for the new SDK) for tutor, studio (6 kinds), notes, questions/plan,
+   OCR; meter it like Claude (cost 0 on free tier); unit tests with a recorded reply (no key in CI); then click every
+   AI feature on newtown with the key and record results.
+4. Not built (founder decides later, needs money/approval): paid voice (Sarvam Bulbul v3, ₹30 / 10k chars [V]),
+   real MP4 video (slides + voice joined with ffmpeg; Claude-drawn diagrams instead of an image AI), Voyage
+   embeddings (Q-08). Founder said browser voice is "okay okay" and will move to a paid voice.
+
+## Session 43 result (2026-10-19) — all on `r13-ui` / PR #35
+- `a98d60c` page pass: own 404 page, result-page options as rows, styled file picker.
+- `dcf3383` CI fix: page `rise` animation faded text → axe colour-contrast failed 4 E2E; now movement only.
+- `740a016` founder UI refine from a 21st.dev reference (own palette kept): raised surfaces, button depth, glow,
+  entry grid, staff phone menu (`(portal)/main-nav.tsx`), Google "G" button, practice/doubt lists as tables,
+  page titles "Page · ExamEdge AI".
+- `6132d60` ADR-050: Smart Study tools work without notes (general knowledge, labelled), Audio overview + Video
+  overview (narrated slides) read by the browser voice; migration 33.
+- `37d9f5f` ADR-050: tutor answers from general knowledge when no notes match (`tutor-v4`), labelled.
+- Founder checks: owner Batches/People were fine (founder misread; temporary owner used to check → deleted).
+  Founder listened to audio/video overviews: works; wants a paid voice later; understands video = narrated slides
+  until a renderer is built.
+- Explained to founder (no code): AI services to buy (Anthropic first; Sarvam voice; Voyage; no image AI needed;
+  ffmpeg/Remotion for MP4) and that a free Gemini key is fine for testing only.
+- Evidence: see Completed rows dated 2026-10-19 (session 43). Last full local gate on `37d9f5f`: format, lint +
+  forbidden, typecheck PASS; unit 178/178; int 28/28; pgTAP Files=26 Tests=1459 PASS; build + bundle ok.
 
 ## Session 42 result (2026-10-19) — polish steps 1–6 built on `r13-ui`, commit `8ebab56`, PR #35
 - Done: step 1 light only; step 2 type scale (16/15/14/13 px, h2 22, h3 18, h1 32–44, stat 36, no 650 weight);

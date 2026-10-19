@@ -90,6 +90,11 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
   boxes, styled dropdown, Home at-a-glance band, status dots, toast, motion, entry page). Founder: "make your changes,
   if I don't like them I will tell you to undo them" — undo only what they name. Next: PROGRESS.md "Next exact action
   (session 43)" (CI, feedback, step 7 page pass, then ask "merge #35?").
+- Session 43 (2026-10-19): on PR #35 the founder got a page pass, a reference-inspired refine (own palette, staff
+  phone menu, Google G button, readable practice tables) and ADR-050: Smart Study tools and the tutor work without
+  teacher notes (general knowledge, labelled "General explanation"), plus Audio overview and Video overview (narrated
+  slides) read by the free browser voice; a paid voice comes later. CI green. Next: PROGRESS.md "Next exact action
+  (session 44)" — ask "merge #35?", then a test-only Gemini provider when the founder adds a free key.
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full
