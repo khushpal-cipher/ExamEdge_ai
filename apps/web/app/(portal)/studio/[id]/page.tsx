@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Content, SourceRef } from '@examedge/core/ai/studio';
 import { formatTime } from '@/lib/assess';
-import { Markdown } from '@/lib/markdown';
+import { Markdown, MathText } from '@/lib/markdown';
 import { fieldLabel, STUDIO_KIND, textFields } from '@/lib/studio';
 import { isUuid, requireMember } from '@/lib/tenant';
 import { Flash, type Search } from '../../flash';
@@ -234,7 +234,7 @@ export default async function StudioArtifact(props: { params: Promise<{ id: stri
                   <ul>
                     {q.options.map((o) => (
                       <li key={o.id}>
-                        {o.text} {o.id === q.answer && <span className="badge good">Correct</span>}
+                        <MathText text={o.text} /> {o.id === q.answer && <span className="badge good">Correct</span>}
                       </li>
                     ))}
                   </ul>

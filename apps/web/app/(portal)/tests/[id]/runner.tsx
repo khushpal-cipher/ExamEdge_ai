@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { startTransition, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { cbtWarning, saveAnswer, submitAttempt } from '../actions';
 import { CBT_WARNINGS } from '@/lib/assess';
+import { Markdown, MathText } from '@/lib/markdown';
 
 export type RunnerQuestion = {
   question_id: string;
@@ -261,7 +262,9 @@ export function Runner({
                 {q.type === 'multi' ? ' · more than one may be correct' : ''}
               </span>
             </legend>
-            <p className="stem">{q.stem}</p>
+            <div className="stem">
+              <Markdown text={q.stem} />
+            </div>
             {(q.type === 'single' || q.type === 'multi') &&
               q.options.map((o) => {
                 const chosen = Array.isArray(value) ? (value as string[]) : [];
@@ -283,7 +286,7 @@ export function Runner({
                       }
                     />
                     <span>
-                      {o.id.toUpperCase()}. {o.text}
+                      {o.id.toUpperCase()}. <MathText text={o.text} />
                     </span>
                   </label>
                 );

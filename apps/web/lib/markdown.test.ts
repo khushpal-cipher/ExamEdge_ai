@@ -3,15 +3,39 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { Meter } from '@examedge/core/ai/gateway';
 import { SYSTEM_PROMPT, tutorAnswer, type Passage } from '@examedge/core/ai/tutor';
-import { Markdown } from './markdown';
+import { clip, Markdown } from './markdown';
 
 const render = (text: string) => renderToStaticMarkup(createElement(Markdown, { text }));
-// Only these tags, and no attribute other than class="md|math", may ever reach the page.
+// Outside KaTeX output only these tags, and no attribute other than class="md|md-inline|math", may reach the page.
+// KaTeX output (trust: false) may use more tags, but never a link, a remote URL, an event handler or a script.
 const TAG = /<\/?([a-z0-9]+)([^>]*)>/gi;
+// Removes each <span class="math">…</span> (KaTeX output) by counting span nesting.
+function withoutKatex(html: string) {
+  let out = '';
+  let from = 0;
+  let depth = 0;
+  for (const m of html.matchAll(TAG)) {
+    if (depth === 0 && m[0] === '<span class="math">') {
+      out += html.slice(from, m.index);
+      depth = 1;
+    } else if (depth > 0 && m[1] === 'span') {
+      depth += m[0].startsWith('</') ? -1 : 1;
+      if (depth === 0) from = m.index + m[0].length;
+    }
+  }
+  return out + html.slice(from);
+}
 function inert(html: string) {
+  // Every real tag (text is escaped, so it cannot form one): nothing active, no link, no handler, no remote URL.
   for (const [, tag, attrs] of html.matchAll(TAG)) {
+    expect(tag!.toLowerCase()).not.toMatch(
+      /^(script|iframe|img|a|style|form|input|object|embed|image|use|foreignobject)$/,
+    );
+    expect(attrs).not.toMatch(/\s(on\w+|href|src|xlink:href|action|formaction)=|javascript:|url\(/i);
+  }
+  for (const [, tag, attrs] of withoutKatex(html).matchAll(TAG)) {
     expect(['div', 'p', 'ul', 'ol', 'li', 'strong', 'em', 'code', 'pre', 'span']).toContain(tag!.toLowerCase());
-    expect(attrs!.trim()).toMatch(/^(class="(md|math)")?$/);
+    expect(attrs!.trim()).toMatch(/^(class="(md|md-inline|math)")?$/);
   }
 }
 
@@ -22,10 +46,25 @@ describe('Markdown renderer', () => {
         '<ul><li>one</li><li>two</li></ul><ol><li>first</li></ol><pre><code>x &lt; y</code></pre></div>',
     );
   });
-  it('shows formulas as code, images as alt text and links as their label', () => {
-    expect(render('Use $F = ma$. ![diagram](https://x.test/a.png) See [notes](https://x.test).')).toBe(
-      '<div class="md"><p>Use <code class="math">F = ma</code>. diagram See <span>notes</span>.</p></div>',
+  it('shows images as alt text and links as their label', () => {
+    expect(render('![diagram](https://x.test/a.png) See [notes](https://x.test).')).toBe(
+      '<div class="md"><p>diagram See <span>notes</span>.</p></div>',
     );
+  });
+  it('typesets $…$ and $$…$$ formulas with KaTeX', () => {
+    const html = render('Answer: $20\\text{ N}$\n\n$$v^2 = u^2 + 2as$$');
+    expect(html).toContain('<span class="math"><span class="katex">');
+    expect(html).toContain('katex-display');
+    expect(html).toContain('<annotation encoding="application/x-tex">20\\text{ N}</annotation>');
+    expect(html).not.toContain('$');
+  });
+  it('shows a broken formula as text instead of failing', () => {
+    expect(render('$\\frac{1}{$')).toContain('katex-error');
+  });
+  it('clips labels without cutting a formula', () => {
+    expect(clip('Mass $m = 0.4\\text{ kg}$ tied', 12)).toBe('Mass…');
+    expect(clip('Use $F = ma$ always here', 14)).toBe('Use $F = ma$ a…');
+    expect(clip('short', 14)).toBe('short');
   });
   it('keeps a lone $ or * as text', () => {
     expect(render('Costs $5 and 2 * 3 = 6')).toBe('<div class="md"><p>Costs $5 and 2 * 3 = 6</p></div>');

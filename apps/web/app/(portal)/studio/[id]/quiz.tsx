@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { submitQuiz } from '../actions';
+import { MathText } from '@/lib/markdown';
 
 type Question = { id: string; stem: string; options: { id: string; text: string }[] };
 type Result = NonNullable<Awaited<ReturnType<typeof submitQuiz>>>;
@@ -42,7 +43,9 @@ export function Quiz({ artifactId, questions }: { artifactId: string; questions:
           return (
             <li key={q.id}>
               <fieldset disabled={!!result}>
-                <legend>{q.stem}</legend>
+                <legend>
+                  <MathText text={q.stem} />
+                </legend>
                 {q.options.map((o) => (
                   <label key={o.id} style={{ display: 'block' }}>
                     <input
@@ -52,12 +55,16 @@ export function Quiz({ artifactId, questions }: { artifactId: string; questions:
                       checked={answers[q.id] === o.id}
                       onChange={() => setAnswers((a) => ({ ...a, [q.id]: o.id }))}
                     />{' '}
-                    {o.text}
+                    <MathText text={o.text} />
                     {r && o.id === r.answer && <span className="badge good"> Correct answer</span>}
                     {r && !r.correct && o.id === r.choice && <span className="badge bad"> Your answer</span>}
                   </label>
                 ))}
-                {r?.explanation && <p className="small muted">{r.explanation}</p>}
+                {r?.explanation && (
+                  <p className="small muted">
+                    <MathText text={r.explanation} />
+                  </p>
+                )}
               </fieldset>
             </li>
           );

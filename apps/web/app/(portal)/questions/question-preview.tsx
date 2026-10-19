@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Markdown } from '@/lib/markdown';
+import { Markdown, MathText } from '@/lib/markdown';
 import { approveQuestion } from './actions';
 import { AiBadge } from './ai-badge';
 
@@ -29,7 +29,7 @@ export function QuestionPreview({ q, label, back }: { q: PreviewQuestion; label:
   return (
     <details className="preview">
       <summary>
-        {label}
+        <MathText text={label} />
         {draft && (
           <>
             {' '}
@@ -43,7 +43,7 @@ export function QuestionPreview({ q, label, back }: { q: PreviewQuestion; label:
           <ol className="options">
             {q.options.map((o) => (
               <li key={o.id} className={correct.has(o.id) ? 'right' : undefined}>
-                <b>{o.id.toUpperCase()}.</b> {o.text}
+                <b>{o.id.toUpperCase()}.</b> <MathText text={o.text} />
                 {correct.has(o.id) && <span className="badge good">Correct</span>}
               </li>
             ))}

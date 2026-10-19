@@ -652,3 +652,15 @@ sitemap or robots.txt).
   teacher_verified`, which the database already allowed for a teacher (`private.guard_question_review`; pgTAP
   `140_question_generation.sql`). The dropdown shows both answers and tells the teacher to approve only if the key is
   right, otherwise Edit. Plain Approve on a question bank row is unchanged (answers-match drafts only).
+
+### ADR-053 Typeset formulas with KaTeX (founder, 2026-10-19)
+- **Decision (founder):** AI text already writes formulas in LaTeX (`$…$`, `$$…$$`), which showed as raw code
+  (`$20\text{ N}$`). `lib/markdown.ts` now typesets them with KaTeX 0.19 (MIT, no network access, fonts bundled),
+  replacing the ADR-026 shortcut. Test stems, MCQ options, model answers and explanations in the student test runner,
+  the result review, the Studio quiz and the question preview go through the same renderer (`Markdown` / `MathText`).
+- **Security (TH-09/TH-19):** `trust: false` (default, verified: `\href{…}` renders as red error text, no link),
+  `throwOnError: false` (a broken formula shows as red text), `maxSize`/`maxExpand` limits. KaTeX's HTML string is the
+  only `dangerouslySetInnerHTML` in the renderer. T-SEC-19 and T-AI-09 now check every tag for script/iframe/img/a,
+  event handlers, `href`/`src` and `javascript:`/`url(`, and keep the strict tag allow-list outside KaTeX output.
+- **Cost:** KaTeX CSS + fonts on every page; the KaTeX script ships to the browser only on the client-side test
+  runner and Studio quiz. Formulas are not compiled on save yet (AI_PIPELINE §"Formulas" still open).
