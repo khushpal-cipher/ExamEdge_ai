@@ -96,7 +96,7 @@ export default async function SubjectWorkspace(props: { params: Promise<{ id: st
                   <form action={deleteChapter}>
                     <input type="hidden" name="subject_id" value={subject.id} />
                     <input type="hidden" name="chapter_id" value={c.id} />
-                    <button type="submit" className="link" aria-label={`Delete ${c.name}`}>
+                    <button type="submit" className="link danger" aria-label={`Delete ${c.name}`}>
                       Delete
                     </button>
                   </form>

@@ -105,7 +105,11 @@ test('a student practice quiz is graded by the database and private to its owner
     const tries = await sql('select score, max_score from practice_attempts where artifact_id = $1', [quiz.id]);
     expect(tries.rows).toEqual([{ score: 1, max_score: questions.length }]);
     await page.goto(`${DEMO}/progress`);
-    await expect(page.getByText(/Physics · Laws of Motion: 1 practice quiz/)).toBeVisible();
+    const practiceRow = page
+      .getByRole('table', { name: 'Practice quizzes' })
+      .getByRole('row', { name: /Laws of Motion/ });
+    await expect(practiceRow).toContainText('Physics');
+    await expect(practiceRow.getByRole('cell').nth(1)).toHaveText('1');
 
     // AC9.4: a classmate, staff and another institute get nothing, in the UI and through the API.
     for (const [email, base] of [

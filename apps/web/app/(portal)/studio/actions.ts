@@ -37,15 +37,15 @@ export async function generate(form: FormData) {
   // RLS: the chapter is visible only if its subject is (students: subjects of their batches).
   const { data: ch } = await db
     .from('chapters')
-    .select('id, name')
+    .select('id, name, subjects(name)')
     .eq('institute_id', institute.id)
     .eq('subject_id', subject)
     .eq('id', chapter)
     .maybeSingle();
   if (!ch) back(here, 'denied');
   // RLS: students read only notes published to their batches; generation uses published notes for staff too.
+  // No notes yet → the AI writes from general knowledge of the topic, labelled as such (ADR-050).
   const { ids, sources } = await chapterNotes(db, institute.id, chapter as string);
-  if (!sources.length) back(here, 'no_sources');
   // Same kind, chapter and notes (chunk ids change when a note is replaced) → same artifact (AC9.2).
   const inputHash = createHash('sha256')
     .update(JSON.stringify([kind, chapter, [...ids].sort()]))
@@ -68,7 +68,13 @@ export async function generate(form: FormData) {
 
   let made;
   try {
-    made = await generateArtifact(webMeter(db, institute.id), { kind, chapter: ch!.name, sources });
+    const subjectName = (ch!.subjects as unknown as { name: string } | null)?.name;
+    made = await generateArtifact(webMeter(db, institute.id), {
+      kind,
+      chapter: ch!.name,
+      subject: subjectName,
+      sources,
+    });
   } catch (e) {
     if (e instanceof AiBlocked) back(here, e.reason);
     if (e instanceof StudioError) back(here, e.message === 'refused' ? 'refused' : 'no_sources');

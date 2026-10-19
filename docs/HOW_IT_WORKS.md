@@ -159,8 +159,11 @@ A subject lists its topics. Clicking a topic opens the **topic page** with two t
 └──────────────────────────────────────────────────────────────┘
 ```
 - **Subtopics:** every subtopic with all its notes (uploaded and AI notes).
-- **Smart Study:** the AI for the whole topic — AI tutor, summary, flashcards, mind map and practice quiz. It picks
-  the relevant subtopics itself from all the topic's notes (no subtopic picker).
+- **Smart Study:** the AI for the whole topic — AI tutor, summary, flashcards, mind map, practice quiz, **audio
+  overview** and **video overview** (narrated slides). It picks the relevant subtopics itself from all the topic's
+  notes (no subtopic picker). With no notes yet, the study tools still work: the AI writes from general knowledge of
+  the topic and the page says "General explanation, not from your institute's notes" (ADR-050). Overviews are read
+  aloud by the student's own device voice (free); a paid natural voice can replace it later.
 
 ### D. Asking a doubt: what happens in about 2 seconds
 1. The student types a question in Smart Study on a topic (e.g. Probability).

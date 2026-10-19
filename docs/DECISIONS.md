@@ -570,3 +570,58 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
 | R-19 | Overengineering risk: Redis, separate vector DB, microservices, multi-LLM routing at launch | Removed from MVP |
 | R-20 | Docker not installed → local Supabase stack impossible | Q-11 before Phase 1 |
 | R-21 | `examedge_ai/` is ignored by the parent git repo (`.gitignore` allowlists only `vulnops-validation/`) — work here is not version-controlled | Q-10: separate repository (Phase 1 Task 1) |
+
+### ADR-049 UI redesign: Brilliant-like layout, own indigo + saffron theme (founder, 2026-10-19)
+- **Decision:** the founder found the UI "very bad" and picked brilliant.org (of five references) as the layout and
+  feel reference, but not its colours. ExamEdge's theme is deep indigo `#2D2A7A` + saffron `#F2A93B` on warm
+  off-white, with a dark mode. Fonts stay Poppins + Lora. CSS/markup only, no new dependency.
+- **Plan and token table:** `docs/UI_REDESIGN_PLAN.md` (branch `r13-ui`; the founder sees student Home + test page
+  before the rest is restyled).
+
+**ADR-049 update (founder, 2026-10-19, session 41):** the indigo + saffron theme is replaced by the founder's palette
+`#3368A0` (primary), `#66A3BF` (secondary), `#C8DFDB` (mint), `#F2EFE7` (warm off-white), and the founder asked for a
+real redesign, not a recolour. Built ("workbook" direction, founder said "keep this type of UI"): Plus Jakarta Sans for
+the interface + Source Serif 4 for page titles, numbers and long reading (replacing Poppins + Lora); page sections are
+divided by hairlines and space instead of boxes, cards only for things you press or fill; mint = "yours/current"
+(selected answer, active nav); `#66A3BF` only for progress fills and accent rules (2.4–2.8:1, never text); links in
+`#244E7A`; dark mode derived. Entry pages: name + purpose left, sign-in right. Home shows Upcoming tests + My progress
+before subjects. Test runner: timer with answered-progress bar, serif question stem, large option rows, Previous/Next
+pinned at the bottom on phones. An institute's brand colour now tints only its own logo mark (it used to replace the
+accent everywhere). No logic, DB or E2E selector change.
+
+**ADR-049 polish (founder, 2026-10-19, session 42):** **light theme only** (the dark-mode block is removed,
+`color-scheme: light`). Type: body 16 px, UI text (tables, labels, buttons, nav) 15 px, hints 14 px minimum, badges
+13 px, h2 22 / h3 18 px, page title 32–44 px, weights 400–700 (no 650). Spacing: 20 px between form fields and rows of
+fields (`.inline` now styles any element, not only `form.inline` — `div.inline` field rows had no gap at all), 48 px
+between page sections, 14 px table cell padding, forms max 560 px, page content max 960 px. Sidebar 248 px, 40 px
+logo, 44 px nav items, full-width quiet Sign out. Destructive actions get a red-outline `.danger` style (class only).
+
+**ADR-049 refine (founder, 2026-10-19, session 43):** founder asked to polish the UI using the techniques (not the maroon
+theme) of a 21st.dev "fintech landing" reference. Taken: raised surfaces (white top highlight + low soft shadow,
+lifting on hover), button depth on primary buttons, one easing `cubic-bezier(0.2, 0.8, 0.2, 1)` at 200 ms, tighter
+page titles (-0.025em, balanced lines), a faint mint glow at the top of every page, a fading drafting grid behind the
+entry page, and a menu button on phones for staff (6–8 links): an animated panel with numbered links that closes on
+navigation and Escape (`(portal)/main-nav.tsx`). Students keep the visible link row (4 links fit at 375 px). Not
+taken: dark slabs, 3D objects, oversized display type, extra colours. The page "rise" animation moves only (no fade):
+fading text failed axe colour-contrast in CI. "Continue with Google" follows Google's button rules (white, grey
+outline, full-colour G). Page titles use the template "Page · ExamEdge AI" (`noindex` stays: private portal, so no
+sitemap or robots.txt).
+
+### ADR-050 Smart Study without notes + audio/video overviews with the browser voice (founder, 2026-10-19)
+- **Decision (founder):** Summary, Flashcards, Mind map and Practice quiz must not depend on teacher notes. If a topic
+  has no published notes, the AI writes them from its own knowledge of the topic (subject + topic name, standard
+  syllabus). Such artifacts store no source refs and are labelled "General explanation, not from your institute's
+  notes", like the tutor's general answers. With notes, the old rule stays: every part cites a sent source.
+- **Decision (founder):** add **Audio overview** and **Video overview** (NotebookLM-like). For now the **free browser
+  voice** (Web Speech API, `speechSynthesis`, en-IN voice when the device has one) reads an AI-written script; the
+  video is narrated slides on the page (each slide highlighted while its narration is read). No audio or video file
+  is made or stored, no new vendor. A paid natural voice (e.g. Sarvam, R2 in the roadmap) replaces the browser voice
+  later — founder will choose it.
+- **Built:** migration `20261114000033_overviews.sql` (kind check + 2 kinds), `STUDIO_PROMPT_VERSION` studio-v2,
+  `GENERAL_PROMPT`, schemas `audio_overview` / `video_overview`, `(portal)/studio/[id]/speaker.tsx`.
+- **Risk:** general-knowledge material is not checked against the institute's syllabus; it is labelled, student
+  artifacts stay private, and institute artifacts still need a teacher's approval before students see them. Voice
+  quality and Hindi depend on the device.
+- **Tutor too (founder, same day):** when no notes match, the tutor says so in one sentence and then answers fully from
+  standard textbook knowledge (prompt `tutor-v4`; the Claude request adds "(No passages from your notes matched.)").
+  Uncited paragraphs were already labelled "General explanation"; demo mode now shows the same two-part shape.

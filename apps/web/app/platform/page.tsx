@@ -76,7 +76,7 @@ export default async function Platform({ searchParams }: { searchParams: Promise
         <form action={setGlobalAi} className="row">
           <span className={`badge ${aiOn ? 'good' : 'bad'}`}>{aiOn ? 'AI is on' : 'AI is off everywhere'}</span>
           <input type="hidden" name="enabled" value={aiOn ? 'false' : 'true'} />
-          <button type="submit" className={aiOn ? '' : 'primary'}>
+          <button type="submit" className={aiOn ? 'danger' : 'primary'}>
             {aiOn ? 'Turn AI off for everyone' : 'Turn AI back on'}
           </button>
         </form>

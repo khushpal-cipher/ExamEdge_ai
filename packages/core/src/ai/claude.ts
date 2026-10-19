@@ -39,6 +39,8 @@ export function claudeTutor(model: ClaudeModel, client = new Anthropic({ maxRetr
                 content: [{ type: 'text' as const, text: p.content }],
                 citations: { enabled: true },
               })),
+              // No notes matched (ADR-050): say so, so the model answers from general knowledge.
+              ...(passages.length ? [] : [{ type: 'text' as const, text: '(No passages from your notes matched.)' }]),
               { type: 'text' as const, text: question },
             ],
           },
@@ -138,10 +140,10 @@ export function claudeStudio(model: ClaudeModel, client = new Anthropic({ maxRet
   return {
     model,
     maxOutput,
-    async generate({ chapter, sources, system, schema }: StudioInput): Promise<StudioOutput> {
-      const notes = sources.map(
-        (s, i) => `<source index="${i}" title="${s.title}, p.${s.page_start}">\n${s.content}\n</source>`,
-      );
+    async generate({ chapter, subject, sources, system, schema }: StudioInput): Promise<StudioOutput> {
+      const notes = sources.length
+        ? sources.map((s, i) => `<source index="${i}" title="${s.title}, p.${s.page_start}">\n${s.content}\n</source>`)
+        : [`No institute notes for this topic.${subject ? ` Subject: ${subject}.` : ''}`];
       const msg = await client.beta.messages.parse({
         model,
         max_tokens: maxOutput,

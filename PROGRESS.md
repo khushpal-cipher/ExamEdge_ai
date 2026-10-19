@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-19 (session 40)
+Last updated: 2026-10-19 (session 43, handoff)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -36,7 +36,8 @@ green, after merging `main` into `r12-bill` because force-push is not allowed) �
 (ADR-046); then `main` merged into `r12-reviews` (`e2a01b4`; PROGRESS kept from `r12-reviews`, DECISIONS kept both ADRs;
 pgTAP Files=25 Tests=1435 PASS, typecheck PASS), CI run 39147981293 green, PR #33 (`03afbca`) reviews + replies
 (ADR-047). `main` = `03afbca`.
-**Session 39 (open, NOT merged):** PR #34 CBT tests (ADR-048), branch `r12-cbt`. First CI run 39153129147 failed
+**Sessions 41–43 (open, NOT merged):** PR #35 `r13-ui` UI redesign + polish + refine (ADR-049) and Smart Study without notes, audio/video overviews, tutor general answers (ADR-050); head `37d9f5f` + handoff commit, **CI green** (run 39202529367 on `37d9f5f`, check incl. E2E + secrets). Founder has NOT said "merge" (see Next exact action (session 44)).
+**Session 39 (merged in 40):** PR #34 CBT tests (ADR-048), branch `r12-cbt`. First CI run 39153129147 failed
 only on the new E2E locator (fixed in `b61f991`, CI re-running at handoff). Founder has not said "merge" for #34.
 **Release 1 local build is complete** (Phases 1–9 + Phase 10 local parts + AC7.5 AI bank questions). Phase 10 cloud parts are BLOCKED on founder approval (see Blocked).
 GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBLIC**, founder's explicit choice on 2026-10-15). Founder asked to connect and push; push phase branches and `main` after each green phase. Never commit secrets (repo is public). Deployments and other cloud accounts still need founder approval.
@@ -44,6 +45,12 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-19 | Tutor answers from general knowledge when no notes match (founder, ADR-050) | `tutor-v4` prompt (full general answer, labelled), Claude request notes "no passages matched", demo provider answers in the same shape; unit test for the old "not found" reply replaced by the new rule (founder changed it). Evidence: `npx vitest run packages/core/src/ai` 102/102; format, lint, typecheck PASS; `npm test` 178/178; `npm run test:int` 28/28; build + check-bundle ok. Browser (founder's `next dev`, student1, probability, 375 px): "Your institute's notes do not cover this yet…" + general paragraph, both labelled "General explanation", 0 page errors; test chat **deleted**. |
+| 2026-10-19 | Smart Study without notes + audio/video overviews (founder, ADR-050), `r13-ui` commit `6132d60` | Founder: study tools must work without teacher notes; add Audio + Video overview with the free browser voice now, paid voice later. Migration `20261114000033_overviews.sql` applied with `supabase migration up` (no reset). Unit test "no sources → nothing reserved" replaced (rule changed by the founder) by general-mode tests for all 6 kinds + "with sources a part without a citation is still rejected". Evidence (2026-10-19): format, lint + forbidden, typecheck PASS; `npm test` 178/178; `npm run test:int` 28/28; `npx supabase test db` Files=26 Tests=1459 PASS (110_studio +3); `npm run build` + check-bundle ok. Headless Chromium on founder's `next dev` :3000 (newtown, student1, maths · probability = 0 notes, 375 + 1280): Summary / Audio / Video overview → `ok=generated`, then `ok=reused`; "General explanation" badge shown; Play → "Part 1 of 3" + Pause/Stop; scrollWidth = viewport; 0 page errors. Spoken audio itself not heard (headless) — **unverified: listen in Chrome/Safari**. 3 test artifacts **deleted**. E2E → CI. |
+| 2026-10-19 | Session 43 on `r13-ui` (PR #35) | `a98d60c` page pass: own 404 page (`app/not-found.tsx`, portal re-export; status stays 404), result-page options as rows, styled file picker. `dcf3383` CI fix: run 39197920047 failed 4 E2E on axe `color-contrast` because the page `rise` animation faded text in → movement only, no assertion changed. `740a016` founder UI refine (ADR-049 refine): raised surfaces, button depth, glow, entry grid, staff phone menu, Google G button, practice/doubt lists as tables (E2E `studio.spec.ts` now checks the table row, same facts), page titles. Evidence (2026-10-19, on `740a016`): format, lint + forbidden, typecheck PASS; `npm test` 163/163; `npm run build` + check-bundle ok. Headless Chromium on the founder's `next dev` :3000 (newtown): student2, teacher.jee, teacher.neet at 375/768/1280, scrollWidth = viewport everywhere, 0 page errors; staff menu at 375/768: opens (links visible), closes on navigation and Escape. Owner view checked with a temporary owner `tmp.owner@newtown.test` (all 3 batches, 4 staff, 2 students, New batch form) → **deleted** (0 tmp users). E2E not run locally (:3000 is the founder's dev) → CI. |
+| 2026-10-19 | UI redesign steps 3–6 (session 41), branch `r13-ui` | Founder: "update the buttons and the links". Links: semibold blue, no underline (underline on hover and inside running text/notes); secondary buttons = mint fill + blue text, no grey box; primary solid blue. Progress-page bars reuse `.meter` (inline colour styles gone; remaining inline styles are layout only). Checked headless at 1280 light: student Contest, My progress, Review; staff batch page, People, Question bank, student progress, released test, topic. lint + forbidden, typecheck, unit 163, build + bundle PASS; E2E → CI. |
+| 2026-10-19 | UI redesign with the founder's palette (ADR-049 update, session 41), branch `r13-ui` | Founder supplied palette `#3368A0/#66A3BF/#C8DFDB/#F2EFE7` + a full redesign brief, then said "keep this type of UI" on the Home screenshot. `globals.css` rewritten (tokens for colour/type/space/radius, dark mode, flat sections, pressable tiles, underlined tabs, runner `.runbar/.meter/.option/.runnav`, entry `.center` split, forms max 600 px, checkbox labels in one row, reduced motion); `layout.tsx` fonts Plus Jakarta Sans + Source Serif 4; markup: entry pages (`page.tsx`, `invite/[token]`), Home section order, runner classes (no logic), batch label `<span>`, brand colour only on the logo (`(portal)/layout.tsx`). Contrast by node script (all text ≥ 4.5, field borders ≥ 3). format, lint + forbidden, typecheck PASS; vitest 191/191; build + bundle PASS; E2E not run locally (:3000 held by founder's dev) → CI; E2E class locators `.stat`, `.side` kept. Headless Chromium on founder's `next dev` :3000 (newtown; student2 and teacher.jee): sign-in, Home, runner (temporary copy of "jhj", **deleted**, tests 10 = before), Dashboard, Tests at 375/768/1280 light + dark, scrollWidth = viewport, 0 page errors. |
+| 2026-10-19 | UI redesign steps 1+2 (ADR-049, session 41), branch `r13-ui` | `globals.css` only: indigo + saffron tokens, dark mode (`prefers-color-scheme`), Poppins 700 headings (h1 clamp 26–34 px), light sidebar with indigo active pill, 16 px cards, pressable 44 px buttons/tiles/answer options (3 px bottom edge, `color-mix` so an institute brand colour also works), chosen MCQ option highlighted via `:has(input:checked)`, `--focus` ring (indigo light / saffron dark), `.stack` no longer stretches empty boxes. No markup, logic or selector change. Contrast by script (node, WCAG formula): all text pairs ≥ 4.5 in light + dark; field borders 3.26–4.67; saffron alone fails 3:1 on the light page → used as focus ring only in dark. brilliant.org studied in the built-in browser (its CSS did not load in the pane; layout cues from structure). format, lint + forbidden, typecheck, build + bundle PASS; unit/pgTAP/int/E2E not rerun (CSS only) → step 7 + CI. Headless Chromium (Playwright) on the founder's `next dev` :3000, newtown, student2, light/dark × 375/1280: Home and a test page scrollWidth = viewport, 0 page errors; runner shown with a temporary copy of "jhj" (SQL, opened now) → started, option B chosen → **deleted** (tests 10 = before, 0 attempts left). Screenshots show newtown's own brand colour replacing indigo (Phase 3 branding) → asked the founder. |
 | 2026-10-19 | Test page fixes (founder, session 40), branch `r12-cbt` | (1) Bug: "Submit test" used `confirm()`; Chrome leaves full screen for that popup, and leaves during it were ignored → after Cancel the test ran outside full screen with no warning. Now the question is asked on the page ("Submit now" / "Keep working"), the `asking` ref is gone. (2) One question per page with Previous / Next ("Question n of N"), all tests. (3) CBT: copy, cut and paste are blocked and each try is a warning (same 3-warning count). Files: `tests/[id]/runner.tsx`; E2E `assessments.spec.ts` (Next/Previous, Submit now), `cbt.spec.ts` (Keep working keeps full screen; 3rd warning = paste → `auto_submitted`; the reload-as-warning step was replaced, it was hand-checked in session 39); ADR-048 updated. format, lint + forbidden, typecheck PASS; unit 163/163; build + bundle PASS. Headless Chromium on the founder's `next dev` :3000 (newtown, teacher.jee → temporary 2-question CBT test in jee 2027 maths, student1, 375 px): Q1 only shown, Previous disabled; Next → Q2, Next disabled; Previous → Q1 answer kept; Submit test → on-page question → Keep working → still full screen, no warning; blur → Warning 1 of 3; paste blocked → Warning 2 of 3; Submit now → Submitted; scrollWidth 375; 0 page errors. Temporary test + 2 questions **deleted** (0 left). int/pgTAP not rerun (no DB or server-code change). E2E → CI. |
 | 2026-10-18 | CBT tests (founder, ADR-048), branch `r12-cbt` | Founder chose: tab/app switch counts too; students told to use Chrome (others refused); teacher sees warnings on results. Migration `20261113000032_cbt.sql` (`tests.cbt`, `test_attempts.cbt_warnings`, definer `cbt_warning`, `guard_test` freezes `cbt` once open) applied with `supabase migration up`. pgTAP new `260_cbt.sql` + allowlist: `npx supabase test db` Files=26 Tests=1456 PASS. format, lint + forbidden, typecheck PASS; unit 163/163; int 28/28; build + bundle PASS. E2E new `cbt.spec.ts` → CI (demo seed). Browser (`web-prod-3001` on :3002, newtown): temporary CBT test for class 10 (SQL); student2 sees the CBT note + "Start test in full screen"; the in-app pane refuses full screen → questions stay covered (fail-safe). Headless Chromium script on the same build at 375 px (scrollWidth 375, no page errors): Enter → full screen; leave full screen → "Warning 1 of 3" (DB 1); blur → "Warning 2 of 3" + "One more warning…"; reload → `auto_submitted`, 3, answer `["a"]` kept, notice shown (bug found + fixed: `CBT_WARNINGS` imported from a client module into a server page was a proxy → moved to `lib/assess.ts`). teacher.jee: CBT tick box on New test. Temporary test, question, attempt **deleted** (0 left). |
 | 2026-10-18 | Student sees own result right after submit (founder, ADR-046), branch `r12-instant-result` | Founder chose: marks + right/wrong at once, correct answers at closing time (key-sharing risk), theory = own answer + marks once checked, rank after release. Migration `20261109000028_instant_result.sql` (`private.get_attempt_review`) applied with `supabase migration up`. pgTAP `060` +6 (after submit: live marks, no keys; still writing / another student's attempt refused; after close: −negative, blank 0, keys, no model answer, no rank; checked-before-release written marks + comment): `npx supabase test db` Files=24 Tests=1378 PASS. format, lint + forbidden, typecheck PASS; unit 163/163; int 28/28; build + bundle PASS. E2E `assessments.spec.ts` (Marks so far 12 / 16, After release, Not checked yet, 3× key-after-close note; after close 3× Correct answer, no Model answer) → CI (:3000 held by the founder's `next dev`). Browser (founder's `next dev` :3000, newtown, student2): temporary copy of "jhj" with a submitted attempt → "-1 / 4", "After release", "Correct answer: shown after the test closes"; after moving its close time → "Correct answer: A", 375 px scrollWidth 375; released "jhj" unchanged (rank 1). Temporary test **deleted** (tests 5, attempts 1, answers 1 = before). PR #32; CI first failed on `getByText('Not checked yet')` (also in the notice) → `exact: true`, run 39147007384 green on `8c20c74`. |
@@ -138,7 +145,151 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 41)
+## Next exact action (session 44)
+**State:** branch `r13-ui`, PR #35 open (https://github.com/khushpal-cipher/ExamEdge_ai/pull/35), Auto-fix on, CI green
+on `37d9f5f` (run 39202529367). Founder has NOT said "merge". Local DB has migration 33 (`overviews`) applied.
+1. `git checkout r13-ui && git pull`; `docker info`; `supabase status`; `gh pr checks 35` (the handoff commit runs CI
+   again; fix any failure without weakening a test).
+2. Ask the founder: "merge #35?" (UI redesign + ADR-050). Merge only on their yes (`gh pr merge 35 --squash`), then
+   record the merge commit here.
+3. Founder's next topic (session 43 talk): a **free Gemini API key for testing only**. When the founder says the key is
+   in `apps/web/.env.local` as `GEMINI_API_KEY` (never in chat, repo is public): add a DECISIONS entry (Gemini =
+   test-only provider, free tier may train on inputs → only local test institutes, never real student data; paid
+   Claude stays the production plan), verify Gemini's current free-tier models/limits/SDK on Google's official docs
+   (mark [U] until checked; use `source-driven-development`), then add `AI_PROVIDER=gemini` behind the gateway in
+   `packages/core/src/ai` (the only place allowed to import an AI SDK; `scripts/check-forbidden.ts` rule
+   `provider-sdk-outside-gateway` must be updated for the new SDK) for tutor, studio (6 kinds), notes, questions/plan,
+   OCR; meter it like Claude (cost 0 on free tier); unit tests with a recorded reply (no key in CI); then click every
+   AI feature on newtown with the key and record results.
+4. Not built (founder decides later, needs money/approval): paid voice (Sarvam Bulbul v3, ₹30 / 10k chars [V]),
+   real MP4 video (slides + voice joined with ffmpeg; Claude-drawn diagrams instead of an image AI), Voyage
+   embeddings (Q-08). Founder said browser voice is "okay okay" and will move to a paid voice.
+
+## Session 43 result (2026-10-19) — all on `r13-ui` / PR #35
+- `a98d60c` page pass: own 404 page, result-page options as rows, styled file picker.
+- `dcf3383` CI fix: page `rise` animation faded text → axe colour-contrast failed 4 E2E; now movement only.
+- `740a016` founder UI refine from a 21st.dev reference (own palette kept): raised surfaces, button depth, glow,
+  entry grid, staff phone menu (`(portal)/main-nav.tsx`), Google "G" button, practice/doubt lists as tables,
+  page titles "Page · ExamEdge AI".
+- `6132d60` ADR-050: Smart Study tools work without notes (general knowledge, labelled), Audio overview + Video
+  overview (narrated slides) read by the browser voice; migration 33.
+- `37d9f5f` ADR-050: tutor answers from general knowledge when no notes match (`tutor-v4`), labelled.
+- Founder checks: owner Batches/People were fine (founder misread; temporary owner used to check → deleted).
+  Founder listened to audio/video overviews: works; wants a paid voice later; understands video = narrated slides
+  until a renderer is built.
+- Explained to founder (no code): AI services to buy (Anthropic first; Sarvam voice; Voyage; no image AI needed;
+  ffmpeg/Remotion for MP4) and that a free Gemini key is fine for testing only.
+- Evidence: see Completed rows dated 2026-10-19 (session 43). Last full local gate on `37d9f5f`: format, lint +
+  forbidden, typecheck PASS; unit 178/178; int 28/28; pgTAP Files=26 Tests=1459 PASS; build + bundle ok.
+
+## Session 42 result (2026-10-19) — polish steps 1–6 built on `r13-ui`, commit `8ebab56`, PR #35
+- Done: step 1 light only; step 2 type scale (16/15/14/13 px, h2 22, h3 18, h1 32–44, stat 36, no 650 weight);
+  step 3 spacing (root cause of "too close": `div.inline` field rows had no CSS — `.inline` now styles any element,
+  20 px gaps; forms 560 px; 48 px between sections; 14 px table cells; hint next to "Create test" in a `.row`);
+  step 4 sidebar (248 px, 40 px logo, 44 px nav items, full-width Sign out, 24 px bottom padding; 768 px keeps the
+  phone layout — checked by screenshot, no overflow); step 5 `.danger` red-outline on 13 destructive buttons
+  (class only), 12 px gap in button rows, runner "Submit test" right-aligned under Previous/Next on desktop;
+  step 6 content max 960 px.
+- Evidence (2026-10-19, on `8ebab56`): `npm run format:check` PASS, `npm run lint` PASS, `npm run typecheck` PASS,
+  `npm test` 163/163 PASS, `npm run build` PASS + check-bundle ok. Screenshots 375/768/1280 light of student Home,
+  Contest, My progress, Review and staff Tests, Batches, Question bank, People: `scrollWidth` = viewport on all.
+- **Not done / unverified:** numbers right-aligned in tables (`td.num`) and Contest "Results" rows (student1 is now
+  in jee 2027 with no tests, so the list could not be seen); test runner, result page, check-answers, documents,
+  bill and platform pages not screenshotted (step 7); E2E not run locally (:3000 is the founder's `next dev`) → CI.
+- Founder follow-up (same session): text boxes grow with typing (3 lines min, `field-sizing`), 40 px buttons/inputs,
+  styled dropdown (own chevron; Chrome `appearance: base-select` list) — `13b05cf`. Then founder said "make your
+  changes, I will tell you to undo": Home "at a glance" band (next test / overall rank / last rank), dashed centred
+  empty states, subject letter marks, table status = dot + word, numbers right-aligned (Tests, test results,
+  standings), short confirmations as a fading toast (long ones stay), page rise + meter fill motion (off with reduced
+  motion), entry page mint background + rule under the name. Gate PASS (format, lint, typecheck, unit 163, build).
+  If the founder dislikes one, revert just that part.
+- Next: step 7 page pass on the remaining pages, then step 8 (CI on PR #35, ask the founder "merge #35?").
+
+## Next exact action (session 42) — history
+**State:** `r13-ui` pushed, **PR #35 open** (https://github.com/khushpal-cipher/ExamEdge_ai/pull/35), Auto-fix on;
+founder has NOT said "merge". Founder palette `#3368A0/#66A3BF/#C8DFDB/#F2EFE7` + Plus Jakarta Sans / Source Serif 4
+are approved. Founder review (2026-10-19, screenshots of Tests, Contest, platform Institutes, staff pages): "keep the
+**light theme**; the font style, font size, the sidebar and the place of buttons are not perfect; things are too
+close to each other." Fix all of it on `r13-ui` (same PR), CSS + markup only, keep every E2E role/label and the
+`.stat` / `.side` classes. Do the steps in order; after each, screenshot at 375 / 768 / 1280 (light only) with the
+Playwright pattern below, fix, run format + lint + typecheck + build, commit, push.
+
+Step 1: Light theme only — delete the `@media (prefers-color-scheme: dark)` block in `globals.css`, set
+`color-scheme: light` on `:root`, update ADR-049 ("light only, founder").
+→ Model: haiku → Effort: low → Why: delete one block + doc line.
+
+Step 2: Type scale and font sizes. Body 16 px (line-height 1.6); UI text in tables, lists, labels 15 px; captions
+and hints min 14 px (no 12–13 px except badges at 13 px); `th` 13→14 px semibold, sentence case; h2 22 px, h3 18 px;
+page h1 serif 40–44 px desktop / 32 px phone; breadcrumb ("Batches", "Tests" above titles) 14 px muted, not tiny blue;
+stat numbers 36 px. Check Plus Jakarta weights: only 400/500/600/700 used, no 650 (snap to 600).
+→ Model: opus → Effort: high → Why: sets the visual system every later step depends on (founder's main complaint).
+
+Step 3: Spacing system. Use the `--s*` scale everywhere: form fields 20–24 px apart (label→input 8 px, field→next
+label 20 px — today forms put fields in nested grids/inline divs so the `form.stack` gap does not reach them; fix by
+`label + label`, `.stack > label` margins or wrapping fields), 24 px between the last field and the submit row;
+submit button never touches an input (platform "Create institute", Tests "Create test"); hint text after a button
+gets 12 px gap or goes on its own line below; section rhythm: 48 px between sections, 16 px under each h2; cards
+padding 24 px desktop / 16 px phone; table cell padding 14 px vertical.
+→ Model: sonnet → Effort: medium → Why: mechanical CSS once the scale exists; verify every form page.
+
+Step 4: Sidebar. Width 248 px; brand block with 40 px logo; batch switcher compact (label above a 40 px select, 24 px
+below it); nav items 44 px tall, 15 px, 4 px gap, active = mint fill + 3 px blue bar (keep); bottom user block: name,
+role and a full-width quiet "Sign out" with clear space (dev-only Next indicator overlaps it — not a bug, but leave
+24 px bottom padding); phone: top bar brand + Sign out, nav as scrolling tabs, batch row — check at 375 and 768
+(768 should still be the phone layout or a narrow 200 px sidebar, decide by screenshot).
+→ Model: sonnet → Effort: medium → Why: one component, visible on every page.
+
+Step 5: Buttons and their placement. Rules: one primary per page section; page actions sit next to the title on the
+same baseline (not floating far right on wide screens — keep `.top` within the content width); secondary = mint fill
++ blue text (keep), destructive actions (Turn AI off, Delete, Withdraw) get a red-outline style `.danger` (markup:
+add the class only, no logic); inline forms (`form.inline`: "₹ per US$" + Save rate, New subtopic + Add) align
+input and button bottoms at the same 44 px height; button groups 12 px apart; `Export CSV` next to its table heading;
+"Previous / Next / Submit" in the runner: Submit sits at the right of the nav row on desktop.
+→ Model: sonnet → Effort: medium → Why: needs judgement page by page; no logic change.
+
+Step 6: Content width and lists. Main content max 960 px; forms max 560 px; text lines ≤ 72ch; lists like Contest
+"Results" become rows with dividers, title left + score/rank right but within 760 px so they do not drift apart on
+wide screens; tables keep full section width, numbers right-aligned (`td.num`/th classes in markup where numeric).
+→ Model: sonnet → Effort: medium → Why: layout per page, markup classes only.
+
+Step 7: Page pass — every page at 375/768/1280 light: student Home, Contest, My progress, Review, subject, topic
+(Subtopics + Smart Study tiles + tutor), test runner (temporary copy of "jhj" via SQL, delete after; tests count must
+stay 10), result page; staff Dashboard, Batches, batch page, Subjects, topic, Tests (new + draft + check answers),
+Question bank + edit, People (3 tabs), Documents/notes, student progress, Reviews, Bill; platform Institutes
+(admin.localhost, needs founder MFA → check markup by CSS only or ask founder for a screenshot); sign-in, invite.
+Fix what the shared CSS misses; send the founder before/after screenshots.
+→ Model: sonnet → Effort: medium → Why: verification sweep; depends on steps 2–6, re-verify step 2 sizes here.
+
+Step 8: Gate + merge. `npm run format:check`, lint, typecheck, unit, build; E2E in CI on PR #35 (local :3000 is the
+founder's `next dev`, no demo seed); record evidence here; ask the founder "merge #35?".
+→ Model: sonnet → Effort: medium → Why: standard gate; never weaken a failing test.
+
+How to screenshot: Playwright script (chromium, `colorScheme: 'light'`, viewport 375/768/1280), open
+`http://newtown.localhost:3000/`, fill "Demo user email" (student1@newtown.test = class 10 with tests,
+student2 = neet 2027, teacher.jee@newtown.test = staff), click "Sign in as demo user", `waitForURL(/\/(home|dashboard)/)`,
+then visit pages; save screenshots in the session scratchpad (never commit them); log `scrollWidth` = viewport.
+
+## Previous next action (session 42 draft) — history
+
+**UI redesign on `r13-ui`: founder's palette + new type system built for the shell, shared components, entry pages,
+student Home and the test runner; founder approved the look ("keep this type of UI").** Next: plan steps 3–4
+(remaining student pages: subject/topic, Smart Study, result, My progress, Review, Contest; staff pages: batches,
+check answers, question bank, documents, people, reviews, bill, platform) — look at each at 375/1280 light/dark and
+fix what the shared CSS misses; step 6 (replace colour/spacing inline styles); step 7 full gate, PR into `main`, CI,
+ask "merge?". Screenshot script: copy the session scratch `shots.mjs` pattern (Playwright, demo sign-in, waitForURL).
+
+## Next exact action (session 41) — history
+**UI redesign (R1.3, ADR-049) — APPROVED by the founder, not started.** Branch `r13-ui` (from `main` `c24db29`)
+holds only the plan: `docs/UI_REDESIGN_PLAN.md` (reference brilliant.org for layout/feel; own colours deep indigo
+`#2D2A7A` + saffron `#F2A93B`, dark mode, Poppins + Lora; 7 steps with model/effort). Founder gave a free hand on
+how to build it and asked to study brilliant.org and use a design skill (`impeccable` or `frontend-design`).
+Steps:
+1. `git checkout r13-ui && git pull`; `docker info`; `supabase status`.
+2. Do plan step 1 (study brilliant.org in the built-in browser; tokens in `globals.css`) and step 2 (shell + building
+   blocks), then show the founder student Home + the test page (light/dark, 375/1280 px screenshots) and wait for "ok".
+3. Then plan steps 3–7; PR into `main`; CI green; ask "merge?".
+
+## Previous next action (session 41, before the UI request) — history
 State (2026-10-19, session 40): **PR #34 `r12-cbt` MERGED** into `main` as `c0c46ca` (squash; CI run 39155901063
 green on `43825c7`: check + secrets, incl. E2E `cbt.spec.ts` and `assessments.spec.ts`). It holds CBT mode
 (ADR-048, migration 32) plus the session 40 founder fixes: submit asked on the page (no `confirm()`), one question
@@ -568,6 +719,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 42 | 2026-10-19 | UI polish on PR #35: light only, type scale, spacing (`.inline` root cause), sidebar, `.danger` buttons, 960 px content; founder follow-ups: 40 px controls, growing text boxes, styled dropdown, Home at-a-glance band, empty states, status dots, right-aligned numbers, toast, motion, entry page. Gate green locally (E2E → CI) | `b8d6cdb` (branch `r13-ui`) |
 | 39 | 2026-10-18/19 | Founder said merge: PR #32 (`16b7547`) and #33 (`03afbca`) merged after merging `main` into `r12-reviews` (pgTAP 1435). Founder asked for CBT tests: full screen, tab/app switch + reload count, 3rd warning auto-submits, Chrome only, warnings on results (ADR-048, migration 32, pgTAP 1456, E2E `cbt.spec.ts`); PR #34, first CI failed on an E2E locator, fixed | `b61f991` (branch `r12-cbt`) |
 | 37 | 2026-10-18 | Founder: "Type a question" gets negative marks; theory model answer optional (migration 25); multi-correct = JEE Advanced marking (migration 26, ADR-045); owner "AI usage" → ₹ Bill at a platform-set rate (migration 27); pgTAP 1372; MCQ-only results question answered (release is manual) — decision open | branches `r12-typed-marks` (PR #30), `r12-bill` |
 | 36b | 2026-10-18 | PR #26/#27 merged (R1.2 done); founder follow-ups: Add questions at the top of a draft test (PR #28 `ac20bed`), teacher notes publish themselves (ADR-044, PR #29 `3261716`); stale :3000 dev server restarted | `3261716` |

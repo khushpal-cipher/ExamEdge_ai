@@ -129,7 +129,7 @@ export default async function QuestionBank({
                                 <input type="hidden" name="question_id" value={q.id} />
                                 <button
                                   type="submit"
-                                  className="link"
+                                  className="link danger"
                                   aria-label={`Delete question: ${q.stem.slice(0, 40)}`}
                                 >
                                   Delete
@@ -150,3 +150,5 @@ export default async function QuestionBank({
     </>
   );
 }
+
+export const metadata = { title: 'Question bank' };

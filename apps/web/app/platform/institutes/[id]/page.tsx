@@ -195,7 +195,9 @@ export default async function InstituteAdmin({
             Type {inst.slug} to confirm
             <input name="confirm_slug" required autoComplete="off" />
           </label>
-          <button type="submit">Delete institute</button>
+          <button type="submit" className="danger">
+            Delete institute
+          </button>
         </form>
       </section>
     </>

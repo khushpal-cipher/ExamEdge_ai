@@ -87,11 +87,11 @@ export default async function Tests({ searchParams }: { searchParams: Search }) 
             <input type="checkbox" name="cbt" /> CBT mode: the test runs in full screen; leaving it or switching tab or
             app is a warning, and the 3rd warning submits the test (students must use Google Chrome)
           </label>
-          <div>
+          <div className="row">
             <button type="submit" className="primary">
               Create test
             </button>
-            <span className="small muted"> Next page: add questions with AI or type them.</span>
+            <span className="small muted">Next page: add questions with AI or type them.</span>
           </div>
         </form>
       </section>
@@ -107,8 +107,8 @@ export default async function Tests({ searchParams }: { searchParams: Search }) 
                   <th>Test</th>
                   <th>Batches</th>
                   <th>Opens</th>
-                  <th>Duration</th>
-                  <th>Questions</th>
+                  <th className="num">Duration</th>
+                  <th className="num">Questions</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -127,8 +127,8 @@ export default async function Tests({ searchParams }: { searchParams: Search }) 
                           .join(', ') || '—'}
                       </td>
                       <td>{formatTime(t.opens_at)}</td>
-                      <td>{formatDuration(t.duration_seconds)}</td>
-                      <td>{(t.test_questions as unknown as { count: number }[])[0]?.count ?? 0}</td>
+                      <td className="num">{formatDuration(t.duration_seconds)}</td>
+                      <td className="num">{(t.test_questions as unknown as { count: number }[])[0]?.count ?? 0}</td>
                       <td>
                         <span className={`badge ${BADGE[phase] ?? ''}`}>{PHASE_LABEL[phase]}</span>
                       </td>
@@ -143,3 +143,5 @@ export default async function Tests({ searchParams }: { searchParams: Search }) 
     </>
   );
 }
+
+export const metadata = { title: 'Tests' };

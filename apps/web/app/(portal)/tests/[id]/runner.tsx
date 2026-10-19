@@ -235,25 +235,25 @@ export function Runner({
           </div>
         </div>
       )}
-      <div
-        className="card row"
-        role="timer"
-        aria-live="off"
-        style={{ justifyContent: 'space-between', position: 'sticky', top: 8 }}
-      >
-        <span>
-          Time left: <b>{left == null ? '—' : clock(left)}</b>
-        </span>
-        <span className="small muted">
-          {questions.length - unanswered} of {questions.length} answered · answers save automatically
-        </span>
+      <div className="runbar" role="timer" aria-live="off">
+        <div className="row between">
+          <span>
+            Time left: <b className="clock">{left == null ? '—' : clock(left)}</b>
+          </span>
+          <span className="small muted">
+            {questions.length - unanswered} of {questions.length} answered · answers save automatically
+          </span>
+        </div>
+        <div className="meter" aria-hidden="true">
+          <span style={{ width: `${((questions.length - unanswered) / Math.max(questions.length, 1)) * 100}%` }} />
+        </div>
       </div>
       {questions.slice(cur, cur + 1).map((q) => {
         const value = answers[q.question_id];
         const st = state[q.question_id];
         const name = `q-${q.question_id}`;
         return (
-          <fieldset key={q.question_id} className="card stack">
+          <fieldset key={q.question_id} className="stack question-card">
             <legend>
               <b>Question {cur + 1}</b>{' '}
               <span className="small muted">
@@ -261,12 +261,12 @@ export function Runner({
                 {q.type === 'multi' ? ' · more than one may be correct' : ''}
               </span>
             </legend>
-            <p style={{ whiteSpace: 'pre-wrap' }}>{q.stem}</p>
+            <p className="stem">{q.stem}</p>
             {(q.type === 'single' || q.type === 'multi') &&
               q.options.map((o) => {
                 const chosen = Array.isArray(value) ? (value as string[]) : [];
                 return (
-                  <label key={o.id} className="row" style={{ display: 'flex' }}>
+                  <label key={o.id} className="option">
                     <input
                       type={q.type === 'single' ? 'radio' : 'checkbox'}
                       name={name}
@@ -335,7 +335,7 @@ export function Runner({
           </fieldset>
         );
       })}
-      <div className="row" style={{ justifyContent: 'space-between' }}>
+      <div className="runnav">
         <button type="button" disabled={cur === 0} onClick={() => setCur(cur - 1)}>
           Previous
         </button>

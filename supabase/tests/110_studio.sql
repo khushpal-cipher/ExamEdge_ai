@@ -2,7 +2,7 @@
 -- tries are private to that student; institute artifacts reach students only once published to their batch.
 begin;
 select tests.setup();
-select plan(38);
+select plan(41);
 
 create temp table ids as select
   tests.inst('alpha') as a,
@@ -49,6 +49,19 @@ select lives_ok($$ insert into public.generated_artifacts (institute_id, owner_s
   input_hash, prompt_version, model, content)
   select a, 'student', 'summary', physics, rotation, repeat('c', 64), 'studio-v1', 'fake', '{"sections":[]}' from ids $$,
   'student1 saves an artifact of their own');
+-- ADR-050: audio and video overviews are artifacts too; other kinds stay refused.
+select lives_ok($$ insert into public.generated_artifacts (institute_id, owner_scope, kind, subject_id, chapter_id,
+  input_hash, prompt_version, model, content)
+  select a, 'student', 'audio_overview', physics, rotation, repeat('e', 64), 'studio-v2', 'fake', '{"parts":[]}' from ids $$,
+  'student1 saves an audio overview');
+select lives_ok($$ insert into public.generated_artifacts (institute_id, owner_scope, kind, subject_id, chapter_id,
+  input_hash, prompt_version, model, content)
+  select a, 'student', 'video_overview', physics, rotation, repeat('f', 64), 'studio-v2', 'fake', '{"slides":[]}' from ids $$,
+  'student1 saves a video overview');
+select throws_ok($$ insert into public.generated_artifacts (institute_id, owner_scope, kind, subject_id, chapter_id,
+  input_hash, prompt_version, model, content)
+  select a, 'student', 'podcast', physics, rotation, repeat('9', 64), 'studio-v2', 'fake', '{}' from ids $$,
+  '23514', null, 'an unknown kind is refused');
 select results_eq($$ select owner_user_id, status from public.generated_artifacts where input_hash = repeat('c', 64) $$,
   $$ values (auth.uid(), 'draft') $$, 'it belongs to the caller and is never shared');
 select throws_ok($$ insert into public.generated_artifacts (institute_id, owner_scope, kind, subject_id, chapter_id,

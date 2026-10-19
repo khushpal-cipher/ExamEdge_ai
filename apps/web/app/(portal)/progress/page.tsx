@@ -26,3 +26,5 @@ export default async function MyProgress() {
     </>
   );
 }
+
+export const metadata = { title: 'My progress' };

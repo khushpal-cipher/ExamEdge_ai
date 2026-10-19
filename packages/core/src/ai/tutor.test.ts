@@ -121,9 +121,15 @@ describe('fake tutor (demo mode)', () => {
     expect(streamed).toBe(g.segments.map((s) => s.text).join(''));
     expect(g.usage.input_tokens).toBeGreaterThan(0);
   });
-  it('says the notes do not cover it when no passage shares a content word', async () => {
+  // ADR-050 (founder): with no matching notes the tutor still answers, from general knowledge, labelled so.
+  it('says the notes do not cover it, then answers generally, all labelled general', async () => {
     const { g } = await run('What is photosynthesis?', [ROTATION]);
-    expect(assemble(g.segments, [ROTATION])).toMatchObject({ content: NOT_FOUND_TEXT, notFound: true });
+    const out = assemble(g.segments, [ROTATION]);
+    expect(out.notFound).toBe(true);
+    expect(out.paragraphs[0]).toEqual({ text: NOT_FOUND_TEXT, label: 'general', citations: [] });
+    expect(out.paragraphs.length).toBe(2);
+    expect(out.paragraphs.every((p) => p.label === 'general')).toBe(true);
+    expect(out.paragraphs[1]!.text).toContain('photosynthesis');
   });
   it('numbers steps for "Solve step by step"', async () => {
     const { g } = await run('torque unit', [ROTATION], true);

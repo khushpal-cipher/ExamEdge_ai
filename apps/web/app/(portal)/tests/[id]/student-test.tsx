@@ -222,7 +222,7 @@ async function ReviewView({
           </h2>
           <p style={{ whiteSpace: 'pre-wrap' }}>{r.stem}</p>
           {r.options.length > 0 && (
-            <ul>
+            <ul className="choices">
               {r.options.map((o) => (
                 <li key={o.id}>
                   {o.id.toUpperCase()}. {o.text}

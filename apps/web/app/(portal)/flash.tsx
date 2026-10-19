@@ -48,8 +48,8 @@ const OK: Record<string, string> = {
   published: 'Published. Students in the chosen batches can open it now.',
   withdrawn: 'Withdrawn. Students can no longer open it.',
   resolved: 'Marked as resolved.',
-  generated: 'Ready. Made from the published notes of this chapter.',
-  reused: 'This was already made from the same notes, so here it is (no AI use counted).',
+  generated: 'Ready. Made by AI for this topic.',
+  reused: 'This was already made for this topic, so here it is (no AI use counted).',
   saved_draft: 'Saved. It is a draft again until you publish it.',
   questions_made: 'AI questions added below as drafts. Check each one and approve it before using it in a test.',
   approved: 'Approved. It can now be added to tests.',
@@ -75,7 +75,8 @@ export async function Flash({ searchParams }: { searchParams: Promise<{ ok?: str
     );
   if (ok && OK[ok])
     return (
-      <p role="status" className="notice">
+      // Short confirmations float and fade away; longer ones stay because they say what to do next.
+      <p role="status" className={OK[ok].length <= 60 ? 'notice toast' : 'notice'}>
         {OK[ok]}
       </p>
     );
