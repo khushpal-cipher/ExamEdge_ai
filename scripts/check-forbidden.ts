@@ -20,7 +20,12 @@ export const rules: Rule[] = [
       /(from\s+|import\s*\(|require\s*\()\s*['"](@anthropic-ai\/sdk|voyageai|openai|@google\/genai)['"/]|api\.(anthropic|voyageai)\.com|generativelanguage\.googleapis\.com/,
     applies: (p) => inRuntime(p) && !p.startsWith('packages/core/src/ai/'),
   },
-  { id: 'dangerouslySetInnerHTML', pattern: /dangerouslySetInnerHTML/, applies: (p) => p.startsWith('apps/web/') },
+  // The safe renderer is the one place allowed to inject HTML: KaTeX output with trust: false (ADR-053, TH-19).
+  {
+    id: 'dangerouslySetInnerHTML',
+    pattern: /dangerouslySetInnerHTML/,
+    applies: (p) => p.startsWith('apps/web/') && p !== 'apps/web/lib/markdown.ts',
+  },
   { id: 'secret-key-in-runtime', pattern: /SUPABASE_SECRET_KEY|SERVICE_ROLE_KEY|sb_secret_/, applies: inRuntime },
 ];
 

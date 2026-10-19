@@ -163,7 +163,7 @@ Each threat: **Scenario → Prevention → Verification test → Monitoring → 
 
 ### TH-19 XSS / content injection in rendered Markdown and LaTeX
 - **Scenario:** malicious stem/notes/AI output with script, HTML or crafted KaTeX.
-- **Prevention:** render Markdown with HTML disabled and a sanitiser; KaTeX with `trust: false` [U: verify option]; strict CSP (no inline scripts); no `dangerouslySetInnerHTML` outside the sanitiser.
+- **Prevention:** render Markdown with HTML disabled and a sanitiser; KaTeX with `trust: false` (verified 2026-10-19, ADR-053); strict CSP (no inline scripts); no `dangerouslySetInnerHTML` outside the sanitiser.
 - **Test:** T-SEC-19 XSS payload corpus in stems, notes, chat.
 - **Residual:** low.
 

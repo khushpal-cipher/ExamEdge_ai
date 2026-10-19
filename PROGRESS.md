@@ -168,6 +168,21 @@ PR or open a tiny PR). Nothing failing, nothing half-built.
 4. Local `npm run test:e2e` stays BLOCKED (no `demo` / `rival` institutes locally; seeding needs `db:reset`); CI runs e2e
    on a fresh database. Unit 185 and pgTAP 1459 pass locally.
 
+## Session 45 (2026-10-19) — KaTeX formulas (ADR-053), branch `r15-next`
+- Founder saw AI quiz text like `$20\text{ N}$` and said "install it". `katex@0.19.0` added to `apps/web` (dev tool
+  rule: free, MIT, logged in DECISIONS ADR-053). `lib/markdown.ts` typesets `$…$` / `$$…$$` (`trust: false`,
+  `throwOnError: false`); new `MathText` (inline) and `clip` (labels that never cut a formula). Stems, options, model
+  answers and explanations now go through it in: student test runner + result review, Studio quiz + artifact page,
+  question preview dropdown + bank list, teacher check page. `katex.min.css` imported in `app/layout.tsx`.
+  `scripts/check-forbidden.ts` exempts only `apps/web/lib/markdown.ts` from the `dangerouslySetInnerHTML` ban.
+- Evidence (2026-10-19): `npm run format:check` ok; `npm run lint` ok (check-forbidden ok); `npm run typecheck` ok;
+  `npm test` 188 passed (T-SEC-19 / T-AI-09 now check every tag + attribute, allow-list outside KaTeX output);
+  `npm run build` ok + check-bundle ok. Browser (newtown, NEET Physics Quiz 1 test page): 165 `.katex` nodes, 0
+  `.katex-error`, KaTeX_Main font loaded, options show "24 N", collapsed titles contain no raw `$`.
+- BLOCKED locally: `npm run test:e2e` (as before, needs `db:reset`); CI runs it. pgTAP untouched (no SQL change).
+- Not done: formulas are not compiled on save (AI_PIPELINE "Formulas" check still open); `<option>` labels in "Add from
+  the bank" stay plain text (native select cannot show math).
+
 ## Session 44d (2026-10-19) — theory checking demo, local data only (no code, nothing committed)
 - Founder asked how a teacher checks theory answers with 5+ students. The existing page
   `/tests/[id]/check` already does it, so no code was written. For the demo, 4 students were added with a one-off script

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { TYPE_SHORT } from '@/lib/assess';
+import { clip, MathText } from '@/lib/markdown';
 import { isUuid, MANAGERS, requireMember, STAFF } from '@/lib/tenant';
 import { deleteQuestion } from '../tests/actions';
 import { approveQuestion } from './actions';
@@ -102,7 +103,7 @@ export default async function QuestionBank({
                         <tr key={q.id}>
                           <td>
                             <Link href={`/questions/${q.id}`}>
-                              {q.stem.length > 90 ? `${q.stem.slice(0, 90)}…` : q.stem}
+                              <MathText text={clip(q.stem, 90)} />
                             </Link>{' '}
                             {!(q.question_keys as unknown) && <span className="badge bad">No answer key</span>}
                             {q.status === 'draft' && <AiBadge verification={q.verification} />}

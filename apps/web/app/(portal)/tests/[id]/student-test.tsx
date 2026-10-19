@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { CBT_WARNINGS, formatDuration, formatTime, pct, requestTime, testPhase } from '@/lib/assess';
+import { Markdown, MathText } from '@/lib/markdown';
 import { studentBatches } from '@/lib/student';
 import type { requireMember } from '@/lib/tenant';
 import { startAttempt } from '../actions';
@@ -220,12 +221,12 @@ async function ReviewView({
               </span>
             )}
           </h2>
-          <p style={{ whiteSpace: 'pre-wrap' }}>{r.stem}</p>
+          <Markdown text={r.stem} />
           {r.options.length > 0 && (
             <ul className="choices">
               {r.options.map((o) => (
                 <li key={o.id}>
-                  {o.id.toUpperCase()}. {o.text}
+                  {o.id.toUpperCase()}. <MathText text={o.text} />
                 </li>
               ))}
             </ul>
@@ -237,13 +238,19 @@ async function ReviewView({
           {answerKey(r) && (
             <p>
               <b>{r.type === 'written' ? 'Model answer' : 'Correct answer'}:</b>{' '}
-              <span style={{ whiteSpace: 'pre-wrap' }}>{answerKey(r)}</span>
+              <span style={{ whiteSpace: 'pre-wrap' }}>
+                <MathText text={answerKey(r)} />
+              </span>
             </p>
           )}
           {!r.key && r.type !== 'written' && (
             <p className="muted">Correct answer: shown after the test closes ({formatTime(test.closes_at)}).</p>
           )}
-          {r.explanation && <p className="muted">{r.explanation}</p>}
+          {r.explanation && (
+            <div className="muted">
+              <Markdown text={r.explanation} />
+            </div>
+          )}
           {r.teacher_comment && (
             <p className="notice">
               <b>Teacher&apos;s comment:</b> {r.teacher_comment}

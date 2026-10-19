@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { formatDuration, formatTime, pct, PHASE_LABEL, testPhase, toLocalInput, TYPE_SHORT } from '@/lib/assess';
 import { MAX_REQUEST } from '@examedge/core/ai/plan';
+import { clip as short } from '@/lib/markdown';
 import { MANAGERS, type requireMember } from '@/lib/tenant';
 import {
   addTestQuestion,
@@ -37,8 +38,6 @@ type TQ = {
   negative_marks: number;
   questions: Omit<PreviewQuestion, 'id'>;
 };
-
-const short = (s: string, n = 80) => (s.length > n ? `${s.slice(0, n)}…` : s);
 
 export async function StaffTest({ ctx, test }: { ctx: Ctx; test: Test }) {
   const { institute, member, db } = ctx;

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Markdown, MathText } from '@/lib/markdown';
 import { isUuid, requireMember, STAFF } from '@/lib/tenant';
 import { Flash } from '../../../flash';
 import { gradeAnswer } from '../../actions';
@@ -103,10 +104,10 @@ export default async function Check({
       </nav>
       <section className="card stack" aria-labelledby="question">
         <h2 id="question">Question ({current.marks} marks)</h2>
-        <p style={{ whiteSpace: 'pre-wrap' }}>{current.questions.stem}</p>
+        <Markdown text={current.questions.stem} />
         {current.questions.question_keys?.key.model_answer && (
           <p className="notice" style={{ whiteSpace: 'pre-wrap' }}>
-            <b>Model answer (guide):</b> {current.questions.question_keys.key.model_answer}
+            <b>Model answer (guide):</b> <MathText text={current.questions.question_keys.key.model_answer} />
           </p>
         )}
       </section>
