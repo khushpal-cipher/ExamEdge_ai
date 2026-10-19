@@ -227,7 +227,9 @@ export default async function StudioArtifact(props: { params: Promise<{ id: stri
             {a.status === 'published' && (
               <form action={withdrawArtifact}>
                 <input type="hidden" name="artifact_id" value={a.id} />
-                <button type="submit">Withdraw</button>
+                <button type="submit" className="danger">
+                  Withdraw
+                </button>
               </form>
             )}
           </section>
@@ -250,7 +252,7 @@ export default async function StudioArtifact(props: { params: Promise<{ id: stri
       {(staff || a.owner_scope === 'student') && (
         <form action={deleteArtifact}>
           <input type="hidden" name="artifact_id" value={a.id} />
-          <button type="submit" className="link">
+          <button type="submit" className="link danger">
             Delete
           </button>
         </form>

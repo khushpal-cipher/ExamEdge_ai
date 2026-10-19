@@ -87,11 +87,11 @@ export default async function Tests({ searchParams }: { searchParams: Search }) 
             <input type="checkbox" name="cbt" /> CBT mode: the test runs in full screen; leaving it or switching tab or
             app is a warning, and the 3rd warning submits the test (students must use Google Chrome)
           </label>
-          <div>
+          <div className="row">
             <button type="submit" className="primary">
               Create test
             </button>
-            <span className="small muted"> Next page: add questions with AI or type them.</span>
+            <span className="small muted">Next page: add questions with AI or type them.</span>
           </div>
         </form>
       </section>

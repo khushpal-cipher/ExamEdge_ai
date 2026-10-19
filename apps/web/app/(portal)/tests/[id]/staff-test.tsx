@@ -131,7 +131,7 @@ export async function StaffTest({ ctx, test }: { ctx: Ctx; test: Test }) {
               <form action={setTestStatus}>
                 <input type="hidden" name="test_id" value={test.id} />
                 <input type="hidden" name="status" value="cancelled" />
-                <button type="submit" className="link">
+                <button type="submit" className="link danger">
                   Cancel test
                 </button>
               </form>
@@ -246,7 +246,7 @@ export async function StaffTest({ ctx, test }: { ctx: Ctx; test: Test }) {
                           <form action={removeTestQuestion}>
                             <input type="hidden" name="test_id" value={test.id} />
                             <input type="hidden" name="question_id" value={q.question_id} />
-                            <button type="submit" className="link" aria-label={`Remove question ${i + 1}`}>
+                            <button type="submit" className="link danger" aria-label={`Remove question ${i + 1}`}>
                               Remove
                             </button>
                           </form>
@@ -272,7 +272,7 @@ export async function StaffTest({ ctx, test }: { ctx: Ctx; test: Test }) {
       {canManage && phase === 'draft' && (
         <form action={deleteTest}>
           <input type="hidden" name="test_id" value={test.id} />
-          <button type="submit" className="link">
+          <button type="submit" className="link danger">
             Delete this draft
           </button>
         </form>

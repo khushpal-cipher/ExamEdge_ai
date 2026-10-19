@@ -144,7 +144,7 @@ export default async function Batch({
                             <form action={removeBatchMember}>
                               <input type="hidden" name="batch_id" value={batch.id} />
                               <input type="hidden" name="membership_id" value={r.membership_id} />
-                              <button type="submit" className="link" aria-label={`Remove ${r.name} from batch`}>
+                              <button type="submit" className="link danger" aria-label={`Remove ${r.name} from batch`}>
                                 Remove
                               </button>
                             </form>

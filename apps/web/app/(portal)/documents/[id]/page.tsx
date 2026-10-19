@@ -152,7 +152,9 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
         {doc.status === 'published' && (
           <form action={withdrawDocument}>
             <input type="hidden" name="document_id" value={id} />
-            <button type="submit">Withdraw (students lose access now)</button>
+            <button type="submit" className="danger">
+              Withdraw (students lose access now)
+            </button>
           </form>
         )}
       </section>
@@ -217,7 +219,7 @@ export default async function DocumentPage(props: { params: Promise<{ id: string
 
       <form action={deleteDocument}>
         <input type="hidden" name="document_id" value={id} />
-        <button type="submit" className="link">
+        <button type="submit" className="link danger">
           Delete these notes
         </button>
       </form>

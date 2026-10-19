@@ -213,7 +213,7 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
                             <form action={deleteSubtopic}>
                               <input type="hidden" name="chapter_id" value={topic.id} />
                               <input type="hidden" name="subtopic_id" value={s.id} />
-                              <button type="submit" className="link" aria-label={`Delete ${s.name}`}>
+                              <button type="submit" className="link danger" aria-label={`Delete ${s.name}`}>
                                 Delete
                               </button>
                             </form>

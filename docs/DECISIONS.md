@@ -588,3 +588,10 @@ divided by hairlines and space instead of boxes, cards only for things you press
 before subjects. Test runner: timer with answered-progress bar, serif question stem, large option rows, Previous/Next
 pinned at the bottom on phones. An institute's brand colour now tints only its own logo mark (it used to replace the
 accent everywhere). No logic, DB or E2E selector change.
+
+**ADR-049 polish (founder, 2026-10-19, session 42):** **light theme only** (the dark-mode block is removed,
+`color-scheme: light`). Type: body 16 px, UI text (tables, labels, buttons, nav) 15 px, hints 14 px minimum, badges
+13 px, h2 22 / h3 18 px, page title 32–44 px, weights 400–700 (no 650). Spacing: 20 px between form fields and rows of
+fields (`.inline` now styles any element, not only `form.inline` — `div.inline` field rows had no gap at all), 48 px
+between page sections, 14 px table cell padding, forms max 560 px, page content max 960 px. Sidebar 248 px, 40 px
+logo, 44 px nav items, full-width quiet Sign out. Destructive actions get a red-outline `.danger` style (class only).

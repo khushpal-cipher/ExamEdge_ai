@@ -30,13 +30,15 @@
   --bad: #a8352c;
   --bad-soft: #f7e0dc;
 
-  /* Type: 1.25 scale on a 15 px base */
-  --t-cap: 13px;
-  --t-body: 15px;
+  /* Type (founder, session 42): 16 px body, 15 px UI (tables, lists, labels, buttons), 14 px minimum for hints */
+  --t-badge: 13px;
+  --t-cap: 14px;
+  --t-ui: 15px;
+  --t-body: 16px;
   --t-read: 17px;
-  --t-h3: 17px;
-  --t-h2: 21px;
-  --t-h1: clamp(30px, 3.6vw, 42px);
+  --t-h3: 18px;
+  --t-h2: 22px;
+  --t-h1: clamp(32px, 4vw, 44px);
 
   /* Space: 4 px base */
   --s1: 4px;
@@ -51,33 +53,6 @@
   --r: 10px;
   --lift: 0 1px 0 rgb(23 34 46 / 4%), 0 8px 24px -12px rgb(23 34 46 / 18%);
   --ease: 160ms cubic-bezier(0.2, 0, 0, 1);
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --bg: #0f1922;
-    --card: #17242f;
-    --soft: #1b2e38;
-    --chosen: #1e3a44;
-    --ink: #e8eef1;
-    --muted: #9aa8b4;
-    --line: #2a3a47;
-    --field: #5a7385;
-    --accent: #7fb3d0;
-    --accent-hover: #9cc6dd;
-    --on-accent: #0f1922;
-    --accent-ink: #9cc6dd;
-    --track: #24414b;
-    --fill: var(--blue-2);
-    --focus: #9cc6dd;
-    --good: #6fcf9c;
-    --good-soft: #163327;
-    --warn-ink: #f0c67c;
-    --warn-soft: #382d18;
-    --bad: #f2928a;
-    --bad-soft: #3d1f22;
-    --lift: none;
-  }
 }
 
 /* Base */
@@ -101,6 +76,9 @@ h1,
 h2,
 h3 {
   margin: 0 0 var(--s2);
+}
+h2 {
+  margin-bottom: var(--s4);
   text-wrap: balance;
 }
 h1 {
@@ -112,7 +90,7 @@ h1 {
 }
 h2 {
   font-size: var(--t-h2);
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.25;
   letter-spacing: -0.01em;
 }
@@ -147,6 +125,7 @@ p:not(.top p) > a:not(.button),
 .main > a:first-child,
 .main > p:first-child > a:only-child {
   font-size: var(--t-cap);
+  font-weight: 500;
   color: var(--muted);
 }
 .reading {
@@ -177,7 +156,7 @@ p:not(.top p) > a:not(.button),
 /* Shell: the sidebar shares the paper; a hairline, not a slab, separates it */
 .shell {
   display: grid;
-  grid-template-columns: 232px minmax(0, 1fr);
+  grid-template-columns: 248px minmax(0, 1fr);
   min-height: 100vh;
 }
 .side {
@@ -186,6 +165,7 @@ p:not(.top p) > a:not(.button),
   display: flex;
   flex-direction: column;
   gap: var(--s5);
+  overflow-y: auto;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -200,8 +180,8 @@ p:not(.top p) > a:not(.button),
   padding: 0 var(--s2);
 }
 .logo {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--r-sm);
   background: var(--accent);
   color: var(--on-accent);
@@ -223,26 +203,37 @@ img.logo {
 }
 .brand small {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--t-cap);
 }
 .switcher {
   grid-area: switch;
   display: flex;
   align-items: flex-end;
   gap: var(--s2);
+  padding: 0 var(--s2);
 }
 .switcher label {
   flex: 1;
   min-width: 0;
+  font-size: var(--t-cap);
+  color: var(--muted);
+}
+.switcher select {
+  min-height: 40px;
+  padding-block: 6px;
+  font-size: var(--t-ui);
 }
 .nav {
   grid-area: nav;
   display: grid;
-  gap: 2px;
+  gap: var(--s1);
 }
 .nav a {
-  display: block;
-  padding: 9px var(--s3);
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--s3);
+  font-size: var(--t-ui);
   border-radius: var(--r-sm);
   color: var(--muted);
   font-weight: 500;
@@ -257,14 +248,14 @@ img.logo {
 }
 .nav a[aria-current='page'] {
   color: var(--ink);
-  font-weight: 650;
+  font-weight: 600;
   background: var(--chosen);
   box-shadow: inset 3px 0 0 var(--accent);
 }
 .me {
   grid-area: me;
   margin-top: auto;
-  padding: var(--s4) var(--s2) 0;
+  padding: var(--s4) var(--s2) var(--s5);
   border-top: 1px solid var(--line);
   font-size: var(--t-cap);
   display: grid;
@@ -278,15 +269,17 @@ img.logo {
   text-transform: capitalize;
 }
 .me button {
-  justify-self: start;
-  margin-top: var(--s2);
+  width: 100%;
+  margin-top: var(--s3);
+  background: none;
+  border-color: var(--line);
 }
 .main {
   padding: var(--s7) clamp(var(--s4), 5vw, 64px) 96px;
   min-width: 0;
-  max-width: 1040px;
+  max-width: 1088px; /* 960 px of content + 64 px padding each side */
   display: grid;
-  gap: var(--s6);
+  gap: var(--s7);
   align-content: start;
 }
 /* Page header: title on the left, page actions on the right */
@@ -303,6 +296,7 @@ img.logo {
 }
 
 /* Sections are chapters of the page: a hairline and space, no box. Cards are only for things you press or fill. */
+/* Space between page sections; heading to content inside them */
 .main section.card {
   background: none;
   border: 0;
@@ -348,7 +342,7 @@ img.logo {
 }
 .stat b {
   font-family: var(--font-read), Georgia, serif;
-  font-size: 34px;
+  font-size: 36px;
   font-weight: 600;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
@@ -365,7 +359,7 @@ img.logo {
   display: inline-block;
   padding: 1px var(--s2);
   border-radius: var(--r-sm);
-  font-size: 12px;
+  font-size: var(--t-badge);
   font-weight: 600;
   line-height: 1.6;
   background: var(--soft);
@@ -404,7 +398,7 @@ img.logo {
 button,
 .button {
   font: inherit;
-  font-size: 14px;
+  font-size: var(--t-ui);
   font-weight: 600;
   min-height: 44px;
   padding: 0 var(--s4);
@@ -454,6 +448,26 @@ button.link {
 button.link:hover {
   text-decoration: underline;
 }
+/* Destructive actions: red outline, never filled, so they never look like the main action */
+button.danger,
+.button.danger {
+  background: none;
+  border-color: color-mix(in srgb, var(--bad) 55%, transparent);
+  color: var(--bad);
+}
+button.danger:hover:not(:disabled),
+.button.danger:hover {
+  background: var(--bad-soft);
+  border-color: var(--bad);
+}
+button.link.danger {
+  border: 0;
+  background: none;
+}
+/* Button groups and a hint next to a button keep 12 px apart */
+.row:has(> button) {
+  gap: var(--s3);
+}
 button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -497,12 +511,12 @@ textarea {
   line-height: 1.6;
 }
 label {
-  font-size: 14px;
+  font-size: var(--t-ui);
   font-weight: 600;
   display: grid;
   /* A select with long options must not widen the page on phones. */
   grid-template-columns: minmax(0, 1fr);
-  gap: 6px;
+  gap: var(--s2);
 }
 label:has(> input[type='checkbox']),
 label:has(> input[type='radio']) {
@@ -519,19 +533,31 @@ label:has(> input[type='radio']) > input {
 .option:has(> input) > input {
   margin-top: 0;
 }
-/* Forms read top to bottom at a comfortable width; fields get room between them */
+/* Forms read top to bottom at a comfortable width; 20 px between fields, 24 px above the submit row */
 .main form.stack {
-  max-width: 600px;
-  gap: var(--s4);
+  max-width: 560px;
+  gap: 20px;
 }
-form.stack > button {
+form.stack > button,
+form.stack > .row:has(> button[type='submit']) {
   justify-self: start;
+  margin-top: var(--s1);
 }
-form.inline {
+/* A row of fields (form or div): inputs and buttons share one 44 px bottom line */
+.inline {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: var(--s3);
+  gap: 20px var(--s4);
+}
+.inline > label {
+  flex: 1 1 200px;
+}
+.inline > button {
+  flex: none;
+}
+.inline > button.link {
+  min-height: 44px;
 }
 fieldset {
   margin: 0;
@@ -556,13 +582,13 @@ fieldset > legend + * {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: var(--t-ui);
   font-variant-numeric: tabular-nums;
 }
 th,
 td {
   text-align: left;
-  padding: var(--s3) var(--s3) var(--s3) 0;
+  padding: 14px var(--s4) 14px 0;
   border-bottom: 1px solid var(--line);
   vertical-align: middle;
 }
@@ -571,6 +597,7 @@ th {
   font-weight: 600;
   font-size: var(--t-cap);
   border-bottom-color: var(--field);
+  white-space: nowrap;
 }
 tbody tr:hover td {
   background: color-mix(in srgb, var(--soft) 60%, transparent);
@@ -665,7 +692,7 @@ tbody tr:hover td {
   border-radius: var(--r-sm);
   padding: var(--s1) var(--s3);
   background: var(--card);
-  font-size: 14px;
+  font-size: var(--t-ui);
 }
 
 /* Test runner (ADR-048): timer + progress on top, one question, Previous/Next pinned on phones */
@@ -808,6 +835,15 @@ label.option:has(> input) {
   text-decoration: none;
 }
 
+@media (min-width: 801px) {
+  /* Submit sits at the right, under the Previous / Next row */
+  .runnav + form > button {
+    display: flex;
+    width: fit-content;
+    margin-left: auto;
+  }
+}
+
 @media (max-width: 800px) {
   /* Phone header: brand and sign-out on one line, nav scrolls below; the page starts within ~150 px */
   .shell {
@@ -863,13 +899,14 @@ label.option:has(> input) {
     display: none;
   }
   .me button {
+    width: auto;
     margin: 0;
     min-height: 36px;
     padding: 0 var(--s3);
   }
   .main {
     padding: var(--s5) var(--s4) 96px;
-    gap: var(--s5);
+    gap: var(--s6);
   }
   .card {
     padding: var(--s4);
