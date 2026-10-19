@@ -157,7 +157,7 @@ code PR). Nothing failing, nothing half-built.
 2. Local dev: `npm run dev` reads `apps/web/.env.local` with `AI_PROVIDER=gemini` + `GEMINI_API_KEY` (never print it;
    test institutes only, ADR-051). Worker: `WORKER_DATABASE_URL=postgresql://worker:worker_local_only@127.0.0.1:54322/postgres
    npm run dev:worker` (notes processing / OCR). Both die with the session; restart them if the founder tests AI.
-3. Unverified from session 45 (check in the browser when convenient, browser pane must be VISIBLE or pages freeze while
+3. VERIFIED by the founder in the browser (2026-10-19, session 46): student Smart Study tiles, Beta badges, repeat make. (Old note: check in the browser when convenient, browser pane must be VISIBLE or pages freeze while
    a form is pending): as a student (e.g. Aman Singh, newtown): Smart Study tiles show "Making your practice quiz…" while
    generating, Beta badges on Audio/Video overview, a second click on the same tile makes a new quiz (lists show times).
 4. Ask the founder what to build next. Open topics: (a) friend `aaradhychinche@gmail.com` as platform admin — he signs
