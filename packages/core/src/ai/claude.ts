@@ -39,6 +39,8 @@ export function claudeTutor(model: ClaudeModel, client = new Anthropic({ maxRetr
                 content: [{ type: 'text' as const, text: p.content }],
                 citations: { enabled: true },
               })),
+              // No notes matched (ADR-050): say so, so the model answers from general knowledge.
+              ...(passages.length ? [] : [{ type: 'text' as const, text: '(No passages from your notes matched.)' }]),
               { type: 'text' as const, text: question },
             ],
           },

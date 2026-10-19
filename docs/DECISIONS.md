@@ -622,3 +622,6 @@ sitemap or robots.txt).
 - **Risk:** general-knowledge material is not checked against the institute's syllabus; it is labelled, student
   artifacts stay private, and institute artifacts still need a teacher's approval before students see them. Voice
   quality and Hindi depend on the device.
+- **Tutor too (founder, same day):** when no notes match, the tutor says so in one sentence and then answers fully from
+  standard textbook knowledge (prompt `tutor-v4`; the Claude request adds "(No passages from your notes matched.)").
+  Uncited paragraphs were already labelled "General explanation"; demo mode now shows the same two-part shape.
