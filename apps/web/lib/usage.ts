@@ -13,6 +13,17 @@ export type UsageRow = {
 
 export const usd = (micro: number) => `$${(micro / 1_000_000).toFixed(2)}`;
 
+export const FEATURE_LABEL: Record<string, string> = {
+  tutor: 'AI tutor answers',
+  tutor_premium: 'Step-by-step answers',
+  query_embed: 'Tutor search',
+  generation: 'Smart Study tools',
+  question_gen: 'AI test questions',
+  notes_gen: 'AI notes',
+  ingest_ocr: 'Reading scanned pages',
+  ingest_embed: 'Indexing notes',
+};
+
 export async function monthUsage(db: Db, institute: string) {
   const { data, error } = await db.rpc('usage_summary', { inst: institute });
   if (error) throw error;

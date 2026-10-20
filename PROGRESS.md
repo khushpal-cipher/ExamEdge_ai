@@ -169,6 +169,18 @@ code PR). Nothing failing, nothing half-built.
 5. Local `npm run test:e2e` stays BLOCKED (no `demo` / `rival` institutes locally; seeding needs `db:reset`); CI runs
    e2e on a fresh database. Unit 189 and pgTAP 1459 pass locally.
 
+## Session 46 (2026-10-20) — tokens on the Bill page (ADR-055), branch `r15-next`
+- Founder asked for the AI tokens an institute used to show on the owner/admin Bill page. Built: `/usage` now shows
+  "AI used this month" (tokens + requests) and a table "Where the AI was used" (requests, tokens per feature); ₹ charge
+  and AI on/off stay; dollars still hidden. Changes ADR-041 part 2 (ADR-055). Reuses `usage_summary`, no migration.
+  `e2e/usage.spec.ts` now expects the tokens card and no `$` (was: no tokens).
+- Evidence (2026-10-20): `npm run format:check`, `npm run lint` (check-forbidden ok), `npm run typecheck` ok; `npm test`
+  189 passed. NOT run: `npm run build` (another session's `next dev` on :3000 uses `apps/web/.next`), `test:e2e` (needs
+  seeded demo; CI), browser check (newtown's only owner is the founder's real account; open http://newtown.localhost:3000/usage
+  as that owner to look).
+- Also this session: go-live checklist and cost/pricing talk (no code); `docs/PROGRESS_REPORT.md` / `.html` (founder's
+  report to their sir, untracked, not committed).
+
 ## Session 45b (2026-10-19) — AI progress, formula check, Beta, repeat study tools (ADR-054), branch `r15-next`
 - **MERGED** (founder's yes, 2026-10-19): PR #39 squash-merged into main as `de1d810`; CI green (check 5m11s incl. e2e, secrets).
 - Founder asked: (1) flag AI questions whose formula cannot be drawn; (2) a NotebookLM-style "making it" state on every

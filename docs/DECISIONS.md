@@ -680,3 +680,10 @@ sitemap or robots.txt).
 - **Students make study tools again (changes AC9.2 for students):** each click makes a new artifact until the AI limit
   stops them (migration 35 drops `generated_artifacts_student_input`; lists show when each was made). Institute
   artifacts keep one per input.
+
+### ADR-055 The Bill page also shows the AI tokens used (founder, 2026-10-20)
+- **Decision:** owner/admin `/usage` ("Bill") now shows, besides "This month's AI charge: ₹X" and AI on/off, "AI used this
+  month" (input + output tokens and number of requests) and a table "Where the AI was used" (requests and tokens per
+  feature). **Changes ADR-041 part 2**, which hid tokens and features. Dollar costs, the budget and banners stay hidden.
+- **How:** reuses `usage_summary` through `monthUsage` (invoker; RLS lets only owner/admin and platform admins read
+  `usage_records`). No migration. Tokens are input + output only (cache tokens are not in `usage_summary`).

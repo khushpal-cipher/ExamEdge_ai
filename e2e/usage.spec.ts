@@ -1,4 +1,4 @@
-// Phase 5 + ADR-041 part 2: the institute's Bill page (owner/admin only, ₹ only) and metering isolation. Needs
+// Phase 5 + ADR-041 part 2: the institute's Bill page (owner/admin only; ₹ + tokens, no dollars) and metering isolation. Needs
 // `npm run seed:demo` (the seed's document ingestion is metered, so Demo and Rival both have usage this month).
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
@@ -12,7 +12,9 @@ async function login(page: Page, email: string) {
   await expect(page).toHaveURL(/\/(home|dashboard)$/);
 }
 
-test('owner sees this month’s AI bill in ₹ only; teachers and students do not', async ({ page }) => {
+test('owner sees this month’s AI bill in ₹ and the tokens used, no dollars; teachers and students do not', async ({
+  page,
+}) => {
   await sql(`update private.settings set inr_per_usd = 90 where id`);
   await login(page, 'owner@demo.test');
   await page.getByRole('link', { name: 'Bill' }).click();
@@ -20,7 +22,11 @@ test('owner sees this month’s AI bill in ₹ only; teachers and students do no
   await expect(page.locator('.stat').filter({ hasText: "This month's AI charge" }).locator('b')).toHaveText(
     /^₹[\d,]+\.\d{2}$/,
   );
-  await expect(page.getByText(/tokens|\$/)).toHaveCount(0);
+  await expect(page.locator('.stat').filter({ hasText: 'AI used this month' }).locator('b')).toHaveText(
+    /^[\d,]+ tokens$/,
+  );
+  await expect(page.getByRole('heading', { name: 'Where the AI was used' })).toBeVisible();
+  await expect(page.getByText(/\$/)).toHaveCount(0); // dollar costs stay hidden (ADR-041, ADR-055)
   await expect(page.getByText('On', { exact: true })).toBeVisible();
   const { violations } = await new AxeBuilder({ page }).analyze();
   expect(violations.filter((v) => v.impact === 'critical' || v.impact === 'serious')).toEqual([]);
