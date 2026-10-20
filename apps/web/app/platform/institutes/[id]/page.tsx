@@ -125,16 +125,6 @@ export default async function InstituteAdmin({
               />
             </label>
             <label>
-              Step-by-step answers per day
-              <input
-                name="student_daily_premium_messages"
-                type="number"
-                min={0}
-                max={10000}
-                defaultValue={q.student_daily_premium_messages}
-              />
-            </label>
-            <label>
               Generations per student per day
               <input
                 name="student_daily_generations"

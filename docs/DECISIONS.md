@@ -687,3 +687,6 @@ sitemap or robots.txt).
   feature). **Changes ADR-041 part 2**, which hid tokens and features. Dollar costs, the budget and banners stay hidden.
 - **How:** reuses `usage_summary` through `monthUsage` (invoker; RLS lets only owner/admin and platform admins read
   `usage_records`). No migration. Tokens are input + output only (cache tokens are not in `usage_summary`).
+- **Step-by-step limit removed from the platform limits form (founder, 2026-10-20):** the student chat box lost its
+  step-by-step toggle in ADR-051, so the setting did nothing. The form and `updateQuotas` no longer touch
+  `student_daily_premium_messages`; the column, its default (5) and the API's `premium` flag stay (no migration).
