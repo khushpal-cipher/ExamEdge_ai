@@ -1589,7 +1589,6 @@ h1 {
 .main .label,
 .stat > span:first-child,
 .brand small {
-  white-space: nowrap;
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 12px;
   font-weight: 500;
@@ -1688,6 +1687,9 @@ ul.rows > li > span:first-child > .small {
   padding: var(--s5);
   min-width: 0;
   overflow-wrap: anywhere;
+}
+.brand small {
+  white-space: nowrap;
 }
 .stats .badge {
   font-size: var(--t-ui);
