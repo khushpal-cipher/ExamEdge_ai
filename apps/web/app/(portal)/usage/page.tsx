@@ -27,31 +27,33 @@ export default async function Bill() {
           <p className="muted">This month (India time).</p>
         </div>
       </div>
-      <div className="grid">
-        <div className="card stat">
-          <span className="muted small">This month&apos;s AI charge</span>
+      <section className="stats three" aria-label="This month">
+        <div className="stat">
+          <span>This month&apos;s AI charge</span>
           <b>
             {amount == null
-              ? 'Not available yet'
+              ? '—'
               : `₹${Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           </b>
           <span className="muted small">
-            {amount == null ? 'ExamEdge has not set the price yet.' : 'Updates as AI is used.'}
+            {amount == null ? 'Not available yet: ExamEdge has not set the price.' : 'Updates as AI is used.'}
           </span>
         </div>
-        <div className="card stat">
-          <span className="muted small">AI used this month</span>
-          <b>{n(totalTokens)} tokens</b>
+        <div className="stat">
+          <span>AI used this month</span>
+          <b>
+            {n(totalTokens)} <small>tokens</small>
+          </b>
           <span className="muted small">{n(totalCalls)} AI requests</span>
         </div>
-        <div className="card stat">
-          <span className="muted small">AI features</span>
+        <div className="stat">
+          <span>AI features</span>
           <b>
             <span className={`badge ${on ? 'good' : 'bad'}`}>{on ? 'On' : 'Off'}</span>
           </b>
           <span className="muted small">{on ? 'Working for your students' : 'Switched off by ExamEdge'}</span>
         </div>
-      </div>
+      </section>
       <section className="card stack" aria-labelledby="by-feature">
         <h2 id="by-feature">Where the AI was used</h2>
         {rows.length === 0 ? (

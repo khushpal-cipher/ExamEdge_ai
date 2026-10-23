@@ -1679,9 +1679,21 @@ ul.rows > li > span:first-child > .small {
   border: 1px solid var(--line);
   border-radius: var(--r);
 }
+.stats.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 .stats > .stat {
   padding: var(--s5);
   min-width: 0;
+}
+.stats .badge {
+  font-size: var(--t-ui);
+}
+.stat b small {
+  font-family: var(--font-ui), sans-serif;
+  font-size: var(--t-ui);
+  font-weight: 500;
+  color: var(--muted);
 }
 .stats > .stat + .stat {
   border-left: 1px solid var(--line);
