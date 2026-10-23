@@ -1744,37 +1744,15 @@ ul.rows > li > span:first-child > .small {
   text-transform: capitalize;
 }
 
-/* Statuses: bright filled pills with a vivid dot (founder, 2026-10-23); text stays dark enough for AA */
-.badge.good,
-td .badge.good[class] {
-  --dot: #16a34a;
-  background: #c8f3d5;
-  border-color: #c8f3d5;
-  color: #075c29;
+/* Statuses: coloured text and dot on a plain pill, a little brighter than the workbook colours (founder,
+   2026-10-23); all still AA on white */
+:root {
+  --good: #15803d;
+  --warn-ink: #9a6206;
+  --bad: #c2362a;
 }
-.badge.warn,
-td .badge.warn[class] {
-  --dot: #f59e0b;
-  background: #ffe6ad;
-  border-color: #ffe6ad;
-  color: #6e4300;
-}
-.badge.bad,
-td .badge.bad[class] {
-  --dot: #ef4444;
-  background: #ffd5cf;
-  border-color: #ffd5cf;
-  color: #9b1209;
-}
-td .badge[class] {
-  padding: 2px var(--s2);
-  background: #e7e7e3;
-  border-color: #e7e7e3;
-  color: #2f2f33;
-}
-td .badge::before,
-td .badge:not(.good, .warn, .bad)::before {
-  background: var(--dot, #8a8a8f);
+td .badge[class]:not(.good, .warn, .bad) {
+  color: #66666d;
 }
 /* Desktop: a compact top bar over the full-width page */
 @media (min-width: 801px) {
