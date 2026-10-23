@@ -19,6 +19,13 @@
       "runtimeArgs": ["run", "start", "-w", "@examedge/web", "--", "-p", "3001"],
       "port": 3001,
       "url": "http://newtown.localhost:3001"
+    },
+    {
+      "name": "web-prod-3005",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start", "-w", "@examedge/web", "--", "-p", "3005"],
+      "port": 3005,
+      "url": "http://newtown.localhost:3005"
     }
   ]
 }

@@ -1200,8 +1200,7 @@ ul.choices > li {
     border: 0;
     align-self: center;
   }
-  .me b,
-  .me .role {
+  .me > span {
     display: none;
   }
   .me button {
@@ -1543,424 +1542,492 @@ div.part[aria-current='true'] {
   margin-left: var(--s2);
 }
 
-/* ===== Space theme (r16-fun-ui, founder's reference: dark space, neon lime, huge condensed titles, mono labels).
-   Overrides the workbook look above; delete this block to get it back. Streak, XP and goal markup is shared. ===== */
+/* ===== Mono theme (r16-mono, the founder's friend's concept, 2026-10-23): black and white, a compact top bar
+   instead of the sidebar; type, spacing and hairlines carry the hierarchy, colour only for good / warn / bad.
+   Students get the same layout as a retro desktop window (.shell[data-look='retro'], below). ===== */
 :root {
-  color-scheme: dark;
-  --lime: #d4ff6b; /* the one accent colour: change it here to retheme */
-  --bg: #06101b;
-  --card: #0b1828;
-  --soft: #10233a;
-  --chosen: color-mix(in srgb, var(--lime) 14%, var(--bg)); /* accent at night: active nav, chosen answer */
-  --ink: #e9f1e4;
-  --muted: #9db0c2;
-  --line: #1d3247;
-  --hair: color-mix(in srgb, var(--lime) 28%, transparent); /* lime hairlines, like the reference */
-  --field: #5f7a94;
-  --accent: var(--lime);
-  --accent-hover: color-mix(in srgb, var(--lime), #fff 35%);
-  --on-accent: #06101b;
-  --accent-ink: var(--lime);
-  --track: #182b40;
-  --fill: var(--lime);
-  --focus: var(--lime);
-  --good: #8fe38f;
-  --good-soft: #10301d;
-  --warn-ink: #ffd37a;
-  --warn-soft: #33260b;
-  --bad: #ff9486;
-  --bad-soft: #3b1713;
-  --flame: #ff9a3c;
-  --sky: #5fd0ff;
-  --r: 6px;
-  --r-sm: 4px;
+  --bg: #f0f0eb;
+  --page: #fafaf8;
+  --card: #ffffff;
+  --soft: #f2f2ef;
+  --chosen: #ebebe7;
+  --ink: #111113;
+  --muted: #5c5c63;
+  --line: #e3e3de;
+  --field: #85858c;
+  --accent: #111113;
+  --accent-hover: #2e2e33;
+  --on-accent: #ffffff;
+  --accent-ink: #111113;
+  --track: #ebebe7;
+  --fill: #111113;
+  --focus: #111113;
+  --r: 12px;
+  --r-sm: 6px;
   --raised: none;
-  --raised-hover: none;
+  --raised-hover: 0 1px 3px rgb(0 0 0 / 8%);
   --lift: none;
   --btn-depth: none;
-  --pop: 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-/* A starfield and a faint blue planet glow at the bottom; pure CSS, no image */
 body {
-  background:
-    radial-gradient(1px 1px at 12% 18%, #fff9, transparent), radial-gradient(1px 1px at 72% 9%, #fff8, transparent),
-    radial-gradient(1.5px 1.5px at 38% 62%, #fff7, transparent),
-    radial-gradient(1px 1px at 88% 44%, #fff9, transparent), radial-gradient(1px 1px at 55% 30%, #fff6, transparent),
-    radial-gradient(1.5px 1.5px at 22% 82%, #fff6, transparent),
-    radial-gradient(1px 1px at 93% 78%, #fff8, transparent),
-    radial-gradient(60rem 22rem at 50% 115%, rgb(40 120 200 / 35%), transparent 70%), var(--bg);
-  background-attachment: fixed;
-  font-family: var(--font-ui), system-ui, sans-serif;
+  background: var(--bg);
 }
 h1,
 h2,
-.stat b {
-  font-family: var(--font-display), Impact, sans-serif;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.01em;
-  line-height: 0.95;
+h3,
+.stat b,
+.tile .mark {
+  font-family: var(--font-ui), system-ui, sans-serif;
 }
 h1 {
-  font-size: clamp(44px, 7vw, 96px);
-  color: var(--lime);
-}
-h2 {
-  font-size: clamp(26px, 3vw, 36px);
-}
-h3 {
+  font-size: clamp(28px, 3.4vw, 34px);
   font-weight: 700;
+  letter-spacing: -0.02em;
 }
-/* Small labels in uppercase mono, like a ship's console */
-.nav a,
-button,
-.button,
-.badge,
-.top h1 + p,
+/* Section titles and small labels: uppercase mono, like the concept */
+.main section.card > h2:first-child,
+.main h2.label,
 .stat > span:first-child,
-.hud-item > span:last-child,
-.week small,
-.brand small,
-.me .role,
-th {
+.brand small {
+  white-space: nowrap;
   font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.top h1 + p {
   color: var(--muted);
-  font-size: var(--t-cap);
-}
-
-/* Sidebar: darker, lime hairline */
-.side {
-  background: rgb(3 9 16 / 70%);
-  border-right: 1px solid var(--hair);
-}
-.nav a {
-  font-size: 13px;
-}
-.nav a[aria-current='page'] {
-  color: var(--lime);
-  background: var(--chosen);
-  box-shadow: inset 2px 0 0 var(--lime);
-}
-
-/* Buttons: pills. Lime fill for the main action, lime outline for the rest */
-button,
-.button {
-  min-height: 44px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 700;
-  border: 1px solid var(--hair);
-  background: transparent;
-  color: var(--lime);
-  transition:
-    transform 80ms,
-    background var(--ease),
-    box-shadow var(--ease);
-}
-button:hover:not(:disabled),
-.button:hover {
-  background: var(--chosen);
-}
-button:active:not(:disabled),
-.button:active {
-  transform: scale(0.97);
-}
-button.primary,
-.button.primary {
-  background: var(--lime);
-  border-color: var(--lime);
-  color: var(--on-accent);
-}
-button.primary:hover:not(:disabled),
-.button.primary:hover {
-  background: var(--accent-hover);
-  transform: none;
-  box-shadow: 0 0 24px color-mix(in srgb, var(--lime) 35%, transparent);
-}
-.button.big {
-  min-height: 52px;
-  padding: 0 var(--s6);
-  font-size: 14px;
-  justify-self: start;
-}
-button.link,
-button.link:active {
-  border: 0;
-  background: none;
-  transform: none;
-}
-button.danger,
-.button.danger {
-  border-color: color-mix(in srgb, var(--bad) 55%, transparent);
-  color: var(--bad);
-}
-
-/* Cards and tiles: dark glass with a hairline; tiles glow lime on hover */
-.card,
-.tile {
-  background: rgb(11 24 40 / 82%);
-  border: 1px solid var(--line);
-}
-.tile {
-  transition:
-    transform var(--pop),
-    border-color var(--ease),
-    box-shadow var(--ease);
-}
-.tile:hover {
-  border-color: var(--lime);
-  box-shadow:
-    0 0 0 1px var(--lime),
-    0 0 28px color-mix(in srgb, var(--lime) 18%, transparent);
-  transform: translateY(-3px);
+  margin: 0;
 }
 .main section.card {
-  border-top: 1px solid var(--hair);
-  background: none;
-}
-.empty {
-  border-color: var(--line);
-  background: rgb(11 24 40 / 50%);
-}
-
-/* Home: streak, XP and level */
-.hud {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s3);
-}
-.hud-item {
-  display: flex;
-  align-items: center;
-  gap: var(--s2);
-  padding: var(--s2) var(--s4);
-  border-radius: 999px;
+  background: var(--card);
   border: 1px solid var(--line);
-  background: rgb(11 24 40 / 82%);
-  font-size: 12px;
-  color: var(--muted);
+  border-radius: var(--r);
+  padding: var(--s5);
 }
-.hud-item > span:first-child {
-  font-size: 20px;
-  line-height: 1;
+.main .grid:has(> section.card) {
+  gap: var(--s5);
 }
-.hud-item b {
-  font-family: var(--font-display), Impact, sans-serif;
-  font-weight: 400;
-  font-size: 24px;
+.main .grid > section.card {
+  padding-top: var(--s5);
+}
+.card,
+.tile {
+  background: var(--card);
+}
+.tile:hover {
+  border-color: var(--ink);
+  transform: none;
+}
+.tile .mark {
+  font-family: var(--font-mono), monospace;
+  font-size: 16px;
+  font-weight: 500;
   color: var(--ink);
 }
-.hud-item.flame {
-  border-color: var(--flame);
-  box-shadow: 0 0 18px rgb(255 154 60 / 25%);
+.hero {
+  background: var(--ink);
 }
-.hud-item.flame > span:first-child {
-  animation: flicker 1.6s ease-in-out infinite;
-}
-.hud-item.cold {
-  border-color: var(--line);
-  box-shadow: none;
-  filter: grayscale(1);
-}
-.hud-item.cold > span:first-child {
-  animation: none;
-}
-.hud-item.gem {
-  border-color: var(--sky);
-}
-.hud-item.lvl {
-  border-color: var(--lime);
-}
-.hud-item.lvl b {
-  color: var(--lime);
-}
-.hud-item .meter {
-  width: 90px;
-  height: 6px;
-}
-@keyframes flicker {
-  50% {
-    transform: scale(1.15) rotate(-6deg);
-  }
-}
-
-/* Daily goal: a lime ring, the last 7 days, one big button */
-.quest {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--s6);
-  align-items: center;
-  padding: var(--s5) 0;
-  border-block: 1px solid var(--hair);
-}
-.quest h2,
-.quest p {
-  margin: 0;
-}
-.ring {
-  width: 132px;
-  height: 132px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: conic-gradient(var(--lime) var(--p), var(--track) 0);
-  box-shadow: 0 0 40px color-mix(in srgb, var(--lime) 15%, transparent);
-  animation: pop var(--pop) both;
-}
-.ring b {
-  width: 112px;
-  height: 112px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--bg);
-  font-family: var(--font-display), Impact, sans-serif;
-  font-weight: 400;
-  font-size: 40px;
-  color: var(--lime);
-}
-@keyframes pop {
-  from {
-    transform: scale(0.6);
-  }
-}
-.week {
-  display: flex;
-  gap: var(--s2);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.week li {
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-}
-.week li > span:first-child {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--line);
-  font-size: 16px;
-}
-.week li.on > span:first-child {
-  border-color: var(--flame);
-  box-shadow: 0 0 12px rgb(255 154 60 / 35%);
-}
-.week li.today > span:first-child {
-  outline: 1px dashed var(--lime);
-  outline-offset: 3px;
-}
-.week small {
-  font-size: 11px;
-  color: var(--muted);
-}
-
-/* Scrolling ticker, like the reference's "we come in peace" band */
-.ticker {
-  overflow: hidden;
-  border-block: 1px solid var(--hair);
-  max-width: none;
-  margin: 0;
-  padding: var(--s3) 0;
+.stat b {
   font-family: var(--font-mono), monospace;
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--lime);
+  font-weight: 500;
+  font-size: 28px;
+}
+.meter {
+  height: 4px;
+  border-radius: 2px;
+}
+.badge {
+  border: 1px solid var(--line);
+  background: var(--card);
+  font-family: var(--font-mono), monospace;
+  font-weight: 500;
+}
+.button.big {
+  min-height: 44px;
+  padding: 0 var(--s5);
+}
+.when {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--t-cap);
+  color: var(--muted);
   white-space: nowrap;
 }
-.ticker > span {
-  display: inline-block;
-  padding-right: var(--s5);
-  animation: ticker 30s linear infinite;
+ul.rows {
+  display: grid;
 }
-@keyframes ticker {
-  to {
-    transform: translateX(-100%);
-  }
+ul.rows > li {
+  padding: var(--s4) 0;
+}
+ul.rows > li + li {
+  border-top: 1px solid var(--line);
+}
+ul.rows > li > span:first-child > .small {
+  display: block;
+}
+.rank {
+  font-family: var(--font-mono), monospace;
+  font-size: 22px;
+  font-weight: 500;
+  margin-right: var(--s2);
 }
 
-/* At-a-glance band: console readout */
-.hero {
-  background: rgb(11 24 40 / 82%);
-  border: 1px solid var(--hair);
+/* Home: four numbers in one ruled band */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+.stats > .stat {
+  padding: var(--s5);
+  min-width: 0;
+}
+.stats > .stat + .stat {
+  border-left: 1px solid var(--line);
+}
+.stats .meter {
+  margin-top: var(--s2);
+}
+/* Daily goal: the one dark band on the page */
+.main section.goal {
+  background: var(--ink);
+  color: var(--on-accent);
+  border-color: var(--ink);
+}
+.goal-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--s5) var(--s6);
+  align-items: center;
+}
+.goal-body h3,
+.goal-body p {
+  margin: 0;
+}
+.goal-count b {
+  font-family: var(--font-mono), monospace;
+  font-size: 44px;
+  font-weight: 500;
+  line-height: 1;
+}
+.goal-count b span {
+  opacity: 0.5;
+}
+.hearts {
+  display: flex;
+  gap: 4px;
+  margin-top: var(--s2);
+}
+.hearts svg {
+  fill: currentColor;
+  opacity: 0.3;
+}
+.hearts svg.on {
+  opacity: 1;
+}
+.main section.goal .muted,
+.main section.goal > h2:first-child {
+  color: #c9c9cf;
+}
+.main section.goal .button.primary {
+  background: #fff;
+  border-color: #fff;
   color: var(--ink);
 }
-.hero .stat > span {
-  color: var(--muted);
-}
-.hero .stat b {
-  color: var(--lime);
-  font-size: 44px;
-}
-
-/* Subject tiles: a coloured glow line on top and a big emoji */
 .tile.subject {
-  min-height: 150px;
-  border-top: 3px solid var(--c, var(--lime));
-}
-.tile.subject.c1 {
-  --c: var(--flame);
-}
-.tile.subject.c2 {
-  --c: var(--sky);
-}
-.tile.subject.c3 {
-  --c: #c79bff;
-}
-.tile.subject.c4 {
-  --c: #ff8fbf;
-}
-.tile.subject .mark {
-  width: 56px;
-  height: 56px;
-  font-size: 30px;
-  border-radius: 50%;
-  background: var(--soft);
-  box-shadow: 0 0 20px color-mix(in srgb, var(--c, var(--lime)) 30%, transparent);
-  font-family: inherit;
+  min-height: 0;
+  justify-content: flex-start;
 }
 /* Subject names typed in lowercase by staff ("physics") still read as names */
 .tile.subject h3 {
   text-transform: capitalize;
 }
-@media (max-width: 640px) {
-  .quest {
-    grid-template-columns: 1fr;
-    justify-items: start;
-  }
-  .ring {
-    width: 104px;
-    height: 104px;
-  }
-  .ring b {
-    width: 88px;
-    height: 88px;
-    font-size: 32px;
-  }
-  .week li > span:first-child {
-    width: 30px;
-    height: 30px;
+
+/* Desktop: the app sits in one framed page with a compact top bar */
+@media (min-width: 801px) {
+  .shell {
+    display: block;
+    max-width: 1240px;
+    margin: var(--s5) auto;
+    min-height: calc(100vh - 2 * var(--s5));
+    background: var(--page);
+    border: 1px solid var(--line);
+    border-radius: 16px;
   }
   .side {
+    position: static;
+    height: auto;
+    overflow: visible;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--s5);
+    padding: var(--s3) var(--s5);
     border-right: 0;
-    border-bottom: 1px solid var(--hair);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand {
+    padding: 0;
+  }
+  .brand > span {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s3);
+  }
+  .logo {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  .switcher label {
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+  }
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+  .nav a {
+    min-height: 36px;
+    padding: 0 var(--s3);
+  }
+  .nav a[aria-current='page'] {
+    box-shadow: none;
+  }
+  .me {
+    margin: 0 0 0 auto;
+    padding: 0;
+    border: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    white-space: nowrap;
+  }
+  .me b {
+    font-size: var(--t-cap);
+  }
+  .me button {
+    width: auto;
+    margin: 0;
+    background: var(--card);
+  }
+  .main {
+    max-width: none;
+    padding: var(--s6) var(--s6) var(--s7);
+    gap: var(--s5);
+  }
+}
+@media (max-width: 960px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .stats > .stat:nth-child(3) {
+    border-left: 0;
+  }
+  .stats > .stat:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
+  .goal-body {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .goal-body > .button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+/* ===== Retro (students): square windows, 2 px black borders, grey offset shadows, bitmap headings and labels,
+   on a fine grey dither. Body text and numbers stay in Inter / Plex Mono so they read easily. ===== */
+body:has(.shell[data-look='retro']) {
+  background: repeating-conic-gradient(#c9c9c9 0 25%, #dedede 0 50%) 0 0 / 4px 4px;
+}
+.shell[data-look='retro'] {
+  --line: #111113;
+  --r: 0;
+  --r-sm: 0;
+  --drop: 6px 6px 0 #7a7a7a;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  box-shadow: var(--drop);
+}
+/* Stripes either side of a centred label: the window title bar */
+.titlebar,
+.shell[data-look='retro'] .main section.card > h2:first-child {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  font-family: var(--font-pixel), monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.titlebar::before,
+.titlebar::after,
+.shell[data-look='retro'] .main section.card > h2:first-child::before,
+.shell[data-look='retro'] .main section.card > h2:first-child::after {
+  content: '';
+  flex: 1;
+  height: 11px;
+  background: repeating-linear-gradient(var(--ink) 0 1px, transparent 1px 3px);
+}
+.titlebar {
+  padding: 6px var(--s3);
+  border-bottom: 2px solid var(--ink);
+}
+.titlebar > span {
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.shell[data-look='retro'] .side {
+  border-bottom: 2px solid var(--ink);
+}
+.shell[data-look='retro'] h1,
+.shell[data-look='retro'] .goal h3,
+.shell[data-look='retro'] .nav a,
+.shell[data-look='retro'] button,
+.shell[data-look='retro'] .button,
+.shell[data-look='retro'] .stat > span:first-child,
+.shell[data-look='retro'] .main h2.label,
+.shell[data-look='retro'] .brand b {
+  font-family: var(--font-pixel), monospace;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.shell[data-look='retro'] h1 {
+  font-size: clamp(22px, 3vw, 30px);
+  letter-spacing: 0.14em;
+}
+.shell[data-look='retro'] .nav a,
+.shell[data-look='retro'] button,
+.shell[data-look='retro'] .button {
+  font-size: 12px;
+}
+.shell[data-look='retro'] .nav a {
+  color: var(--ink);
+}
+.shell[data-look='retro'] .nav a:hover {
+  background: var(--soft);
+}
+.shell[data-look='retro'] .nav a[aria-current='page'] {
+  background: var(--ink);
+  color: #fff;
+}
+.shell[data-look='retro'] .main section.card,
+.shell[data-look='retro'] .stats > .stat,
+.shell[data-look='retro'] .tile {
+  border: 2px solid var(--ink);
+  box-shadow: var(--drop);
+  background: #fff;
+}
+.shell[data-look='retro'] .main section.card {
+  padding: 0 var(--s5) var(--s5);
+}
+.shell[data-look='retro'] .main section.card > h2:first-child {
+  margin: 0 calc(-1 * var(--s5)) var(--s2);
+  padding: 4px var(--s3);
+  border-bottom: 2px solid var(--ink);
+  font-size: 11px;
+}
+.shell[data-look='retro'] .stats {
+  gap: var(--s4);
+  background: none;
+  border: 0;
+}
+.shell[data-look='retro'] .stats > .stat + .stat {
+  border-left: 2px solid var(--ink);
+}
+.shell[data-look='retro'] .stats > .stat:nth-child(n) {
+  border-top: 2px solid var(--ink);
+}
+.shell[data-look='retro'] .meter {
+  height: 10px;
+  border: 2px solid var(--ink);
+  background: #fff;
+}
+.shell[data-look='retro'] .meter > span {
+  background: repeating-linear-gradient(90deg, var(--ink) 0 6px, #fff 6px 8px);
+}
+.shell[data-look='retro'] button,
+.shell[data-look='retro'] .button {
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: #fff;
+  color: var(--ink);
+}
+.shell[data-look='retro'] button.primary,
+.shell[data-look='retro'] .button.primary {
+  background: var(--ink);
+  color: #fff;
+  box-shadow: 4px 4px 0 #7a7a7a;
+}
+.shell[data-look='retro'] button.primary:hover:not(:disabled),
+.shell[data-look='retro'] .button.primary:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #7a7a7a;
+}
+.shell[data-look='retro'] .badge {
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  box-shadow: 3px 3px 0 #7a7a7a;
+}
+/* The daily goal is a plain white window here, not the dark band */
+.shell[data-look='retro'] .main section.goal {
+  color: var(--ink);
+}
+.shell[data-look='retro'] .main section.goal .muted {
+  color: var(--muted);
+}
+.shell[data-look='retro'] .main section.goal .button.primary {
+  background: var(--ink);
+  color: #fff;
+}
+.shell[data-look='retro'] .goal-count b span {
+  opacity: 1;
+  color: #8a8a8a;
+}
+.shell[data-look='retro'] .hearts svg {
+  opacity: 1;
+  fill: #cfcfcf;
+}
+.shell[data-look='retro'] .hearts svg.on {
+  fill: var(--ink);
+}
+.shell[data-look='retro'] .tile .mark {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--ink);
+  background: #fff;
+  font-family: var(--font-pixel), monospace;
+  font-size: 12px;
+}
+.shell[data-look='retro'] .tile:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 4px 4px 0 #7a7a7a;
+}
+.shell[data-look='retro'] .empty {
+  border: 2px dashed var(--ink);
+}
+@media (max-width: 640px) {
+  .goal-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 800px) {
+  .shell[data-look='retro'] {
+    border-width: 0;
+    box-shadow: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .hud-item.flame > span:first-child,
-  .ring,
-  .ticker > span {
-    animation: none;
-  }
-  .tile:hover {
+  .shell[data-look='retro'] .tile:hover,
+  .shell[data-look='retro'] .button.primary:hover {
     transform: none;
   }
 }
