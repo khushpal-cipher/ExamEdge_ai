@@ -103,6 +103,10 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
 - Session 45 (2026-10-19): founder said merge; PRs #38 (KaTeX formulas, ADR-053) and #39 (ADR-054: "Making…" progress
   on every AI button, broken-formula flag on AI questions, Beta audio/video overviews, students may make a study tool
   again until the AI limit) merged. Next: PROGRESS.md "Next exact action (session 47)" — ask the founder what next.
+- Session 46 (2026-10-20): founder verified the session 45 student tiles, then asked go-live questions (hosting, cost,
+  pricing, limits per institute size; answers in PROGRESS.md) and for AI tokens on the owner Bill page (ADR-055) and the
+  unused step-by-step limit removed. PR #40 open, CI green, waiting for the founder's "merge". Next: PROGRESS.md "Next
+  exact action (session 47)" — merge #40 when told, then ask the founder what next (go-live setup needs their accounts).
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full

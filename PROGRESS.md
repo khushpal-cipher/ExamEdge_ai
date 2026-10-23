@@ -146,11 +146,21 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 47)
-**State (2026-10-19, end of session 45):** main = `de1d810`. Session 45 merged PR #38 (KaTeX formulas, ADR-053,
-`5cb5327`) and PR #39 (ADR-054: "Making…" progress on every AI button, formula check on save, Beta audio/video
-overviews, students can make a study tool again; migration 35 `studio_repeat`, `de1d810`). Both CI green, founder said
-merge. Branch `r15-next` (`d7c0f71` + this handoff) holds only PROGRESS / prompt notes, no PR (merge it with the next
-code PR). Nothing failing, nothing half-built.
+**State (2026-10-20, end of session 46):** main = `de1d810`. **PR #40** (`r15-next` → main, https://github.com/khushpal-cipher/ExamEdge_ai/pull/40)
+is OPEN, CI green (2 checks), mergeable, Auto-fix on, waiting for the founder's "merge". It holds: ADR-055 (owner/admin Bill
+page shows AI tokens + requests per feature, ₹ stays, dollars hidden), the step-by-step limit removed from the platform
+limits form (`student_daily_premium_messages` column and API `premium` flag stay), and PROGRESS / prompt notes. Nothing
+failing, nothing half-built. Untracked and NOT to be committed: `docs/PROGRESS_REPORT.md` / `.html` (founder's report to
+their sir), `.freebuff/` (not ours).
+**Founder's go-live questions (session 46, no code):** hosting = Vercel (Pro, or its 14-day free Pro trial; Hobby is
+non-commercial), DB/auth/files = Supabase Pro (Mumbai), worker = Railway; Cloudflare is optional (domain/DNS only; hosting
+the Next.js app there is untested and would need an ADR). Domain `examedge.in` not bought yet. Cost for ONE institute of
+~150 students: about ₹12–15k a month (AI ~$85 typical, capped by the budget; infra ~$55–70). Break-even about ₹100 per
+student; suggested pilot price ₹99–149 per student, charged in advance. Suggested limits per institute: budget ≈
+students × $0.35 + $35 (+20%) → $100 for 150; doubts 10/day, generations 5/day. Still blocking launch: Q-01 legal opinion,
+Q-08 Voyage terms, production accounts (need the founder's go-ahead), restore drill, load test, rollback test. None of
+the production accounts exist yet.
+0. If the founder says "merge #40": `gh pr merge 40 --squash` (CI is green), then `git switch main && git pull`.
 1. `git switch main && git pull`, then a new branch (e.g. `r16-next`) for new work; `docker info`; `supabase status`
    (never `db:reset` without asking: it holds the founder's test institutes newtown / vedam / asjdfl). Local DB has
    migrations up to 35 (`studio_repeat`, applied with `supabase migration up`).
