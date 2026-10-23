@@ -137,6 +137,15 @@ export default async function StudentHome() {
           ) : null}
         </div>
       </section>
+      <p className="ticker" aria-hidden="true">
+        {[0, 1].map((i) => (
+          <span key={i}>
+            {`✦ ${days ? `${days} day streak` : 'start a streak today'} ✦ ${xp} XP ✦ level ${lv.level} ✦ one doubt a day keeps the rank up ✦ ${DAILY_GOAL - today > 0 ? `${DAILY_GOAL - today} to go today` : 'daily goal done'} `.repeat(
+              2,
+            )}
+          </span>
+        ))}
+      </p>
       {(next || overall || lastRanked) && (
         <section className="hero" aria-label="At a glance">
           <div className="stat">
