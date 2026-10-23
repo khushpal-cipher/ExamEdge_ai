@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { formatTime, PHASE_LABEL, requestTime, testPhase } from '@/lib/assess';
+import { formatTime, PHASE_LABEL, requestTime, testPhase, TZ } from '@/lib/assess';
 import { batchTests, studentBatches } from '@/lib/student';
+import { DAILY_GOAL, isToday, level, streak, week, XP } from '@/lib/streak';
 import { requireMember } from '@/lib/tenant';
 
 export default async function StudentHome() {
@@ -9,9 +10,11 @@ export default async function StudentHome() {
   const first = (
     await db.from('profiles').select('full_name').eq('user_id', member.userId).maybeSingle()
   ).data?.full_name?.split(' ')[0];
+  const hour = Number(new Intl.DateTimeFormat('en-IN', { timeZone: TZ, hour: 'numeric', hour12: false }).format()) % 24;
+  const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const hello = (
     <div>
-      <h1>{first ? `Hello, ${first}` : 'Hello'}</h1>
+      <h1>{first ? `${greet}, ${first}` : greet}</h1>
       <p className="muted">
         {selected
           ? `${selected.name}${selected.leftAt ? ' · past batch: your own year, read-only for tests' : ''}`
@@ -21,21 +24,30 @@ export default async function StudentHome() {
   );
   if (!selected) return <div className="top">{hello}</div>;
   // RLS: only the student's own batches (current or past) and their subjects (AC3.4, ADR-040).
-  const [{ data: subjects }, tests, { data: attempts }, { data: standings }] = await Promise.all([
-    db
-      .from('subjects')
-      .select('id, name, chapters(count)')
-      .eq('institute_id', institute.id)
-      .eq('batch_id', selected.id)
-      .order('name'),
-    batchTests(selected),
-    db.from('test_attempts').select('test_id, rank, status').eq('user_id', member.userId),
-    db
-      .from('batch_standings')
-      .select('overall_rank, average_percentage, batch_id')
-      .eq('user_id', member.userId)
-      .eq('batch_id', selected.id),
-  ]);
+  // shortcut: reads every activity timestamp of this student; move to a SQL count per day once students have thousands.
+  const [{ data: subjects }, tests, { data: attempts }, { data: standings }, { data: doubts }, { data: tools }] =
+    await Promise.all([
+      db
+        .from('subjects')
+        .select('id, name, chapters(count)')
+        .eq('institute_id', institute.id)
+        .eq('batch_id', selected.id)
+        .order('name'),
+      batchTests(selected),
+      db.from('test_attempts').select('test_id, rank, status, started_at').eq('user_id', member.userId),
+      db
+        .from('batch_standings')
+        .select('overall_rank, average_percentage, batch_id')
+        .eq('user_id', member.userId)
+        .eq('batch_id', selected.id),
+      // RLS: only the student's own conversations' messages and own study tools.
+      db.from('messages').select('created_at').eq('institute_id', institute.id).eq('role', 'user'),
+      db
+        .from('generated_artifacts')
+        .select('created_at')
+        .eq('institute_id', institute.id)
+        .eq('owner_user_id', member.userId),
+    ]);
   const now = requestTime();
   const mine = new Map((attempts ?? []).map((a) => [a.test_id, a]));
   const upcoming = tests
@@ -45,6 +57,16 @@ export default async function StudentHome() {
   const lastRanked = released.find((t) => mine.get(t.id)?.rank);
   const next = upcoming[0];
   const overall = standings?.find((s) => s.overall_rank);
+  const times = [
+    ...(doubts ?? []).map((d) => d.created_at),
+    ...(tools ?? []).map((t) => t.created_at),
+    ...(attempts ?? []).map((a) => a.started_at),
+  ];
+  const days = streak(times, now);
+  const xp = (doubts?.length ?? 0) * XP.doubt + (tools?.length ?? 0) * XP.tool + (attempts?.length ?? 0) * XP.test;
+  const lv = level(xp);
+  const today = Math.min(DAILY_GOAL, times.filter((t) => isToday(t, now)).length);
+  const go = next && testPhase(next, now) === 'open' && (mine.has(next.id) || !selected.leftAt) ? next : null;
   // Shown once when the page loads (no live ticking).
   const until = (iso: string) => {
     const m = Math.max(1, Math.round((Date.parse(iso) - now) / 60000));
@@ -56,25 +78,86 @@ export default async function StudentHome() {
   return (
     <>
       <div className="top">{hello}</div>
-      <section className="hero" aria-label="At a glance">
-        <div className="stat">
-          <span>Next test</span>
-          <b>{!next ? '—' : testPhase(next, now) === 'open' ? 'Open now' : `in ${until(next.opens_at)}`}</b>
-          <span className="small">{next ? next.title : 'Nothing scheduled'}</span>
+      <section className="hud" aria-label="Your streak and points">
+        <div className={`hud-item flame${days ? '' : ' cold'}`}>
+          <span aria-hidden="true">🔥</span>
+          <b>{days}</b>
+          <span>day streak</span>
         </div>
-        <div className="stat">
-          <span>Overall rank</span>
-          <b>{overall?.overall_rank ?? '—'}</b>
-          <span className="small">
-            {overall ? `average ${overall.average_percentage}%` : 'after your first result'}
+        <div className="hud-item gem">
+          <span aria-hidden="true">⚡</span>
+          <b>{xp}</b>
+          <span>XP</span>
+        </div>
+        <div className="hud-item lvl">
+          <span aria-hidden="true">🏆</span>
+          <b>Level {lv.level}</b>
+          <span className="meter" aria-label={`${lv.into} of ${lv.need} XP to level ${lv.level + 1}`}>
+            <span style={{ width: `${(lv.into / lv.need) * 100}%` }} />
           </span>
         </div>
-        <div className="stat">
-          <span>Last test rank</span>
-          <b>{lastRanked ? mine.get(lastRanked.id)?.rank : '—'}</b>
-          <span className="small">{lastRanked ? lastRanked.title : 'no results yet'}</span>
+      </section>
+      <section className="quest" aria-labelledby="goal">
+        <div
+          className="ring"
+          style={{ '--p': `${(today / DAILY_GOAL) * 100}%` } as React.CSSProperties}
+          role="img"
+          aria-label={`${today} of ${DAILY_GOAL} done today`}
+        >
+          <b>
+            {today}/{DAILY_GOAL}
+          </b>
+        </div>
+        <div className="stack">
+          <h2 id="goal">{today >= DAILY_GOAL ? 'Daily goal done! 🎉' : "Today's goal"}</h2>
+          <p className="muted">
+            {today >= DAILY_GOAL
+              ? 'Streak saved. Anything more is bonus XP.'
+              : days
+                ? `Do ${DAILY_GOAL - today} more: ask a doubt, use a study tool or take a test. Keep your ${days}-day streak alive!`
+                : `Ask a doubt, use a study tool or take a test (${DAILY_GOAL - today} to go) to start a streak.`}
+          </p>
+          <ol className="week" aria-label="Last 7 days">
+            {week(times, now).map((d, i) => (
+              <li key={i} className={`${d.active ? 'on' : ''}${d.today ? ' today' : ''}`}>
+                <span aria-hidden="true">{d.active ? '🔥' : ''}</span>
+                <small>{d.label}</small>
+                <span className="sr-only">{d.active ? 'studied' : 'missed'}</span>
+              </li>
+            ))}
+          </ol>
+          {go ? (
+            <Link href={`/tests/${go.id}`} className="button primary big">
+              {mine.has(go.id) ? 'Continue' : 'Start'} {go.title} · +{XP.test} XP
+            </Link>
+          ) : subjects?.[0] ? (
+            <Link href={`/subjects/${subjects[0].id}`} className="button primary big">
+              Start studying
+            </Link>
+          ) : null}
         </div>
       </section>
+      {(next || overall || lastRanked) && (
+        <section className="hero" aria-label="At a glance">
+          <div className="stat">
+            <span>Next test</span>
+            <b>{!next ? '—' : testPhase(next, now) === 'open' ? 'Open now' : `in ${until(next.opens_at)}`}</b>
+            <span className="small">{next ? next.title : 'Nothing scheduled'}</span>
+          </div>
+          <div className="stat">
+            <span>Overall rank</span>
+            <b>{overall?.overall_rank ? `#${overall.overall_rank}` : '—'}</b>
+            <span className="small">
+              {overall ? `average ${overall.average_percentage}%` : 'after your first result'}
+            </span>
+          </div>
+          <div className="stat">
+            <span>Last test rank</span>
+            <b>{lastRanked ? `#${mine.get(lastRanked.id)?.rank}` : '—'}</b>
+            <span className="small">{lastRanked ? lastRanked.title : 'no results yet'}</span>
+          </div>
+        </section>
+      )}
       <div className="grid">
         <section className="card stack" aria-labelledby="upcoming">
           <h2 id="upcoming">Upcoming tests</h2>
@@ -154,10 +237,10 @@ export default async function StudentHome() {
           <p className="empty">No subjects yet. Your institute adds them to your batch.</p>
         ) : (
           <div className="grid">
-            {subjects.map((s) => (
-              <Link key={s.id} href={`/subjects/${s.id}`} className="card tile">
+            {subjects.map((s, i) => (
+              <Link key={s.id} href={`/subjects/${s.id}`} className={`card tile subject c${i % 5}`}>
                 <span className="mark" aria-hidden="true">
-                  {s.name.slice(0, 1).toUpperCase()}
+                  {EMOJI.find(([re]) => re.test(s.name))?.[1] ?? '📘'}
                 </span>
                 <h3>{s.name}</h3>
                 <p className="muted small">
@@ -172,5 +255,13 @@ export default async function StudentHome() {
     </>
   );
 }
+
+const EMOJI: [RegExp, string][] = [
+  [/phys/i, '⚛️'],
+  [/chem/i, '🧪'],
+  [/math/i, '📐'],
+  [/bio|bot|zoo/i, '🧬'],
+  [/eng/i, '📖'],
+];
 
 export const metadata = { title: 'Home' };
