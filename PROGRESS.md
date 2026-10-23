@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-19 (session 43, handoff)
+Last updated: 2026-10-23 (session 47, handoff)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -148,7 +148,35 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 47)
+## Next exact action (session 48)
+**State (2026-10-23, end of session 47):** PR #40 MERGED (main = `707294d`, CI green). Nothing failing on main.
+**Checked-out branch: `r16-fun-ui` — LOCAL ONLY, never pushed (founder: "commit locally so if I don't like it I can use
+the current version"). Do NOT push or merge any `r16-*` branch until the founder says so.**
+- `r16-fun-ui` (head = this handoff commit; based on `95abc4a` = old r15-next, so it does NOT contain main's squash
+  `707294d`, same content): gamified student Home (`lib/streak.ts` streak/week/XP/level from own doubts, study tools,
+  test attempts, IST days, no DB change; daily goal ring of 3 actions; last-7-days strip; one big Start button; HUD
+  pills; scrolling ticker; subject tiles with emoji) + "Space theme" CSS block at the END of `globals.css` (dark
+  starfield, one accent token `--lime: #d4ff6b`, Anton titles, Space Mono labels, Space Grotesk text; fonts in
+  `app/layout.tsx`). Delete that CSS block to return to the old workbook look.
+- `r16-violet` (`--lime: #b79cff`) and `r16-saffron` (`--lime: #ffb547`, streak coral `#ff7a90`): one-line accent trials.
+  Claude recommended lime (violet = Byju's purple; saffron clashes with warn/streak). Founder has NOT chosen.
+- Older looks: `d5b4eac` = bright "Play" version (Nunito, chunky light buttons); `r15-next` / main = old workbook UI.
+- **Founder: "my friend didn't like the UI, he will be suggesting the UI."** Wait for the friend's suggestions
+  (screenshots/references, which screen and why). Build them on a NEW local branch from `r16-fun-ui` (keep the
+  streak/XP/goal logic, it is look-independent), show screenshots (student Home 1280 + 375) before restyling more.
+- Not done / unverified on `r16-*`: E2E + axe (CI only, branch not pushed), test runner page, results page, sign-in
+  page, owner pages and teacher check page in the new theme; Playwright `toHaveText` on capitalised subject tiles
+  should still pass (CSS `text-transform` does not change textContent) — confirm in CI before any merge.
+- Before any `r16-*` PR: rebase/merge onto main (`707294d`), run the full gate (`npm run check`), then PR.
+- Dev servers: the other chat's `next dev` on :3000 returns 500 for the new Google fonts (Turbopack "Can't resolve
+  @vercel/turbopack-next/internal/font/google/font") until restarted; `npm run build` is fine. This session checked
+  pages on `next start` (launch config `web-prod-3001`, got :3002) — rebuild AND restart it after CSS changes
+  (a rebuild under a running `next start` serves unstyled pages).
+- Demo sign-in for the founder (localhost only): `student1@newtown.test` (Riya Sharma) or `student2@newtown.test` in
+  the "Demo user email" box, no password.
+- Open topics from session 46 still stand (friend as platform admin, go-live accounts need the founder's go-ahead).
+
+## Next exact action (session 47) — history
 **State (2026-10-20, end of session 46):** main = `de1d810`. **PR #40** (`r15-next` → main, https://github.com/khushpal-cipher/ExamEdge_ai/pull/40)
 is OPEN, CI green (2 checks), mergeable, Auto-fix on, waiting for the founder's "merge". It holds: ADR-055 (owner/admin Bill
 page shows AI tokens + requests per feature, ₹ stays, dollars hidden), the step-by-step limit removed from the platform
