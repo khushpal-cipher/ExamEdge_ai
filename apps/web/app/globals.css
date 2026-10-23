@@ -1547,18 +1547,18 @@ div.part[aria-current='true'] {
    Overrides the workbook look above; delete this block to get it back. Streak, XP and goal markup is shared. ===== */
 :root {
   color-scheme: dark;
-  --lime: #d4ff6b;
+  --lime: #d4ff6b; /* the one accent colour: change it here to retheme */
   --bg: #06101b;
   --card: #0b1828;
   --soft: #10233a;
-  --chosen: #1d2f12; /* lime at night: active nav, chosen answer */
+  --chosen: color-mix(in srgb, var(--lime) 14%, var(--bg)); /* accent at night: active nav, chosen answer */
   --ink: #e9f1e4;
   --muted: #9db0c2;
   --line: #1d3247;
-  --hair: rgb(212 255 107 / 28%); /* lime hairlines, like the reference */
+  --hair: color-mix(in srgb, var(--lime) 28%, transparent); /* lime hairlines, like the reference */
   --field: #5f7a94;
   --accent: var(--lime);
-  --accent-hover: #e4ff9c;
+  --accent-hover: color-mix(in srgb, var(--lime), #fff 35%);
   --on-accent: #06101b;
   --accent-ink: var(--lime);
   --track: #182b40;
@@ -1679,7 +1679,7 @@ button.primary:hover:not(:disabled),
 .button.primary:hover {
   background: var(--accent-hover);
   transform: none;
-  box-shadow: 0 0 24px rgb(212 255 107 / 35%);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--lime) 35%, transparent);
 }
 .button.big {
   min-height: 52px;
@@ -1715,7 +1715,7 @@ button.danger,
   border-color: var(--lime);
   box-shadow:
     0 0 0 1px var(--lime),
-    0 0 28px rgb(212 255 107 / 18%);
+    0 0 28px color-mix(in srgb, var(--lime) 18%, transparent);
   transform: translateY(-3px);
 }
 .main section.card {
@@ -1808,7 +1808,7 @@ button.danger,
   display: grid;
   place-items: center;
   background: conic-gradient(var(--lime) var(--p), var(--track) 0);
-  box-shadow: 0 0 40px rgb(212 255 107 / 15%);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--lime) 15%, transparent);
   animation: pop var(--pop) both;
 }
 .ring b {
