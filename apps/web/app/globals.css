@@ -1754,6 +1754,19 @@ ul.rows > li > span:first-child > .small {
 td .badge[class]:not(.good, .warn, .bad) {
   color: #66666d;
 }
+/* Every badge, in tables too, keeps room between its border and its text; the dot sits centred */
+.badge,
+td .badge[class] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  line-height: 1.3;
+}
+td .badge::before {
+  margin: 0;
+  vertical-align: 0;
+}
 /* Desktop: a compact top bar over the full-width page */
 @media (min-width: 801px) {
   .shell {
