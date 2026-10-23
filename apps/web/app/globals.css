@@ -1586,7 +1586,7 @@ h1 {
 }
 /* Section titles and small labels: uppercase mono, like the concept */
 .main section.card > h2:first-child,
-.main h2.label,
+.main .label,
 .stat > span:first-child,
 .brand small {
   white-space: nowrap;
@@ -1679,12 +1679,15 @@ ul.rows > li > span:first-child > .small {
   border: 1px solid var(--line);
   border-radius: var(--r);
 }
-.stats.three {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+@media (min-width: 961px) {
+  .stats.three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 .stats > .stat {
   padding: var(--s5);
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 .stats .badge {
   font-size: var(--t-ui);
@@ -1918,7 +1921,7 @@ td .badge::before {
 .shell[data-look='retro'] button,
 .shell[data-look='retro'] .button,
 .shell[data-look='retro'] .stat > span:first-child,
-.shell[data-look='retro'] .main h2.label,
+.shell[data-look='retro'] .main .label,
 .shell[data-look='retro'] .brand b {
   font-family: var(--font-pixel), monospace;
   font-weight: 400;

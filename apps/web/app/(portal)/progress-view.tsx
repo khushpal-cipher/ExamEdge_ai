@@ -114,29 +114,40 @@ export function ProgressView({
         <h2 id="summary">Summary</h2>
         {p.standings.length === 0 && <p className="empty">No released tests yet.</p>}
         {p.standings.map((s) => (
-          <div key={s.batch} className="grid">
-            <div className="card stat">
-              <span className="muted small">Overall rank · {s.batch}</span>
-              <b>{s.overall_rank ? `${s.overall_rank} of ${s.batch_size}` : '—'}</b>
-            </div>
-            <div className="card stat">
-              <span className="muted small">Average percentage</span>
-              <b>{s.tests_counted ? `${s.average_percentage}%` : '—'}</b>
-            </div>
-            <div className="card stat">
-              <span className="muted small">Tests taken / missed</span>
-              <b>
-                {s.tests_counted - s.tests_missed} / {s.tests_missed}
-              </b>
-            </div>
-            {latest && (
-              <div className="card stat">
-                <span className="muted small">Last test rank</span>
+          <div key={s.batch} className="stack">
+            {p.standings.length > 1 && <h3 className="label">{s.batch}</h3>}
+            <div className={`stats${latest ? '' : ' three'}`}>
+              <div className="stat">
+                <span>Overall rank{p.standings.length > 1 ? '' : ` · ${s.batch}`}</span>
                 <b>
-                  {latest.rank} of {latest.takers}
+                  {s.overall_rank ? (
+                    <>
+                      {s.overall_rank} <small>of {s.batch_size}</small>
+                    </>
+                  ) : (
+                    '—'
+                  )}
                 </b>
               </div>
-            )}
+              <div className="stat">
+                <span>Average percentage</span>
+                <b>{s.tests_counted ? `${s.average_percentage}%` : '—'}</b>
+              </div>
+              <div className="stat">
+                <span>Tests taken / missed</span>
+                <b>
+                  {s.tests_counted - s.tests_missed} <small>/ {s.tests_missed}</small>
+                </b>
+              </div>
+              {latest && (
+                <div className="stat">
+                  <span>Last test rank</span>
+                  <b>
+                    {latest.rank} <small>of {latest.takers}</small>
+                  </b>
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </section>
