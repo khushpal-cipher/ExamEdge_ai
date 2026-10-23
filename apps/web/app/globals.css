@@ -1748,12 +1748,8 @@ ul.rows > li > span:first-child > .small {
 @media (min-width: 801px) {
   .shell {
     display: block;
-    max-width: 1240px;
-    margin: var(--s5) auto;
-    min-height: calc(100vh - 2 * var(--s5));
+    min-height: 100vh;
     background: var(--page);
-    border: 1px solid var(--line);
-    border-radius: 16px;
   }
   .side {
     position: static;
@@ -1840,18 +1836,12 @@ ul.rows > li > span:first-child > .small {
 
 /* ===== Retro (students): square windows, 2 px black borders, grey offset shadows, bitmap headings and labels,
    on a fine grey dither. Body text and numbers stay in Inter / Plex Mono so they read easily. ===== */
-body:has(.shell[data-look='retro']) {
-  background: repeating-conic-gradient(#c9c9c9 0 25%, #dedede 0 50%) 0 0 / 4px 4px;
-}
 .shell[data-look='retro'] {
   --line: #111113;
   --r: 0;
   --r-sm: 0;
   --drop: 6px 6px 0 #7a7a7a;
   background: #fff;
-  border: 2px solid var(--ink);
-  border-radius: 0;
-  box-shadow: var(--drop);
 }
 /* Stripes either side of a centred label: the window title bar */
 .titlebar,
@@ -2017,12 +2007,6 @@ body:has(.shell[data-look='retro']) {
 @media (max-width: 640px) {
   .goal-body {
     grid-template-columns: minmax(0, 1fr);
-  }
-}
-@media (max-width: 800px) {
-  .shell[data-look='retro'] {
-    border-width: 0;
-    box-shadow: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
