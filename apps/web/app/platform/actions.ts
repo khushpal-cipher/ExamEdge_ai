@@ -171,12 +171,7 @@ export async function uploadLogo(form: FormData) {
   redirect(`/institutes/${id}?${error ? 'error=logo' : 'ok=saved'}`);
 }
 
-const QUOTA_FIELDS = [
-  'student_daily_messages',
-  'student_daily_premium_messages',
-  'student_daily_generations',
-  'max_concurrent_jobs',
-] as const;
+const QUOTA_FIELDS = ['student_daily_messages', 'student_daily_generations', 'max_concurrent_jobs'] as const;
 
 export async function updateQuotas(form: FormData) {
   const db = await requireAal2();

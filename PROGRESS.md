@@ -145,30 +145,54 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 46)
-**State (2026-10-19, session 45):** main = `5cb5327` (PR #38 KaTeX formulas, ADR-053, merged). Before that main = `be6e77c` (PRs #35 UI redesign + ADR-050, #36 Gemini test provider +
-tutor chat box, #37 AI question dropdown + Approve, all MERGED with founder's yes, CI green). Branch `r15-next`
-(`47cea0b` + this handoff) holds only PROGRESS / prompt notes; no PR opened for it (docs only: merge it with the next code
-PR or open a tiny PR). Nothing failing, nothing half-built.
-1. `git switch main && git pull`; `docker info`; `supabase status` (never `db:reset` without asking: it holds the founder's
-   test institutes newtown / vedam / asjdfl). Local DB has migrations up to 34 (`gemini`).
-2. Local dev: `npm run dev` reads `apps/web/.env.local` which now has `AI_PROVIDER=gemini` + `GEMINI_API_KEY` (never print
-   it; test institutes only, ADR-051). Worker: `WORKER_DATABASE_URL=postgresql://worker:worker_local_only@127.0.0.1:54322/postgres
-   npm run dev:worker` (needed for notes processing / OCR). Delete the `AI_PROVIDER` line to go back to demo AI. Both
-   processes die with the session; restart them if the founder tests AI features.
-3. Ask the founder what to build next; likely topics they raised: (a) their friend `aaradhychinche@gmail.com` as platform
-   admin — he signs in once at http://admin.localhost:3000 (Google) on the founder's Mac so his account exists, then
-   `insert into private.platform_admins (user_id, granted_by) select id, 'founder' from auth.users where email =
-   'aaradhychinche@gmail.com'`; he scans the MFA QR with HIS phone (never the founder's). Account did not exist on
-   2026-10-19. Remote access for him needs a deployment (Phase 10, founder approval needed for accounts/hosting).
-   (b) the teacher theory-checking page: it already lists every student's answer per question (Q1–Q5 tabs, model answer,
-   marks + comment, hide names) — founder saw it with 5 students; ask if they want changes (e.g. all answers of one
-   student, bulk marks). (c) Not built, needs founder decision/money: paid voice (Sarvam), real MP4 video, Voyage
-   embeddings (Q-08), deployment (Phase 10).
-4. Local `npm run test:e2e` stays BLOCKED (no `demo` / `rival` institutes locally; seeding needs `db:reset`); CI runs e2e
-   on a fresh database. Unit 185 and pgTAP 1459 pass locally.
+## Next exact action (session 47)
+**State (2026-10-20, end of session 46):** main = `de1d810`. **PR #40** (`r15-next` → main, https://github.com/khushpal-cipher/ExamEdge_ai/pull/40)
+is OPEN, CI green (2 checks), mergeable, Auto-fix on, waiting for the founder's "merge". It holds: ADR-055 (owner/admin Bill
+page shows AI tokens + requests per feature, ₹ stays, dollars hidden), the step-by-step limit removed from the platform
+limits form (`student_daily_premium_messages` column and API `premium` flag stay), and PROGRESS / prompt notes. Nothing
+failing, nothing half-built. Untracked and NOT to be committed: `docs/PROGRESS_REPORT.md` / `.html` (founder's report to
+their sir), `.freebuff/` (not ours).
+**Founder's go-live questions (session 46, no code):** hosting = Vercel (Pro, or its 14-day free Pro trial; Hobby is
+non-commercial), DB/auth/files = Supabase Pro (Mumbai), worker = Railway; Cloudflare is optional (domain/DNS only; hosting
+the Next.js app there is untested and would need an ADR). Domain `examedge.in` not bought yet. Cost for ONE institute of
+~150 students: about ₹12–15k a month (AI ~$85 typical, capped by the budget; infra ~$55–70). Break-even about ₹100 per
+student; suggested pilot price ₹99–149 per student, charged in advance. Suggested limits per institute: budget ≈
+students × $0.35 + $35 (+20%) → $100 for 150; doubts 10/day, generations 5/day. Still blocking launch: Q-01 legal opinion,
+Q-08 Voyage terms, production accounts (need the founder's go-ahead), restore drill, load test, rollback test. None of
+the production accounts exist yet.
+0. If the founder says "merge #40": `gh pr merge 40 --squash` (CI is green), then `git switch main && git pull`.
+1. `git switch main && git pull`, then a new branch (e.g. `r16-next`) for new work; `docker info`; `supabase status`
+   (never `db:reset` without asking: it holds the founder's test institutes newtown / vedam / asjdfl). Local DB has
+   migrations up to 35 (`studio_repeat`, applied with `supabase migration up`).
+2. Local dev: `npm run dev` reads `apps/web/.env.local` with `AI_PROVIDER=gemini` + `GEMINI_API_KEY` (never print it;
+   test institutes only, ADR-051). Worker: `WORKER_DATABASE_URL=postgresql://worker:worker_local_only@127.0.0.1:54322/postgres
+   npm run dev:worker` (notes processing / OCR). Both die with the session; restart them if the founder tests AI.
+3. VERIFIED by the founder in the browser (2026-10-19, session 46): student Smart Study tiles, Beta badges, repeat make. (Old note: check in the browser when convenient, browser pane must be VISIBLE or pages freeze while
+   a form is pending): as a student (e.g. Aman Singh, newtown): Smart Study tiles show "Making your practice quiz…" while
+   generating, Beta badges on Audio/Video overview, a second click on the same tile makes a new quiz (lists show times).
+4. Ask the founder what to build next. Open topics: (a) friend `aaradhychinche@gmail.com` as platform admin — he signs
+   in once at http://admin.localhost:3000 (Google), then `insert into private.platform_admins (user_id, granted_by)
+   select id, 'founder' from auth.users where email = 'aaradhychinche@gmail.com'`; he scans the MFA QR with HIS phone;
+   remote access needs a deployment (Phase 10, founder approval). (b) Teacher theory-checking page changes, if any.
+   (c) Needs founder decision/money: paid voice (Sarvam), real MP4 video, Voyage embeddings (Q-08), deployment.
+   (d) Optional: retry AI generation once when a formula is broken (now flag only, ADR-054).
+5. Local `npm run test:e2e` stays BLOCKED (no `demo` / `rival` institutes locally; seeding needs `db:reset`); CI runs
+   e2e on a fresh database. Unit 189 and pgTAP 1459 pass locally.
+
+## Session 46 (2026-10-20) — tokens on the Bill page (ADR-055), branch `r15-next`
+- Founder asked for the AI tokens an institute used to show on the owner/admin Bill page. Built: `/usage` now shows
+  "AI used this month" (tokens + requests) and a table "Where the AI was used" (requests, tokens per feature); ₹ charge
+  and AI on/off stay; dollars still hidden. Changes ADR-041 part 2 (ADR-055). Reuses `usage_summary`, no migration.
+  `e2e/usage.spec.ts` now expects the tokens card and no `$` (was: no tokens).
+- Evidence (2026-10-20): `npm run format:check`, `npm run lint` (check-forbidden ok), `npm run typecheck` ok; `npm test`
+  189 passed. NOT run: `npm run build` (another session's `next dev` on :3000 uses `apps/web/.next`), `test:e2e` (needs
+  seeded demo; CI), browser check (newtown's only owner is the founder's real account; open http://newtown.localhost:3000/usage
+  as that owner to look).
+- Also this session: go-live checklist and cost/pricing talk (no code); `docs/PROGRESS_REPORT.md` / `.html` (founder's
+  report to their sir, untracked, not committed).
 
 ## Session 45b (2026-10-19) — AI progress, formula check, Beta, repeat study tools (ADR-054), branch `r15-next`
+- **MERGED** (founder's yes, 2026-10-19): PR #39 squash-merged into main as `de1d810`; CI green (check 5m11s incl. e2e, secrets).
 - Founder asked: (1) flag AI questions whose formula cannot be drawn; (2) a NotebookLM-style "making it" state on every
   AI feature; (3) Beta on audio/video overview; (4) students make a study tool again until the AI limit.
 - Built: `lib/markdown.ts` `brokenMath` / `questionTexts`; `addAiQuestions` flags on save (`ai_questions_formula`),
@@ -196,6 +220,29 @@ PR or open a tiny PR). Nothing failing, nothing half-built.
 - BLOCKED locally: `npm run test:e2e` (as before, needs `db:reset`); CI runs it. pgTAP untouched (no SQL change).
 - Not done: formulas are not compiled on save (AI_PIPELINE "Formulas" check still open); `<option>` labels in "Add from
   the bank" stay plain text (native select cannot show math).
+
+## Next exact action (session 46) — history
+**State (2026-10-19, session 45):** main = `5cb5327` (PR #38 KaTeX formulas, ADR-053, merged). Before that main = `be6e77c` (PRs #35 UI redesign + ADR-050, #36 Gemini test provider +
+tutor chat box, #37 AI question dropdown + Approve, all MERGED with founder's yes, CI green). Branch `r15-next`
+(`47cea0b` + this handoff) holds only PROGRESS / prompt notes; no PR opened for it (docs only: merge it with the next code
+PR or open a tiny PR). Nothing failing, nothing half-built.
+1. `git switch main && git pull`; `docker info`; `supabase status` (never `db:reset` without asking: it holds the founder's
+   test institutes newtown / vedam / asjdfl). Local DB has migrations up to 34 (`gemini`).
+2. Local dev: `npm run dev` reads `apps/web/.env.local` which now has `AI_PROVIDER=gemini` + `GEMINI_API_KEY` (never print
+   it; test institutes only, ADR-051). Worker: `WORKER_DATABASE_URL=postgresql://worker:worker_local_only@127.0.0.1:54322/postgres
+   npm run dev:worker` (needed for notes processing / OCR). Delete the `AI_PROVIDER` line to go back to demo AI. Both
+   processes die with the session; restart them if the founder tests AI features.
+3. Ask the founder what to build next; likely topics they raised: (a) their friend `aaradhychinche@gmail.com` as platform
+   admin — he signs in once at http://admin.localhost:3000 (Google) on the founder's Mac so his account exists, then
+   `insert into private.platform_admins (user_id, granted_by) select id, 'founder' from auth.users where email =
+   'aaradhychinche@gmail.com'`; he scans the MFA QR with HIS phone (never the founder's). Account did not exist on
+   2026-10-19. Remote access for him needs a deployment (Phase 10, founder approval needed for accounts/hosting).
+   (b) the teacher theory-checking page: it already lists every student's answer per question (Q1–Q5 tabs, model answer,
+   marks + comment, hide names) — founder saw it with 5 students; ask if they want changes (e.g. all answers of one
+   student, bulk marks). (c) Not built, needs founder decision/money: paid voice (Sarvam), real MP4 video, Voyage
+   embeddings (Q-08), deployment (Phase 10).
+4. Local `npm run test:e2e` stays BLOCKED (no `demo` / `rival` institutes locally; seeding needs `db:reset`); CI runs e2e
+   on a fresh database. Unit 185 and pgTAP 1459 pass locally.
 
 ## Session 44d (2026-10-19) — theory checking demo, local data only (no code, nothing committed)
 - Founder asked how a teacher checks theory answers with 5+ students. The existing page
