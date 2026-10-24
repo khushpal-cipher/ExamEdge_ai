@@ -1767,6 +1767,10 @@ ul.rows > li > span:first-child > .small {
   --good: #15803d;
   --warn-ink: #9a6206;
   --bad: #c2362a;
+  /* Lighter tints keep the brighter text at ≥ 4.6:1 on badges and notices */
+  --good-soft: #f0f8f3;
+  --warn-soft: #fdf5e8;
+  --bad-soft: #fcf1ef;
 }
 td .badge[class]:not(.good, .warn, .bad) {
   color: #66666d;

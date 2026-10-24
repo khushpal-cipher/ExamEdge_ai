@@ -121,7 +121,7 @@ export default async function StudentHome() {
         <div className="stat">
           <span>Level</span>
           <b>{lv.level}</b>
-          <span className="meter" aria-label={`${lv.into} of ${lv.need} XP to level ${lv.level + 1}`}>
+          <span className="meter" role="img" aria-label={`${lv.into} of ${lv.need} XP to level ${lv.level + 1}`}>
             <span style={{ width: `${(lv.into / lv.need) * 100}%` }} />
           </span>
         </div>
