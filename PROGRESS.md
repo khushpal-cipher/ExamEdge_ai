@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-24 (session 48, handoff)
+Last updated: 2026-10-24 (session 48, PR #41 merged)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -12,6 +12,7 @@ Last updated: 2026-10-24 (session 48, handoff)
 **Phase 6 MERGED** into `main` (PR #7, squash commit `7863900`, CI green: check + secrets, run 38841699259 — unit 104, pgTAP 1064, integration 21, E2E 22/22 against the production build, 2026-10-16).
 **Phase 8 MERGED** into `main` (PR #8, squash commit `bce1046`, CI green: check + secrets, run 38848935766 — unit 111, pgTAP 1107, integration 21, E2E 24/24 against the production build, 2026-10-16).
 **Phase 9 MERGED** into `main` (PR #9, squash commit `67ed4ac`, CI green: check + secrets, run 38869056404 — pgTAP 1220, E2E 26/26 against the production build incl. T-SEC-05, 2026-10-16).
+**New UI (ADR-056) MERGED** into `main` (PR #41, squash commit `f1b9d3f`, CI green: check + secrets, run 40065062694, 2026-10-24).
 **Phase 10 (local parts) MERGED** into `main` (PR #10, squash commit `dc7600f`, CI green: check + secrets, run 38877776627 — unit 132, pgTAP 1243, integration 23, E2E 26/26 against the production build incl. T-SEC-05, 2026-10-16).
 **R1 OCR MERGED** into `main` (PR #11, squash commit `69d3fc6`, CI green: E2E 26/26, run 38880693017, 2026-10-16).
 **R1 file purge MERGED** into `main` (PR #12, squash commit `6f343a0`, CI green: run 38896124282 — unit 135, pgTAP 1256, integration 26, E2E 26/26 against the production build, 2026-10-16).
@@ -149,9 +150,12 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 49)
-**State (2026-10-24, end of session 48):** main = `707294d` (unchanged, CI green). **Checked-out branch: `r16-mono` —
-LOCAL ONLY, never pushed (same founder rule as all `r16-*`: do NOT push or merge until the founder says so).**
-`r16-mono` = `r16-fun-ui` + the founder's friend's two concepts (session 48):
+**State (2026-10-24, end of session 48):** **PR #41 MERGED** (squash `f1b9d3f` on main, CI green: check + secrets, run
+40065062694 — E2E incl. axe passed after fix `997ae8b`: lighter `--good-soft #f0f8f3` / `--warn-soft #fdf5e8` /
+`--bad-soft #fcf1ef` so the brighter status text stays ≥ 4.6:1, and `role="img"` on the Home level bar). Founder: "UI is
+final for now." Checked-out branch: `r17-next` (from main, holds only this handoff). `r16-fun-ui`, `r16-violet`,
+`r16-saffron` stay local, superseded; `r16-mono` is merged.
+What #41 contains:
 - Staff (owner/admin/teacher): black-and-white "mono" look — compact top bar replaces the sidebar (portal
   `layout.tsx`: `<header className="side">`, name · role + Sign out on the right), Inter text, IBM Plex Mono labels and
   numbers, white boxed sections with small uppercase mono titles, full screen width (founder: "remove blank space on
@@ -171,17 +175,18 @@ LOCAL ONLY, never pushed (same founder rule as all `r16-*`: do NOT push or merge
   typecheck` ok, `npm test` 195/195 passed, `npm run build -w @examedge/web` ok; browser check on `next start`
   (launch config `web-prod-3005`) at 1280/1600 and 375 px: student Home, My progress, teacher Dashboard / Tests /
   People / Question bank / Subjects / student page, no page-level horizontal scroll at 375.
-- **Unverified:** E2E + axe (CI only; branch not pushed). Owner Bill page in the new look (no `.test` owner login;
+- E2E + axe: PASSED in CI run 40065062694. **Unverified:** owner Bill page in the new look (no `.test` owner login;
   founder signs in with Google) — ask the founder to look. Test runner, results, sign-in, check page, Reviews, Contest
   in the new look not clicked through. E2E `usage.spec.ts` expects the tokens figure text `/^[\d,]+ tokens$/` — kept
   (`1,234 <small>tokens</small>`).
 - Pricing (no code): founder's working plan saved in `docs/PRICING_PLAN.md` (`041cd8b`): Mini ≤150 ₹19,999, Basic
   ≤300 ₹34,999, Pro ≤600 ₹59,999, Scale 1,000+ ₹89/student (floor ₹79), yearly = pay 10 get 12, budget = students ×
   $0.55–0.60 + $31, 15 doubts / 5 generations a day. Founder: "don't build anything for now, I will handle this."
-1. Ask the founder for feedback on `r16-mono` (or more friend screenshots). Fix what they name on `r16-mono`, rebuild
-   and restart `web-prod-3005` after CSS changes (a rebuild under a running `next start` serves unstyled pages).
-2. Optional, only if the founder wants it: Dashboard number cards as the same `.stats` band.
-3. Before any PR of `r16-mono` (only on the founder's word): merge main (`707294d`), `npm run check`, push, PR, CI.
+1. Ask the founder what to build next. Open ideas (founder's word needed): plans table + Bill page showing plan,
+   student count, monthly / yearly price (design explained in session 48, nothing built; prices in
+   docs/PRICING_PLAN.md — founder said "I will handle this"); Dashboard number cards as the `.stats` band; go-live
+   accounts (Phase 10 cloud, needs founder approval and money).
+2. New work goes on `r17-next` (or a new branch from main); push it and open a PR when green.
 - Demo logins (localhost, "Demo user email", no password): students `student1@newtown.test` (Riya Sharma),
   `student2@newtown.test` (Aman Singh, has results), `priya.sharma@`, `rohan.mehta@`, `sneha.patel@`,
   `vikram.singh@newtown.test`; teachers `teacher.jee@newtown.test`, `teacher.neet@newtown.test`; owner = founder's Google.
