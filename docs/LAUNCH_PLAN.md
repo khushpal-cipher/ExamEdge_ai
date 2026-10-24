@@ -100,4 +100,13 @@ Never use a "no KYC" payment repo: every real Indian gateway needs KYC, and unkn
   search the name, add 1 year (or 2–3), pay ≈ ₹500–1,200; skip extras (hosting, email, website builder, SSL); turn on
   auto-renew and two-step login; check the renewal price, not only the first-year offer. Then Claude moves the
   nameservers to Vercel at deploy.
+- **Legal documents (step 11; text from a lawyer or approved template, Claude builds the pages) [U: confirm with the lawyer]:**
+  website pages — Privacy Policy (what data, why, sub-processors Anthropic/Supabase/Vercel/Railway/Resend/Google,
+  data outside India, retention and deletion, essential cookies only, grievance officer contact), Terms of Service
+  (subscription, pilot, prices, "one account = one coaching", acceptable use, AI answers can be wrong, the coaching owns
+  rights to uploaded notes, suspension), Refund & Cancellation Policy, Contact Us (name, address, email, phone),
+  Service delivery policy (online service, access on payment; Razorpay asks for a "shipping" policy). With each
+  coaching — Data Processing Agreement (the coaching decides on students' data, ExamEdge processes it; DPDP Act 2023).
+  For students — parental consent for under-18s (DPDP Act §9) shown in the app and recorded (`consent_records` table
+  exists); no ads or tracking of children. Business papers (not pages): Udyam, PAN, bank account, GST later, invoices.
 
