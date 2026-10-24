@@ -10,7 +10,7 @@ Status key: ⬜ not started · 🟨 started · ✅ done
 
 | # | Step | What it means | Model / Effort | Status |
 |---|---|---|---|---|
-| 1 | Free pilot | 14 days free, 10 students, owner + 3 teachers, $10 AI for the whole pilot. Ask "How many students do you have?" when it is created. After day 14: AI off, app read-only, banner "Your pilot has ended". Founder can extend it. Data kept 30 days, then deleted by hand. | Sonnet / Medium | ⬜ (a first draft was undone on 2026-10-24 at the founder's request) |
+| 1 | Free pilot | 7 days free, 10 students, any number of teachers/admins, $10 AI for the whole pilot (teachers share it). Ask "How many students do you have?" when it is created. After day 7: AI off, app read-only, banner "Your pilot has ended". Founder can extend it. Data kept 30 days, then deleted by hand. | Sonnet / Medium | ⬜ (a first draft was undone on 2026-10-24 at the founder's request) |
 | 2 | Hide Audio + Video overview | Off for real users (`OVERVIEWS_BETA`), on locally for testing. Server also refuses them. | Haiku / Low | ⬜ |
 | 3 | Price per account | Every account charged (students, teachers, admins; owner free): first 300 at ₹200, 301–1,000 at ₹120, above 1,000 at ₹89, slabs like income tax; minimum 30 accounts (₹6,000); yearly = pay 10 get 12; +18% GST (PRICING_PLAN §2a). Only the platform admin edits prices. | Opus / High | ⬜ |
 | 4 | Limits follow the count | AI budget = accounts × $0.60 + $31 (stop AI on), 15 doubts / 5 study tools a day per student, 30 doubts a day per teacher, storage 1 GB per 50 accounts — all set automatically. | Sonnet / Medium | ⬜ |
@@ -61,3 +61,29 @@ Never use a "no KYC" payment repo: every real Indian gateway needs KYC, and unkn
 
 ## Founder answers still needed
 1. Yes / no to payment by UPI by hand (step 7).
+
+## Session 49 notes (founder Q&A, 2026-10-24/25)
+
+- **Audio/Video overview (later, local Beta):** NotebookLM-style = Claude writes a two-host conversation → a real
+  voice (Gemini TTS or Sarvam Bulbul) reads it → one MP3 stored once per chapter and language → player with seek,
+  ±10 s, speed, download. Video = Claude writes scenes with SVG drawings that draw themselves, animated in the browser
+  in time with the MP3 (no render server); a real MP4 via Remotion only later (licence [U]). Not real AI video models
+  (wrong formulas, high cost). Cost [E]: ≈ ₹20 per audio, ≈ ₹25 per video, made once.
+- **How `newtown.examedgeai.in` works:** owning `examedgeai.in` gives every name under it for free. One wildcard DNS
+  record `*.examedgeai.in` → Vercel (needs Vercel nameservers [U]); Vercel adds https for each; the app reads
+  `newtown` from the address and finds that institute. A new coaching = one row, no DNS change.
+- **The Mac can be off:** Vercel, Supabase and Railway run the site; the Mac is only for building and testing.
+- **Payment by UPI by hand (step 7):** owner picks a price → your UPI QR or "Pay with UPI" link with the amount →
+  pays in GPay/PhonePe → types the 12-digit UTR → you get an email + "Payments to check" → you match it in the bank
+  app → Approve (paid, limits set, "paid until" date, receipt) or Reject with a reason. Razorpay later automates it.
+  Never use a "no KYC" payment repo: every real Indian gateway needs KYC.
+- **Razorpay business type:** Individual if there is no registration yet; better: free Udyam registration
+  (udyamregistration.gov.in, Aadhaar + PAN) → Sole Proprietorship. Razorpay checks the live website and its Privacy,
+  Terms and Refund pages, so approval may wait for go-live. Category: education / SaaS subscription. Ask the CA about GST.
+- **Business email:** Zoho Mail free plan (up to 5 addresses [U], web + phone app, opens in Chrome) — no Google
+  Workspace needed. Addresses: `khushpal@`, `hello@`, `support@examedgeai.in`. Needs the domain first. Use it for
+  Razorpay, Vercel, Supabase and Anthropic so the business owns them. App emails come from `noreply@examedgeai.in`
+  through Resend (set up at deploy, works alongside Zoho).
+- **"Check the real cost after the first pilot month":** prices rest on estimates (≈ 4 doubts a day); after a real
+  pilot, read the real AI cost per account on the Bill page and raise or lower prices/budgets if it differs.
+

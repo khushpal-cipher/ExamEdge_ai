@@ -55,7 +55,7 @@ AI + hosting share), with more hosting at 4,000.
 4. Yearly at a small count, then growth → yearly covers the count on the day they pay; extras billed every 3 months.
 5. Small coachings joining as one to reach the ₹89 slab → Terms: "one account = one coaching"; the founder creates
    every institute.
-6. A new free pilot every 14 days → one pilot per coaching; the founder checks name and phone when creating it.
+6. A new free pilot every 7 days → one pilot per coaching; the founder checks name and phone when creating it.
 7. Not paying → pay at the start of the month; read-only after a short grace.
 8. Removing accounts before the bill date → billed on the highest count of the month.
 
@@ -140,7 +140,7 @@ The AI stops for that coaching until the 1st. To avoid angry students:
 
 ## 10. Free pilot (founder's idea, 2026-10-24, not built)
 - **Who:** a new coaching starts with status `pilot` (the column already exists: `pilot|active|suspended|offboarding`).
-- **Free for 14 days**, **10 students** (invite limit), the owner plus up to 3 teachers.
+- **Free for 7 days** (founder, 2026-10-25; was 14), **10 students** (invite limit), **any number of teachers and admins**.
 - **Same AI as the paid plans** (cheap Claude Haiku for most features), not the free Gemini key: Gemini's free tier
   uses the content to improve Google's products (ADR-051 forbids real student data on it), its shared rate limits
   break when several pilots run together, and a weaker pilot AI would not sell the real product.
@@ -148,12 +148,12 @@ The AI stops for that coaching until the 1st. To avoid angry students:
 - **How many students they have:** asked once when the pilot is created ("How many students do you have?", typed by
   you or by the owner). That number picks the suggested plan (section 3). After they pay, the app counts real
   student accounts and the 10% rule (section 6) applies, so a wrong guess corrects itself.
-- **Day 14:** AI switches off and the app becomes read-only with a banner "Your pilot has ended. Choose a plan to
+- **Day 7:** AI switches off and the app becomes read-only with a banner "Your pilot has ended. Choose a plan to
   continue." Data is kept for 30 days. You can extend a pilot by hand.
 - **Paying:** the owner sees "Choose a plan" on the Bill page during and after the pilot, picks monthly or yearly
   and pays (Razorpay). On success the status becomes `active`, the plan's limits fill in, the 10-student cap is lifted.
   You can still switch a coaching to `active` by hand (for example cash or bank transfer).
-- **Build order (only on the founder's word):** 1) pilot rules (10-student cap, end date, read-only after 14 days,
+- **Build order (only on the founder's word):** 1) pilot rules (10-student cap, end date, read-only after 7 days,
   $10 budget); 2) Bill page with plan, student count, monthly / yearly price, "Choose a plan"; 3) Razorpay in
   **test mode** (fake cards, no money, no KYC needed to build); 4) go live after Razorpay KYC and the legal pages.
 - **Still needed before real students:** the legal opinion on minors' data (Q-01) applies to pilots too.

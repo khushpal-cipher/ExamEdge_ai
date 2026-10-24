@@ -189,7 +189,8 @@ What #41 contains:
   $20 Claude credits); only paid AI key = Anthropic (Haiku / Sonnet / Opus); voice for audio/video stays the free
   browser voice (Sarvam later, founder's decision). Founder: nothing to build yet.
 - Session 49 (2026-10-24/25, docs only, no code): founder's launch order saved in `docs/LAUNCH_PLAN.md`; pricing v2 =
-  price per account in slabs, teachers charged too (ADR-057, `docs/PRICING_PLAN.md` §2a). Audio/video overviews stay
+  price per account in slabs, teachers charged too (ADR-057, `docs/PRICING_PLAN.md` §2a). Pilot changed to 7 days,
+  10 students, unlimited teachers/admins. All session Q&A saved in LAUNCH_PLAN "Session 49 notes". Audio/video overviews stay
   local Beta (hidden from real users, LAUNCH_PLAN step 2). Payment by UPI checked by hand until Razorpay (step 7,
   founder's yes pending). A first pilot-rules migration was written, applied locally, then fully undone at the
   founder's request (local institutes back to `pilot`, migration row removed). Nothing to build until the founder says go.
