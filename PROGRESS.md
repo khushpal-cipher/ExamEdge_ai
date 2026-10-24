@@ -182,6 +182,12 @@ What #41 contains:
 - Pricing (no code): founder's working plan saved in `docs/PRICING_PLAN.md` (`041cd8b`): Mini ≤150 ₹19,999, Basic
   ≤300 ₹34,999, Pro ≤600 ₹59,999, Scale 1,000+ ₹89/student (floor ₹79), yearly = pay 10 get 12, budget = students ×
   $0.55–0.60 + $31, 15 doubts / 5 generations a day. Founder: "don't build anything for now, I will handle this."
+- Session 48 Q&A (no code): founder's free-pilot idea and launch money saved in `docs/PRICING_PLAN.md` §10–11
+  (`acd8569`): pilot = status `pilot`, 14 days, 10 students, same Claude AI (not free Gemini: ADR-051 data rule),
+  $10 budget, read-only after day 14, student count asked at pilot start; then Bill page "Choose a plan" + Razorpay
+  in test mode. First 2 months with no clients ≈ ₹10–15k (domain, Vercel Pro, Supabase free→Pro, Railway Hobby,
+  $20 Claude credits); only paid AI key = Anthropic (Haiku / Sonnet / Opus); voice for audio/video stays the free
+  browser voice (Sarvam later, founder's decision). Founder: nothing to build yet.
 1. Ask the founder what to build next. Open ideas (founder's word needed): plans table + Bill page showing plan,
    student count, monthly / yearly price (design explained in session 48, nothing built; prices in
    docs/PRICING_PLAN.md — founder said "I will handle this"); Dashboard number cards as the `.stats` band; go-live
