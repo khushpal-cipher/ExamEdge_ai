@@ -194,6 +194,8 @@ What #41 contains:
   local Beta (hidden from real users, LAUNCH_PLAN step 2). Payment by UPI checked by hand until Razorpay (step 7,
   founder's yes pending). A first pilot-rules migration was written, applied locally, then fully undone at the
   founder's request (local institutes back to `pilot`, migration row removed). Nothing to build until the founder says go.
+  2026-10-25: founder said yes to UPI payment by hand and that step 1 (pilot) is next, but "don't build it now".
+  Plan review fixes 1–10 are in LAUNCH_PLAN "Fixes found in the plan review".
 1. Ask the founder what to build next. Open ideas (founder's word needed): plans table + Bill page showing plan,
    student count, monthly / yearly price (design explained in session 48, nothing built; prices in
    docs/PRICING_PLAN.md — founder said "I will handle this"); Dashboard number cards as the `.stats` band; go-live

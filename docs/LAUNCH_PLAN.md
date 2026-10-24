@@ -16,7 +16,7 @@ Status key: ⬜ not started · 🟨 started · ✅ done
 | 4 | Limits follow the count | AI budget = accounts × $0.60 + $31 (stop AI on), 15 doubts / 5 study tools a day per student, 30 doubts a day per teacher, storage 1 GB per 50 accounts — all set automatically. | Sonnet / Medium | ⬜ |
 | 5 | Bill page | Account count (students + teachers), this month's price by slab, monthly vs yearly with "save ₹…", AI used %, next bill date, "Pay now". | Sonnet / Medium | ⬜ |
 | 6 | Billing rules | Pay at the start of the month; billed on the highest count of the month; yearly covers the count on the day they pay, extras billed every 3 months; one pilot per coaching. | Opus / High | ⬜ |
-| 7 | Payment by UPI (by hand) | Owner sees the amount, pays to the founder's UPI QR / "Pay with UPI" link, types the UTR. Founder gets an email + "Payments to check", matches it in the bank app, presses Approve (status `active`, limits set, "paid until", receipt) or Reject with a reason. | Sonnet / Medium | ⬜ (founder's yes pending) |
+| 7 | Payment by UPI (by hand) | Owner sees the amount, pays to the founder's UPI QR / "Pay with UPI" link, types the UTR. Founder gets an email + "Payments to check", matches it in the bank app, presses Approve (status `active`, limits set, "paid until", receipt) or Reject with a reason. | Sonnet / Medium | ⬜ (founder said yes, 2026-10-25) |
 | 8 | Renewal | Reminder email + banner before "paid until" ends; read-only after a few days' grace if unpaid. | Sonnet / Medium | ⬜ |
 | 9 | Budget warning + top-ups | Warn the owner at 80% of the AI budget; top-up pack ₹2,500 for $20 more AI (paid the same way as step 7). | Sonnet / Medium | ⬜ |
 | 10 | Public home page | `examedgeai.in`: what ExamEdge does, prices, "Book a demo" / contact (`support@examedgeai.in`), links to the legal pages; one H1, title and description, robots.txt + sitemap. Razorpay and coachings look here first. | Sonnet / Medium | ⬜ |
@@ -63,7 +63,27 @@ Never use a "no KYC" payment repo: every real Indian gateway needs KYC, and unkn
 - Lower AI cost: fewer doubts to the expensive model, reuse notes across students, batch mode (50% off) for teacher jobs.
 
 ## Founder answers still needed
-1. Yes / no to payment by UPI by hand (step 7).
+None. UPI by hand = yes (2026-10-25). Step 1 is next; build it only when the founder says "build".
+
+## Fixes found in the plan review (2026-10-25, to build with the step in brackets)
+1. **GST only after registration [3, 5, 7]:** without a GST number we must not add 18% GST. Show "GST extra when
+   applicable" and add GST only once the founder sets a GST number on the platform page.
+2. **Real AI must be switched on [16]:** today a missing `AI_PROVIDER` silently means fake AI. On the live site the app
+   must refuse to start unless `AI_PROVIDER=anthropic` (and never `gemini`).
+3. **Same UTR twice [7]:** a transaction number can be used only once, and the amount must match the bill.
+4. **Waiting for Approve [1, 7, 8]:** a coaching that has typed a UTR keeps full access until the founder approves or
+   rejects, so a pilot ending on day 7 does not lock them out while the payment is checked.
+5. **Read-only never mid-test [1, 8]:** pilot end and unpaid read-only start at midnight (IST), and a test already
+   started can still be submitted; the owner is warned 3 days before.
+6. **Budget follows growth [4]:** the AI budget is recalculated whenever the account count changes, not only on the
+   1st, so a coaching adding 200 students mid-month does not run out of AI.
+7. **Price changes [3]:** a coaching keeps its price until its next renewal when the founder changes prices.
+8. **Refund rule for yearly [11]:** decide what happens when a yearly coaching cancels (for example: no refund, access
+   until the year ends).
+9. **Second platform admin [18]:** only the founder can approve payments; if the founder's phone (MFA) is lost, nobody
+   can. Give the founder's friend platform-admin access and save the authenticator backup codes.
+10. **Data deletion reminder [1]:** the platform page lists ended pilots older than 30 days so their deletion is not
+    forgotten.
 
 ## Session 49 notes (founder Q&A, 2026-10-24/25)
 
