@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-23 (session 47, handoff)
+Last updated: 2026-10-24 (session 48, handoff)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -148,7 +148,48 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 48)
+## Next exact action (session 49)
+**State (2026-10-24, end of session 48):** main = `707294d` (unchanged, CI green). **Checked-out branch: `r16-mono` —
+LOCAL ONLY, never pushed (same founder rule as all `r16-*`: do NOT push or merge until the founder says so).**
+`r16-mono` = `r16-fun-ui` + the founder's friend's two concepts (session 48):
+- Staff (owner/admin/teacher): black-and-white "mono" look — compact top bar replaces the sidebar (portal
+  `layout.tsx`: `<header className="side">`, name · role + Sign out on the right), Inter text, IBM Plex Mono labels and
+  numbers, white boxed sections with small uppercase mono titles, full screen width (founder: "remove blank space on
+  sides"; platform page width cap removed too).
+- Students: same layout as a retro desktop window (`.shell[data-look='retro']`): striped title bar with the institute
+  name, 2 px black borders, grey offset shadows, Silkscreen bitmap headings/labels/buttons, section `h2` = window title
+  bar. Student Home rebuilt to the mock: greeting + "N tests coming up" + batch badge, 4-number band (streak, XP, level
+  bar, overall rank "of N" from a `batch_standings` count), "Today's goal" window (0/3 + pixel hearts), Upcoming tests,
+  My progress (#rank + %), letter subject tiles. Removed from Home: 7-day strip, ticker, at-a-glance hero, results
+  list (`week()` in `lib/streak.ts` stays, unit-tested).
+- Founder follow-ups done: status pills = coloured text + dot only, slightly brighter (`--good #15803d`, `--warn-ink
+  #9a6206`, `--bad #c2362a`, Draft `#66666d`, all AA ≥ 5:1); padding inside every badge; Bill page numbers and the
+  progress Summary (one band per batch, batch name above when >1) use the ruled `.stats` band; stat labels wrap.
+- Fonts in `app/layout.tsx`: Inter, IBM_Plex_Mono, Silkscreen, Source_Serif_4 (Anton / Space_* removed). All theme CSS
+  is the "Mono theme" + "Retro" block at the END of `globals.css` (the Space theme block was replaced).
+- Evidence (2026-10-23/24, `r16-mono` up to `42a557c`): `npm run format:check` ok, `npm run lint` ok, `npm run
+  typecheck` ok, `npm test` 195/195 passed, `npm run build -w @examedge/web` ok; browser check on `next start`
+  (launch config `web-prod-3005`) at 1280/1600 and 375 px: student Home, My progress, teacher Dashboard / Tests /
+  People / Question bank / Subjects / student page, no page-level horizontal scroll at 375.
+- **Unverified:** E2E + axe (CI only; branch not pushed). Owner Bill page in the new look (no `.test` owner login;
+  founder signs in with Google) — ask the founder to look. Test runner, results, sign-in, check page, Reviews, Contest
+  in the new look not clicked through. E2E `usage.spec.ts` expects the tokens figure text `/^[\d,]+ tokens$/` — kept
+  (`1,234 <small>tokens</small>`).
+- Pricing (no code): founder's working plan saved in `docs/PRICING_PLAN.md` (`041cd8b`): Mini ≤150 ₹19,999, Basic
+  ≤300 ₹34,999, Pro ≤600 ₹59,999, Scale 1,000+ ₹89/student (floor ₹79), yearly = pay 10 get 12, budget = students ×
+  $0.55–0.60 + $31, 15 doubts / 5 generations a day. Founder: "don't build anything for now, I will handle this."
+1. Ask the founder for feedback on `r16-mono` (or more friend screenshots). Fix what they name on `r16-mono`, rebuild
+   and restart `web-prod-3005` after CSS changes (a rebuild under a running `next start` serves unstyled pages).
+2. Optional, only if the founder wants it: Dashboard number cards as the same `.stats` band.
+3. Before any PR of `r16-mono` (only on the founder's word): merge main (`707294d`), `npm run check`, push, PR, CI.
+- Demo logins (localhost, "Demo user email", no password): students `student1@newtown.test` (Riya Sharma),
+  `student2@newtown.test` (Aman Singh, has results), `priya.sharma@`, `rohan.mehta@`, `sneha.patel@`,
+  `vikram.singh@newtown.test`; teachers `teacher.jee@newtown.test`, `teacher.neet@newtown.test`; owner = founder's Google.
+- Dev servers: another chat's `next dev` holds :3000 for this folder (a second `next dev` refuses to start); this
+  session used `npm run build -w @examedge/web` + preview `web-prod-3005` (`next start -p 3005`). The old :3002
+  `next start` may serve stale/unstyled pages after rebuilds.
+
+## Next exact action (session 48) — history
 **State (2026-10-23, end of session 47):** PR #40 MERGED (main = `707294d`, CI green). Nothing failing on main.
 **Checked-out branch: `r16-fun-ui` — LOCAL ONLY, never pushed (founder: "commit locally so if I don't like it I can use
 the current version"). Do NOT push or merge any `r16-*` branch until the founder says so.**

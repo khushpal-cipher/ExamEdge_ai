@@ -112,6 +112,10 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
   founder's reference, plus violet/saffron accent trials — all on LOCAL branches `r16-fun-ui`, `r16-violet`,
   `r16-saffron` (never push or merge them without the founder's word). A friend of the founder will suggest the UI next:
   see PROGRESS.md "Next exact action (session 48)".
+- Session 48 (2026-10-23/24): built the founder's friend's UI concepts on LOCAL branch `r16-mono` (from `r16-fun-ui`):
+  black-and-white top-bar look for staff, retro desktop-window look for students, full width, brighter status text,
+  ruled number bands. Never push or merge `r16-*` without the founder's word. Founder's pricing plan (no code) is in
+  docs/PRICING_PLAN.md. Next: PROGRESS.md "Next exact action (session 49)".
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full
