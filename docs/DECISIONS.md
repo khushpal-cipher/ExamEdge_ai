@@ -702,3 +702,13 @@ sitemap or robots.txt).
 - **How:** CSS only plus small markup changes (`(portal)/layout.tsx` header, `home/page.tsx`, Bill and progress number
   bands); fonts Inter, IBM Plex Mono, Silkscreen, Source Serif 4 via `next/font/google` (self-hosted at build, no new
   dependency). Students are scoped by `.shell[data-look='retro']`.
+
+### ADR-057 Price per account in slabs, teachers charged too (founder, 2026-10-25, not built)
+- **Decision (founder):** replaces the Mini/Basic/Pro/Scale plans with one price per account per month: first 300 at
+  ₹200, 301–1,000 at ₹120, above 1,000 at ₹89, applied like income-tax slabs; minimum 30 accounts; every account is
+  charged (students, teachers, admins), only the owner is free; yearly = pay 10 months, get 12; GST on top.
+- **Why:** no jump between plans (301 students pay for 301), and charging staff closes the "students added as
+  teachers" loophole. The AI budget (accounts × $0.60 + $31, hard stop on) caps our AI cost below the price.
+- **Details and the loophole list:** docs/PRICING_PLAN.md §2a. Order of work: docs/LAUNCH_PLAN.md steps 3–8.
+- **Risk:** prices are estimates [E], not tested with coachings; check real cost per account after the first pilot month.
+

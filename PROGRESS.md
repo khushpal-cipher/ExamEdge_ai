@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-24 (session 48, PR #41 merged)
+Last updated: 2026-10-25 (session 49, launch + pricing plan docs)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -188,6 +188,11 @@ What #41 contains:
   in test mode. First 2 months with no clients ≈ ₹10–15k (domain, Vercel Pro, Supabase free→Pro, Railway Hobby,
   $20 Claude credits); only paid AI key = Anthropic (Haiku / Sonnet / Opus); voice for audio/video stays the free
   browser voice (Sarvam later, founder's decision). Founder: nothing to build yet.
+- Session 49 (2026-10-24/25, docs only, no code): founder's launch order saved in `docs/LAUNCH_PLAN.md`; pricing v2 =
+  price per account in slabs, teachers charged too (ADR-057, `docs/PRICING_PLAN.md` §2a). Audio/video overviews stay
+  local Beta (hidden from real users, LAUNCH_PLAN step 2). Payment by UPI checked by hand until Razorpay (step 7,
+  founder's yes pending). A first pilot-rules migration was written, applied locally, then fully undone at the
+  founder's request (local institutes back to `pilot`, migration row removed). Nothing to build until the founder says go.
 1. Ask the founder what to build next. Open ideas (founder's word needed): plans table + Bill page showing plan,
    student count, monthly / yearly price (design explained in session 48, nothing built; prices in
    docs/PRICING_PLAN.md — founder said "I will handle this"); Dashboard number cards as the `.stats` band; go-live

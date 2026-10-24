@@ -1,6 +1,6 @@
 # ExamEdge AI — Pricing Plan
 
-Status: **Founder's working plan, not built** · Last updated: 2026-10-24 · All costs are **estimates [E]** from
+Status: **Founder's working plan, not built** · Last updated: 2026-10-25 · All costs are **estimates [E]** from
 [COST_MODEL.md](COST_MODEL.md) ($1 = ₹88). Check them against real usage after the first pilot month.
 
 ## 1. The idea in one line
@@ -12,7 +12,57 @@ Charge **per student**, give each coaching an **AI budget that grows with its st
 - Plus about **₹2,700 a month per coaching** for teachers' AI (notes, AI tests, reading scanned pages).
 - Plus servers: about ₹2,000 for a small coaching, rising to ₹15,000+ for 4,000 students.
 
-## 3. The plans (prices before 18% GST)
+## 2a. Pricing v2: price per account, in slabs (founder, 2026-10-25, ADR-057) — replaces §3–§6
+
+**Every account is charged: students, teachers and admins.** Only the owner's own account is free.
+
+| Accounts (slab) | Price per account per month |
+|---|---|
+| first 300 | ₹200 |
+| 301 to 1,000 | ₹120 |
+| above 1,000 | ₹89 |
+
+- **Slabs work like income tax:** each rate applies only to the accounts inside that slab, so adding an account
+  always costs more, never less. 301 accounts = 300 × ₹200 + 1 × ₹120 = ₹60,120.
+- **Minimum charge: 30 accounts (₹6,000 a month)**, even if they have fewer (below about 26 we lose money).
+- **Yearly:** pay 10 months, get 12, for the account count on the day they pay. Extra accounts are billed every 3 months.
+- **GST 18% on top** of every price.
+- **Pay at the start of the month** for the current count; accounts added during the month go on the next bill
+  (charged on the **highest** count of the month). Unpaid after a few days' grace → app read-only.
+
+| Accounts | Monthly price | Our worst-case cost [E] | Profit |
+|---|---|---|---|
+| 30 (minimum) | ₹6,000 | ≈ ₹5,400 | ≈ ₹600 |
+| 100 | ₹20,000 | ≈ ₹9,400 | ≈ ₹10,600 (53%) |
+| 300 | ₹60,000 | ≈ ₹20,800 | ≈ ₹39,200 (65%) |
+| 600 | ₹96,000 | ≈ ₹38,000 | ≈ ₹58,000 (60%) |
+| 1,000 | ₹1,44,000 | ≈ ₹62,000 | ≈ ₹82,000 (57%) |
+| 4,000 | ₹4,11,000 | ≈ ₹2,51,000 | ≈ ₹1,60,000 (39%) |
+
+Worst-case cost = accounts × ≈ ₹57 (AI budget cap ≈ ₹53 + 2% payment fee) + ≈ ₹3,700 per coaching (teachers'
+AI + hosting share), with more hosting at 4,000.
+
+**Limits, set automatically from the count (no typing by hand):**
+- **Monthly AI budget = accounts × $0.60 + $31**, "Stop AI when the budget is used up" always on. This caps our AI
+  cost below what they pay, so we never lose money on AI.
+- 15 doubts and 5 study tools a day per student; **30 doubts a day per teacher/admin** (staff had no daily limit).
+- Storage: 1 GB per 50 accounts (minimum 5 GB). Background jobs: 2, 3 above 600 accounts, 4 above 1,000, 6 above 3,000.
+
+**Loopholes and fixes:**
+1. Students added as teachers to skip paying → every account is charged, staff too.
+2. 301 accounts cheaper than 300 → slabs work like income tax (above).
+3. One login shared by many students → daily doubt limit now; **later:** one device signed in per account at a time.
+4. Yearly at a small count, then growth → yearly covers the count on the day they pay; extras billed every 3 months.
+5. Small coachings joining as one to reach the ₹89 slab → Terms: "one account = one coaching"; the founder creates
+   every institute.
+6. A new free pilot every 14 days → one pilot per coaching; the founder checks name and phone when creating it.
+7. Not paying → pay at the start of the month; read-only after a short grace.
+8. Removing accounts before the bill date → billed on the highest count of the month.
+
+Not loopholes but worth watching: a few heavy users can use up the shared budget early (80% warning + top-ups);
+a weaker rupee raises our dollar AI cost (review prices yearly).
+
+## 3. The plans (prices before 18% GST) — superseded by §2a
 
 | Plan | Students | Monthly | Per student | Yearly (pay 10 months, get 12) |
 |---|---|---|---|---|
@@ -25,7 +75,7 @@ Charge **per student**, give each coaching an **AI budget that grows with its st
 - Scale above 5,000 students: ₹84 per student. **Never go below ₹79** (profit drops under 30%).
 - Between 601 and 999 students: offer Scale at the 1,000 minimum, or Pro plus extra students at ₹95 each.
 
-## 4. Profit even in the worst case (every student uses the AI fully)
+## 4. Profit even in the worst case (every student uses the AI fully) — superseded by §2a
 
 | Plan | Price | Our cost (AI budget + servers + 2% payment fee) | Profit |
 |---|---|---|---|
@@ -38,7 +88,7 @@ Charge **per student**, give each coaching an **AI budget that grows with its st
 The budget box stops AI spending at a fixed amount, so this is the lowest profit. Most students will not use their
 full share, so real profit should be higher (about 45–60%).
 
-## 5. What to type in each coaching's limits (platform admin → institute → Usage limits)
+## 5. What to type in each coaching's limits (platform admin → institute → Usage limits) — superseded by §2a
 
 | Box | Mini | Basic | Pro | Scale |
 |---|---|---|---|---|
@@ -56,7 +106,7 @@ Why these numbers:
 - **The monthly budget protects our money.** It is about $0.60 per student plus $31 for teachers, which covers
   about 4 doubts per student per day on average, more than most will use.
 
-## 6. When a coaching grows (for example 140 → 280 students)
+## 6. When a coaching grows (for example 140 → 280 students) — superseded by §2a
 1. The app counts the real student accounts; we never rely on the number the coaching tells us.
 2. Allow **10% extra** (Mini up to 165, Basic 330, Pro 660). After that, ask them to move to the next plan.
 3. **Monthly plan:** the new plan starts from the next bill.
