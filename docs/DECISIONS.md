@@ -690,3 +690,15 @@ sitemap or robots.txt).
 - **Step-by-step limit removed from the platform limits form (founder, 2026-10-20):** the student chat box lost its
   step-by-step toggle in ADR-051, so the setting did nothing. The form and `updateQuotas` no longer touch
   `student_daily_premium_messages`; the column, its default (5) and the API's `premium` flag stay (no migration).
+
+### ADR-056 Mono UI for staff, retro window UI for students (founder, 2026-10-24)
+- **Decision:** replaces the ADR-049 workbook look (and the session 47 space theme trials) with the founder's friend's
+  two concepts, approved as final by the founder: staff (owner/admin/teacher) get a black-and-white look with a compact
+  top bar instead of the sidebar; students get the same layout as a retro desktop window (square windows, 2 px black
+  borders, grey offset shadows, bitmap headings and labels). Full screen width. Colour only for status (good / warn /
+  bad text, slightly brighter than ADR-049, all ≥ 5:1 on white).
+- **Student Home** keeps the session 47 streak / XP / level / daily goal (`lib/streak.ts`, no DB change): one band of
+  four numbers, a "Today's goal" window with pixel hearts, upcoming tests, ranks, letter subject tiles.
+- **How:** CSS only plus small markup changes (`(portal)/layout.tsx` header, `home/page.tsx`, Bill and progress number
+  bands); fonts Inter, IBM Plex Mono, Silkscreen, Source Serif 4 via `next/font/google` (self-hosted at build, no new
+  dependency). Students are scoped by `.shell[data-look='retro']`.

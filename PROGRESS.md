@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-19 (session 43, handoff)
+Last updated: 2026-10-24 (session 48, handoff)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -45,6 +45,9 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-23 | PR #40 merged (founder: "push #40") | CI green on `95abc4a` (check incl. E2E + secrets), `gh pr merge 40 --squash` → main `707294d`. Founder's friend will suggest the UI next; `r16-fun-ui` / `r16-violet` / `r16-saffron` stay local, unmerged. |
+| 2026-10-23 | Session 47b: founder liked the gamified Home but said the bright look felt AI-made; sent a Squarespace space template as the look they like. LOCAL branch `r16-fun-ui` | "Play theme" CSS block replaced by a "Space theme" block (end of `globals.css`): dark starfield page (CSS gradients), neon lime `#d4ff6b`, Anton uppercase titles, Space Mono uppercase labels/nav/buttons, Space Grotesk text, pill buttons (lime fill / lime outline), hairline cards, lime goal ring, scrolling ticker on Home (`aria-hidden`, stops with reduced motion). Contrast by script: muted `#9db0c2` ≥ 7.1 on all dark surfaces, lime ≥ 12.4. Evidence (2026-10-23): lint + forbidden, typecheck PASS; `npm test` 195/195; `npm run build` PASS; headless Chromium on the production build (`next start`, :3002): student Home 1280 + 375 (scrollWidth = viewport), subject page, teacher Dashboard + Question bank; 0 page errors. The other chat's `next dev` on :3000 shows a 500 for the new Google fonts (Turbopack "Can't resolve @vercel/turbopack-next/internal/font/google/font") until it is restarted; the build is fine. NOT pushed; E2E/axe not run. Undo: `git checkout d5b4eac` (bright version) or `git checkout r15-next` (old). |
+| 2026-10-23 | Session 47: playful student Home, LOCAL branch `r16-fun-ui` only (founder: "not boring, play with psychology, commit locally so I can go back") | `lib/streak.ts` (streak/week/XP/level from existing activity: own doubts, study tools, test attempts; IST days; no DB change) + `streak.test.ts` 6 tests; Home: greeting by time of day, streak/XP/level pills, daily goal ring (3 actions) + last-7-days strip + one big button, empty rank band hidden, subject tiles coloured with emoji; "Play theme" CSS block at the end of `globals.css` (Nunito font, chunky 3D buttons, flat outlined cards). Evidence (2026-10-23): lint + forbidden, typecheck PASS; `npm test` 195/195; headless Chromium on `next dev` :3000 (newtown, student1) 1280 + 375: scrollWidth = viewport, 0 page errors. NOT pushed, NOT merged; E2E/axe not run. Undo: `git checkout r15-next`. |
 | 2026-10-19 | Tutor answers from general knowledge when no notes match (founder, ADR-050) | `tutor-v4` prompt (full general answer, labelled), Claude request notes "no passages matched", demo provider answers in the same shape; unit test for the old "not found" reply replaced by the new rule (founder changed it). Evidence: `npx vitest run packages/core/src/ai` 102/102; format, lint, typecheck PASS; `npm test` 178/178; `npm run test:int` 28/28; build + check-bundle ok. Browser (founder's `next dev`, student1, probability, 375 px): "Your institute's notes do not cover this yet…" + general paragraph, both labelled "General explanation", 0 page errors; test chat **deleted**. |
 | 2026-10-19 | Smart Study without notes + audio/video overviews (founder, ADR-050), `r13-ui` commit `6132d60` | Founder: study tools must work without teacher notes; add Audio + Video overview with the free browser voice now, paid voice later. Migration `20261114000033_overviews.sql` applied with `supabase migration up` (no reset). Unit test "no sources → nothing reserved" replaced (rule changed by the founder) by general-mode tests for all 6 kinds + "with sources a part without a citation is still rejected". Evidence (2026-10-19): format, lint + forbidden, typecheck PASS; `npm test` 178/178; `npm run test:int` 28/28; `npx supabase test db` Files=26 Tests=1459 PASS (110_studio +3); `npm run build` + check-bundle ok. Headless Chromium on founder's `next dev` :3000 (newtown, student1, maths · probability = 0 notes, 375 + 1280): Summary / Audio / Video overview → `ok=generated`, then `ok=reused`; "General explanation" badge shown; Play → "Part 1 of 3" + Pause/Stop; scrollWidth = viewport; 0 page errors. Spoken audio itself not heard (headless) — **unverified: listen in Chrome/Safari**. 3 test artifacts **deleted**. E2E → CI. |
 | 2026-10-19 | Session 43 on `r13-ui` (PR #35) | `a98d60c` page pass: own 404 page (`app/not-found.tsx`, portal re-export; status stays 404), result-page options as rows, styled file picker. `dcf3383` CI fix: run 39197920047 failed 4 E2E on axe `color-contrast` because the page `rise` animation faded text in → movement only, no assertion changed. `740a016` founder UI refine (ADR-049 refine): raised surfaces, button depth, glow, entry grid, staff phone menu, Google G button, practice/doubt lists as tables (E2E `studio.spec.ts` now checks the table row, same facts), page titles. Evidence (2026-10-19, on `740a016`): format, lint + forbidden, typecheck PASS; `npm test` 163/163; `npm run build` + check-bundle ok. Headless Chromium on the founder's `next dev` :3000 (newtown): student2, teacher.jee, teacher.neet at 375/768/1280, scrollWidth = viewport everywhere, 0 page errors; staff menu at 375/768: opens (links visible), closes on navigation and Escape. Owner view checked with a temporary owner `tmp.owner@newtown.test` (all 3 batches, 4 staff, 2 students, New batch form) → **deleted** (0 tmp users). E2E not run locally (:3000 is the founder's dev) → CI. |
@@ -145,7 +148,76 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 47)
+## Next exact action (session 49)
+**State (2026-10-24, end of session 48):** main = `707294d` (unchanged, CI green). **Checked-out branch: `r16-mono` —
+LOCAL ONLY, never pushed (same founder rule as all `r16-*`: do NOT push or merge until the founder says so).**
+`r16-mono` = `r16-fun-ui` + the founder's friend's two concepts (session 48):
+- Staff (owner/admin/teacher): black-and-white "mono" look — compact top bar replaces the sidebar (portal
+  `layout.tsx`: `<header className="side">`, name · role + Sign out on the right), Inter text, IBM Plex Mono labels and
+  numbers, white boxed sections with small uppercase mono titles, full screen width (founder: "remove blank space on
+  sides"; platform page width cap removed too).
+- Students: same layout as a retro desktop window (`.shell[data-look='retro']`): striped title bar with the institute
+  name, 2 px black borders, grey offset shadows, Silkscreen bitmap headings/labels/buttons, section `h2` = window title
+  bar. Student Home rebuilt to the mock: greeting + "N tests coming up" + batch badge, 4-number band (streak, XP, level
+  bar, overall rank "of N" from a `batch_standings` count), "Today's goal" window (0/3 + pixel hearts), Upcoming tests,
+  My progress (#rank + %), letter subject tiles. Removed from Home: 7-day strip, ticker, at-a-glance hero, results
+  list (`week()` in `lib/streak.ts` stays, unit-tested).
+- Founder follow-ups done: status pills = coloured text + dot only, slightly brighter (`--good #15803d`, `--warn-ink
+  #9a6206`, `--bad #c2362a`, Draft `#66666d`, all AA ≥ 5:1); padding inside every badge; Bill page numbers and the
+  progress Summary (one band per batch, batch name above when >1) use the ruled `.stats` band; stat labels wrap.
+- Fonts in `app/layout.tsx`: Inter, IBM_Plex_Mono, Silkscreen, Source_Serif_4 (Anton / Space_* removed). All theme CSS
+  is the "Mono theme" + "Retro" block at the END of `globals.css` (the Space theme block was replaced).
+- Evidence (2026-10-23/24, `r16-mono` up to `42a557c`): `npm run format:check` ok, `npm run lint` ok, `npm run
+  typecheck` ok, `npm test` 195/195 passed, `npm run build -w @examedge/web` ok; browser check on `next start`
+  (launch config `web-prod-3005`) at 1280/1600 and 375 px: student Home, My progress, teacher Dashboard / Tests /
+  People / Question bank / Subjects / student page, no page-level horizontal scroll at 375.
+- **Unverified:** E2E + axe (CI only; branch not pushed). Owner Bill page in the new look (no `.test` owner login;
+  founder signs in with Google) — ask the founder to look. Test runner, results, sign-in, check page, Reviews, Contest
+  in the new look not clicked through. E2E `usage.spec.ts` expects the tokens figure text `/^[\d,]+ tokens$/` — kept
+  (`1,234 <small>tokens</small>`).
+- Pricing (no code): founder's working plan saved in `docs/PRICING_PLAN.md` (`041cd8b`): Mini ≤150 ₹19,999, Basic
+  ≤300 ₹34,999, Pro ≤600 ₹59,999, Scale 1,000+ ₹89/student (floor ₹79), yearly = pay 10 get 12, budget = students ×
+  $0.55–0.60 + $31, 15 doubts / 5 generations a day. Founder: "don't build anything for now, I will handle this."
+1. Ask the founder for feedback on `r16-mono` (or more friend screenshots). Fix what they name on `r16-mono`, rebuild
+   and restart `web-prod-3005` after CSS changes (a rebuild under a running `next start` serves unstyled pages).
+2. Optional, only if the founder wants it: Dashboard number cards as the same `.stats` band.
+3. Before any PR of `r16-mono` (only on the founder's word): merge main (`707294d`), `npm run check`, push, PR, CI.
+- Demo logins (localhost, "Demo user email", no password): students `student1@newtown.test` (Riya Sharma),
+  `student2@newtown.test` (Aman Singh, has results), `priya.sharma@`, `rohan.mehta@`, `sneha.patel@`,
+  `vikram.singh@newtown.test`; teachers `teacher.jee@newtown.test`, `teacher.neet@newtown.test`; owner = founder's Google.
+- Dev servers: another chat's `next dev` holds :3000 for this folder (a second `next dev` refuses to start); this
+  session used `npm run build -w @examedge/web` + preview `web-prod-3005` (`next start -p 3005`). The old :3002
+  `next start` may serve stale/unstyled pages after rebuilds.
+
+## Next exact action (session 48) — history
+**State (2026-10-23, end of session 47):** PR #40 MERGED (main = `707294d`, CI green). Nothing failing on main.
+**Checked-out branch: `r16-fun-ui` — LOCAL ONLY, never pushed (founder: "commit locally so if I don't like it I can use
+the current version"). Do NOT push or merge any `r16-*` branch until the founder says so.**
+- `r16-fun-ui` (head = this handoff commit; based on `95abc4a` = old r15-next, so it does NOT contain main's squash
+  `707294d`, same content): gamified student Home (`lib/streak.ts` streak/week/XP/level from own doubts, study tools,
+  test attempts, IST days, no DB change; daily goal ring of 3 actions; last-7-days strip; one big Start button; HUD
+  pills; scrolling ticker; subject tiles with emoji) + "Space theme" CSS block at the END of `globals.css` (dark
+  starfield, one accent token `--lime: #d4ff6b`, Anton titles, Space Mono labels, Space Grotesk text; fonts in
+  `app/layout.tsx`). Delete that CSS block to return to the old workbook look.
+- `r16-violet` (`--lime: #b79cff`) and `r16-saffron` (`--lime: #ffb547`, streak coral `#ff7a90`): one-line accent trials.
+  Claude recommended lime (violet = Byju's purple; saffron clashes with warn/streak). Founder has NOT chosen.
+- Older looks: `d5b4eac` = bright "Play" version (Nunito, chunky light buttons); `r15-next` / main = old workbook UI.
+- **Founder: "my friend didn't like the UI, he will be suggesting the UI."** Wait for the friend's suggestions
+  (screenshots/references, which screen and why). Build them on a NEW local branch from `r16-fun-ui` (keep the
+  streak/XP/goal logic, it is look-independent), show screenshots (student Home 1280 + 375) before restyling more.
+- Not done / unverified on `r16-*`: E2E + axe (CI only, branch not pushed), test runner page, results page, sign-in
+  page, owner pages and teacher check page in the new theme; Playwright `toHaveText` on capitalised subject tiles
+  should still pass (CSS `text-transform` does not change textContent) — confirm in CI before any merge.
+- Before any `r16-*` PR: rebase/merge onto main (`707294d`), run the full gate (`npm run check`), then PR.
+- Dev servers: the other chat's `next dev` on :3000 returns 500 for the new Google fonts (Turbopack "Can't resolve
+  @vercel/turbopack-next/internal/font/google/font") until restarted; `npm run build` is fine. This session checked
+  pages on `next start` (launch config `web-prod-3001`, got :3002) — rebuild AND restart it after CSS changes
+  (a rebuild under a running `next start` serves unstyled pages).
+- Demo sign-in for the founder (localhost only): `student1@newtown.test` (Riya Sharma) or `student2@newtown.test` in
+  the "Demo user email" box, no password.
+- Open topics from session 46 still stand (friend as platform admin, go-live accounts need the founder's go-ahead).
+
+## Next exact action (session 47) — history
 **State (2026-10-20, end of session 46):** main = `de1d810`. **PR #40** (`r15-next` → main, https://github.com/khushpal-cipher/ExamEdge_ai/pull/40)
 is OPEN, CI green (2 checks), mergeable, Auto-fix on, waiting for the founder's "merge". It holds: ADR-055 (owner/admin Bill
 page shows AI tokens + requests per feature, ₹ stays, dollars hidden), the step-by-step limit removed from the platform

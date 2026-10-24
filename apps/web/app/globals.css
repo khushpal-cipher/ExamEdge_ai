@@ -1200,8 +1200,7 @@ ul.choices > li {
     border: 0;
     align-self: center;
   }
-  .me b,
-  .me .role {
+  .me > span {
     display: none;
   }
   .me button {
@@ -1541,4 +1540,522 @@ div.part[aria-current='true'] {
 }
 .preview .options .badge {
   margin-left: var(--s2);
+}
+
+/* ===== Mono theme (r16-mono, the founder's friend's concept, 2026-10-23): black and white, a compact top bar
+   instead of the sidebar; type, spacing and hairlines carry the hierarchy, colour only for good / warn / bad.
+   Students get the same layout as a retro desktop window (.shell[data-look='retro'], below). ===== */
+:root {
+  --bg: #f0f0eb;
+  --page: #fafaf8;
+  --card: #ffffff;
+  --soft: #f2f2ef;
+  --chosen: #ebebe7;
+  --ink: #111113;
+  --muted: #5c5c63;
+  --line: #e3e3de;
+  --field: #85858c;
+  --accent: #111113;
+  --accent-hover: #2e2e33;
+  --on-accent: #ffffff;
+  --accent-ink: #111113;
+  --track: #ebebe7;
+  --fill: #111113;
+  --focus: #111113;
+  --r: 12px;
+  --r-sm: 6px;
+  --raised: none;
+  --raised-hover: 0 1px 3px rgb(0 0 0 / 8%);
+  --lift: none;
+  --btn-depth: none;
+}
+body {
+  background: var(--bg);
+}
+h1,
+h2,
+h3,
+.stat b,
+.tile .mark {
+  font-family: var(--font-ui), system-ui, sans-serif;
+}
+h1 {
+  font-size: clamp(28px, 3.4vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+/* Section titles and small labels: uppercase mono, like the concept */
+.main section.card > h2:first-child,
+.main .label,
+.stat > span:first-child,
+.brand small {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+}
+.main section.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: var(--s5);
+}
+.main .grid:has(> section.card) {
+  gap: var(--s5);
+}
+.main .grid > section.card {
+  padding-top: var(--s5);
+}
+.card,
+.tile {
+  background: var(--card);
+}
+.tile:hover {
+  border-color: var(--ink);
+  transform: none;
+}
+.tile .mark {
+  font-family: var(--font-mono), monospace;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.hero {
+  background: var(--ink);
+}
+.stat b {
+  font-family: var(--font-mono), monospace;
+  font-weight: 500;
+  font-size: 28px;
+}
+.meter {
+  height: 4px;
+  border-radius: 2px;
+}
+.badge {
+  border: 1px solid var(--line);
+  background: var(--card);
+  font-family: var(--font-mono), monospace;
+  font-weight: 500;
+}
+.button.big {
+  min-height: 44px;
+  padding: 0 var(--s5);
+}
+.when {
+  font-family: var(--font-mono), monospace;
+  font-size: var(--t-cap);
+  color: var(--muted);
+  white-space: nowrap;
+}
+ul.rows {
+  display: grid;
+}
+ul.rows > li {
+  padding: var(--s4) 0;
+}
+ul.rows > li + li {
+  border-top: 1px solid var(--line);
+}
+ul.rows > li > span:first-child > .small {
+  display: block;
+}
+.rank {
+  font-family: var(--font-mono), monospace;
+  font-size: 22px;
+  font-weight: 500;
+  margin-right: var(--s2);
+}
+
+/* Home: four numbers in one ruled band */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+@media (min-width: 961px) {
+  .stats.three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.stats > .stat {
+  padding: var(--s5);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.brand small {
+  white-space: nowrap;
+}
+.stats .badge {
+  font-size: var(--t-ui);
+}
+.stat b small {
+  font-family: var(--font-ui), sans-serif;
+  font-size: var(--t-ui);
+  font-weight: 500;
+  color: var(--muted);
+}
+.stats > .stat + .stat {
+  border-left: 1px solid var(--line);
+}
+.stats .meter {
+  margin-top: var(--s2);
+}
+/* Daily goal: the one dark band on the page */
+.main section.goal {
+  background: var(--ink);
+  color: var(--on-accent);
+  border-color: var(--ink);
+}
+.goal-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--s5) var(--s6);
+  align-items: center;
+}
+.goal-body h3,
+.goal-body p {
+  margin: 0;
+}
+.goal-count b {
+  font-family: var(--font-mono), monospace;
+  font-size: 44px;
+  font-weight: 500;
+  line-height: 1;
+}
+.goal-count b span {
+  opacity: 0.5;
+}
+.hearts {
+  display: flex;
+  gap: 4px;
+  margin-top: var(--s2);
+}
+.hearts svg {
+  fill: currentColor;
+  opacity: 0.3;
+}
+.hearts svg.on {
+  opacity: 1;
+}
+.main section.goal .muted,
+.main section.goal > h2:first-child {
+  color: #c9c9cf;
+}
+.main section.goal .button.primary {
+  background: #fff;
+  border-color: #fff;
+  color: var(--ink);
+}
+.tile.subject {
+  min-height: 0;
+  justify-content: flex-start;
+}
+/* Subject names typed in lowercase by staff ("physics") still read as names */
+.tile.subject h3 {
+  text-transform: capitalize;
+}
+
+/* Statuses: coloured text and dot on a plain pill, a little brighter than the workbook colours (founder,
+   2026-10-23); all still AA on white */
+:root {
+  --good: #15803d;
+  --warn-ink: #9a6206;
+  --bad: #c2362a;
+  /* Lighter tints keep the brighter text at ≥ 4.6:1 on badges and notices */
+  --good-soft: #f0f8f3;
+  --warn-soft: #fdf5e8;
+  --bad-soft: #fcf1ef;
+}
+td .badge[class]:not(.good, .warn, .bad) {
+  color: #66666d;
+}
+/* Every badge, in tables too, keeps room between its border and its text; the dot sits centred */
+.badge,
+td .badge[class] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  line-height: 1.3;
+}
+td .badge::before {
+  margin: 0;
+  vertical-align: 0;
+}
+/* Desktop: a compact top bar over the full-width page */
+@media (min-width: 801px) {
+  .shell {
+    display: block;
+    min-height: 100vh;
+    background: var(--page);
+  }
+  .side {
+    position: static;
+    height: auto;
+    overflow: visible;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--s5);
+    padding: var(--s3) var(--s5);
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .brand {
+    padding: 0;
+  }
+  .brand > span {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s3);
+  }
+  .logo {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  .switcher label {
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+  }
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+  .nav a {
+    min-height: 36px;
+    padding: 0 var(--s3);
+  }
+  .nav a[aria-current='page'] {
+    box-shadow: none;
+  }
+  .me {
+    margin: 0 0 0 auto;
+    padding: 0;
+    border: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    white-space: nowrap;
+  }
+  .me b {
+    font-size: var(--t-cap);
+  }
+  .me button {
+    width: auto;
+    margin: 0;
+    background: var(--card);
+  }
+  .main {
+    max-width: none;
+    padding: var(--s6) var(--s6) var(--s7);
+    gap: var(--s5);
+  }
+}
+@media (max-width: 960px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .stats > .stat:nth-child(3) {
+    border-left: 0;
+  }
+  .stats > .stat:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
+  .goal-body {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .goal-body > .button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+/* ===== Retro (students): square windows, 2 px black borders, grey offset shadows, bitmap headings and labels,
+   on a fine grey dither. Body text and numbers stay in Inter / Plex Mono so they read easily. ===== */
+.shell[data-look='retro'] {
+  --line: #111113;
+  --r: 0;
+  --r-sm: 0;
+  --drop: 6px 6px 0 #7a7a7a;
+  background: #fff;
+}
+/* Stripes either side of a centred label: the window title bar */
+.titlebar,
+.shell[data-look='retro'] .main section.card > h2:first-child {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  font-family: var(--font-pixel), monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.titlebar::before,
+.titlebar::after,
+.shell[data-look='retro'] .main section.card > h2:first-child::before,
+.shell[data-look='retro'] .main section.card > h2:first-child::after {
+  content: '';
+  flex: 1;
+  height: 11px;
+  background: repeating-linear-gradient(var(--ink) 0 1px, transparent 1px 3px);
+}
+.titlebar {
+  padding: 6px var(--s3);
+  border-bottom: 2px solid var(--ink);
+}
+.titlebar > span {
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.shell[data-look='retro'] .side {
+  border-bottom: 2px solid var(--ink);
+}
+.shell[data-look='retro'] h1,
+.shell[data-look='retro'] .goal h3,
+.shell[data-look='retro'] .nav a,
+.shell[data-look='retro'] button,
+.shell[data-look='retro'] .button,
+.shell[data-look='retro'] .stat > span:first-child,
+.shell[data-look='retro'] .main .label,
+.shell[data-look='retro'] .brand b {
+  font-family: var(--font-pixel), monospace;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.shell[data-look='retro'] h1 {
+  font-size: clamp(22px, 3vw, 30px);
+  letter-spacing: 0.14em;
+}
+.shell[data-look='retro'] .nav a,
+.shell[data-look='retro'] button,
+.shell[data-look='retro'] .button {
+  font-size: 12px;
+}
+.shell[data-look='retro'] .nav a {
+  color: var(--ink);
+}
+.shell[data-look='retro'] .nav a:hover {
+  background: var(--soft);
+}
+.shell[data-look='retro'] .nav a[aria-current='page'] {
+  background: var(--ink);
+  color: #fff;
+}
+.shell[data-look='retro'] .main section.card,
+.shell[data-look='retro'] .stats > .stat,
+.shell[data-look='retro'] .tile {
+  border: 2px solid var(--ink);
+  box-shadow: var(--drop);
+  background: #fff;
+}
+.shell[data-look='retro'] .main section.card {
+  padding: 0 var(--s5) var(--s5);
+}
+.shell[data-look='retro'] .main section.card > h2:first-child {
+  margin: 0 calc(-1 * var(--s5)) var(--s2);
+  padding: 4px var(--s3);
+  border-bottom: 2px solid var(--ink);
+  font-size: 11px;
+}
+.shell[data-look='retro'] .stats {
+  gap: var(--s4);
+  background: none;
+  border: 0;
+}
+.shell[data-look='retro'] .stats > .stat + .stat {
+  border-left: 2px solid var(--ink);
+}
+.shell[data-look='retro'] .stats > .stat:nth-child(n) {
+  border-top: 2px solid var(--ink);
+}
+.shell[data-look='retro'] .meter {
+  height: 10px;
+  border: 2px solid var(--ink);
+  background: #fff;
+}
+.shell[data-look='retro'] .meter > span {
+  background: repeating-linear-gradient(90deg, var(--ink) 0 6px, #fff 6px 8px);
+}
+.shell[data-look='retro'] button,
+.shell[data-look='retro'] .button {
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: #fff;
+  color: var(--ink);
+}
+.shell[data-look='retro'] button.primary,
+.shell[data-look='retro'] .button.primary {
+  background: var(--ink);
+  color: #fff;
+  box-shadow: 4px 4px 0 #7a7a7a;
+}
+.shell[data-look='retro'] button.primary:hover:not(:disabled),
+.shell[data-look='retro'] .button.primary:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #7a7a7a;
+}
+.shell[data-look='retro'] .badge {
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  box-shadow: 3px 3px 0 #7a7a7a;
+}
+/* The daily goal is a plain white window here, not the dark band */
+.shell[data-look='retro'] .main section.goal {
+  color: var(--ink);
+}
+.shell[data-look='retro'] .main section.goal .muted {
+  color: var(--muted);
+}
+.shell[data-look='retro'] .main section.goal .button.primary {
+  background: var(--ink);
+  color: #fff;
+}
+.shell[data-look='retro'] .goal-count b span {
+  opacity: 1;
+  color: #8a8a8a;
+}
+.shell[data-look='retro'] .hearts svg {
+  opacity: 1;
+  fill: #cfcfcf;
+}
+.shell[data-look='retro'] .hearts svg.on {
+  fill: var(--ink);
+}
+.shell[data-look='retro'] .tile .mark {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--ink);
+  background: #fff;
+  font-family: var(--font-pixel), monospace;
+  font-size: 12px;
+}
+.shell[data-look='retro'] .tile:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 4px 4px 0 #7a7a7a;
+}
+.shell[data-look='retro'] .empty {
+  border: 2px dashed var(--ink);
+}
+@media (max-width: 640px) {
+  .goal-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shell[data-look='retro'] .tile:hover,
+  .shell[data-look='retro'] .button.primary:hover {
+    transform: none;
+  }
 }
