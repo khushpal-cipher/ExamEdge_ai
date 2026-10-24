@@ -45,7 +45,7 @@ The founder's Mac does not need to stay on: Vercel, Supabase and Railway run the
 
 | # | Item | When | Cost |
 |---|---|---|---|
-| 20 | Lawyer's opinion on children's data (Q-01) | Before real school students, pilots included | ≈ ₹10,000–30,000 [U] |
+| 20 | Lawyer reviews Privacy, Terms and the consent screen; Data Processing Agreement for coachings (Q-01) | After 2–3 paying coachings, or sooner if a coaching asks (DPDP child rules phase in ≈ 2027 [U]) | ≈ ₹15,000–45,000 [U] |
 | 21 | Business registration + GST via a CA, then Razorpay KYC (ask Razorpay if a sole owner with PAN + bank account is enough [U]) | Before Razorpay | ≈ ₹3,000–15,000 [U] |
 | 22 | Ask 2–3 coachings what they pay today before fixing prices | Before the first paid plan | — |
 | 23 | After the first pilot month: check real AI cost per student, adjust prices and budgets | After the first pilot | — |
@@ -109,4 +109,10 @@ Never use a "no KYC" payment repo: every real Indian gateway needs KYC, and unkn
   coaching — Data Processing Agreement (the coaching decides on students' data, ExamEdge processes it; DPDP Act 2023).
   For students — parental consent for under-18s (DPDP Act §9) shown in the app and recorded (`consent_records` table
   exists); no ads or tracking of children. Business papers (not pages): Udyam, PAN, bank account, GST later, invoices.
+- **When the legal documents are needed (founder, 2026-10-25):** before go-live, ₹0 — Claude drafts Privacy Policy,
+  Terms, Refund & Cancellation, Contact Us and Service delivery pages from a standard template (founder checks address,
+  phone and refund rule; never copy another company's text) and builds a simple parent consent screen. After 2–3
+  paying coachings (or when a coaching asks): lawyer reviews Privacy, Terms and consent ≈ ₹10,000–30,000 [U], and a
+  Data Processing Agreement drafted once and reused ≈ ₹5,000–15,000 [U]. Do it as soon as money comes in: DPDP fines
+  for children's data are large even though most rules apply from ≈ 2027 [U].
 
