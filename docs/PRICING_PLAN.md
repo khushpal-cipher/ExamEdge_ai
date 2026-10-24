@@ -87,3 +87,50 @@ The AI stops for that coaching until the 1st. To avoid angry students:
   (payment gateway). Today the limits are typed by hand on the platform admin page.
 - Before 1,000+ student coachings go live: load test (many students opening a test at once) and the AI
   provider's per-minute limits for our account.
+
+## 10. Free pilot (founder's idea, 2026-10-24, not built)
+- **Who:** a new coaching starts with status `pilot` (the column already exists: `pilot|active|suspended|offboarding`).
+- **Free for 14 days**, **10 students** (invite limit), the owner plus up to 3 teachers.
+- **Same AI as the paid plans** (cheap Claude Haiku for most features), not the free Gemini key: Gemini's free tier
+  uses the content to improve Google's products (ADR-051 forbids real student data on it), its shared rate limits
+  break when several pilots run together, and a weaker pilot AI would not sell the real product.
+- **Pilot AI budget: $10** with "Stop AI when the budget is used up" on. Expected use: about $3–5 per pilot [E].
+- **How many students they have:** asked once when the pilot is created ("How many students do you have?", typed by
+  you or by the owner). That number picks the suggested plan (section 3). After they pay, the app counts real
+  student accounts and the 10% rule (section 6) applies, so a wrong guess corrects itself.
+- **Day 14:** AI switches off and the app becomes read-only with a banner "Your pilot has ended. Choose a plan to
+  continue." Data is kept for 30 days. You can extend a pilot by hand.
+- **Paying:** the owner sees "Choose a plan" on the Bill page during and after the pilot, picks monthly or yearly
+  and pays (Razorpay). On success the status becomes `active`, the plan's limits fill in, the 10-student cap is lifted.
+  You can still switch a coaching to `active` by hand (for example cash or bank transfer).
+- **Build order (only on the founder's word):** 1) pilot rules (10-student cap, end date, read-only after 14 days,
+  $10 budget); 2) Bill page with plan, student count, monthly / yearly price, "Choose a plan"; 3) Razorpay in
+  **test mode** (fake cards, no money, no KYC needed to build); 4) go live after Razorpay KYC and the legal pages.
+- **Still needed before real students:** the legal opinion on minors' data (Q-01) applies to pilots too.
+
+## 11. Money needed to go live [E] ($1 = ₹88; check each price when buying)
+
+**Every month (small start, a few coachings):**
+
+| Item | Cost a month |
+|---|---|
+| Vercel Pro (website) | $20 ≈ ₹1,800 |
+| Supabase Pro + Small compute (database, logins, files; Mumbai) | $40 ≈ ₹3,500 |
+| Railway (background worker) | $5–20 ≈ ₹450–1,800 |
+| Resend (emails; free up to 3,000 a month) | $0–20 ≈ ₹0–1,800 |
+| Claude API (pilots + first paying coachings; capped by each budget) | prepaid, see below |
+| **Total servers** | **≈ $65–100 ≈ ₹6,000–9,000** |
+
+**One-time / upfront:**
+
+| Item | Cost |
+|---|---|
+| Domain `examedge.in` (yearly) | ≈ ₹800–1,200 |
+| Claude API credits to start (covers ~5 pilots + buffer) | $50–100 ≈ ₹4,500–9,000 |
+| Lawyer's opinion on minors' data (Q-01) | ≈ ₹10,000–30,000 [U] |
+| Business registration + GST via a CA (needed for Razorpay KYC and invoices) | ≈ ₹3,000–15,000 [U] (proprietorship cheaper, Pvt Ltd more) |
+| Razorpay | ₹0 setup; about 2% per payment [U] |
+
+**Suggested amount to keep ready: about ₹60,000–80,000** = first 3 months of servers (≈ ₹25,000) + API credits
+(≈ ₹9,000) + domain + legal and registration (≈ ₹25,000–45,000). The first paying coaching (Mini ₹19,999 a month)
+covers the monthly server bill on its own.
