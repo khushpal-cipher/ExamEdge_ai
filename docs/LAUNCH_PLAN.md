@@ -10,7 +10,7 @@ Status key: ⬜ not started · 🟨 started · ✅ done
 
 | # | Step | What it means | Model / Effort | Status |
 |---|---|---|---|---|
-| 1 | Free pilot | 7 days free, 10 students, any number of teachers/admins, $10 AI for the whole pilot (teachers share it). Ask "How many students do you have?" when it is created. After day 7: AI off, app read-only, banner "Your pilot has ended". Founder can extend it. Data kept 30 days, then deleted by hand. | Sonnet / Medium | ⬜ (a first draft was undone on 2026-10-24 at the founder's request) |
+| 1 | Free pilot | 7 days free, 10 students, up to 20 teachers/admins (founder can raise), $10 AI for the whole pilot (teachers share it). Ask "How many students do you have?" when it is created. After day 7: AI off, app read-only, banner "Your pilot has ended". Founder can extend it. Data kept 30 days, then deleted by hand. | Sonnet / Medium | ⬜ (a first draft was undone on 2026-10-24 at the founder's request) |
 | 2 | Hide Audio + Video overview | Off for real users (`OVERVIEWS_BETA`), on locally for testing. Server also refuses them. | Haiku / Low | ⬜ |
 | 3 | Price per account | Every account charged (students, teachers, admins; owner free): first 300 at ₹200, 301–1,000 at ₹120, above 1,000 at ₹89, slabs like income tax; minimum 30 accounts (₹6,000); yearly = pay 10 get 12; +18% GST (PRICING_PLAN §2a). Only the platform admin edits prices. | Opus / High | ⬜ |
 | 4 | Limits follow the count | AI budget = accounts × $0.60 + $31 (stop AI on), 15 doubts / 5 study tools a day per student, 30 doubts a day per teacher, storage 1 GB per 50 accounts — all set automatically. | Sonnet / Medium | ⬜ |
@@ -86,4 +86,15 @@ Never use a "no KYC" payment repo: every real Indian gateway needs KYC, and unkn
   through Resend (set up at deploy, works alongside Zoho).
 - **"Check the real cost after the first pilot month":** prices rest on estimates (≈ 4 doubts a day); after a real
   pilot, read the real AI cost per account on the Bill page and raise or lower prices/budgets if it differs.
+- **Udyam registration (free, udyamregistration.gov.in only; ignore paid look-alike sites):** owner's Aadhaar with its
+  linked mobile (OTP), PAN, bank account + IFSC, business name and address, activity (software / education services;
+  NIC code chosen on the form), start date, employees, investment and turnover (a new business can enter 0). GSTIN only
+  if already registered. Certificate usually the same or next day [U].
+- **Google account on `khushpal@examedgeai.in`:** yes, free, no Workspace: on Google sign-up choose "Use my current
+  email address instead" and confirm with the code Zoho receives. Signs in to Chrome, Google Cloud (for Google sign-in
+  setup) and YouTube; the mail itself stays in Zoho.
+- **Buying `examedgeai.in`:** on a registrar that lets you change nameservers (GoDaddy, Namecheap, Hostinger, BigRock):
+  search the name, add 1 year (or 2–3), pay ≈ ₹500–1,200; skip extras (hosting, email, website builder, SSL); turn on
+  auto-renew and two-step login; check the renewal price, not only the first-year offer. Then Claude moves the
+  nameservers to Vercel at deploy.
 
