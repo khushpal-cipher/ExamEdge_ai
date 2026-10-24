@@ -78,8 +78,8 @@ None. UPI by hand = yes (2026-10-25). Step 1 is next; build it only when the fou
 6. **Budget follows growth [4]:** the AI budget is recalculated whenever the account count changes, not only on the
    1st, so a coaching adding 200 students mid-month does not run out of AI.
 7. **Price changes [3]:** a coaching keeps its price until its next renewal when the founder changes prices.
-8. **Refund rule for yearly [11]:** decide what happens when a yearly coaching cancels (for example: no refund, access
-   until the year ends).
+8. **Refund rule for yearly [11]:** founder decided (2026-10-25): no refund for yearly; access continues until the paid
+   year ends.
 9. **Second platform admin [18]:** only the founder can approve payments; if the founder's phone (MFA) is lost, nobody
    can. Give the founder's friend platform-admin access and save the authenticator backup codes.
 10. **Data deletion reminder [1]:** the platform page lists ended pilots older than 30 days so their deletion is not
