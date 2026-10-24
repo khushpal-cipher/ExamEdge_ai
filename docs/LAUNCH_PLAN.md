@@ -85,6 +85,23 @@ None. UPI by hand = yes (2026-10-25). Step 1 is next; build it only when the fou
 10. **Data deletion reminder [1]:** the platform page lists ended pilots older than 30 days so their deletion is not
     forgotten.
 
+## Code review findings (2026-10-25, fix before go-live unless marked later)
+1. **Must:** a student can use up the whole coaching's AI budget by calling `ai_reserve` directly for `query_embed`
+   (no daily limit) — fold the query embedding into the tutor's own reservation, or give it a per-student daily cap.
+2. **Must:** reservations left `pending` (server stopped mid-call) never expire, so they keep eating the budget and are
+   added to the Bill at worst-case cost — count `pending` only while younger than ~15 minutes, and settle older ones as error.
+3. **Must:** a missing `AI_PROVIDER` on the live site silently means fake AI (same as plan-review fix 2).
+4. **Must:** student Home shows "#2 of 1": the class size is counted through RLS, which shows a student only their own
+   standings row — take `batch_size` from `student_progress` (or a small definer count).
+5. **Should:** error logs can carry row data (PostgREST `details`/`hint`, e.g. "Failing row contains (…answer…)") —
+   drop `details`/`hint` in `scrub`.
+6. **Should:** a student can insert their own fake "AI" message into their chat and Report it to teachers — let
+   `report_answer` accept only messages with a settled usage record of that student.
+7. **Later:** ingest jobs longer than 30 minutes can run twice (double OCR cost) — refresh `claimed_at` while working.
+8. **Later:** multi-correct partial marks give full marks when the key has 5+ correct options and 4 are chosen.
+9. **Later:** published practice-quiz answers can be read through the API before trying (practice only, no rank).
+10. **Later:** a file uploaded bigger than its declared size fails but its storage file is never purged.
+
 ## Session 49 notes (founder Q&A, 2026-10-24/25)
 
 - **Audio/Video overview (later, local Beta):** NotebookLM-style = Claude writes a two-host conversation → a real
