@@ -10,17 +10,19 @@ Status key: ⬜ not started · 🟨 started · ✅ done
 
 | # | Step | What it means | Model / Effort | Status |
 |---|---|---|---|---|
-| 1 | Free pilot | 7 days free, 10 students, up to 20 teachers/admins (founder can raise), $10 AI for the whole pilot (teachers share it). Ask "How many students do you have?" when it is created. After day 7: AI off, app read-only, banner "Your pilot has ended". Founder can extend it. Data kept 30 days, then deleted by hand. | Sonnet / Medium | ⬜ (a first draft was undone on 2026-10-24 at the founder's request) |
+| 1 | Free pilot | 7 days free, 10 students, up to 20 teachers/admins (founder can raise), $10 AI for the whole pilot (teachers share it). Founder types "How many students do you have?" and the end date when creating it. Banner "N days left". After day 7: AI off, app read-only, banner "Your pilot has ended". Founder can extend it. Data kept 30 days, then deleted by hand. | Sonnet / Medium | ⬜ (a first draft was undone on 2026-10-24 at the founder's request) |
 | 2 | Hide Audio + Video overview | Off for real users (`OVERVIEWS_BETA`), on locally for testing. Server also refuses them. | Haiku / Low | ⬜ |
-| 3 | Price per account | Every account charged (students, teachers, admins; owner free): first 300 at ₹200, 301–1,000 at ₹120, above 1,000 at ₹89, slabs like income tax; minimum 30 accounts (₹6,000); yearly = pay 10 get 12; +18% GST (PRICING_PLAN §2a). Only the platform admin edits prices. | Opus / High | ⬜ |
+| 3 | Price per account | Every active account charged (students, teachers, admins; owner free; removed accounts not counted): first 300 at ₹200, 301–1,000 at ₹120, above 1,000 at ₹89, slabs like income tax; minimum 30 accounts (₹6,000); yearly = pay 10 get 12; +18% GST (PRICING_PLAN §2a). Only the platform admin edits prices. | Opus / High | ⬜ |
 | 4 | Limits follow the count | AI budget = accounts × $0.60 + $31 (stop AI on), 15 doubts / 5 study tools a day per student, 30 doubts a day per teacher, storage 1 GB per 50 accounts — all set automatically. | Sonnet / Medium | ⬜ |
-| 5 | Bill page | Account count (students + teachers), this month's price by slab, monthly vs yearly with "save ₹…", AI used %, next bill date. | Sonnet / Medium | ⬜ |
+| 5 | Bill page | Account count (students + teachers), this month's price by slab, monthly vs yearly with "save ₹…", AI used %, next bill date, "Pay now". | Sonnet / Medium | ⬜ |
 | 6 | Billing rules | Pay at the start of the month; billed on the highest count of the month; yearly covers the count on the day they pay, extras billed every 3 months; one pilot per coaching. | Opus / High | ⬜ |
-| 7 | Payment by UPI (by hand) | Owner picks a plan, pays to the founder's UPI QR, types the transaction number (UTR). Founder checks the bank app and presses Approve → status `active`, plan limits set, "paid until" date, simple receipt. | Sonnet / Medium | ⬜ |
-| 8 | Renewal | Reminder before "paid until" ends; read-only after a few days' grace if unpaid. | Sonnet / Medium | ⬜ |
+| 7 | Payment by UPI (by hand) | Owner sees the amount, pays to the founder's UPI QR / "Pay with UPI" link, types the UTR. Founder gets an email + "Payments to check", matches it in the bank app, presses Approve (status `active`, limits set, "paid until", receipt) or Reject with a reason. | Sonnet / Medium | ⬜ (founder's yes pending) |
+| 8 | Renewal | Reminder email + banner before "paid until" ends; read-only after a few days' grace if unpaid. | Sonnet / Medium | ⬜ |
 | 9 | Budget warning + top-ups | Warn the owner at 80% of the AI budget; top-up pack ₹2,500 for $20 more AI (paid the same way as step 7). | Sonnet / Medium | ⬜ |
-| 10 | Legal pages | Privacy, Terms and Refund pages (text from a lawyer or a template the founder approves). Razorpay needs all three. | Sonnet / Low | ⬜ |
-| 11 | Quality gate | Full `npm run check`, PR, CI green, merge. | Haiku / Low | ⬜ |
+| 10 | Public home page | `examedgeai.in`: what ExamEdge does, prices, "Book a demo" / contact (`support@examedgeai.in`), links to the legal pages; one H1, title and description, robots.txt + sitemap. Razorpay and coachings look here first. | Sonnet / Medium | ⬜ |
+| 11 | Legal pages | Privacy, Terms (incl. "one account = one coaching") and Refund pages (text from a lawyer or a template the founder approves); consent step for students if the lawyer asks for it (Q-01). Razorpay needs all three pages. | Sonnet / Low | ⬜ |
+| 12 | Check unverified pages | Click through in the new look: owner Bill page, test runner, results, theory checking, Reviews, Contest; a full Google sign-in and invitation acceptance (PROGRESS.md "Unverified"). | Sonnet / Medium | ⬜ |
+| 13 | Quality gate | Full `npm run check`, PR, CI green, merge. | Haiku / Low | ⬜ |
 
 Steps 4–9 depend on step 3: re-check step 3's design at high effort before building them.
 
@@ -30,11 +32,12 @@ About **₹10,000–15,000 for the first 2 months**; keep ₹20,000 to be safe (
 
 | # | Step | Who | Cost (2 months) | Status |
 |---|---|---|---|---|
-| 12 | Buy `examedgeai.in` (registrar that allows changing nameservers) | Founder | ₹800–1,200 a year | ⬜ |
-| 13 | Accounts: Vercel Pro (website), Railway Hobby (worker), Supabase (free, Pro the day a real pilot starts), Anthropic $20 credits | Founder | ≈ ₹3,600 + ₹900 + ₹0–4,400 + ₹1,800 | ⬜ |
-| 14 | Set up: cloud database + migrations, website, worker, `*.examedgeai.in` wildcard (Vercel nameservers), Google sign-in on the live address (publish consent screen), Resend email domain, secret keys, Sentry alerts (free), nightly backup + one test restore. Change docs from `examedge.in` to `examedgeai.in`. | Claude (Opus / High) | — | ⬜ |
-| 15 | Platform admin account with MFA, then a test run with one coaching | Founder + Claude (Sonnet / Medium) | — | ⬜ |
-| 16 | Before any 1,000+ student coaching: load test (many students opening a test at once) and Claude's per-minute limits for our account | Claude (Sonnet / Medium) | — | ⬜ |
+| 14 | Buy `examedgeai.in`; Zoho Mail free (`khushpal@`, `hello@`, `support@`); Google account on `khushpal@`; Udyam | Founder | ₹800–1,200 a year | ⬜ |
+| 15 | Accounts with `khushpal@examedgeai.in`: Vercel Pro (website), Railway Hobby (worker), Supabase (free, Pro the day a real pilot starts), Anthropic $20 credits with a monthly spend limit | Founder | ≈ ₹3,600 + ₹900 + ₹0–4,400 + ₹1,800 | ⬜ |
+| 16 | Set up: cloud database + migrations, website, worker, `*.examedgeai.in` wildcard (Vercel nameservers), Google sign-in on the live address (publish consent screen), Resend domain (`noreply@`), secret keys, `AI_PROVIDER=anthropic` (never Gemini for real users), built-in notes search (Voyage later), demo login off, Sentry alerts (free), nightly backup + one test restore. Change docs from `examedge.in` to `examedgeai.in`. | Claude (Opus / High) | — | ⬜ |
+| 17 | Real Claude test: every AI feature once with the real key (tutor, AI notes, AI test, study tools, scanned pages) — so far only fake and Gemini AI were used | Claude (Sonnet / Medium) | ≈ $1–2 of credits | ⬜ |
+| 18 | Platform admin account with MFA, then a test run with one coaching | Founder + Claude (Sonnet / Medium) | — | ⬜ |
+| 19 | Before any 1,000+ student coaching: load test (many students opening a test at once), Claude's per-minute limits for our account, rollback rehearsal | Claude (Sonnet / Medium) | — | ⬜ |
 
 The founder's Mac does not need to stay on: Vercel, Supabase and Railway run the site all the time.
 
@@ -42,10 +45,10 @@ The founder's Mac does not need to stay on: Vercel, Supabase and Railway run the
 
 | # | Item | When | Cost |
 |---|---|---|---|
-| 17 | Lawyer's opinion on children's data (Q-01) | Before real school students, pilots included | ≈ ₹10,000–30,000 [U] |
-| 18 | Business registration + GST via a CA, then Razorpay KYC (ask Razorpay if a sole owner with PAN + bank account is enough [U]) | Before Razorpay | ≈ ₹3,000–15,000 [U] |
-| 19 | Ask 2–3 coachings what they pay today before fixing prices | Before the first paid plan | — |
-| 21 | After the first pilot month: check real AI cost per student, adjust prices and budgets | After the first pilot | — |
+| 20 | Lawyer's opinion on children's data (Q-01) | Before real school students, pilots included | ≈ ₹10,000–30,000 [U] |
+| 21 | Business registration + GST via a CA, then Razorpay KYC (ask Razorpay if a sole owner with PAN + bank account is enough [U]) | Before Razorpay | ≈ ₹3,000–15,000 [U] |
+| 22 | Ask 2–3 coachings what they pay today before fixing prices | Before the first paid plan | — |
+| 23 | After the first pilot month: check real AI cost per student, adjust prices and budgets | After the first pilot | — |
 
 Money received by UPI is business income: tell the CA. GST registration is needed above ₹20 lakh a year [U].
 Never use a "no KYC" payment repo: every real Indian gateway needs KYC, and unknown payment code is a risk.
