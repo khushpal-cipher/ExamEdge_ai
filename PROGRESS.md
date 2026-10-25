@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-25 (session 52 handoff: Batch B half built — CR 1–2 green, billing spec waiting, pilot WIP)
+Last updated: 2026-10-25 (session 53: Batch B built — CR 1–2 + free pilot, PR #43 open, CI pending; billing spec waiting for the founder)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -149,7 +149,37 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 53)
+## Next exact action (session 54)
+**State (2026-10-25, end of session 53, Opus, branch `r18-batch-b`, pushed, PR #43 open into main, CI running at handoff):**
+Batch B code is built; nothing of it is merged yet.
+- `2ada634` pilot DB green. Fixed the 2 pgTAP failures: `guard_read_only` is now SECURITY DEFINER (the `worker` role has no
+  access to schema `auth`, so `auth.uid()` in an invoker trigger broke every worker write — a real bug, not only the
+  test); `guard_seats` checks only when a row takes a seat it did not hold (a teacher made admin at the cap was refused);
+  allowlist += `read_only`, `guard_read_only`, `seats_full`, `guard_seats`. New `supabase/tests/270_pilot.sql` (37 tests:
+  create_institute defaults + past end refused, trigger coverage on every tenant table, last pilot day not read-only,
+  read-only after: reads ok, in-progress attempt answer + submit ok, new attempt / teacher / owner / invite refused, AI
+  `ai_disabled`, worker and platform admin still write, extension re-opens; pilot budget counts last month; seat caps:
+  invites incl. pending, accept refused, removed student frees a seat, re-activation needs a seat, owner not counted).
+  Local migration 40 re-applied by hand (`create or replace` of the two functions; file and DB agree).
+- `f299e23` web: `lib/pilot.ts` (+ unit test), portal banner, `read_only` / `seats_full` messages (flash, people invite
+  list, invite page), platform create form (students, last pilot day prefilled today + 7), institute page (pilot end,
+  expected students, seat caps), list column "Pilot ends", "Ended pilots older than 30 days — delete by hand".
+  E2E `portals.spec.ts`: create form fills students, checks the pilot row in the DB; budget text now $10.00 (pilots get $10).
+- Docs commit: ADR-058, DATABASE_DESIGN, HOW_IT_WORKS Part 4, RUNBOOKS §4, LAUNCH_PLAN step 1 ✅ + CR 1–2 note.
+Evidence (2026-10-25): `npx supabase test db` Files=27 Tests=1516 PASS; `npm test` 203/203; `npm run test:int` 28/28;
+format, lint + forbidden, typecheck PASS; `npm run build` + check-bundle ok. **E2E not run locally** (founder DB, no demo
+seed) → CI on PR #43. Browser (dev :3000, founder signed in as newtown Owner): newtown `pilot_end` set to today + 2 →
+"Free pilot: 3 days left…" in red; set to yesterday → ended banner, "Create batch" refused with the `read_only` message,
+no row written, 375 px scrollWidth 375, one H1; `pilot_end` then set back to null (founder data unchanged).
+**Unverified:** platform admin pages in the browser (needs the founder's authenticator; E2E covers them in CI).
+Known limits (ADR-058): banner mirrors the SQL rule in `lib/pilot.ts`; platform institute page says "AI spent this month"
+for a pilot whose budget is its whole life.
+Next exact action:
+1. `mcp__ccd_pr__get_status` / `gh pr checks 43`: if CI is red, fix on `r18-batch-b`, push; when green, merge (squash).
+2. Billing spec (LAUNCH_PLAN "Billing spec — steps 3 + 6"): ask the founder for "ok" on the 4 questions if not answered.
+3. Then stop: Batch C (Sonnet, Medium) builds steps 3–9 from the spec, including plan-review fix 4 in `private.read_only`.
+
+## Next exact action (session 53) — history
 **State (2026-10-25, end of session 52, Opus, branch `r18-batch-b`, pushed, NO PR yet):** Batch B about half built.
 Done:
 - **CR 1–2 (commit `8617d24`, green):** migration `20261118000039_ai_budget_fixes.sql`, applied locally. CR 1: `query_embed`
@@ -1066,6 +1096,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 53 | 2026-10-25 | Batch B: pilot pgTAP fixed (worker `auth.uid()` bug, seat regroup), `270_pilot`, pilot web (banner, platform fields, messages), ADR-058 + docs; pgTAP 1516, unit 203, int 28, build ok; PR #43 opened, CI pending | see `git log` (branch `r18-batch-b`) |
 | 42 | 2026-10-19 | UI polish on PR #35: light only, type scale, spacing (`.inline` root cause), sidebar, `.danger` buttons, 960 px content; founder follow-ups: 40 px controls, growing text boxes, styled dropdown, Home at-a-glance band, empty states, status dots, right-aligned numbers, toast, motion, entry page. Gate green locally (E2E → CI) | `b8d6cdb` (branch `r13-ui`) |
 | 39 | 2026-10-18/19 | Founder said merge: PR #32 (`16b7547`) and #33 (`03afbca`) merged after merging `main` into `r12-reviews` (pgTAP 1435). Founder asked for CBT tests: full screen, tab/app switch + reload count, 3rd warning auto-submits, Chrome only, warnings on results (ADR-048, migration 32, pgTAP 1456, E2E `cbt.spec.ts`); PR #34, first CI failed on an E2E locator, fixed | `b61f991` (branch `r12-cbt`) |
 | 37 | 2026-10-18 | Founder: "Type a question" gets negative marks; theory model answer optional (migration 25); multi-correct = JEE Advanced marking (migration 26, ADR-045); owner "AI usage" → ₹ Bill at a platform-set rate (migration 27); pgTAP 1372; MCQ-only results question answered (release is manual) — decision open | branches `r12-typed-marks` (PR #30), `r12-bill` |
