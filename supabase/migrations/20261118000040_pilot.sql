@@ -25,9 +25,10 @@ language sql stable security definer set search_path = '' as $$
 $$;
 
 -- On every tenant table: a signed-in member of a read-only institute cannot write. The worker (no user) and platform
--- admins are not members, so retention purges and platform changes still run.
+-- admins are not members, so retention purges and platform changes still run. Definer only so that auth.uid() also
+-- works for the worker role, which has no access to schema auth; it writes nothing.
 create function private.guard_read_only() returns trigger
-language plpgsql security invoker set search_path = '' as $$
+language plpgsql security definer set search_path = '' as $$
 declare
   inst uuid := case when tg_op = 'DELETE' then old.institute_id else new.institute_id end;
 begin
@@ -79,11 +80,15 @@ language sql stable security definer set search_path = '' as $$
   ) >= (select n from cap)
 $$;
 
+-- Checked only when the row takes a seat it did not hold (new, re-activated, or moved between student / staff / owner),
+-- so a teacher made admin is not counted twice.
 create function private.guard_seats() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
   if new.status = 'active' and new.role <> 'owner'
-     and (tg_op = 'INSERT' or old.status <> 'active' or old.role is distinct from new.role)
+     and (tg_op = 'INSERT' or old.status <> 'active'
+          or (case old.role when 'student' then 's' when 'owner' then 'o' else 't' end)
+             <> (case new.role when 'student' then 's' else 't' end))
      and private.seats_full(new.institute_id, new.role, false) then
     raise exception 'seats_full' using errcode = 'P0001';
   end if;
