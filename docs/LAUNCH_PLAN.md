@@ -217,4 +217,14 @@ Founder said "fix 1 to 10" on 2026-10-25, then "work for the next session": noth
   Settings → Bank account → change (checked by a ₹1 transfer or cancelled cheque, ≈ 2–5 working days [U]). The account
   must be in the founder's name or business name under the same PAN. Changing Individual → Sole Proprietorship (after
   Udyam) is a KYC change: ask Razorpay support to update this account (one PAN = one account), never open a new one.
+- **Founder said "yes to all" (2026-10-25):** unpaid grace = **3 days**, then read-only; top-up pack = **₹2,500 for
+  $20 more AI**; teachers/admins = **30 doubts a day**; pilot staff cap = **20** (founder can raise per coaching).
+  Still open: legal page details (business name, address, phone, complaints contact) — needed in Batch A step 11;
+  who the second platform admin is; when to book the lawyer; asking 2–3 coachings about price.
+- **Business email steps (Zoho free):** buy `examedgeai.in` → zoho.com/mail "Forever Free" → add the domain → paste
+  Zoho's TXT line into the registrar's DNS settings to verify → create `khushpal@`, `hello@`, `support@` → paste Zoho's
+  MX, SPF and DKIM lines into DNS → open at mail.zoho.in or the Zoho Mail app. At deploy, when nameservers move to
+  Vercel, these Zoho lines must be copied into Vercel's DNS or email stops.
+- **DNS:** the domain's address book (name → where it goes). Found in the registrar account: GoDaddy "My Products →
+  Domain → DNS / Manage DNS", Namecheap "Domain List → Manage → Advanced DNS", Hostinger "Domains → DNS / Nameservers".
 
