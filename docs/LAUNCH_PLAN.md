@@ -9,6 +9,9 @@ Status key: ⬜ not started · 🟨 started · ✅ done
 ## Build order by model (founder, 2026-10-25: Sonnet work first, then Opus, to save tokens)
 
 The founder picks the model in the app before each session; one batch per session (or more if context allows).
+Session settings (founder picks both before pasting the prompt): **A = Sonnet, Medium effort · B = Opus, High ·
+C = Sonnet, Medium · D = Opus, High.** If a task inside a session turns out tricky, the session says so and the
+founder may raise the effort for that part.
 "CR" = Code review findings below, "Step" = section A. A batch only starts when the batch before it is merged.
 
 **Batch A — Sonnet** (no Opus design needed)

@@ -198,7 +198,7 @@ What #41 contains:
   Plan review fixes 1–10 are in LAUNCH_PLAN "Fixes found in the plan review".
   Same day: full code review (server code + all migrations read; pages' layout not reviewed): findings 1–10 in
   LAUNCH_PLAN "Code review findings", with the fix approach. Founder: "fix 1 to 10", then "work for the next
-  session" — NOTHING built; the few started edits were reverted. Next exact action (session 50, founder runs it on SONNET): build LAUNCH_PLAN "Build order by model" BATCH A only
+  session" — NOTHING built; the few started edits were reverted. Next exact action (session 50, founder runs it on SONNET, Medium effort): build LAUNCH_PLAN "Build order by model" BATCH A only
   (CR 3–11, steps 2, 10, 11, 12; CR 1–2 are Opus, Batch B) on `r17-next` — ask the founder at the start for the
   legal page details (business name, address, phone, complaints contact); other decisions are saved in LAUNCH_PLAN
   ("yes to all" 2026-10-25: 3-day grace, top-up ₹2,500 = $20, staff 30 doubts/day, pilot staff cap 20) (pgTAP for 1, 2, 4, 6, 8, 10; unit for 3, 5), quality gate, PR; then ask the founder
