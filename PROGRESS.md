@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-25 (session 53: Batch B built — CR 1–2 + free pilot, PR #43 open, CI pending; billing spec waiting for the founder)
+Last updated: 2026-10-26 (session 53 handoff: Batch B on PR #43, CI green, not merged; billing answers 1, 2, 4 = yes, 3 open; 3 founder change proposals waiting)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -150,6 +150,38 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 54)
+**State (2026-10-26, end of session 53, Opus, branch `r18-batch-b`, pushed):** PR #43 (Batch B) **CI green** on `540e8c2`
+(check incl. E2E + secrets, run 40221819983), mergeable, **NOT merged** (founder said "no more fix or build" this turn; the
+standing rule says merge once green).
+After the session 53 handoff below: `540e8c2` Gemini test provider falls back to `gemini-3.5-flash-lite` when
+`gemini-3.8-flash` still answers 503 "high demand" after its retry (cause of the founder's "The AI could not make this
+right now" on student Summary, reproduced 2026-10-26; Gemini unit tests 7/7). Founder must restart their own `npm run dev`
+on :3000 to get it; not clicked in the browser after the fix.
+**Founder answers (2026-10-26) to the billing spec questions (LAUNCH_PLAN "Billing spec — steps 3 + 6"):**
+1 billing period from the approval day = **yes** · 2 yearly extras at the yearly rate (× 10/12) = **yes** · 4 "30 doubts a
+day per staff" = 30 AI requests a day = **yes** · **3 (a waiting UTR keeps full access for at most 7 days) = NOT accepted,
+open**: the founder understood it correctly (paid, waiting for the founder's Approve, keeps access meanwhile) but did not say
+yes — ask what they want instead (e.g. another number of days, or no cap) before Batch C builds plan-review fix 4.
+**Founder change proposals (session 53, explained, NOT approved, nothing built — founder will cross-check, then update the plan):**
+- A. **Student names:** names come only from Google sign-in (an email/demo sign-in has none → "Unnamed"; seen for a local
+  student). Proposal: invitation CSV `email,name,role,batch` + a Name box on single invite (name used on accept); staff can
+  edit a member's name on People; a student can fix their own name.
+- B. **ChatGPT prompt box** on People → Invite: "Have an Excel sheet? Let ChatGPT format it" + Copy prompt, prompt lists the
+  coaching's real batch names; the app still validates every line.
+- C. **Light/dark toggle** for everyone (remembered per device, default = device setting). Conflicts with the earlier
+  "light theme only" decision: both looks (staff mono, student retro) need a dark design — founder to confirm.
+Founder Q&A this session (answers given, no change): billing counts real active accounts, never the typed student number;
+monthly = highest count of the month; yearly = covered count + quarterly extras; limits recalc on count change (spec rule
+9, Batch C); models per task (`routing.ts`); cost shown on platform list, institute page, owner Bill page; new AI services
+(TTS) must go through the gateway; load for ~6,000 students: Vercel scales, Supabase compute is the pressure point,
+unproven until LAUNCH_PLAN step 19.
+Next exact action:
+1. `gh pr checks 43`; if still green, squash-merge PR #43 (Batch B), pull `main`.
+2. Ask the founder for billing question 3 (UTR wait) and whether proposals A, B, C are approved (and their order/batch).
+3. Record the answers in LAUNCH_PLAN (billing spec + a new founder change list) and DECISIONS; build only when the founder
+   says "build". Batch C (Sonnet, Medium) builds steps 3–9 from the spec once question 3 is settled.
+
+## Next exact action (session 54, first draft) — history
 **State (2026-10-25, end of session 53, Opus, branch `r18-batch-b`, pushed, PR #43 open into main, CI running at handoff):**
 Batch B code is built; nothing of it is merged yet.
 - `2ada634` pilot DB green. Fixed the 2 pgTAP failures: `guard_read_only` is now SECURITY DEFINER (the `worker` role has no

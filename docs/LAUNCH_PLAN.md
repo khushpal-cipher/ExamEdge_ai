@@ -132,6 +132,8 @@ founder can change them), $10 AI for the **whole pilot** (the budget window of a
 read-only after `pilot_end` (rule 8). The founder extends a pilot by changing `pilot_end` or makes it `active` by hand.
 Ended pilots older than 30 days are listed on the platform page for deletion by hand (plan-review fix 10).
 
+**Founder answers (2026-10-26): 1 yes · 2 yes · 4 yes · 3 open (not accepted yet; ask what instead).**
+
 **Questions for the founder (my default in brackets; say "ok" to take all defaults):**
 1. Billing period from the approval day, not the 1st of the calendar month? [yes — no part-month bills]
 2. Yearly extras charged at the yearly rate (× 10/12)? [yes]

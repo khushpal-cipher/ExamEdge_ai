@@ -10,8 +10,8 @@ Continue building ExamEdge AI Release 1 in ~/Documents/startup/examedge_ai.
    in that file — follow them exactly), docs/PROJECT_MASTER_PLAN.md, docs/IMPLEMENTATION_ROADMAP.md,
    docs/DATABASE_DESIGN.md, docs/SECURITY_THREAT_MODEL.md, docs/AI_PIPELINE_DESIGN.md, docs/TEST_STRATEGY.md,
    docs/DECISIONS.md, docs/HOW_IT_WORKS.md, docs/ARCHITECTURE.md, docs/LAUNCH_PLAN.md. Then run `git log --oneline -15` and `git status`.
-2. Continue from PROGRESS.md "Next exact action (session 53)" (LAUNCH_PLAN Batch B, Opus, High; branch r18-batch-b,
-   pilot migration 40 is applied locally but has 2 failing pgTAP tests). Read docs/LAUNCH_PLAN.md too. Do not restart or redo finished work;
+2. Continue from PROGRESS.md "Next exact action (session 54)" (merge PR #43 = Batch B if CI is still green; then ask me
+   billing question 3 and whether change proposals A, B, C are approved). Read docs/LAUNCH_PLAN.md too. Do not restart or redo finished work;
    re-verify only what PROGRESS.md marks as unverified.
 3. First check `docker info` (run `open -a Docker` and wait if it fails) and `supabase status`
    (run `supabase start` from the repo root if stopped). Never reset the local database without asking me:
@@ -133,6 +133,9 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
 - Session 52 (2026-10-25, Opus): Batch B on `r18-batch-b`: CR 1–2 built and green (migration 39); billing spec for steps
   3 + 6 written in LAUNCH_PLAN with 4 questions (no money code until the founder says ok); pilot migration 40 applied
   locally, WIP (2 pgTAP failures, web + docs not done). Next: PROGRESS.md "Next exact action (session 53)".
+- Session 53 (2026-10-25/26, Opus): Batch B on PR #43 (CR 1–2, free pilot ADR-058, billing spec, Gemini 503 fallback),
+  CI green, not merged. Founder: billing questions 1, 2, 4 = yes, 3 (UTR wait 7 days) open; proposals A student names,
+  B ChatGPT prompt box, C light/dark toggle explained, not approved. Next: PROGRESS.md "Next exact action (session 54)".
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full
