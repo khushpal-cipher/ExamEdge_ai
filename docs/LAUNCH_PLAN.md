@@ -6,6 +6,42 @@ All money figures are estimates [E]; check each price when buying.
 
 Status key: ⬜ not started · 🟨 started · ✅ done
 
+## Build order by model (founder, 2026-10-25: Sonnet work first, then Opus, to save tokens)
+
+The founder picks the model in the app before each session; one batch per session (or more if context allows).
+"CR" = Code review findings below, "Step" = section A. A batch only starts when the batch before it is merged.
+
+**Batch A — Sonnet** (no Opus design needed)
+| Task | Model / Effort |
+|---|---|
+| CR 3 live site needs real Claude · CR 5 no student text in logs · CR 10 purge oversized files | Sonnet / Low |
+| CR 4 "#2 of 1" · CR 7 refresh job claim · CR 8 multi-correct partial marks | Sonnet / Medium |
+| CR 6 harder to report fake AI answers · CR 9 hide practice-quiz answers · CR 11 "Mix" results | Sonnet / Medium |
+| Step 2 overviews "Beta · Coming soon" | Haiku / Low (Sonnet fine) |
+| Step 10 public home page · Step 11 legal pages + consent screen (needs founder's name, address, phone) | Sonnet / Medium |
+| Step 12 check untested pages | Sonnet / Medium |
+| Quality gate, PR, CI, merge | Haiku / Low (Sonnet fine) |
+
+**Batch B — Opus** (money, security, design decisions)
+| Task | Model / Effort |
+|---|---|
+| CR 1 students draining the AI budget · CR 2 stuck AI charges | Opus / High |
+| Step 1 free pilot (read-only rules, seat caps, midnight switch, never mid-test) | Opus / High |
+| Steps 3 + 6 design: price slabs, account count, billing period, "paid until", payments table, UPI flow, renewal and read-only rules — written as a short spec in this file before any code | Opus / High |
+
+**Batch C — Sonnet** (builds from Batch B's spec)
+| Task | Model / Effort |
+|---|---|
+| Step 3 + 4 price and limits in code · Step 5 Bill page · Step 7 UPI payment by hand · Step 8 renewal · Step 9 80% warning + top-ups | Sonnet / Medium |
+| Quality gate, PR, CI, merge | Haiku / Low |
+
+**Batch D — Opus** (going online, after the founder's accounts exist)
+| Task | Model / Effort |
+|---|---|
+| One Opus review of all money code from Batch C before real payments | Opus / High |
+| Step 16 deploy (cloud database, keys, wildcard domain, Google sign-in, email, backups) | Opus / High |
+| Steps 17–19 real Claude test, first coaching, load test | Sonnet / Medium |
+
 ## A. Build (code, no money needed)
 
 | # | Step | What it means | Model / Effort | Status |

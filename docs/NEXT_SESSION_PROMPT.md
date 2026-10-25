@@ -119,8 +119,9 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
 - Session 49 (2026-10-24/25, docs only, no code): founder's launch order is docs/LAUNCH_PLAN.md (read it fully).
   Decisions: pricing per account in slabs, teachers charged (ADR-057, PRICING_PLAN §2a); pilot 7 days, 10 students,
   up to 20 staff, $10 AI; audio/video overviews shown "Beta · Coming soon"; UPI payment checked by hand until
-  Razorpay; yearly = no refund; "Mix" results (total at once, right/wrong after close). Next: build LAUNCH_PLAN
-  "Code review findings" 1–11 on `r17-next` (approach written there), quality gate, PR; build launch steps only
+  Razorpay; yearly = no refund; "Mix" results (total at once, right/wrong after close). Next: follow LAUNCH_PLAN
+  "Build order by model": Batch A (Sonnet) → B (Opus) → C (Sonnet) → D (Opus); one batch per session, only the batch
+  PROGRESS.md names; if a task needs a different model than the session runs on, stop and tell the founder; build launch steps only
   when the founder says "build". Each launch step must include its "Fixes found in the plan review" items.
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
