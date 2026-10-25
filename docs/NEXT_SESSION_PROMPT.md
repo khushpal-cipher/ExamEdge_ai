@@ -9,8 +9,8 @@ Continue building ExamEdge AI Release 1 in ~/Documents/startup/examedge_ai.
    CLAUDE.md, PROGRESS.md, docs/NEXT_SESSION_PROMPT.md (your full instructions are the "Full instructions" box
    in that file — follow them exactly), docs/PROJECT_MASTER_PLAN.md, docs/IMPLEMENTATION_ROADMAP.md,
    docs/DATABASE_DESIGN.md, docs/SECURITY_THREAT_MODEL.md, docs/AI_PIPELINE_DESIGN.md, docs/TEST_STRATEGY.md,
-   docs/DECISIONS.md, docs/HOW_IT_WORKS.md, docs/ARCHITECTURE.md. Then run `git log --oneline -15` and `git status`.
-2. Continue from PROGRESS.md "Next exact action" and "In progress". Do not restart or redo finished work;
+   docs/DECISIONS.md, docs/HOW_IT_WORKS.md, docs/ARCHITECTURE.md, docs/LAUNCH_PLAN.md. Then run `git log --oneline -15` and `git status`.
+2. Continue from PROGRESS.md "Next exact action (session 52)" (LAUNCH_PLAN Batch B, Opus). Read docs/LAUNCH_PLAN.md too. Do not restart or redo finished work;
    re-verify only what PROGRESS.md marks as unverified.
 3. First check `docker info` (run `open -a Docker` and wait if it fails) and `supabase status`
    (run `supabase start` from the repo root if stopped). Never reset the local database without asking me:
@@ -126,6 +126,9 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
 - Session 50 (2026-10-25, Sonnet): built most of LAUNCH_PLAN Batch A on `r17-next` (CR 3–11, steps 2, 10, 11 drafts). Not pushed,
   no PR. Next: PROGRESS.md "Next exact action (session 51)" — finish Batch A (legal details from the founder, browser check,
   step 12, docs, full gate, PR, merge), then stop; Batch B is Opus.
+- Session 51 (2026-10-25, Sonnet): Batch A merged (PR #42 `631aebf`): code review fixes 3–11, Beta overviews, public home +
+  legal pages with the founder's real details, retro UI polish, "Mix" results (ADR-046 amendment). Next: PROGRESS.md "Next exact
+  action (session 52)" = Batch B (Opus, High): CR 1–2, free pilot, pricing/billing spec; branch off `main`.
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full
