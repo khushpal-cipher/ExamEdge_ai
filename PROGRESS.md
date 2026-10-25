@@ -149,9 +149,22 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 51)
+## Next exact action (session 52)
+**State (2026-10-25, end of session 51):** LAUNCH_PLAN **Batch A is MERGED** (PR #42, squash `631aebf`, CI green run 40185000036).
+Local DB: migrations 36–38 applied; founder renamed institute `newtown` to display name "Allen" (slug unchanged). Founder is
+signed in as Owner in the app's browser pane. Not verified: real Google sign-in, real invitation email (founder's inbox).
+Next: **Batch B (Opus, High effort)** from a branch `r18-batch-b` (already created from `main`, holds this handoff):
+1. CR 1 students draining the AI budget via `ai_reserve` `query_embed`; CR 2 stuck `pending` reservations (approach in
+   LAUNCH_PLAN "Code review findings"). pgTAP for both.
+2. Step 1 free pilot (7 days, 10 students, staff cap 20, $10 AI, read-only after, never mid-test).
+3. Steps 3 + 6 design: write the short spec for price slabs, account count, billing period, "paid until", payments table, UPI
+   flow, renewal and read-only rules IN `docs/LAUNCH_PLAN.md` before any code (ADR-057, PRICING_PLAN §2a); founder reviews it.
+Include the "Fixes found in the plan review" items for each step. Quality gate, PR, CI green, merge, then stop (Batch C = Sonnet).
+If the session is not running Opus, stop and tell the founder.
 
-**Session 51 (2026-10-25, Sonnet):** legal details filled in (`business.ts`), docs updated (ADR-046 Mix amendment, LAUNCH_PLAN statuses), PR #42 opened; E2E tutor fixture fixed (settled usage record), retro UI polish (tab padding, round send button, tile labels, badge spacing). Step 12 owner click-through (founder signed in as Owner, `next start` :3005): Bill, Tests + results rank list, theory check page, Reviews, People, Batches, Subjects, Question bank load with 0 page errors, 1 H1 each; scrollWidth = 375 at phone width on check, results, Bill, Reviews, People, student page, Batches. Mix checked (headless student1, temporary test, closing time moved by hand in a transaction, then all rows deleted): before close "4 / 4" + "per question after the test closes", no key; after close "4 / 4" per question + "Correct answer: B". Not clicked: Google sign-in itself, invitation acceptance. Local `institutes.name` 'newtown' renamed 'Allen' by hand (slug unchanged).
+## Next exact action (session 51) — history
+
+**Session 51 (2026-10-25, Sonnet): Batch A MERGED — PR #42, squash `631aebf`, CI green (check incl. E2E + secrets, run 40185000036). Next: Batch B (Opus, High): CR 1–2, LaunchPlan steps 1, 3, 6 design.** legal details filled in (`business.ts`), docs updated (ADR-046 Mix amendment, LAUNCH_PLAN statuses), PR #42 opened; E2E tutor fixture fixed (settled usage record), retro UI polish (tab padding, round send button, tile labels, badge spacing). Step 12 owner click-through (founder signed in as Owner, `next start` :3005): Bill, Tests + results rank list, theory check page, Reviews, People, Batches, Subjects, Question bank load with 0 page errors, 1 H1 each; scrollWidth = 375 at phone width on check, results, Bill, Reviews, People, student page, Batches. Mix checked (headless student1, temporary test, closing time moved by hand in a transaction, then all rows deleted): before close "4 / 4" + "per question after the test closes", no key; after close "4 / 4" per question + "Correct answer: B". Not clicked: Google sign-in itself, invitation acceptance. Local `institutes.name` 'newtown' renamed 'Allen' by hand (slug unchanged).
 **State (2026-10-25, end of session 50, Sonnet, branch `r17-next`, NOT pushed, NOT merged, no PR yet):** LAUNCH_PLAN
 Batch A is about 70% built. Commits on `r17-next` after `3d267f9`: live-site AI guard + log scrub; migrations 36–38 with
 code-review fixes 4, 6, 8, 9, 10, 11; worker claim refresh (7); overviews "Beta · Coming soon"; public home page, legal
