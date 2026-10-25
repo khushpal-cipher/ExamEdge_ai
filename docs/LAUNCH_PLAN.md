@@ -20,7 +20,7 @@ Status key: ⬜ not started · 🟨 started · ✅ done
 | 8 | Renewal | Reminder email + banner before "paid until" ends; read-only after a few days' grace if unpaid. | Sonnet / Medium | ⬜ |
 | 9 | Budget warning + top-ups | Warn the owner at 80% of the AI budget; top-up pack ₹2,500 for $20 more AI (paid the same way as step 7). | Sonnet / Medium | ⬜ |
 | 10 | Public home page | `examedgeai.in`: what ExamEdge does, prices, "Book a demo" / contact (`support@examedgeai.in`), links to the legal pages; one H1, title and description, robots.txt + sitemap. Razorpay and coachings look here first. | Sonnet / Medium | ⬜ |
-| 11 | Legal pages | Privacy, Terms (incl. "one account = one coaching") and Refund pages (text from a lawyer or a template the founder approves); consent step for students if the lawyer asks for it (Q-01). Razorpay needs all three pages. | Sonnet / Low | ⬜ |
+| 11 | Legal pages | Claude drafts Privacy, Terms (incl. "one account = one coaching"), Refund & Cancellation, Contact Us and Service delivery pages from a standard template, written for what ExamEdge really does (founder approves; lawyer reviews later). Founder supplies: business name, address, phone, grievance officer name + email, monthly cancellation rule; consent step for students if the lawyer asks for it (Q-01). Razorpay needs all three pages. | Sonnet / Low | ⬜ |
 | 12 | Check unverified pages | Click through in the new look: owner Bill page, test runner, results, theory checking, Reviews, Contest; a full Google sign-in and invitation acceptance (PROGRESS.md "Unverified"). | Sonnet / Medium | ⬜ |
 | 13 | Quality gate | Full `npm run check`, PR, CI green, merge. | Haiku / Low | ⬜ |
 
