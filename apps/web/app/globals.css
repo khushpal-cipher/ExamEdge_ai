@@ -2064,3 +2064,36 @@ td .badge::before {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+/* Public site (home + legal pages on the root host) */
+.site-head,
+.site-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3, 1rem);
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+}
+.site-foot nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.site-brand {
+  font-weight: 700;
+}
+.site-main {
+  display: grid;
+  gap: 2.5rem;
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
