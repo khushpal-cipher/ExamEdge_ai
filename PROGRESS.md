@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-25 (session 49, launch + pricing plan docs)
+Last updated: 2026-10-25 (session 49 handoff: launch plan, pricing v2, code review findings 1–11 to build)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
