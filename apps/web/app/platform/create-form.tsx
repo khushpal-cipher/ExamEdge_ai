@@ -3,7 +3,7 @@
 import { useActionState } from 'react';
 import { createInstitute, type CreateState } from './actions';
 
-export function CreateInstitute({ root }: { root: string }) {
+export function CreateInstitute({ root, today, defaultEnd }: { root: string; today: string; defaultEnd: string }) {
   const [state, action, pending] = useActionState<CreateState, FormData>(createInstitute, null);
   return (
     <form action={action} className="stack">
@@ -28,12 +28,21 @@ export function CreateInstitute({ root }: { root: string }) {
           Owner email
           <input name="owner_email" type="email" required maxLength={254} />
         </label>
+        <label>
+          How many students do you have?
+          <input name="students" type="number" min={0} max={1000000} />
+        </label>
+        <label>
+          Free pilot ends (last day)
+          <input name="ends" type="date" required min={today} defaultValue={defaultEnd} />
+        </label>
         <button type="submit" className="primary" disabled={pending}>
           Create institute
         </button>
       </div>
       <p className="small muted">
-        The address becomes &lt;subdomain&gt;.{root}: at least 3 characters (lowercase letters, digits or hyphens).
+        The address becomes &lt;subdomain&gt;.{root}: at least 3 characters (lowercase letters, digits or hyphens). A
+        new institute is a free pilot: 10 students, 20 staff, $10 of AI; read-only from the day after it ends.
       </p>
       {state && 'error' in state && (
         <p role="alert" className="alert">

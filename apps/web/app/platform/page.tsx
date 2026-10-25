@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { rootHost } from '@/lib/tenant';
 import { usd } from '@/lib/usage';
+import { indiaDate } from '@/lib/pilot';
 import { signOut } from '../actions';
 import { setGlobalAi, setInrRate } from './actions';
 import { SignIn } from '../sign-in';
@@ -42,7 +43,10 @@ export default async function Platform({ searchParams }: { searchParams: Promise
 
   // RLS: rows appear only for platform admins with an aal2 session.
   const [{ data: institutes }, { data: aiOn }, { data: usage }, { data: rate }] = await Promise.all([
-    db.from('institutes').select('id, slug, name, status, created_at').order('created_at', { ascending: false }),
+    db
+      .from('institutes')
+      .select('id, slug, name, status, pilot_end, created_at')
+      .order('created_at', { ascending: false }),
     db.rpc('ai_enabled'),
     db.rpc('platform_usage'), // this India month, ADR-041
     db.rpc('inr_per_usd'),
@@ -55,6 +59,9 @@ export default async function Platform({ searchParams }: { searchParams: Promise
       ],
     ),
   );
+  const today = indiaDate();
+  const deleteBy = indiaDate(new Date(), -30); // plan-review fix 10: ended pilot data is kept 30 days
+  const oldPilots = (institutes ?? []).filter((i) => i.status === 'pilot' && i.pilot_end && i.pilot_end < deleteBy);
   return (
     <>
       <div className="top">
@@ -103,8 +110,24 @@ export default async function Platform({ searchParams }: { searchParams: Promise
       </section>
       <section className="card stack" aria-labelledby="new">
         <h2 id="new">New institute</h2>
-        <CreateInstitute root={rootHost()} />
+        <CreateInstitute root={rootHost()} today={today} defaultEnd={indiaDate(new Date(), 7)} />
       </section>
+      {oldPilots.length > 0 && (
+        <section className="card stack" aria-labelledby="old-pilots">
+          <h2 id="old-pilots">Ended pilots older than 30 days — delete by hand</h2>
+          <p className="small muted">
+            Their data is kept 30 days after the pilot ends. Export it if the coaching asks, then delete it (RUNBOOKS,
+            offboarding).
+          </p>
+          <ul>
+            {oldPilots.map((i) => (
+              <li key={i.id}>
+                <Link href={`/institutes/${i.id}`}>{i.name}</Link> — pilot ended {i.pilot_end}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <section className="card" aria-labelledby="list">
         <h2 id="list">All institutes ({institutes?.length ?? 0})</h2>
         {!institutes?.length ? (
@@ -117,6 +140,7 @@ export default async function Platform({ searchParams }: { searchParams: Promise
                   <th>Institute</th>
                   <th>Address</th>
                   <th>Status</th>
+                  <th>Pilot ends</th>
                   <th>Created</th>
                   <th>AI this month</th>
                 </tr>
@@ -132,6 +156,11 @@ export default async function Platform({ searchParams }: { searchParams: Promise
                     </td>
                     <td>
                       <span className={`badge ${i.status === 'suspended' ? 'bad' : 'good'}`}>{i.status}</span>
+                    </td>
+                    <td>
+                      {i.status === 'pilot' && i.pilot_end
+                        ? `${i.pilot_end}${i.pilot_end < today ? ' (ended)' : ''}`
+                        : '—'}
                     </td>
                     <td>{new Date(i.created_at).toLocaleDateString('en-IN')}</td>
                     <td>{used.get(i.id) ?? '0 tokens · $0.00'}</td>

@@ -1,4 +1,5 @@
 import { brandStyle, logoUrl } from '@/lib/brand';
+import { pilotState } from '@/lib/pilot';
 import { studentBatches } from '@/lib/student';
 import { MANAGERS, requireMember } from '@/lib/tenant';
 import { signOut } from '../actions';
@@ -30,14 +31,19 @@ const initials = (name: string) =>
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const { institute, member, db } = await requireMember();
-  const { data: me } = await db.from('profiles').select('full_name').eq('user_id', member.userId).maybeSingle();
+  const [{ data: me }, { data: inst }] = await Promise.all([
+    db.from('profiles').select('full_name').eq('user_id', member.userId).maybeSingle(),
+    db.from('institutes').select('status, pilot_end').eq('id', institute.id).maybeSingle(),
+  ]);
+  const pilot = inst && pilotState(inst.status, inst.pilot_end);
+  const manager = MANAGERS.includes(member.role);
   const branding = institute.branding as { color?: string; logo?: string };
   const logo = logoUrl(branding.logo);
   const batches = member.role === 'student' ? await studentBatches() : null;
   const nav =
     member.role === 'student'
       ? STUDENT_NAV
-      : MANAGERS.includes(member.role)
+      : manager
         ? [...STAFF_NAV, ['/reviews', 'Reviews'], ['/usage', 'Bill']]
         : STAFF_NAV;
   return (
@@ -75,7 +81,23 @@ export default async function PortalLayout({ children }: { children: React.React
           </form>
         </div>
       </header>
-      <main className="main">{children}</main>
+      <main className="main">
+        {pilot?.ended ? (
+          <p role="alert" className="alert">
+            Your free pilot has ended. Everything can still be read, but nothing can be changed and AI is off.
+            {manager && ' Write to support@examedgeai.in to continue.'}
+          </p>
+        ) : (
+          pilot &&
+          manager && (
+            <p role="status" className={pilot.daysLeft <= 3 ? 'alert' : 'notice'}>
+              Free pilot: {pilot.daysLeft} {pilot.daysLeft === 1 ? 'day' : 'days'} left.
+              {pilot.daysLeft <= 3 && ' After that the app becomes read-only and AI stops.'}
+            </p>
+          )
+        )}
+        {children}
+      </main>
     </div>
   );
 }

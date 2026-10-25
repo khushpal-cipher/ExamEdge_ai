@@ -28,7 +28,11 @@ export default async function InstituteAdmin({
   const { id } = await params;
   if (!isUuid(id)) notFound();
   const [{ data: inst }, { data: q }, { spent }] = await Promise.all([
-    db.from('institutes').select('id, slug, name, status, branding').eq('id', id).maybeSingle(),
+    db
+      .from('institutes')
+      .select('id, slug, name, status, branding, pilot_end, expected_students')
+      .eq('id', id)
+      .maybeSingle(),
     db.from('institute_quotas').select('*').eq('institute_id', id).maybeSingle(),
     monthUsage(db, id),
   ]);
@@ -77,6 +81,14 @@ export default async function InstituteAdmin({
             </select>
           </label>
           <label>
+            Pilot ends (last day)
+            <input name="pilot_end" type="date" defaultValue={inst.pilot_end ?? ''} />
+          </label>
+          <label>
+            Students they said they have
+            <input name="expected_students" type="number" min={0} defaultValue={inst.expected_students ?? ''} />
+          </label>
+          <label>
             Brand colour
             <input name="color" type="color" defaultValue={color} />
           </label>
@@ -84,7 +96,10 @@ export default async function InstituteAdmin({
             Save institute
           </button>
         </form>
-        <p className="small muted">Suspending blocks every member immediately.</p>
+        <p className="small muted">
+          Suspending blocks every member immediately. A pilot is read-only from the day after its end date: change the
+          date to extend it, or set the status to active.
+        </p>
         <form action={uploadLogo} className="inline" aria-label="Logo">
           <input type="hidden" name="institute_id" value={inst.id} />
           {/* eslint-disable-next-line @next/next/no-img-element -- tiny public logo, not worth image optimisation config */}
@@ -147,6 +162,14 @@ export default async function InstituteAdmin({
             <label>
               Parallel background jobs
               <input name="max_concurrent_jobs" type="number" min={1} max={50} defaultValue={q.max_concurrent_jobs} />
+            </label>
+            <label>
+              Student seats (blank = no cap)
+              <input name="max_students" type="number" min={0} defaultValue={q.max_students ?? ''} />
+            </label>
+            <label>
+              Staff seats, owner not counted (blank = no cap)
+              <input name="max_staff" type="number" min={0} defaultValue={q.max_staff ?? ''} />
             </label>
             <label className="row" style={{ display: 'flex' }}>
               <input name="hard_stop" type="checkbox" defaultChecked={q.hard_stop} />

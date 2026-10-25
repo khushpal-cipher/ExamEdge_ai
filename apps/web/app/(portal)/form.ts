@@ -23,6 +23,8 @@ const NAMED = [
   'document_no_batches',
   'document_not_ready',
   'formula_broken',
+  'read_only',
+  'seats_full',
 ];
 
 export function done(path: string, error?: { code?: string; message?: string } | null, okCode = 'saved'): never {

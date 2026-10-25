@@ -47,7 +47,14 @@ export async function signOut() {
   redirect('/');
 }
 
-const INVITE_ERRORS = ['invitation_invalid', 'invitation_not_usable', 'email_mismatch', 'already_member'];
+const INVITE_ERRORS = [
+  'invitation_invalid',
+  'invitation_not_usable',
+  'email_mismatch',
+  'already_member',
+  'seats_full',
+  'read_only',
+];
 
 export async function acceptInvite(form: FormData) {
   const token = String(form.get('token') ?? '');
