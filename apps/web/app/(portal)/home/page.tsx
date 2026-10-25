@@ -36,7 +36,7 @@ export default async function StudentHome() {
     tests,
     { data: attempts },
     { data: standings },
-    { count: classSize },
+    { data: classSize },
     { data: doubts },
     { data: tools },
   ] = await Promise.all([
@@ -54,7 +54,7 @@ export default async function StudentHome() {
       .eq('user_id', member.userId)
       .eq('batch_id', selected.id)
       .maybeSingle(),
-    db.from('batch_standings').select('user_id', { count: 'exact', head: true }).eq('batch_id', selected.id),
+    db.rpc('batch_standing_count', { batch: selected.id }),
     // RLS: only the student's own conversations' messages and own study tools.
     db.from('messages').select('created_at').eq('institute_id', institute.id).eq('role', 'user'),
     db

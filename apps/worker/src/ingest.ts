@@ -63,6 +63,17 @@ export async function ingestVersion(deps: Deps, job: Job): Promise<'ready' | 'fa
   });
   const v = rows[0];
   if (!v) return 'skipped'; // already handled, not a version of this institute, or no free job slot
+  // A long job keeps its claim fresh, so the 30-minute reclaim only fires for a dead worker (no double OCR cost).
+  const keepClaim = setInterval(
+    () =>
+      inTenant(deps.pool, job.institute_id, (c) =>
+        c.query(
+          `update public.document_versions set claimed_at = now() where id = $1 and processing_status = 'processing'`,
+          [job.version_id],
+        ),
+      ).catch((err) => log.warn('ingest.claim_refresh_failed', { err })),
+    5 * 60 * 1000,
+  );
   try {
     const bytes = await deps.download(v.storage_path).catch(() => {
       throw new IngestError('file_missing');
@@ -137,6 +148,8 @@ export async function ingestVersion(deps: Deps, job: Job): Promise<'ready' | 'fa
       ),
     );
     return 'failed';
+  } finally {
+    clearInterval(keepClaim);
   }
 }
 

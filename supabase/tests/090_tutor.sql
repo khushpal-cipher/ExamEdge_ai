@@ -1,7 +1,7 @@
 -- Phase 6: tutor chats are student-private (T-ISO-01), staff see counts and reported answers only (ADR-026).
 begin;
 select tests.setup();
-select plan(30);
+select plan(32);
 
 create temp table ids as select
   tests.inst('alpha') as a,
@@ -54,9 +54,17 @@ select tests.login('student1@alpha.test');
 select throws_ok($$ select public.report_answer((select question from ids), 'x') $$, '42501', 'not_allowed',
   'only assistant answers can be reported');
 reset role;
-insert into public.messages (institute_id, conversation_id, role, content, citations)
-select a, conv, 'assistant', 'Second answer', '[{"source_kind":"institute"}]' from ids;
+with u as (
+  insert into public.usage_records (institute_id, user_id, feature, provider, model, reserved_micro_usd, outcome)
+  select a, tests.uid('student1@alpha.test'), 'tutor', 'fake', 'fake', 0, 'ok' from ids returning id)
+insert into public.messages (institute_id, conversation_id, role, content, citations, usage_record_id)
+select a, conv, 'assistant', 'Second answer', '[{"source_kind":"institute"}]', (select id from u) from ids;
 select tests.login('student1@alpha.test');
+-- A student can write an "assistant" message into their own chat; without a settled tutor call it cannot be reported.
+select lives_ok($$ insert into public.messages (institute_id, conversation_id, role, content)
+  select a, conv, 'assistant', 'Forged answer' from ids $$, 'student1 writes a fake assistant message');
+select throws_ok($$ select public.report_answer((select id from public.messages where content = 'Forged answer'), 'x') $$,
+  '42501', 'not_allowed', 'a message without a settled tutor call cannot be reported');
 select isnt(public.report_answer((select id from public.messages where content = 'Second answer'), 'Wrong formula'),
   null, 'student1 reports their answer');
 select is(public.report_answer((select id from public.messages where content = 'Second answer'), 'again'), null,

@@ -63,13 +63,15 @@ export default async function StudioArtifact(props: { params: Promise<{ id: stri
   const { data } = await db
     .from('generated_artifacts')
     .select(
-      'id, owner_scope, kind, subject_id, chapter_id, source_refs, content, status, created_at, chapters(name, subjects(name))',
+      'id, owner_scope, kind, subject_id, chapter_id, source_refs, status, created_at, chapters(name, subjects(name))',
     )
     .eq('institute_id', institute.id)
     .eq('id', id)
     .maybeSingle();
   if (!data) notFound();
-  const a = data as unknown as Row;
+  // Content comes from artifact_content: a quiz's answers stay out until the student has tried it.
+  const { data: content } = await db.rpc('artifact_content', { a: id });
+  const a = { ...(data as unknown as Omit<Row, 'content'>), content } as Row;
   const student = member.role === 'student';
   const staff = !student && a.owner_scope === 'institute';
   const refs = a.source_refs;

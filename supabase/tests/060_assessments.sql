@@ -20,6 +20,8 @@ select is(private.grade_objective('multi', '{"correct":["a","b","c","d"]}', '["a
   'multi: three right options of four = +3');
 select is(private.grade_objective('multi', '{"correct":["a","c"]}', '["c","a","a"]', 4, 2), 4.0,
   'multi: all right options (repeats ignored) = full');
+select is(private.grade_objective('multi', '{"correct":["a","b","c","d","e"]}', '["a","b","c","d"]', 4, 2), 3.2,
+  'multi: 4 of 5 right options never reach full marks');
 select is(private.grade_objective('multi', '{"correct":["a","c"]}', '["a","b"]', 4, 2), -2.0,
   'multi: a wrong option picked = negative, even with a right one');
 select is(private.grade_objective('multi', '{"correct":["a","c"]}', '["a"]', 8, 0), 2.0,
@@ -166,12 +168,12 @@ select lives_ok(format($$ select public.submit_attempt(%L) $$, tests.attempt('Un
   'student submits');
 select throws_ok(format($$ select public.submit_attempt(%L) $$, tests.attempt('Unit 1', 'student1@alpha.test')),
   'P0001', 'attempt_closed', 'double submit rejected');
--- ADR-046: own result right after submit; no keys while the test is still open, written answer not checked yet.
-select results_eq(format($$ select type, marks_awarded, key, explanation from public.get_attempt_review(%L) order by pos $$,
-  tests.attempt('Unit 1', 'student1@alpha.test')),
-  $$ values ('single', 4.0, null::jsonb, null::text), ('multi', 4.0, null, null), ('numerical', 4.0, null, null),
-            ('written', null, null, null) $$,
-  'after submit, before close: objective marks live, no keys or explanations, written not checked yet');
+-- ADR-046 ("Mix"): total marks right after submit; per-question marks and keys only once the test closes.
+select results_eq(format($$ select type, marks_awarded, key, explanation, revealed, pending, score
+  from public.get_attempt_review(%L) order by pos $$, tests.attempt('Unit 1', 'student1@alpha.test')),
+  $$ values ('single', null::numeric, null::jsonb, null::text, false, false, 12.0), ('multi', null, null, null, false, false, 12.0),
+            ('numerical', null, null, null, false, false, 12.0), ('written', null, null, null, false, true, 12.0) $$,
+  'after submit, before close: live total only; no per-question marks, keys or explanations; written not checked yet');
 select throws_ok(format($$ select public.save_answer(%L, %L, '["b"]') $$,
   tests.attempt('Unit 1', 'student1@alpha.test'), tests.id_of('questions', 'stem', 'Q1 single')), 'P0001',
   'attempt_closed', 'no saves after submit');
@@ -356,6 +358,9 @@ select is((select count(*) from public.get_attempt_review(tests.attempt('Unit 1'
 select is((select teacher_comment from public.get_attempt_review(tests.attempt('Unit 1', 'student1@alpha.test'))
            where type = 'written'), 'Mention r x F', 'and the teacher''s comment');
 select is((select count(*) from public.batch_standings), 1::bigint, 'student sees only own standing row');
+select is(public.batch_standing_count((select id from pg_temp.bx)), 3::bigint, 'but can count the whole batch (Home "of N")');
+select throws_ok($$ select public.batch_standing_count(gen_random_uuid()) $$, '42501', 'not_allowed',
+  'not a batch they are not in');
 create temp table progress_self on commit drop as
   select public.student_progress(tests.inst('alpha'), tests.uid('student1@alpha.test')) as p;
 select is((select jsonb_array_length(p -> 'tests') from progress_self), 3, 'progress lists the 3 released tests');

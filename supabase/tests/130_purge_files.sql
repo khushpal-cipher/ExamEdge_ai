@@ -34,9 +34,16 @@ update public.institutes set branding = jsonb_build_object('logo', id || '/00000
 -- alpha's notes were deleted 31 days ago; bravo's 29 days ago (still in the grace period).
 update public.documents set deleted_at = now() - interval '31 days' where id = (select notes from ids where slug = 'alpha');
 update public.documents set deleted_at = now() - interval '29 days' where id = (select notes from ids where slug = 'bravo');
+-- Code review 10: bravo's upload was bigger than declared (failed `too_large`); its file is purgeable although the
+-- document is live.
+update public.documents set deleted_at = null where id = (select notes from ids where slug = 'bravo');
+update public.document_versions set processing_status = 'failed', error_code = 'too_large'
+  where document_id = (select notes from ids where slug = 'bravo');
 create temp table expected on commit drop as
   select 'documents' as bucket, v.storage_path as name from public.document_versions v
   where v.document_id = (select notes from ids where slug = 'alpha')
+  union all select 'documents', v.storage_path from public.document_versions v
+  where v.document_id = (select notes from ids where slug = 'bravo')
   union all values ('documents', '00000000-0000-4000-8000-0000000000dd/00000000-0000-4000-8000-0000000000de/x'),
                    ('logos', (select inst from ids where slug = 'alpha') || '/00000000-0000-4000-8000-00000000000b');
 grant select on expected to authenticated, worker;
