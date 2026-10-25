@@ -199,7 +199,9 @@ What #41 contains:
   Same day: full code review (server code + all migrations read; pages' layout not reviewed): findings 1–10 in
   LAUNCH_PLAN "Code review findings", with the fix approach. Founder: "fix 1 to 10", then "work for the next
   session" — NOTHING built; the few started edits were reverted. Next exact action (session 50, founder runs it on SONNET): build LAUNCH_PLAN "Build order by model" BATCH A only
-  (CR 3–11, steps 2, 10, 11, 12; CR 1–2 are Opus, Batch B) on `r17-next` (pgTAP for 1, 2, 4, 6, 8, 10; unit for 3, 5), quality gate, PR; then ask the founder
+  (CR 3–11, steps 2, 10, 11, 12; CR 1–2 are Opus, Batch B) on `r17-next` — ask the founder at the start for the
+  legal page details (business name, address, phone, complaints contact); other decisions are saved in LAUNCH_PLAN
+  ("yes to all" 2026-10-25: 3-day grace, top-up ₹2,500 = $20, staff 30 doubts/day, pilot staff cap 20) (pgTAP for 1, 2, 4, 6, 8, 10; unit for 3, 5), quality gate, PR; then ask the founder
   before starting LAUNCH_PLAN step 1.
 1. Ask the founder what to build next. Open ideas (founder's word needed): plans table + Bill page showing plan,
    student count, monthly / yearly price (design explained in session 48, nothing built; prices in
