@@ -509,6 +509,11 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
 - **Why keys wait for closing time:** students start at different times inside the test window; an early finisher
   who saw the key could pass it to classmates still writing (founder chose this over showing keys at once).
 
+- **Amendment "Mix" (founder, 2026-10-25, migration 38):** after submitting, the student sees only the **total marks**
+  at once. Per-question right/wrong, marks and correct answers appear once the test's closing time passes
+  (`get_attempt_review` returns `revealed`, `pending`, `score`; per-question marks are null before). Why: on a long
+  window an early finisher could tell classmates which answers were right.
+
 ### ADR-047 Student reviews, read only by owner/admin (founder, 2026-10-18)
 - **Decision:** a "Review" page in the student sidebar (text up to 2000 characters, "Hide my name" tick box) and a
   "Reviews" page for owner/admin listing them newest first with name + batch, or "Anonymous" + batch. Teachers have
@@ -702,3 +707,13 @@ sitemap or robots.txt).
 - **How:** CSS only plus small markup changes (`(portal)/layout.tsx` header, `home/page.tsx`, Bill and progress number
   bands); fonts Inter, IBM Plex Mono, Silkscreen, Source Serif 4 via `next/font/google` (self-hosted at build, no new
   dependency). Students are scoped by `.shell[data-look='retro']`.
+
+### ADR-057 Price per account in slabs, teachers charged too (founder, 2026-10-25, not built)
+- **Decision (founder):** replaces the Mini/Basic/Pro/Scale plans with one price per account per month: first 300 at
+  ₹200, 301–1,000 at ₹120, above 1,000 at ₹89, applied like income-tax slabs; minimum 30 accounts; every account is
+  charged (students, teachers, admins), only the owner is free; yearly = pay 10 months, get 12; GST on top.
+- **Why:** no jump between plans (301 students pay for 301), and charging staff closes the "students added as
+  teachers" loophole. The AI budget (accounts × $0.60 + $31, hard stop on) caps our AI cost below the price.
+- **Details and the loophole list:** docs/PRICING_PLAN.md §2a. Order of work: docs/LAUNCH_PLAN.md steps 3–8.
+- **Risk:** prices are estimates [E], not tested with coachings; check real cost per account after the first pilot month.
+

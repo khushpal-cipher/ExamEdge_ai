@@ -1,10 +1,12 @@
 import { PgBoss } from 'pg-boss';
 import pg from 'pg';
 import { log } from '@examedge/core/log';
+import { assertLiveAi } from '@examedge/core/demo';
 import { ingestVersion, pendingJobs, type Job } from './ingest';
 import { purge } from './purge';
 import { workerDownloader, workerStorage } from './storage';
 
+assertLiveAi(process.env);
 const connectionString = process.env.WORKER_DATABASE_URL;
 if (!connectionString) throw new Error('WORKER_DATABASE_URL is required');
 

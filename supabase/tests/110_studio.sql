@@ -2,7 +2,7 @@
 -- tries are private to that student; institute artifacts reach students only once published to their batch.
 begin;
 select tests.setup();
-select plan(41);
+select plan(48);
 
 create temp table ids as select
   tests.inst('alpha') as a,
@@ -87,19 +87,34 @@ select is(tests.affected($$ delete from public.generated_artifacts where id = (s
 
 -- ---------------------------------------------------------------- practice quizzes are graded by the database
 select tests.login('student2@alpha.test');
+-- Code review 9: the answers are not readable before the first try, neither as content nor as a column.
+select throws_ok($$ select content from public.generated_artifacts $$, '42501', null,
+  'the content column is closed to API users');
+select is((select jsonb_path_exists(public.artifact_content((select quiz from ids)), '$.questions[*].answer')), false,
+  'before a try the quiz comes without answers');
+select is((select jsonb_path_exists(public.artifact_content((select quiz from ids)), '$.questions[*].explanation')),
+  false, 'and without explanations');
+select is((select jsonb_array_length(public.artifact_content((select quiz from ids)) -> 'questions')), 2,
+  'but with all its questions');
 select is(public.submit_practice((select quiz from ids), '{"q1":"a","q2":"c","x":"junk"}') - 'results',
   '{"score":1,"max_score":2}'::jsonb, 'the database grades the quiz');
 select results_eq($$ select answers, score, max_score from public.practice_attempts $$,
   $$ values ('{"q1":"a","q2":"c"}'::jsonb, 1, 2) $$, 'the try is recorded for the student, unknown answers dropped');
 select throws_ok($$ insert into public.practice_attempts (institute_id, user_id, artifact_id, answers, score, max_score)
   select a, auth.uid(), quiz, '{}', 2, 2 from ids $$, '42501', null, 'a student cannot write a score directly');
+select is((select jsonb_path_exists(public.artifact_content((select quiz from ids)), '$.questions[*].answer')), true,
+  'after a try the answers come with the content');
 select tests.login('student3@alpha.test');
+select throws_ok($$ select public.artifact_content((select quiz from ids)) $$, '42501', 'not_allowed',
+  'a student outside the audience cannot read the content');
 select throws_ok($$ select public.submit_practice((select quiz from ids), '{}') $$, '42501', 'not_allowed',
   'a quiz not published to the student''s batch cannot be taken');
 select tests.login('student1@bravo.test');
 select throws_ok($$ select public.submit_practice((select quiz from ids), '{}') $$, '42501', 'not_allowed',
   'another institute''s student cannot take it');
 select tests.login('teacher1@alpha.test');
+select is((select jsonb_path_exists(public.artifact_content((select quiz from ids)), '$.questions[*].answer')), true,
+  'staff read the quiz with its answers');
 select throws_ok($$ select public.submit_practice((select quiz from ids), '{}') $$, '42501', 'not_allowed',
   'staff tries are not recorded');
 

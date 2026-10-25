@@ -1,5 +1,5 @@
 // JSON line logger. Never log PII or prompt text: sensitive keys are dropped and emails masked.
-const SENSITIVE_KEY = /email|name|phone|prompt|content|text|answer|password|token|secret|key/i;
+const SENSITIVE_KEY = /email|name|phone|prompt|content|text|answer|password|token|secret|key|details|hint/i;
 const EMAIL = /[\w.+-]+@[\w-]+(\.[\w-]+)+/g;
 
 type Fields = Record<string, unknown>;

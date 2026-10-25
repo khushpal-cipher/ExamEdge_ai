@@ -25,8 +25,11 @@ type Review = {
     model_answer?: string;
   } | null;
   marks: number;
-  marks_awarded: number | null; // null = written answer not checked yet
+  marks_awarded: number | null; // null until the test closes (ADR-046 "Mix"); then null = written not checked yet
   teacher_comment: string | null;
+  revealed: boolean; // per-question marks shown (test closed or released)
+  pending: boolean; // written answer not checked yet
+  score: number; // live total, same on every row
 };
 
 const letters = (ids: unknown) =>
@@ -171,8 +174,9 @@ async function ReviewView({
   const { data, error } = await ctx.db.rpc('get_attempt_review', { a: attempt.id });
   if (error) throw error;
   const rows = (data ?? []) as Review[];
-  const unchecked = rows.filter((r) => r.marks_awarded == null).length;
-  const score = released ? attempt.score : rows.reduce((s, r) => s + Number(r.marks_awarded ?? 0), 0);
+  const unchecked = rows.filter((r) => r.pending).length;
+  const score = released ? attempt.score : Number(rows[0]?.score ?? 0);
+  const revealed = rows.every((r) => r.revealed);
   const max = released ? attempt.max_score : rows.reduce((s, r) => s + Number(r.marks), 0);
   return (
     <>
@@ -206,6 +210,9 @@ async function ReviewView({
           <b>{released ? attempt.rank : 'After release'}</b>
         </div>
       </div>
+      {!revealed && (
+        <p className="muted">Right and wrong per question after the test closes ({formatTime(test.closes_at)}).</p>
+      )}
       <p>
         <Link href="/progress">See your overall rank and progress</Link>
       </p>
@@ -213,7 +220,7 @@ async function ReviewView({
         <section key={r.question_id} className="card stack" aria-labelledby={`r-${r.question_id}`}>
           <h2 id={`r-${r.question_id}`}>
             Question {i + 1}{' '}
-            {r.marks_awarded == null ? (
+            {!r.revealed ? null : r.marks_awarded == null ? (
               <span className="badge warn">Not checked yet</span>
             ) : (
               <span className={`badge ${r.marks_awarded >= r.marks ? 'good' : r.marks_awarded < 0 ? 'bad' : 'warn'}`}>

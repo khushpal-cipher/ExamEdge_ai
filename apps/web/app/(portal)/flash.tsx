@@ -32,6 +32,7 @@ const ERRORS: Record<string, string> = {
   budget: "Your institute's AI budget for this month is used up. Please tell your institute admin.",
   ai_disabled: 'AI is switched off right now. Please try again later.',
   no_sources: 'There are no published notes for this topic yet, so there is nothing to make it from.',
+  coming_soon: 'Audio and video overviews are coming soon.',
   notes_refused: 'The AI could not write notes from this explanation. Try explaining it differently.',
   storage_full: 'Your institute’s storage is full. Ask your admin.',
   refused: 'The AI could not make this from these notes. Please ask your teacher.',

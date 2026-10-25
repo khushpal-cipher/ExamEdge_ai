@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-24 (session 48, handoff)
+Last updated: 2026-10-25 (session 49 handoff: launch plan, pricing v2, code review findings 1–11 to build)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -12,6 +12,7 @@ Last updated: 2026-10-24 (session 48, handoff)
 **Phase 6 MERGED** into `main` (PR #7, squash commit `7863900`, CI green: check + secrets, run 38841699259 — unit 104, pgTAP 1064, integration 21, E2E 22/22 against the production build, 2026-10-16).
 **Phase 8 MERGED** into `main` (PR #8, squash commit `bce1046`, CI green: check + secrets, run 38848935766 — unit 111, pgTAP 1107, integration 21, E2E 24/24 against the production build, 2026-10-16).
 **Phase 9 MERGED** into `main` (PR #9, squash commit `67ed4ac`, CI green: check + secrets, run 38869056404 — pgTAP 1220, E2E 26/26 against the production build incl. T-SEC-05, 2026-10-16).
+**New UI (ADR-056) MERGED** into `main` (PR #41, squash commit `f1b9d3f`, CI green: check + secrets, run 40065062694, 2026-10-24).
 **Phase 10 (local parts) MERGED** into `main` (PR #10, squash commit `dc7600f`, CI green: check + secrets, run 38877776627 — unit 132, pgTAP 1243, integration 23, E2E 26/26 against the production build incl. T-SEC-05, 2026-10-16).
 **R1 OCR MERGED** into `main` (PR #11, squash commit `69d3fc6`, CI green: E2E 26/26, run 38880693017, 2026-10-16).
 **R1 file purge MERGED** into `main` (PR #12, squash commit `6f343a0`, CI green: run 38896124282 — unit 135, pgTAP 1256, integration 26, E2E 26/26 against the production build, 2026-10-16).
@@ -148,10 +149,47 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 49)
-**State (2026-10-24, end of session 48):** main = `707294d` (unchanged, CI green). **Checked-out branch: `r16-mono` —
-LOCAL ONLY, never pushed (same founder rule as all `r16-*`: do NOT push or merge until the founder says so).**
-`r16-mono` = `r16-fun-ui` + the founder's friend's two concepts (session 48):
+## Next exact action (session 51)
+
+**Session 51 (2026-10-25, Sonnet):** legal details filled in (`business.ts`), docs updated (ADR-046 Mix amendment, LAUNCH_PLAN statuses), PR #42 opened; E2E tutor fixture fixed (settled usage record), retro UI polish (tab padding, round send button, tile labels, badge spacing). Step 12 owner click-through (founder signed in as Owner, `next start` :3005): Bill, Tests + results rank list, theory check page, Reviews, People, Batches, Subjects, Question bank load with 0 page errors, 1 H1 each; scrollWidth = 375 at phone width on check, results, Bill, Reviews, People, student page, Batches. Mix checked (headless student1, temporary test, closing time moved by hand in a transaction, then all rows deleted): before close "4 / 4" + "per question after the test closes", no key; after close "4 / 4" per question + "Correct answer: B". Not clicked: Google sign-in itself, invitation acceptance. Local `institutes.name` 'newtown' renamed 'Allen' by hand (slug unchanged).
+**State (2026-10-25, end of session 50, Sonnet, branch `r17-next`, NOT pushed, NOT merged, no PR yet):** LAUNCH_PLAN
+Batch A is about 70% built. Commits on `r17-next` after `3d267f9`: live-site AI guard + log scrub; migrations 36–38 with
+code-review fixes 4, 6, 8, 9, 10, 11; worker claim refresh (7); overviews "Beta · Coming soon"; public home page, legal
+pages, robots, sitemap. Local DB has migrations 36, 37, 38 applied (`supabase migration up`, no reset).
+Built (see `git log --oneline 3d267f9..HEAD`):
+- CR 3 `assertLiveAi` (`packages/core/src/demo.ts`, called from `apps/web/instrumentation.ts` and `apps/worker/src/index.ts`).
+- CR 5 `details|hint` scrubbed in `packages/core/src/log.ts`.
+- CR 4 `batch_standing_count` rpc used by student Home. CR 6 `report_answer` needs a settled tutor usage record + unique
+  index on `messages(usage_record_id)`. CR 8 `least(...)` in `grade_objective`. CR 11 "Mix": `get_attempt_review` now returns
+  `revealed`, `pending`, `score`; per-question marks null until the test closes (`student-test.tsx`, E2E `assessments.spec.ts`
+  updated). CR 7 `setInterval` claim refresh in `apps/worker/src/ingest.ts`. CR 10 `private.purgeable` ignores failed
+  `too_large` versions. CR 9 `content` column closed to API users; read via `artifact_content(a)` (studio page, studio actions).
+- Step 2 `overviewsEnabled` (on locally or `OVERVIEWS_BETA=true`); tiles disabled with "Beta · Coming soon"; server refuses.
+- Step 10 home page `Landing` in `apps/web/app/page.tsx` (root host only), `robots.ts`, `sitemap.ts`, `lib/business.ts`.
+- Step 11 five legal pages at `/legal/<doc>` (`apps/web/app/legal/docs.ts`) with PLACEHOLDERS in `apps/web/lib/business.ts`
+  (`[business name]`, `[registered address]`, `[phone number]`, `[grievance officer name]`).
+Evidence (2026-10-25, before the last two commits): `npx supabase test db` Files=26 Tests=1471 PASS; `npm test` 198/198;
+`npm run test:int` 28/28; lint + forbidden, typecheck, format PASS; `npm run build -w @examedge/web` PASS (after the
+home page). **Unverified:** home page and legal pages not looked at in the browser; E2E not run (needs `npm run check`;
+:3000 may be held by another `next dev`); `OVERVIEWS_BETA` tile look; `docs` not updated (ADR for Mix/ADR-046 change,
+LAUNCH_PLAN statuses, HOW_IT_WORKS result page text).
+Next exact action:
+1. Get from the founder: business name, registered address, phone, grievance officer name (founder may name themselves;
+   email stays support@examedgeai.in). Put them in `apps/web/lib/business.ts`.
+2. Look at `/` and `/legal/privacy` at 1280 and 375 px in the browser (root host `localhost`, e.g. preview `web-prod-3005`
+   after rebuild); check one H1, title/description lengths.
+3. LAUNCH_PLAN step 12: click through owner Bill page, test runner, results (new Mix text), theory checking, Reviews, Contest.
+4. Docs: add the "Mix" change to DECISIONS.md (next to ADR-046), mark CR 3–11 and steps 2, 10, 11 done in LAUNCH_PLAN,
+   update HOW_IT_WORKS result text.
+5. `npm run check` full gate, push `r17-next`, open PR into main, CI green, merge. Then stop: Batch B (Opus) is next.
+
+## Next exact action (session 49) — history
+**State (2026-10-24, end of session 48):** **PR #41 MERGED** (squash `f1b9d3f` on main, CI green: check + secrets, run
+40065062694 — E2E incl. axe passed after fix `997ae8b`: lighter `--good-soft #f0f8f3` / `--warn-soft #fdf5e8` /
+`--bad-soft #fcf1ef` so the brighter status text stays ≥ 4.6:1, and `role="img"` on the Home level bar). Founder: "UI is
+final for now." Checked-out branch: `r17-next` (from main, holds only this handoff). `r16-fun-ui`, `r16-violet`,
+`r16-saffron` stay local, superseded; `r16-mono` is merged.
+What #41 contains:
 - Staff (owner/admin/teacher): black-and-white "mono" look — compact top bar replaces the sidebar (portal
   `layout.tsx`: `<header className="side">`, name · role + Sign out on the right), Inter text, IBM Plex Mono labels and
   numbers, white boxed sections with small uppercase mono titles, full screen width (founder: "remove blank space on
@@ -171,17 +209,39 @@ LOCAL ONLY, never pushed (same founder rule as all `r16-*`: do NOT push or merge
   typecheck` ok, `npm test` 195/195 passed, `npm run build -w @examedge/web` ok; browser check on `next start`
   (launch config `web-prod-3005`) at 1280/1600 and 375 px: student Home, My progress, teacher Dashboard / Tests /
   People / Question bank / Subjects / student page, no page-level horizontal scroll at 375.
-- **Unverified:** E2E + axe (CI only; branch not pushed). Owner Bill page in the new look (no `.test` owner login;
+- E2E + axe: PASSED in CI run 40065062694. **Unverified:** owner Bill page in the new look (no `.test` owner login;
   founder signs in with Google) — ask the founder to look. Test runner, results, sign-in, check page, Reviews, Contest
   in the new look not clicked through. E2E `usage.spec.ts` expects the tokens figure text `/^[\d,]+ tokens$/` — kept
   (`1,234 <small>tokens</small>`).
 - Pricing (no code): founder's working plan saved in `docs/PRICING_PLAN.md` (`041cd8b`): Mini ≤150 ₹19,999, Basic
   ≤300 ₹34,999, Pro ≤600 ₹59,999, Scale 1,000+ ₹89/student (floor ₹79), yearly = pay 10 get 12, budget = students ×
   $0.55–0.60 + $31, 15 doubts / 5 generations a day. Founder: "don't build anything for now, I will handle this."
-1. Ask the founder for feedback on `r16-mono` (or more friend screenshots). Fix what they name on `r16-mono`, rebuild
-   and restart `web-prod-3005` after CSS changes (a rebuild under a running `next start` serves unstyled pages).
-2. Optional, only if the founder wants it: Dashboard number cards as the same `.stats` band.
-3. Before any PR of `r16-mono` (only on the founder's word): merge main (`707294d`), `npm run check`, push, PR, CI.
+- Session 48 Q&A (no code): founder's free-pilot idea and launch money saved in `docs/PRICING_PLAN.md` §10–11
+  (`acd8569`): pilot = status `pilot`, 14 days, 10 students, same Claude AI (not free Gemini: ADR-051 data rule),
+  $10 budget, read-only after day 14, student count asked at pilot start; then Bill page "Choose a plan" + Razorpay
+  in test mode. First 2 months with no clients ≈ ₹10–15k (domain, Vercel Pro, Supabase free→Pro, Railway Hobby,
+  $20 Claude credits); only paid AI key = Anthropic (Haiku / Sonnet / Opus); voice for audio/video stays the free
+  browser voice (Sarvam later, founder's decision). Founder: nothing to build yet.
+- Session 49 (2026-10-24/25, docs only, no code): founder's launch order saved in `docs/LAUNCH_PLAN.md`; pricing v2 =
+  price per account in slabs, teachers charged too (ADR-057, `docs/PRICING_PLAN.md` §2a). Pilot changed to 7 days,
+  10 students, unlimited teachers/admins. All session Q&A saved in LAUNCH_PLAN "Session 49 notes". Audio/video overviews stay
+  local Beta (hidden from real users, LAUNCH_PLAN step 2). Payment by UPI checked by hand until Razorpay (step 7,
+  founder's yes pending). A first pilot-rules migration was written, applied locally, then fully undone at the
+  founder's request (local institutes back to `pilot`, migration row removed). Nothing to build until the founder says go.
+  2026-10-25: founder said yes to UPI payment by hand and that step 1 (pilot) is next, but "don't build it now".
+  Plan review fixes 1–10 are in LAUNCH_PLAN "Fixes found in the plan review".
+  Same day: full code review (server code + all migrations read; pages' layout not reviewed): findings 1–10 in
+  LAUNCH_PLAN "Code review findings", with the fix approach. Founder: "fix 1 to 10", then "work for the next
+  session" — NOTHING built; the few started edits were reverted. Next exact action (session 50, founder runs it on SONNET, Medium effort): build LAUNCH_PLAN "Build order by model" BATCH A only
+  (CR 3–11, steps 2, 10, 11, 12; CR 1–2 are Opus, Batch B) on `r17-next` — ask the founder at the start for the
+  legal page details (business name, address, phone, complaints contact); other decisions are saved in LAUNCH_PLAN
+  ("yes to all" 2026-10-25: 3-day grace, top-up ₹2,500 = $20, staff 30 doubts/day, pilot staff cap 20) (pgTAP for 1, 2, 4, 6, 8, 10; unit for 3, 5), quality gate, PR; then ask the founder
+  before starting LAUNCH_PLAN step 1.
+1. Ask the founder what to build next. Open ideas (founder's word needed): plans table + Bill page showing plan,
+   student count, monthly / yearly price (design explained in session 48, nothing built; prices in
+   docs/PRICING_PLAN.md — founder said "I will handle this"); Dashboard number cards as the `.stats` band; go-live
+   accounts (Phase 10 cloud, needs founder approval and money).
+2. New work goes on `r17-next` (or a new branch from main); push it and open a PR when green.
 - Demo logins (localhost, "Demo user email", no password): students `student1@newtown.test` (Riya Sharma),
   `student2@newtown.test` (Aman Singh, has results), `priya.sharma@`, `rohan.mehta@`, `sneha.patel@`,
   `vikram.singh@newtown.test`; teachers `teacher.jee@newtown.test`, `teacher.neet@newtown.test`; owner = founder's Google.

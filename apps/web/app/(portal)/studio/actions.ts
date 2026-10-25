@@ -18,7 +18,8 @@ import {
 import { log } from '@examedge/core/log';
 import { webMeter } from '@/lib/meter';
 import { chapterNotes } from '@/lib/notes';
-import { textFields, withTexts } from '@/lib/studio';
+import { overviewsEnabled } from '@examedge/core/demo';
+import { BETA_KINDS, textFields, withTexts } from '@/lib/studio';
 import { isUuid, requireMember, STAFF } from '@/lib/tenant';
 import { done } from '../form';
 
@@ -32,6 +33,7 @@ export async function generate(form: FormData) {
   if (!isUuid(subject) || !isUuid(chapter)) redirect('/');
   const here = `/topics/${chapter}`;
   if (!KINDS.includes(kind)) back(here, 'invalid');
+  if (BETA_KINDS.has(kind) && !overviewsEnabled(process.env)) back(here, 'coming_soon');
   const student = member.role === 'student';
 
   // RLS: the chapter is visible only if its subject is (students: subjects of their batches).
@@ -113,12 +115,13 @@ async function artifact(form: FormData, roles?: string[]) {
   if (!isUuid(id)) redirect('/');
   const { data } = await m.db
     .from('generated_artifacts')
-    .select('id, kind, content, source_refs, subject_id')
+    .select('id, kind, source_refs, subject_id')
     .eq('institute_id', m.institute.id)
     .eq('id', id)
     .maybeSingle();
   if (!data) back(`/studio/${id}`, 'denied');
-  return { ...m, a: data as Artifact, path: `/studio/${id}` };
+  const { data: content } = await m.db.rpc('artifact_content', { a: id });
+  return { ...m, a: { ...data, content } as Artifact, path: `/studio/${id}` };
 }
 
 // Staff edit the generated text; the shape and the citations stay as generated, and the result is validated again.
@@ -202,7 +205,7 @@ export async function deleteArtifact(form: FormData) {
 // The database grades the quiz and records the try (submit_practice). The quiz page sends no answers to the browser;
 // they come back only with the result.
 export async function submitQuiz(artifactId: string, answers: Record<string, string>) {
-  const { institute, db } = await requireMember(['student']);
+  const { db } = await requireMember(['student']);
   if (!isUuid(artifactId)) return null;
   const clean = Object.fromEntries(
     Object.entries(answers)
@@ -217,14 +220,9 @@ export async function submitQuiz(artifactId: string, answers: Record<string, str
     results: { id: string; choice: string | null; answer: string; correct: boolean; explanation?: string }[];
   };
   // Explanations give the answer away, so they are shown only now.
-  const { data: a } = await db
-    .from('generated_artifacts')
-    .select('content')
-    .eq('institute_id', institute.id)
-    .eq('id', artifactId)
-    .single();
+  const { data: content } = await db.rpc('artifact_content', { a: artifactId });
   const why = new Map(
-    ((a?.content as { questions?: { id: string; explanation: string }[] })?.questions ?? []).map((q) => [
+    ((content as { questions?: { id: string; explanation: string }[] })?.questions ?? []).map((q) => [
       q.id,
       q.explanation,
     ]),

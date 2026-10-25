@@ -2059,3 +2059,74 @@ td .badge::before {
     transform: none;
   }
 }
+
+.tile:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Public site (home + legal pages on the root host) */
+.site-head,
+.site-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3, 1rem);
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+}
+.site-foot nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.site-brand {
+  font-weight: 700;
+}
+.site-main {
+  display: grid;
+  gap: 2.5rem;
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* Retro polish: room inside boxes, round send button, badges that do not touch their neighbours */
+.shell[data-look='retro'] .tabs.always {
+  gap: var(--s3);
+  border-bottom: 0;
+}
+.shell[data-look='retro'] .tabs.always button {
+  padding: 0 var(--s4);
+  margin-bottom: 0;
+}
+.shell[data-look='retro'] .tabs.always button[aria-selected='true'] {
+  background: var(--ink);
+  color: #fff;
+}
+.shell[data-look='retro'] .main section.card > .row:first-child {
+  padding-top: var(--s4);
+}
+.shell[data-look='retro'] .composer button {
+  border-radius: 50%;
+  box-shadow: none;
+}
+.shell[data-look='retro'] li > .badge,
+.shell[data-look='retro'] .tile .badge {
+  display: inline-block;
+  margin: 0 var(--s2) 0 var(--s1);
+  padding: 2px var(--s2);
+}
+.shell[data-look='retro'] .tile h3,
+.shell[data-look='retro'] .tile > span {
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  overflow-wrap: normal;
+}
