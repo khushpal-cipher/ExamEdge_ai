@@ -20,7 +20,7 @@ Status key: ⬜ not started · 🟨 started · ✅ done
 | 8 | Renewal | Reminder email + banner before "paid until" ends; read-only after a few days' grace if unpaid. | Sonnet / Medium | ⬜ |
 | 9 | Budget warning + top-ups | Warn the owner at 80% of the AI budget; top-up pack ₹2,500 for $20 more AI (paid the same way as step 7). | Sonnet / Medium | ⬜ |
 | 10 | Public home page | `examedgeai.in`: what ExamEdge does, prices, "Book a demo" / contact (`support@examedgeai.in`), links to the legal pages; one H1, title and description, robots.txt + sitemap. Razorpay and coachings look here first. | Sonnet / Medium | ⬜ |
-| 11 | Legal pages | Claude drafts Privacy, Terms (incl. "one account = one coaching"), Refund & Cancellation, Contact Us and Service delivery pages from a standard template, written for what ExamEdge really does (founder approves; lawyer reviews later). Founder supplies: business name, address, phone, grievance officer name + email, monthly cancellation rule; consent step for students if the lawyer asks for it (Q-01). Razorpay needs all three pages. | Sonnet / Low | ⬜ |
+| 11 | Legal pages | Claude drafts Privacy, Terms (incl. "one account = one coaching"), Refund & Cancellation, Contact Us and Service delivery pages from a standard template, written for what ExamEdge really does (founder approves; lawyer reviews later). Founder supplies: business name, address, phone, grievance officer name + email. Refund rule (founder, 2026-10-25): **no refund for any payment** (monthly, yearly, top-ups); a coaching can cancel anytime and keeps access until the paid period ends; consent step for students if the lawyer asks for it (Q-01). Razorpay needs all three pages. | Sonnet / Low | ⬜ |
 | 12 | Check unverified pages | Click through in the new look: owner Bill page, test runner, results, theory checking, Reviews, Contest; a full Google sign-in and invitation acceptance (PROGRESS.md "Unverified"). | Sonnet / Medium | ⬜ |
 | 13 | Quality gate | Full `npm run check`, PR, CI green, merge. | Haiku / Low | ⬜ |
 
@@ -78,8 +78,8 @@ None. UPI by hand = yes (2026-10-25). Step 1 is next; build it only when the fou
 6. **Budget follows growth [4]:** the AI budget is recalculated whenever the account count changes, not only on the
    1st, so a coaching adding 200 students mid-month does not run out of AI.
 7. **Price changes [3]:** a coaching keeps its price until its next renewal when the founder changes prices.
-8. **Refund rule for yearly [11]:** founder decided (2026-10-25): no refund for yearly; access continues until the paid
-   year ends.
+8. **Refund rule [11]:** founder decided (2026-10-25): no refund for any payment (monthly, yearly, top-ups); access
+   continues until the paid period ends.
 9. **Second platform admin [18]:** only the founder can approve payments; if the founder's phone (MFA) is lost, nobody
    can. Give the founder's friend platform-admin access and save the authenticator backup codes.
 10. **Data deletion reminder [1]:** the platform page lists ended pilots older than 30 days so their deletion is not
