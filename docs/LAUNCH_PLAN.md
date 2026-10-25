@@ -50,7 +50,7 @@ founder may raise the effort for that part.
 | # | Step | What it means | Model / Effort | Status |
 |---|---|---|---|---|
 | 1 | Free pilot | 7 days free, 10 students, up to 20 teachers/admins (founder can raise), $10 AI for the whole pilot (teachers share it). Founder types "How many students do you have?" and the end date when creating it. Banner "N days left". After day 7: AI off, app read-only, banner "Your pilot has ended". Founder can extend it. Data kept 30 days, then deleted by hand. | Sonnet / Medium | ⬜ (a first draft was undone on 2026-10-24 at the founder's request) |
-| 2 | Audio + Video overview "Beta · Coming soon" | Real users still see both tiles, greyed out with a "Beta · Coming soon" badge, and cannot open or make them (`OVERVIEWS_BETA` off; the server also refuses). Fully usable locally for testing. | Haiku / Low | ⬜ |
+| 2 | Audio + Video overview "Beta · Coming soon" | Real users still see both tiles, greyed out with a "Beta · Coming soon" badge, and cannot open or make them (`OVERVIEWS_BETA` off; the server also refuses). Fully usable locally for testing. | Haiku / Low | ✅ 2026-10-25 |
 | 3 | Price per account | Every active account charged (students, teachers, admins; owner free; removed accounts not counted): first 300 at ₹200, 301–1,000 at ₹120, above 1,000 at ₹89, slabs like income tax; minimum 30 accounts (₹6,000); yearly = pay 10 get 12; +18% GST (PRICING_PLAN §2a). Only the platform admin edits prices. | Opus / High | ⬜ |
 | 4 | Limits follow the count | AI budget = accounts × $0.60 + $31 (stop AI on), 15 doubts / 5 study tools a day per student, 30 doubts a day per teacher, storage 1 GB per 50 accounts — all set automatically. | Sonnet / Medium | ⬜ |
 | 5 | Bill page | Account count (students + teachers), this month's price by slab, monthly vs yearly with "save ₹…", AI used %, next bill date, "Pay now". | Sonnet / Medium | ⬜ |
@@ -58,8 +58,8 @@ founder may raise the effort for that part.
 | 7 | Payment by UPI (by hand) | Owner sees the amount, pays to the founder's UPI QR / "Pay with UPI" link, types the UTR. Founder gets an email + "Payments to check", matches it in the bank app, presses Approve (status `active`, limits set, "paid until", receipt) or Reject with a reason. | Sonnet / Medium | ⬜ (founder said yes, 2026-10-25) |
 | 8 | Renewal | Reminder email + banner before "paid until" ends; read-only after a few days' grace if unpaid. | Sonnet / Medium | ⬜ |
 | 9 | Budget warning + top-ups | Warn the owner at 80% of the AI budget; top-up pack ₹2,500 for $20 more AI (paid the same way as step 7). | Sonnet / Medium | ⬜ |
-| 10 | Public home page | `examedgeai.in`: what ExamEdge does, prices, "Book a demo" / contact (`support@examedgeai.in`), links to the legal pages; one H1, title and description, robots.txt + sitemap. Razorpay and coachings look here first. | Sonnet / Medium | ⬜ |
-| 11 | Legal pages | Claude drafts Privacy, Terms (incl. "one account = one coaching"), Refund & Cancellation, Contact Us and Service delivery pages from a standard template, written for what ExamEdge really does (founder approves; lawyer reviews later). Founder supplies: business name, address, phone, grievance officer name + email. Refund rule (founder, 2026-10-25): **no refund for any payment** (monthly, yearly, top-ups); a coaching can cancel anytime and keeps access until the paid period ends; consent step for students if the lawyer asks for it (Q-01). Razorpay needs all three pages. | Sonnet / Low | ⬜ |
+| 10 | Public home page | `examedgeai.in`: what ExamEdge does, prices, "Book a demo" / contact (`support@examedgeai.in`), links to the legal pages; one H1, title and description, robots.txt + sitemap. Razorpay and coachings look here first. | Sonnet / Medium | ✅ 2026-10-25 |
+| 11 | Legal pages | Claude drafts Privacy, Terms (incl. "one account = one coaching"), Refund & Cancellation, Contact Us and Service delivery pages from a standard template, written for what ExamEdge really does (founder approves; lawyer reviews later). Founder supplies: business name, address, phone, grievance officer name + email. Refund rule (founder, 2026-10-25): **no refund for any payment** (monthly, yearly, top-ups); a coaching can cancel anytime and keeps access until the paid period ends; consent step for students if the lawyer asks for it (Q-01). Razorpay needs all three pages. | Sonnet / Low | ✅ 2026-10-25 (real details; founder approves text, lawyer later) |
 | 12 | Check unverified pages | Click through in the new look: owner Bill page, test runner, results, theory checking, Reviews, Contest; a full Google sign-in and invitation acceptance (PROGRESS.md "Unverified"). | Sonnet / Medium | ⬜ |
 | 13 | Quality gate | Full `npm run check`, PR, CI green, merge. | Haiku / Low | ⬜ |
 
@@ -160,6 +160,7 @@ Founder said "fix 1 to 10" on 2026-10-25, then "work for the next session": noth
   that lists artifacts for students).
 - 10: `purgeable()` also returns files of versions that failed with `too_large`.
 
+(CR 3–11 built in Batch A, 2026-10-25; CR 1–2 are Batch B.)
 11. **Founder decided "Mix" (2026-10-25, changes ADR-046), build next session with fixes 1–10:** after submitting, a
     student sees only their **total marks** at once; **right/wrong per question** (and correct answers, as today) only
     after the test closes. Why: on a long test window (e.g. 10 am–6 pm) an early finisher could pass on which answers

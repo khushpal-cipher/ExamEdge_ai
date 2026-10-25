@@ -193,7 +193,7 @@ again (R1.2, ADR-043).
    - **CBT test:** "Start test in full screen". The questions show only in full screen; leaving it, switching tab or
      app, or reloading shows "Warning 1 of 3" with **Return to full screen**; the 3rd warning submits the test (answers
      already given are kept). Safari, Firefox and iPhones are refused: "Open it in Google Chrome".
-4. Right after submitting, the student sees their own marks so far and which questions they got right or wrong (with the marks for each). Theory answers show the student's own answer and, once a teacher has checked it, its marks. Correct answers appear once the test's closing time passes (not earlier, so nobody can pass them to classmates still writing). (ADR-046)
+4. Right after submitting, the student sees only their total marks so far. Which questions were right or wrong (with the marks for each) and the correct answers appear once the test's closing time passes, so nobody can pass them to classmates still writing. Theory answers show the student's own answer and, once a teacher has checked it, its marks. (ADR-046, Mix amendment)
 5. After the teacher releases results: final marks, teacher comments, model answers, **test rank** and updated **overall rank**.
 
 ### G. My progress

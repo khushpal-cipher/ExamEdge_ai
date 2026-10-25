@@ -509,6 +509,11 @@ in the order of PROGRESS.md; the "Built" line is filled in when it merges.
 - **Why keys wait for closing time:** students start at different times inside the test window; an early finisher
   who saw the key could pass it to classmates still writing (founder chose this over showing keys at once).
 
+- **Amendment "Mix" (founder, 2026-10-25, migration 38):** after submitting, the student sees only the **total marks**
+  at once. Per-question right/wrong, marks and correct answers appear once the test's closing time passes
+  (`get_attempt_review` returns `revealed`, `pending`, `score`; per-question marks are null before). Why: on a long
+  window an early finisher could tell classmates which answers were right.
+
 ### ADR-047 Student reviews, read only by owner/admin (founder, 2026-10-18)
 - **Decision:** a "Review" page in the student sidebar (text up to 2000 characters, "Hide my name" tick box) and a
   "Reviews" page for owner/admin listing them newest first with name + batch, or "Anonymous" + batch. Teachers have
