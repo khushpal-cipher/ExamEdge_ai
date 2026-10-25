@@ -70,9 +70,12 @@ test('chats and reports stay private: staff and other institutes read no chat te
        insert into conversations (institute_id, user_id, subject_id, chapter_id, title)
        select s.institute_id, u.id, s.id, $2, 'Private doubt' from subjects s, auth.users u
        where s.id = $1 and u.email = 'student05@demo.test'
-       returning id, institute_id)
-     insert into messages (institute_id, conversation_id, role, content)
-     select institute_id, id, 'assistant', 'Private answer' from c returning id, conversation_id`,
+       returning id, institute_id, user_id),
+     u as (
+       insert into usage_records (institute_id, user_id, feature, provider, model, reserved_micro_usd, outcome)
+       select institute_id, user_id, 'tutor', 'fake', 'fake', 0, 'ok' from c returning id)
+     insert into messages (institute_id, conversation_id, role, content, usage_record_id)
+     select institute_id, id, 'assistant', 'Private answer', (select id from u) from c returning id, conversation_id`,
     [subject, topic],
   );
   const { id: message, conversation_id: conversation } = rows[0] as { id: string; conversation_id: string };
