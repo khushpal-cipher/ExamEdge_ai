@@ -1,12 +1,11 @@
 // Who runs ExamEdge AI, shown on the public pages. Razorpay and the privacy rules need real values here.
-// TODO(founder): fill in before go-live (LAUNCH_PLAN step 11); the pages show them as written.
 export const BUSINESS = {
   name: 'ExamEdge AI',
-  legalName: '[business name]',
-  address: '[registered address]',
-  phone: '[phone number]',
+  legalName: 'Khushpal Singh Chouhan (trading as ExamEdge AI)',
+  address: 'Parikshit Bldg, B404, Premium Park Road, Premium Park, Virar, Vasai-Virar, Maharashtra 401303, India',
+  phone: '+91 8302639041',
   email: 'support@examedgeai.in',
-  grievanceOfficer: '[grievance officer name]',
+  grievanceOfficer: 'Khushpal Singh Chouhan',
   grievanceEmail: 'support@examedgeai.in',
 };
 
