@@ -121,8 +121,11 @@ Founder said "fix 1 to 10" on 2026-10-25, then "work for the next session": noth
   that lists artifacts for students).
 - 10: `purgeable()` also returns files of versions that failed with `too_large`.
 
-Decision to keep in mind (not a bug, ADR-046): students see right/wrong right after submitting, so in a test open for
-several hours an early finisher could pass answers on. Option: show right/wrong only after the test closes (founder decides).
+11. **Founder decided "Mix" (2026-10-25, changes ADR-046), build next session with fixes 1–10:** after submitting, a
+    student sees only their **total marks** at once; **right/wrong per question** (and correct answers, as today) only
+    after the test closes. Why: on a long test window (e.g. 10 am–6 pm) an early finisher could pass on which answers
+    were right. How: in `get_attempt_review`, before `closed` return per-question marks as null (keep the total), and
+    the result page shows "Per-question results after the test closes"; record as ADR-057's neighbour in DECISIONS.md.
 
 ## Session 49 notes (founder Q&A, 2026-10-24/25)
 
