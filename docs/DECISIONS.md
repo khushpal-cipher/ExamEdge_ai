@@ -717,3 +717,26 @@ sitemap or robots.txt).
 - **Details and the loophole list:** docs/PRICING_PLAN.md §2a. Order of work: docs/LAUNCH_PLAN.md steps 3–8.
 - **Risk:** prices are estimates [E], not tested with coachings; check real cost per account after the first pilot month.
 
+
+### ADR-058 Free pilot: 7 days, seat caps, read-only after (founder, LAUNCH_PLAN step 1, built 2026-10-25)
+- **Decision:** every institute created on the platform page is a free pilot: status `pilot`, `pilot_end` (last pilot
+  day, India date, default today + 7, the founder can type another), "How many students do you have?"
+  (`expected_students`), at most 10 students and 20 staff (`institute_quotas.max_students` / `max_staff`, blank = no
+  cap, owner never counted), $10 of AI with the hard stop on, and the pilot's AI budget covers its **whole life**, not
+  one month. From midnight IST after `pilot_end` the institute is **read-only**: members read everything but write
+  nothing, AI is off, an attempt already started can still be answered and submitted, no new attempt can start (plan-
+  review fix 5). The founder extends a pilot by changing `pilot_end` or makes it `active` by hand. Ended pilots older
+  than 30 days are listed on the platform page for deletion by hand (plan-review fix 10). Institutes created before
+  this (`pilot_end` null) are unchanged.
+- **How:** migration 40. `private.read_only(inst)` is derived from dates (no job flips a status at midnight, like test
+  states, ADR-023); Batch C adds the paid rules and the waiting-payment rule (plan-review fix 4) to the same function.
+  Trigger `guard_read_only` (definer only so `auth.uid()` also works for the worker role; it writes nothing) on every
+  public table with `institute_id` except `usage_records`, `usage_counters`, `audit_events`: it refuses writes by a
+  signed-in member (`read_only`); the worker (no user) and platform admins pass. pgTAP `270_pilot` fails if a new
+  tenant table lacks the trigger. Seats: `private.seats_full` + trigger `guard_seats` on memberships (checked only when
+  a row takes a seat it did not hold) and in `create_invitation` (pending invitations hold a seat) → `seats_full`.
+  Web: platform create form and institute page fields, "Pilot ends" column, portal banner (owner/admin "Free pilot: N
+  days left", red in the last 3 days; everyone "Your free pilot has ended" when read-only).
+- **Disadvantages:** the web banner mirrors the pilot rule of `read_only()` in `lib/pilot.ts` (shortcut until Batch
+  C); the platform institute page still shows "AI spent this month" for a pilot whose budget is its whole life;
+  storage logo uploads and the institute's own row are not guarded (platform-admin only anyway).
