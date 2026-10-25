@@ -138,7 +138,7 @@ The AI stops for that coaching until the 1st. To avoid angry students:
 - Before 1,000+ student coachings go live: load test (many students opening a test at once) and the AI
   provider's per-minute limits for our account.
 
-## 10. Free pilot (founder's idea, 2026-10-24, not built)
+## 10. Free pilot (prices and paying: see §2a and docs/LAUNCH_PLAN.md steps 5–7, "Pay now" by UPI until Razorpay) (founder's idea, 2026-10-24, not built)
 - **Who:** a new coaching starts with status `pilot` (the column already exists: `pilot|active|suspended|offboarding`).
 - **Free for 7 days** (founder, 2026-10-25; was 14), **10 students** (invite limit), teachers and admins up to
   **20** (enough for a real coaching; the founder can raise it by hand). Stops students being added as "teachers" to get
@@ -161,7 +161,7 @@ The AI stops for that coaching until the 1st. To avoid angry students:
   **test mode** (fake cards, no money, no KYC needed to build); 4) go live after Razorpay KYC and the legal pages.
 - **Still needed before real students:** the legal opinion on minors' data (Q-01) applies to pilots too.
 
-## 11. Money needed to go live [E] ($1 = ₹88; check each price when buying)
+## 11. Money needed to go live — superseded by docs/LAUNCH_PLAN.md section B (≈ ₹10,000–15,000 for 2 months, domain `examedgeai.in`) [E] ($1 = ₹88; check each price when buying)
 
 **Every month (small start, a few coachings):**
 

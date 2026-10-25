@@ -177,4 +177,8 @@ Founder said "fix 1 to 10" on 2026-10-25, then "work for the next session": noth
   paying coachings (or when a coaching asks): lawyer reviews Privacy, Terms and consent ≈ ₹10,000–30,000 [U], and a
   Data Processing Agreement drafted once and reused ≈ ₹5,000–15,000 [U]. Do it as soon as money comes in: DPDP fines
   for children's data are large even though most rules apply from ≈ 2027 [U].
+- **Razorpay: switch to the business bank account:** keep the same Razorpay account and email; Dashboard → Account &
+  Settings → Bank account → change (checked by a ₹1 transfer or cancelled cheque, ≈ 2–5 working days [U]). The account
+  must be in the founder's name or business name under the same PAN. Changing Individual → Sole Proprietorship (after
+  Udyam) is a KYC change: ask Razorpay support to update this account (one PAN = one account), never open a new one.
 
