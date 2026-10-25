@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-25 (session 49 handoff: launch plan, pricing v2, code review findings 1–11 to build)
+Last updated: 2026-10-25 (session 52 handoff: Batch B half built — CR 1–2 green, billing spec waiting, pilot WIP)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -149,7 +149,46 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 52)
+## Next exact action (session 53)
+**State (2026-10-25, end of session 52, Opus, branch `r18-batch-b`, pushed, NO PR yet):** Batch B about half built.
+Done:
+- **CR 1–2 (commit `8617d24`, green):** migration `20261118000039_ai_budget_fixes.sql`, applied locally. CR 1: `query_embed`
+  now has its own daily counter `searches` (limit = student doubts + step-by-step doubts a day) and is refused to staff.
+  (The session-49 "pair with tutor calls" idea was dropped: a student can settle their own reservation as `error`, which
+  refunds the counter, so any pairing can be looped; a counter is exact.) CR 2: `ai_take` (under the institute lock) and
+  `purge_expired` settle `pending` rows older than 1 hour as `error`, cost 0; partial index `usage_records_pending`.
+  pgTAP `080_usage` (+7, and two `generate_series` cross-join tests that only ran the RPC once were made lateral),
+  `120` expects the new `stale_reservations` key. Evidence (2026-10-25): `npx supabase test db` Files=26 Tests=1479 PASS.
+- **Billing spec (steps 3 + 6)** written in `docs/LAUNCH_PLAN.md` "Billing spec — steps 3 + 6" with 4 questions for the
+  founder (defaults in brackets). **Founder has NOT answered yet: no money code until they say ok.**
+- **Step 1 pilot — WIP, NOT green:** migration `20261118000040_pilot.sql` is **applied to the local DB** (committed as
+  WIP in the handoff commit). It adds `institutes.pilot_end` + `expected_students`, `institute_quotas.max_students` /
+  `max_staff`, `private.read_only(inst)` (pilot: from midnight IST after `pilot_end`), trigger `guard_read_only` on every
+  public table with `institute_id` except usage_records / usage_counters / audit_events (members cannot write; worker and
+  platform admins can; an in-progress attempt can still be answered/submitted), seat caps (`seats_full`,
+  `guard_seats` on memberships, check in `create_invitation` counting pending invites), `create_institute(..., students,
+  ends)` (defaults today + 7; sets caps 10/20, $10 budget, hard stop), `ai_take` = no AI while read-only + a pilot's
+  budget window is its whole life. Existing institutes (pilot_end null) are unchanged.
+  pgTAP with it: **2 failures** — `010_policy_coverage` test 7 (add `read_only`, `seats_full`, `guard_seats` to the
+  definer allowlist) and `070_documents` test 22 ("an alpha chunk cannot point at a bravo document (composite FK)": the
+  new BEFORE trigger now runs first — check which error it raises and make the trigger not mask the FK; never weaken the test).
+Next exact action:
+1. Fix the 2 pgTAP failures; new `supabase/tests/270_pilot.sql`: read-only after `pilot_end` (writes refused with
+   `read_only`, reads fine, in-progress attempt answer + submit allowed, new attempt refused, worker/platform admin allowed,
+   AI `ai_disabled`), seat caps (11th student invite and membership refused, owner not counted), pilot budget over a month
+   boundary, `create_institute` defaults, and a coverage check that every public table with `institute_id` (except the 3)
+   has the `guard_read_only` trigger.
+2. Web: platform create form (students + end date, prefilled today + 7) → `createInstitute` passes `students`, `ends`;
+   institute page edits `pilot_end`, `expected_students`, `max_students`, `max_staff`; platform list column "Pilot ends"
+   + section "Ended pilots older than 30 days — delete by hand" (plan-review fix 10, RUNBOOKS line); portal layout banner
+   (owner/admin "Pilot: N days left", warning in the last 3 days; everyone "Your pilot has ended…" when read-only);
+   `read_only` in `form.ts` NAMED + `flash.tsx`; `seats_full` / `read_only` in people `INVITE_ERRORS` (by message).
+   Read `node_modules/next/AGENTS.md` first. Update E2E `portals.spec.ts` for the new create form.
+3. Docs: ADR-058 (pilot), DATABASE_DESIGN, HOW_IT_WORKS, LAUNCH_PLAN step 1 + CR 1–2 status.
+4. Ask the founder for "ok" on the billing spec questions (they may have answered in chat).
+5. `npm run check`, browser check (platform + a pilot institute at 375 px), PR into main, CI green, merge. Stop (Batch C = Sonnet).
+
+## Next exact action (session 52) — history
 **State (2026-10-25, end of session 51):** LAUNCH_PLAN **Batch A is MERGED** (PR #42, squash `631aebf`, CI green run 40185000036).
 Local DB: migrations 36–38 applied; founder renamed institute `newtown` to display name "Allen" (slug unchanged). Founder is
 signed in as Owner in the app's browser pane. Not verified: real Google sign-in, real invitation email (founder's inbox).
