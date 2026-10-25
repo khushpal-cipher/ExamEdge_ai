@@ -71,7 +71,7 @@ About **₹10,000–15,000 for the first 2 months**; keep ₹20,000 to be safe (
 
 | # | Step | Who | Cost (2 months) | Status |
 |---|---|---|---|---|
-| 14 | Buy `examedgeai.in`; Zoho Mail free (`khushpal@`, `hello@`, `support@`); Google account on `khushpal@`; Udyam | Founder | ₹800–1,200 a year | ⬜ |
+| 14 | Buy `examedgeai.in`; Zoho Mail free (`khushpal@`, `hello@`, `support@`); Google account on `khushpal@`; Udyam | Founder | ₹800–1,200 a year | 🟨 domain bought 2026-10-25 (GoDaddy, 1 year, ₹117 with GOINDIA; renews Oct 2027 at ₹899); Zoho, Google account, Udyam next |
 | 15 | Accounts with `khushpal@examedgeai.in`: Vercel Pro (website), Railway Hobby (worker), Supabase (free, Pro the day a real pilot starts), Anthropic $20 credits with a monthly spend limit | Founder | ≈ ₹3,600 + ₹900 + ₹0–4,400 + ₹1,800 | ⬜ |
 | 16 | Set up: cloud database + migrations, website, worker, `*.examedgeai.in` wildcard (Vercel nameservers), Google sign-in on the live address (publish consent screen), Resend domain (`noreply@`), secret keys, `AI_PROVIDER=anthropic` (never Gemini for real users), built-in notes search (Voyage later), demo login off, Sentry alerts (free), nightly backup + one test restore. Change docs from `examedge.in` to `examedgeai.in`. | Claude (Opus / High) | — | ⬜ |
 | 17 | Real Claude test: every AI feature once with the real key (tutor, AI notes, AI test, study tools, scanned pages) — so far only fake and Gemini AI were used | Claude (Sonnet / Medium) | ≈ $1–2 of credits | ⬜ |
