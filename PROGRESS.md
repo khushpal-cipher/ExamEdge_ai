@@ -149,7 +149,39 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 49)
+## Next exact action (session 51)
+**State (2026-10-25, end of session 50, Sonnet, branch `r17-next`, NOT pushed, NOT merged, no PR yet):** LAUNCH_PLAN
+Batch A is about 70% built. Commits on `r17-next` after `3d267f9`: live-site AI guard + log scrub; migrations 36–38 with
+code-review fixes 4, 6, 8, 9, 10, 11; worker claim refresh (7); overviews "Beta · Coming soon"; public home page, legal
+pages, robots, sitemap. Local DB has migrations 36, 37, 38 applied (`supabase migration up`, no reset).
+Built (see `git log --oneline 3d267f9..HEAD`):
+- CR 3 `assertLiveAi` (`packages/core/src/demo.ts`, called from `apps/web/instrumentation.ts` and `apps/worker/src/index.ts`).
+- CR 5 `details|hint` scrubbed in `packages/core/src/log.ts`.
+- CR 4 `batch_standing_count` rpc used by student Home. CR 6 `report_answer` needs a settled tutor usage record + unique
+  index on `messages(usage_record_id)`. CR 8 `least(...)` in `grade_objective`. CR 11 "Mix": `get_attempt_review` now returns
+  `revealed`, `pending`, `score`; per-question marks null until the test closes (`student-test.tsx`, E2E `assessments.spec.ts`
+  updated). CR 7 `setInterval` claim refresh in `apps/worker/src/ingest.ts`. CR 10 `private.purgeable` ignores failed
+  `too_large` versions. CR 9 `content` column closed to API users; read via `artifact_content(a)` (studio page, studio actions).
+- Step 2 `overviewsEnabled` (on locally or `OVERVIEWS_BETA=true`); tiles disabled with "Beta · Coming soon"; server refuses.
+- Step 10 home page `Landing` in `apps/web/app/page.tsx` (root host only), `robots.ts`, `sitemap.ts`, `lib/business.ts`.
+- Step 11 five legal pages at `/legal/<doc>` (`apps/web/app/legal/docs.ts`) with PLACEHOLDERS in `apps/web/lib/business.ts`
+  (`[business name]`, `[registered address]`, `[phone number]`, `[grievance officer name]`).
+Evidence (2026-10-25, before the last two commits): `npx supabase test db` Files=26 Tests=1471 PASS; `npm test` 198/198;
+`npm run test:int` 28/28; lint + forbidden, typecheck, format PASS; `npm run build -w @examedge/web` PASS (after the
+home page). **Unverified:** home page and legal pages not looked at in the browser; E2E not run (needs `npm run check`;
+:3000 may be held by another `next dev`); `OVERVIEWS_BETA` tile look; `docs` not updated (ADR for Mix/ADR-046 change,
+LAUNCH_PLAN statuses, HOW_IT_WORKS result page text).
+Next exact action:
+1. Get from the founder: business name, registered address, phone, grievance officer name (founder may name themselves;
+   email stays support@examedgeai.in). Put them in `apps/web/lib/business.ts`.
+2. Look at `/` and `/legal/privacy` at 1280 and 375 px in the browser (root host `localhost`, e.g. preview `web-prod-3005`
+   after rebuild); check one H1, title/description lengths.
+3. LAUNCH_PLAN step 12: click through owner Bill page, test runner, results (new Mix text), theory checking, Reviews, Contest.
+4. Docs: add the "Mix" change to DECISIONS.md (next to ADR-046), mark CR 3–11 and steps 2, 10, 11 done in LAUNCH_PLAN,
+   update HOW_IT_WORKS result text.
+5. `npm run check` full gate, push `r17-next`, open PR into main, CI green, merge. Then stop: Batch B (Opus) is next.
+
+## Next exact action (session 49) — history
 **State (2026-10-24, end of session 48):** **PR #41 MERGED** (squash `f1b9d3f` on main, CI green: check + secrets, run
 40065062694 — E2E incl. axe passed after fix `997ae8b`: lighter `--good-soft #f0f8f3` / `--warn-soft #fdf5e8` /
 `--bad-soft #fcf1ef` so the brighter status text stays ≥ 4.6:1, and `role="img"` on the Home level bar). Founder: "UI is

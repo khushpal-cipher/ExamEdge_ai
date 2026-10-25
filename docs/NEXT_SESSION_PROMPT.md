@@ -123,6 +123,9 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
   "Build order by model": Batch A (Sonnet) → B (Opus) → C (Sonnet) → D (Opus); one batch per session, only the batch
   PROGRESS.md names; if a task needs a different model than the session runs on, stop and tell the founder; build launch steps only
   when the founder says "build". Each launch step must include its "Fixes found in the plan review" items.
+- Session 50 (2026-10-25, Sonnet): built most of LAUNCH_PLAN Batch A on `r17-next` (CR 3–11, steps 2, 10, 11 drafts). Not pushed,
+  no PR. Next: PROGRESS.md "Next exact action (session 51)" — finish Batch A (legal details from the founder, browser check,
+  step 12, docs, full gate, PR, merge), then stop; Batch B is Opus.
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full
