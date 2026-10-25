@@ -196,6 +196,11 @@ What #41 contains:
   founder's request (local institutes back to `pilot`, migration row removed). Nothing to build until the founder says go.
   2026-10-25: founder said yes to UPI payment by hand and that step 1 (pilot) is next, but "don't build it now".
   Plan review fixes 1–10 are in LAUNCH_PLAN "Fixes found in the plan review".
+  Same day: full code review (server code + all migrations read; pages' layout not reviewed): findings 1–10 in
+  LAUNCH_PLAN "Code review findings", with the fix approach. Founder: "fix 1 to 10", then "work for the next
+  session" — NOTHING built; the few started edits were reverted. Next exact action (session 50): fix code review
+  findings 1–10 on `r17-next` (pgTAP for 1, 2, 4, 6, 8, 10; unit for 3, 5), quality gate, PR; then ask the founder
+  before starting LAUNCH_PLAN step 1.
 1. Ask the founder what to build next. Open ideas (founder's word needed): plans table + Bill page showing plan,
    student count, monthly / yearly price (design explained in session 48, nothing built; prices in
    docs/PRICING_PLAN.md — founder said "I will handle this"); Dashboard number cards as the `.stats` band; go-live

@@ -102,6 +102,28 @@ None. UPI by hand = yes (2026-10-25). Step 1 is next; build it only when the fou
 9. **Later:** published practice-quiz answers can be read through the API before trying (practice only, no rank).
 10. **Later:** a file uploaded bigger than its declared size fails but its storage file is never purged.
 
+Founder said "fix 1 to 10" on 2026-10-25, then "work for the next session": nothing is built yet. Approach worked out:
+- 1: in `ai_reserve`, allow `query_embed` only while the student's `query_embed` count in the last 2 minutes is below
+  their `tutor`/`tutor_premium` count in the same window (each doubt = one search, bounded by the daily limit).
+- 2: in `ai_take` (under the institute lock) and in `purge_expired`, settle `pending` rows older than 1 hour as
+  `error` with cost 0 (1 hour so a slow real call can still settle; `ai_finish` needs `pending`).
+- 3: `assertLiveAi(env)` in `packages/core/src/demo.ts` (throws unless Supabase is local or `AI_PROVIDER=anthropic`),
+  called from new `apps/web/instrumentation.ts` `register()` (nodejs runtime only) and at the top of
+  `apps/worker/src/index.ts`; unit tests in `demo.test.ts`.
+- 4: a small definer `batch_standing_count(batch)` (caller in the batch or staff) for the Home "of N".
+- 5: add `details|hint` to `SENSITIVE_KEY` in `packages/core/src/log.ts`; test in `log.test.ts`.
+- 6: `report_answer` only for messages whose `usage_record_id` is a settled tutor record of the same student, plus a
+  unique index on `messages(usage_record_id)` (raises the bar; the answer text always passes through the user's
+  session, so it cannot be made fully forgery-proof without a server secret).
+- 7: refresh `claimed_at` every 5 minutes while `ingestVersion` works.
+- 8: partial marks = `least(count * marks / 4, count * marks / number_of_correct_options)`.
+- 9: needs the most work: institute quizzes read by students through a definer that strips answers (check every page
+  that lists artifacts for students).
+- 10: `purgeable()` also returns files of versions that failed with `too_large`.
+
+Decision to keep in mind (not a bug, ADR-046): students see right/wrong right after submitting, so in a test open for
+several hours an early finisher could pass answers on. Option: show right/wrong only after the test closes (founder decides).
+
 ## Session 49 notes (founder Q&A, 2026-10-24/25)
 
 - **Audio/Video overview (later, local Beta):** NotebookLM-style = Claude writes a two-host conversation → a real
