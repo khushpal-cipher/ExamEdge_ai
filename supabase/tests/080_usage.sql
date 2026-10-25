@@ -22,7 +22,7 @@ select is((select blocked from public.ai_reserve(tests.inst('alpha'), 'tutor', '
 select is((select value from public.usage_counters where counter_key = 'messages'), 3,
   'counter stops at the limit and the student reads their own counter');
 select is((select blocked from public.ai_reserve(tests.inst('alpha'), 'query_embed', 'fake', 'fake', 10)), null,
-  'a feature without a counter is not blocked by the message limit');
+  'a search has its own daily counter, so the message limit does not block it');
 insert into rec select 'premium', record_id from public.ai_reserve(tests.inst('alpha'), 'tutor_premium', 'fake', 'fake', 10);
 select is((select value from public.usage_counters where counter_key = 'premium_messages'), 1,
   'premium messages use their own counter');
@@ -69,7 +69,7 @@ select is((select input_tokens from public.usage_records where id = (select id f
 
 -- ---------------------------------------------------------------- staff
 select tests.login('teacher1@alpha.test');
-select is((select count(*) from generate_series(1, 5) g, public.ai_reserve(tests.inst('alpha'), 'notes_gen', 'fake', 'fake', 10) r
+select is((select count(*) from generate_series(1, 5) g, public.ai_reserve(tests.inst('alpha'), 'notes_gen', 'fake', 'fake', 10 + 0 * g) r
   where r.blocked is null), 5::bigint, 'staff features use no student daily counter (ADR-039: staff no longer use the tutor)');
 select is((select count(*) from public.usage_counters), 0::bigint, 'staff calls create no counters');
 select is((select count(*) from public.usage_records), 0::bigint, 'teacher reads no usage records');
@@ -182,6 +182,40 @@ select is((select blocked from private.ai_reserve_job('ingest_ocr', 'fake', 'fak
   'suspended institute gets no AI');
 select set_config('app.institute_id', '', true);
 reset role;
+
+-- ---------------------------------------------------------------- CR 1: searches have a daily limit
+-- Limit = doubts + step-by-step doubts a day (3 + 5 here); one search was reserved above.
+update private.settings set ai_enabled = true;
+update public.institutes set status = 'active' where id = tests.inst('alpha');
+update public.institute_quotas set hard_stop = false where institute_id = tests.inst('alpha');
+select tests.login('student2@alpha.test');
+select is((select count(*) from generate_series(1, 10) g,
+  public.ai_reserve(tests.inst('alpha'), 'query_embed', 'fake', 'fake', 10 + 0 * g) r where r.blocked is null), 8::bigint,
+  'a student gets as many searches a day as doubts (CR 1)');
+select is((select blocked from public.ai_reserve(tests.inst('alpha'), 'query_embed', 'fake', 'fake', 10)), 'quota',
+  'the next search is blocked');
+select tests.login('teacher1@alpha.test');
+select throws_ok($$ select * from public.ai_reserve(tests.inst('alpha'), 'query_embed', 'fake', 'fake', 10) $$, '42501',
+  'not_allowed', 'staff cannot reserve the tutor search');
+select tests.logout();
+
+-- ---------------------------------------------------------------- CR 2: stale reservations settle as error
+insert into public.usage_records (institute_id, user_id, feature, provider, model, reserved_micro_usd, created_at)
+values (tests.inst('alpha'), tests.uid('student1@alpha.test'), 'tutor', 'fake', 'fake', 90000, now() - interval '61 minutes'),
+       (tests.inst('alpha'), tests.uid('student1@alpha.test'), 'tutor', 'fake', 'fake', 90000, now() - interval '59 minutes'),
+       (tests.inst('bravo'), null, 'ingest_ocr', 'fake', 'fake', 90000, now() - interval '2 hours');
+select tests.login('owner@alpha.test');
+select is((select blocked from public.ai_reserve(tests.inst('alpha'), 'notes_gen', 'fake', 'fake', 1)), null,
+  'a reservation runs the stale sweep');
+select tests.logout();
+select is((select string_agg(outcome || ':' || cost_micro_usd, ',' order by created_at) from public.usage_records
+  where reserved_micro_usd = 90000 and institute_id = tests.inst('alpha')), 'error:0,pending:0',
+  'a pending reservation older than 1 hour is settled as error at cost 0; a younger one stays pending (CR 2)');
+select is((select outcome from public.usage_records where reserved_micro_usd = 90000 and institute_id = tests.inst('bravo')),
+  'pending', 'the sweep touches only the reserving institute');
+select is(private.purge_expired() ->> 'stale_reservations', '1', 'the daily purge settles stale reservations everywhere');
+select is((select outcome from public.usage_records where reserved_micro_usd = 90000 and institute_id = tests.inst('bravo')),
+  'error', 'the stale bravo reservation no longer holds its budget');
 
 -- ---------------------------------------------------------------- anon
 select tests.as_anon();

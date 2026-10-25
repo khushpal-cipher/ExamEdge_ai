@@ -65,6 +65,80 @@ founder may raise the effort for that part.
 
 Steps 4–9 depend on step 3: re-check step 3's design at high effort before building them.
 
+## Billing spec — steps 3 + 6 (Batch B, Opus, 2026-10-25) — WAITING FOR THE FOUNDER'S OK
+
+Batch C builds steps 3–9 from this; nothing here is built yet except what step 1 (pilot) shares, marked **[built in B]**.
+Money is stored as whole **paise** (`bigint`), never floats. India time (IST) for every date, like test times.
+
+**1. Who is counted.** An account = an **active** membership with role student, teacher or admin. The owner is free;
+removed and suspended memberships are not counted. The app counts; it never trusts a number typed by the coaching.
+
+**2. Price of a count** (one SQL function `private.price(accounts, price_list)`, the web only shows what it returns):
+`n = greatest(accounts, 30)`; first 300 × ₹200 + next 700 × ₹120 + the rest × ₹89 (slabs like income tax).
+Examples: 30 → ₹6,000 · 100 → ₹20,000 · 301 → ₹60,120 · 1,000 → ₹1,44,000. Yearly = 10 × the monthly price for 12 months.
+
+**3. Price lists and price changes (plan-review fix 7).** Prices live in a `price_lists` table (slabs, minimum, yearly
+months paid); the platform admin (aal2, audited) adds a new row instead of editing one. Each coaching keeps the price list
+of its current paid period; the next payment after a change uses the newest list.
+
+**4. GST (plan-review fix 1).** No GST is added while the platform has no GST number: pages say "GST extra when
+applicable". Once the founder saves a GST number on the platform page, every new payment adds 18% (stored as base, GST and
+total on the payment row). Amounts already shown on a waiting payment do not change.
+
+**5. Billing period.** A paid period runs from the day the founder approves the payment for **1 month** (monthly) or
+**12 months** (yearly); stored as `institutes.paid_until` (the last paid **date**). Paying early extends from the old
+`paid_until`, so no paid day is lost.
+
+**6. What a bill charges (steps 6, "highest count of the month").**
+- A trigger on memberships keeps `account_peaks (institute, period_start, peak)` = the highest count reached in the
+  current period (counted on every add/remove, so adding 200 at 10 am and removing them at 5 pm still counts).
+- **Monthly:** next bill = price(greatest(peak of the period now ending, count today)). Accounts added mid-month are paid
+  for on the next bill, as the founder said; nothing is charged in arrears.
+- **Yearly:** pay 10 × price(count today); that count becomes the **covered count** for 12 months. Every 3 months the
+  Bill page shows an **extras** bill if the quarter's peak was above the covered count:
+  3 × (price(peak) − price(covered)) × 10/12 (the yearly discount also applies to extras). The covered count then rises
+  to that peak for the rest of the year.
+- First bill after a pilot = price(count today).
+
+**7. Payments table (step 7 builds it).** `payments(institute_id, kind monthly|yearly|extras|topup, accounts,
+price_list_id, base_paise, gst_paise, total_paise, utr, status waiting|approved|rejected, reject_reason, receipt_no,
+period_start, period_end, created_by, decided_by, timestamps)`. The **server computes the amount** (definer
+`start_payment(inst, kind)`, owner only); the owner then types the UTR (`submit_utr`). A UTR is 12 digits and **unique
+across all payments**, rejected ones included (plan-review fix 3); the founder checks the bank amount equals the total
+before pressing Approve. Approve (aal2, audited) = status `active`, `paid_until` extended, covered count set (yearly),
+limits set (step 4), receipt number from a sequence. Reject needs a reason. RLS: owner/admin read their own rows;
+platform admins read all; nobody updates a row except through these functions.
+
+**8. When the app is read-only [shared function built in B].** One function `private.read_only(inst)` decides, for
+every write and every AI call (no job flips a status at midnight; it is derived from dates, like test states, ADR-023):
+- pilot: from midnight IST after `pilot_end` (the last pilot day) [built in B];
+- paid: from midnight IST after `paid_until` + **3 days' grace** (step 8);
+- **never while a payment is `waiting`** for the founder (plan-review fix 4), for at most 7 days after the UTR was typed
+  (so a made-up UTR cannot keep a coaching open for ever);
+- read-only = members can read everything but write nothing; AI is off; **an attempt already started can still be
+  answered and submitted** (plan-review fix 5) [built in B]; the owner can still start a payment.
+- The owner/admin banner turns into a warning **3 days before** the end (pilot or paid) [pilot part built in B]; the
+  reminder email is step 8 (needs the Resend domain).
+
+**9. Limits follow the count (step 4, plan-review fix 6).** For an `active` coaching, a trigger recalculates
+`institute_quotas` whenever the count changes and on every Approve: AI budget = greatest(count, 30) × $0.60 + $31 (hard
+stop on); storage 1 GB per 50 accounts (minimum 5 GB); background jobs 2 / 3 above 600 / 4 above 1,000 / 6 above 3,000;
+15 doubts + 5 study tools a day per student. The AI budget stays per calendar month (as today); a top-up (step 9,
+₹2,500 = $20) adds to the month it is approved in.
+
+**10. Pilot (step 1) [built in B].** Status `pilot`, `pilot_end` date (default today + 7), "How many students do you
+have?" stored as `expected_students`, at most 10 students and 20 staff (`institute_quotas.max_students` / `max_staff`,
+founder can change them), $10 AI for the **whole pilot** (the budget window of a pilot is its whole life, not the month),
+read-only after `pilot_end` (rule 8). The founder extends a pilot by changing `pilot_end` or makes it `active` by hand.
+Ended pilots older than 30 days are listed on the platform page for deletion by hand (plan-review fix 10).
+
+**Questions for the founder (my default in brackets; say "ok" to take all defaults):**
+1. Billing period from the approval day, not the 1st of the calendar month? [yes — no part-month bills]
+2. Yearly extras charged at the yearly rate (× 10/12)? [yes]
+3. A waiting UTR keeps the coaching open for at most 7 days? [yes]
+4. "30 doubts a day per teacher/admin": staff have no tutor (ADR-039), so this means **30 AI requests a day** (AI notes +
+   AI test requests) per staff member? [yes]
+
 ## B. Go online (founder's accounts and money)
 
 About **₹10,000–15,000 for the first 2 months**; keep ₹20,000 to be safe (Indian cards add GST + forex fees).
