@@ -81,6 +81,8 @@ async function call(
     await new Promise((r) => setTimeout(r, 2000));
     res = await send();
   }
+  // Still busy (503 "high demand", seen 2026-10-26): the lighter model usually has room.
+  if (res.status === 503 && model === 'gemini-3.8-flash') return call(f, 'gemini-3.5-flash-lite', req);
   if (!res.ok) throw new Error(`gemini_http_${res.status}`); // status only: the body may echo the prompt
   const j = (await res.json()) as Reply;
   const c = j.candidates?.[0];
