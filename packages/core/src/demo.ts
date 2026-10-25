@@ -15,3 +15,20 @@ export function demoLoginAllowed(env: Record<string, string | undefined>) {
 export function safeNext(next: unknown) {
   return typeof next === 'string' && /^\/(?![/\\])/.test(next) ? next : '/';
 }
+
+// A live (non-local) server must use real Claude: an unset AI_PROVIDER means fake AI, and gemini is test-only (ADR-051).
+export function assertLiveAi(env: Record<string, string | undefined>) {
+  const urls = [env.NEXT_PUBLIC_SUPABASE_URL, env.WORKER_DATABASE_URL].filter(Boolean) as string[];
+  const local =
+    urls.length > 0 &&
+    urls.every((u) => {
+      try {
+        return ['127.0.0.1', 'localhost'].includes(new URL(u).hostname);
+      } catch {
+        return false;
+      }
+    });
+  if (!local && env.AI_PROVIDER !== 'anthropic') {
+    throw new Error('AI_PROVIDER must be "anthropic" on a live server (unset means fake AI, gemini is test-only)');
+  }
+}

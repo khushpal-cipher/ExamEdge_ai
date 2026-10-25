@@ -8,6 +8,14 @@ describe('scrub', () => {
     ).toEqual({ request_id: 'r1', email: '[redacted]', nested: { full_name: '[redacted]', note: 'mail [email] now' } });
   });
 
+  it('drops database error details and hints (they can carry row data)', () => {
+    expect(scrub({ code: '23514', details: 'Failing row contains (x)', hint: 'h' })).toEqual({
+      code: '23514',
+      details: '[redacted]',
+      hint: '[redacted]',
+    });
+  });
+
   it('serialises errors without stack traces', () => {
     expect(scrub(new Error('bad a@b.co'))).toEqual({ error: 'Error', message: 'bad [email]' });
   });
