@@ -150,6 +150,8 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 51)
+
+**Session 51 (2026-10-25, Sonnet):** legal details filled in (`business.ts`), docs updated (ADR-046 Mix amendment, LAUNCH_PLAN statuses), PR #42 opened; E2E tutor fixture fixed (settled usage record), retro UI polish (tab padding, round send button, tile labels, badge spacing). Step 12 owner click-through (founder signed in as Owner, `next start` :3005): Bill, Tests + results rank list, theory check page, Reviews, People, Batches, Subjects, Question bank load with 0 page errors, 1 H1 each; scrollWidth = 375 at phone width on check, results, Bill, Reviews, People, student page, Batches. Not clicked: submitting a test as a student (Mix text), Google sign-in itself, invitation acceptance. Local `institutes.name` 'newtown' renamed 'Allen' by hand (slug unchanged).
 **State (2026-10-25, end of session 50, Sonnet, branch `r17-next`, NOT pushed, NOT merged, no PR yet):** LAUNCH_PLAN
 Batch A is about 70% built. Commits on `r17-next` after `3d267f9`: live-site AI guard + log scrub; migrations 36–38 with
 code-review fixes 4, 6, 8, 9, 10, 11; worker claim refresh (7); overviews "Beta · Coming soon"; public home page, legal
