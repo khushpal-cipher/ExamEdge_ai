@@ -18,7 +18,8 @@ import {
 import { log } from '@examedge/core/log';
 import { webMeter } from '@/lib/meter';
 import { chapterNotes } from '@/lib/notes';
-import { textFields, withTexts } from '@/lib/studio';
+import { overviewsEnabled } from '@examedge/core/demo';
+import { BETA_KINDS, textFields, withTexts } from '@/lib/studio';
 import { isUuid, requireMember, STAFF } from '@/lib/tenant';
 import { done } from '../form';
 
@@ -32,6 +33,7 @@ export async function generate(form: FormData) {
   if (!isUuid(subject) || !isUuid(chapter)) redirect('/');
   const here = `/topics/${chapter}`;
   if (!KINDS.includes(kind)) back(here, 'invalid');
+  if (BETA_KINDS.has(kind) && !overviewsEnabled(process.env)) back(here, 'coming_soon');
   const student = member.role === 'student';
 
   // RLS: the chapter is visible only if its subject is (students: subjects of their batches).

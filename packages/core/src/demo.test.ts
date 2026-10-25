@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assertLiveAi, demoLoginAllowed, safeNext } from './demo';
+import { assertLiveAi, overviewsEnabled, demoLoginAllowed, safeNext } from './demo';
 
 describe('demoLoginAllowed', () => {
   const local = { DEMO_LOGIN_ENABLED: 'true', NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54321' };
@@ -37,5 +37,15 @@ describe('assertLiveAi', () => {
     expect(() => assertLiveAi({ ...live, AI_PROVIDER: 'fake' })).toThrow();
     expect(() => assertLiveAi({ ...live, AI_PROVIDER: 'anthropic' })).not.toThrow();
     expect(() => assertLiveAi({})).toThrow();
+  });
+});
+
+describe('overviewsEnabled', () => {
+  it('is on locally or with the flag, off on a live server', () => {
+    expect(overviewsEnabled({ NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54321' })).toBe(true);
+    expect(overviewsEnabled({ NEXT_PUBLIC_SUPABASE_URL: 'https://abc.supabase.co', OVERVIEWS_BETA: 'true' })).toBe(
+      true,
+    );
+    expect(overviewsEnabled({ NEXT_PUBLIC_SUPABASE_URL: 'https://abc.supabase.co' })).toBe(false);
   });
 });

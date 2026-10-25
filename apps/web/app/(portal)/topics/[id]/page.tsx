@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { formatTime } from '@/lib/assess';
+import { overviewsEnabled } from '@examedge/core/demo';
 import { BETA_KINDS, STUDIO_KIND } from '@/lib/studio';
 import { isUuid, opensBatch, requireMember } from '@/lib/tenant';
 import { addSubtopic, deleteSubtopic, renameSubtopic } from '../../actions';
@@ -31,6 +32,7 @@ const ICON: Record<string, string> = {
 // the AI over the whole topic). Staff make tests on the Tests page (ADR-042).
 export default async function TopicPage(props: { params: Promise<{ id: string }>; searchParams: Search }) {
   const m = await requireMember();
+  const overviews = overviewsEnabled(process.env);
   const { institute, member, db } = m;
   const { id } = await props.params;
   if (!isUuid(id)) notFound();
@@ -289,13 +291,22 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
                             ]}
                           >
                             {Object.entries(STUDIO_KIND).map(([k, label]) => (
-                              <button key={k} type="submit" name="kind" value={k} className="tile">
+                              <button
+                                key={k}
+                                type="submit"
+                                name="kind"
+                                value={k}
+                                className="tile"
+                                disabled={BETA_KINDS.has(k) && !overviews}
+                              >
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
                                   <path d={ICON[k]} />
                                 </svg>
                                 <span>
                                   {label}
-                                  {BETA_KINDS.has(k) && <span className="badge"> Beta</span>}
+                                  {BETA_KINDS.has(k) && (
+                                    <span className="badge"> {overviews ? 'Beta' : 'Beta · Coming soon'}</span>
+                                  )}
                                 </span>
                               </button>
                             ))}

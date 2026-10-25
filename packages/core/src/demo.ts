@@ -2,13 +2,16 @@
 // used against a cloud project because demo sign-in requires the Supabase URL to be this machine.
 export const DEMO_PASSWORD = 'examedge-demo-local';
 
-export function demoLoginAllowed(env: Record<string, string | undefined>) {
-  if (env.DEMO_LOGIN_ENABLED !== 'true' || !env.NEXT_PUBLIC_SUPABASE_URL) return false;
+function isLocalUrl(url: string | undefined) {
   try {
-    return ['127.0.0.1', 'localhost'].includes(new URL(env.NEXT_PUBLIC_SUPABASE_URL).hostname);
+    return ['127.0.0.1', 'localhost'].includes(new URL(url ?? '').hostname);
   } catch {
     return false;
   }
+}
+
+export function demoLoginAllowed(env: Record<string, string | undefined>) {
+  return env.DEMO_LOGIN_ENABLED === 'true' && isLocalUrl(env.NEXT_PUBLIC_SUPABASE_URL);
 }
 
 // Same-origin path for post-login redirects; blocks //evil.com and /\evil.com (browsers treat both as hosts).
@@ -31,4 +34,10 @@ export function assertLiveAi(env: Record<string, string | undefined>) {
   if (!local && env.AI_PROVIDER !== 'anthropic') {
     throw new Error('AI_PROVIDER must be "anthropic" on a live server (unset means fake AI, gemini is test-only)');
   }
+}
+
+// Audio and video overviews are "Beta · Coming soon" for real users (LAUNCH_PLAN step 2); usable on a local stack or
+// with OVERVIEWS_BETA=true.
+export function overviewsEnabled(env: Record<string, string | undefined>) {
+  return env.OVERVIEWS_BETA === 'true' || isLocalUrl(env.NEXT_PUBLIC_SUPABASE_URL);
 }
