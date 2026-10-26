@@ -138,7 +138,9 @@ Consequence to tell coachings: pay before the pilot/paid period ends; the founde
 **Founder change list (2026-10-26):** A student names (approved) · B ChatGPT prompt help on People → Invite as an info icon
 next to "paste the list" (approved; opens on hover AND click/tap, with a Copy button, because hover does not work on phones) ·
 C light/dark toggle for everyone (approved; the earlier "light theme only" is cancelled; remembered per device, default =
-device setting; staff mono look and student retro look each need a dark design). Not built yet.
+device setting; staff mono look and student retro look each need a dark design) · D **copy icon** (two overlapping squares,
+founder's screenshot) next to every invitation link on People, one click copies it, brief "Copied" feedback, so nobody has to
+select the link by hand (approved). Not built yet.
 
 **Questions for the founder (my default in brackets; say "ok" to take all defaults):**
 1. Billing period from the approval day, not the 1st of the calendar month? [yes — no part-month bills]
