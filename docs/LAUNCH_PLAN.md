@@ -140,7 +140,7 @@ next to "paste the list" (approved; opens on hover AND click/tap, with a Copy bu
 C light/dark toggle for everyone (approved; the earlier "light theme only" is cancelled; remembered per device, default =
 device setting; staff mono look and student retro look each need a dark design) · D **copy icon** (two overlapping squares,
 founder's screenshot) next to every invitation link on People, one click copies it, brief "Copied" feedback, so nobody has to
-select the link by hand (approved). Not built yet.
+select the link by hand (approved). **A–D built 2026-10-26 (ADR-059, PR on `r19-founder-list`).**
 
 **Questions for the founder (my default in brackets; say "ok" to take all defaults):**
 1. Billing period from the approval day, not the 1st of the calendar month? [yes — no part-month bills]

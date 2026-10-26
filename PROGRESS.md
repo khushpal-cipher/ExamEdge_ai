@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-26 (session 53 handoff: Batch B on PR #43, CI green, not merged; billing answers 1, 2, 4 = yes, 3 open; 3 founder change proposals waiting)
+Last updated: 2026-10-26 (session 54: PR #43 merged `57a7010`; founder change list A+B+C+D built on `r19-founder-list`, PR open; billing Q3 = no grace, access only after Approve)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -46,6 +46,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-26 | Session 54: PR #43 (Batch B) merged `57a7010` (CI green run 40245697831). Founder change list A names, B ChatGPT prompt info icon, C light/dark toggle, D copy icon (ADR-059), branch `r19-founder-list` | Migration `20261119000041_member_names.sql` applied with `supabase migration up` (no reset). Local: format, lint + forbidden, typecheck PASS; `npm test` 203/203; `npx supabase test db` Files=28 Tests=1526 PASS (new `280_member_names`); `npm run test:int` 28/28; `npm run build` + bundle PASS. Browser (founder's `next dev` :3000, newtown): teacher.jee People → Invitations: Name box, prompt popover (batch names listed), invitation with name stored (`invitations.full_name`), copy button renders; Students tab: Edit name saved ("Tmp Rename", reverted with psql), invitation deleted; student2: dark retro Home, My progress "Change my name"; toggle works, device setting used when nothing saved (headless pane dark). **Unverified:** the copy button writing to the clipboard (the in-app pane denies clipboard permission → shows "Select and copy"; try in Chrome), accept-invitation name flow in the browser (pgTAP only), E2E (port 3000 held by the dev server → CI), dark look on every page (checked: sign-in, staff People, student Home, My progress). |
 | 2026-10-23 | PR #40 merged (founder: "push #40") | CI green on `95abc4a` (check incl. E2E + secrets), `gh pr merge 40 --squash` → main `707294d`. Founder's friend will suggest the UI next; `r16-fun-ui` / `r16-violet` / `r16-saffron` stay local, unmerged. |
 | 2026-10-23 | Session 47b: founder liked the gamified Home but said the bright look felt AI-made; sent a Squarespace space template as the look they like. LOCAL branch `r16-fun-ui` | "Play theme" CSS block replaced by a "Space theme" block (end of `globals.css`): dark starfield page (CSS gradients), neon lime `#d4ff6b`, Anton uppercase titles, Space Mono uppercase labels/nav/buttons, Space Grotesk text, pill buttons (lime fill / lime outline), hairline cards, lime goal ring, scrolling ticker on Home (`aria-hidden`, stops with reduced motion). Contrast by script: muted `#9db0c2` ≥ 7.1 on all dark surfaces, lime ≥ 12.4. Evidence (2026-10-23): lint + forbidden, typecheck PASS; `npm test` 195/195; `npm run build` PASS; headless Chromium on the production build (`next start`, :3002): student Home 1280 + 375 (scrollWidth = viewport), subject page, teacher Dashboard + Question bank; 0 page errors. The other chat's `next dev` on :3000 shows a 500 for the new Google fonts (Turbopack "Can't resolve @vercel/turbopack-next/internal/font/google/font") until it is restarted; the build is fine. NOT pushed; E2E/axe not run. Undo: `git checkout d5b4eac` (bright version) or `git checkout r15-next` (old). |
 | 2026-10-23 | Session 47: playful student Home, LOCAL branch `r16-fun-ui` only (founder: "not boring, play with psychology, commit locally so I can go back") | `lib/streak.ts` (streak/week/XP/level from existing activity: own doubts, study tools, test attempts; IST days; no DB change) + `streak.test.ts` 6 tests; Home: greeting by time of day, streak/XP/level pills, daily goal ring (3 actions) + last-7-days strip + one big button, empty rank band hidden, subject tiles coloured with emoji; "Play theme" CSS block at the end of `globals.css` (Nunito font, chunky 3D buttons, flat outlined cards). Evidence (2026-10-23): lint + forbidden, typecheck PASS; `npm test` 195/195; headless Chromium on `next dev` :3000 (newtown, student1) 1280 + 375: scrollWidth = viewport, 0 page errors. NOT pushed, NOT merged; E2E/axe not run. Undo: `git checkout r15-next`. |
@@ -149,7 +150,10 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 54)
+## Next exact action (session 55)
+**Session 54 (2026-10-26):** PR #43 merged (`57a7010`). Founder answers: billing Q3 = a waiting UTR gives NO extra access, access only after Approve (LAUNCH_PLAN rule 8 + plan-review fix 4 replaced); proposals A, C approved, B as an info icon, D copy icon; "build" given. Built on `r19-founder-list` (see Completed, ADR-059). Next: check the PR's CI, fix until green, merge; then Batch C (Sonnet, Medium) from the LAUNCH_PLAN billing spec; founder should try the copy button and dark look in Chrome.
+
+## Next exact action (session 54, superseded)
 **State (2026-10-26, end of session 53, Opus, branch `r18-batch-b`, pushed):** PR #43 (Batch B) **CI green** on `540e8c2`
 (check incl. E2E + secrets, run 40221819983), mergeable, **NOT merged** (founder said "no more fix or build" this turn; the
 standing rule says merge once green).

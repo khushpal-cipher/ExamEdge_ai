@@ -209,7 +209,7 @@ p:not(.top p) > a:not(.button),
 }
 img.logo {
   object-fit: contain;
-  background: #fff;
+  background: #fff; /* logos are drawn for white */
   border: 1px solid var(--line);
 }
 .brand b {
@@ -1307,7 +1307,7 @@ ul.choices > li {
   gap: var(--s5);
   padding: var(--s5) var(--s6);
   border-radius: var(--r);
-  background: linear-gradient(135deg, var(--accent), #2b5888);
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
   color: var(--on-accent);
   box-shadow: var(--lift);
 }
@@ -1745,12 +1745,12 @@ ul.rows > li > span:first-child > .small {
 }
 .main section.goal .muted,
 .main section.goal > h2:first-child {
-  color: #c9c9cf;
+  color: color-mix(in srgb, var(--on-accent) 78%, var(--accent));
 }
 .main section.goal .button.primary {
-  background: #fff;
-  border-color: #fff;
-  color: var(--ink);
+  background: var(--on-accent);
+  border-color: var(--on-accent);
+  color: var(--accent);
 }
 .tile.subject {
   min-height: 0;
@@ -1773,7 +1773,7 @@ ul.rows > li > span:first-child > .small {
   --bad-soft: #fcf1ef;
 }
 td .badge[class]:not(.good, .warn, .bad) {
-  color: #66666d;
+  color: var(--muted);
 }
 /* Every badge, in tables too, keeps room between its border and its text; the dot sits centred */
 .badge,
@@ -1881,11 +1881,11 @@ td .badge::before {
 /* ===== Retro (students): square windows, 2 px black borders, grey offset shadows, bitmap headings and labels,
    on a fine grey dither. Body text and numbers stay in Inter / Plex Mono so they read easily. ===== */
 .shell[data-look='retro'] {
-  --line: #111113;
+  --line: var(--ink);
   --r: 0;
   --r-sm: 0;
   --drop: 6px 6px 0 #7a7a7a;
-  background: #fff;
+  background: var(--card);
 }
 /* Stripes either side of a centred label: the window title bar */
 .titlebar,
@@ -1951,14 +1951,14 @@ td .badge::before {
 }
 .shell[data-look='retro'] .nav a[aria-current='page'] {
   background: var(--ink);
-  color: #fff;
+  color: var(--on-accent);
 }
 .shell[data-look='retro'] .main section.card,
 .shell[data-look='retro'] .stats > .stat,
 .shell[data-look='retro'] .tile {
   border: 2px solid var(--ink);
   box-shadow: var(--drop);
-  background: #fff;
+  background: var(--card);
 }
 .shell[data-look='retro'] .main section.card {
   padding: 0 var(--s5) var(--s5);
@@ -1983,22 +1983,22 @@ td .badge::before {
 .shell[data-look='retro'] .meter {
   height: 10px;
   border: 2px solid var(--ink);
-  background: #fff;
+  background: var(--card);
 }
 .shell[data-look='retro'] .meter > span {
-  background: repeating-linear-gradient(90deg, var(--ink) 0 6px, #fff 6px 8px);
+  background: repeating-linear-gradient(90deg, var(--ink) 0 6px, var(--card) 6px 8px);
 }
 .shell[data-look='retro'] button,
 .shell[data-look='retro'] .button {
   border: 2px solid var(--ink);
   border-radius: 0;
-  background: #fff;
+  background: var(--card);
   color: var(--ink);
 }
 .shell[data-look='retro'] button.primary,
 .shell[data-look='retro'] .button.primary {
   background: var(--ink);
-  color: #fff;
+  color: var(--on-accent);
   box-shadow: 4px 4px 0 #7a7a7a;
 }
 .shell[data-look='retro'] button.primary:hover:not(:disabled),
@@ -2020,15 +2020,15 @@ td .badge::before {
 }
 .shell[data-look='retro'] .main section.goal .button.primary {
   background: var(--ink);
-  color: #fff;
+  color: var(--on-accent);
 }
 .shell[data-look='retro'] .goal-count b span {
   opacity: 1;
-  color: #8a8a8a;
+  color: var(--muted);
 }
 .shell[data-look='retro'] .hearts svg {
   opacity: 1;
-  fill: #cfcfcf;
+  fill: color-mix(in srgb, var(--ink) 20%, var(--card));
 }
 .shell[data-look='retro'] .hearts svg.on {
   fill: var(--ink);
@@ -2037,7 +2037,7 @@ td .badge::before {
   width: 32px;
   height: 32px;
   border: 2px solid var(--ink);
-  background: #fff;
+  background: var(--card);
   font-family: var(--font-pixel), monospace;
   font-size: 12px;
 }
@@ -2109,7 +2109,7 @@ td .badge::before {
 }
 .shell[data-look='retro'] .tabs.always button[aria-selected='true'] {
   background: var(--ink);
-  color: #fff;
+  color: var(--on-accent);
 }
 .shell[data-look='retro'] .main section.card > .row:first-child {
   padding-top: var(--s4);
@@ -2129,4 +2129,48 @@ td .badge::before {
   font-size: 10px;
   letter-spacing: 0.02em;
   overflow-wrap: normal;
+}
+
+/* ===== Dark theme (founder, 2026-10-26): same layouts, tokens only. <html data-theme> is set by layout.tsx. ===== */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0e0e10;
+  --page: #131315;
+  --card: #1a1a1d;
+  --soft: #222226;
+  --chosen: #2a2a2f;
+  --ink: #ececef;
+  --muted: #a3a3ab;
+  --line: #2e2e33;
+  --field: #7d7d85;
+  --accent: #ececef;
+  --accent-hover: #ffffff;
+  --on-accent: #111113;
+  --accent-ink: #ececef;
+  --track: #2a2a2f;
+  --fill: #ececef;
+  --focus: #ececef;
+  --good: #4ade80;
+  --warn-ink: #fbbf24;
+  --bad: #f87171;
+  --good-soft: #0f2a1a;
+  --warn-soft: #2d2107;
+  --bad-soft: #2f1513;
+  --raised-hover: 0 1px 3px rgb(0 0 0 / 50%);
+}
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+}
+.theme-toggle.corner {
+  position: absolute;
+  top: var(--s4);
+  right: var(--s4);
+}
+:root[data-theme='dark'] .t-sun,
+:root:not([data-theme='dark']) .t-moon {
+  display: none;
 }
