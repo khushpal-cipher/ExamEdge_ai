@@ -87,6 +87,9 @@ database and the files.
 
 ## 4. When an institute leaves
 
+**An ended free pilot:** the platform page lists pilots that ended more than 30 days ago under "Ended pilots
+older than 30 days — delete by hand" (ADR-058). If the coaching did not pay, follow steps 2–5 below for it.
+
 Created by mistake and nobody has joined yet? Use **Delete institute** on its page in the platform admin instead (ADR-033).
 
 1. The platform admin sets the institute's status to **offboarding**. Its people can still sign in to download their data.

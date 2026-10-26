@@ -50,7 +50,12 @@ const CREATE_ERRORS: Record<string, string> = {
   slug_reserved: 'That address is reserved.',
   slug_invalid: 'The address must be 3–40 characters: lowercase letters, digits or hyphens.',
   host_mismatch: 'The address must be 3–40 characters: lowercase letters, digits or hyphens.',
+  pilot_end_past: 'The pilot end date cannot be in the past.',
 };
+
+// Blank or malformed → null (the database then uses its default or clears the value).
+const intOrNull = (v: FormDataEntryValue | null) => (v && /^\d+$/.test(String(v)) ? Number(v) : null);
+const dateOrNull = (v: FormDataEntryValue | null) => (v && /^\d{4}-\d{2}-\d{2}$/.test(String(v)) ? String(v) : null);
 
 export async function createInstitute(_prev: CreateState, form: FormData): Promise<CreateState> {
   const db = await requireAal2();
@@ -67,6 +72,8 @@ export async function createInstitute(_prev: CreateState, form: FormData): Promi
     new_name: name,
     new_host: host,
     owner_email: email,
+    students: intOrNull(form.get('students')),
+    ends: dateOrNull(form.get('ends')),
   });
   if (error) {
     if (error.code === '23505') return { error: 'That address or name is already taken.' };
@@ -127,6 +134,8 @@ export async function updateInstitute(form: FormData) {
     .update({
       name: String(form.get('name') ?? '').trim(),
       status: STATUSES.includes(status) ? status : 'pilot',
+      pilot_end: dateOrNull(form.get('pilot_end')),
+      expected_students: intOrNull(form.get('expected_students')),
       branding: { ...(/^#[0-9a-f]{6}$/.test(color) && { color }), ...(logo && { logo }) },
     })
     .eq('id', id);
@@ -187,10 +196,14 @@ export async function updateQuotas(form: FormData) {
     updated_at: new Date().toISOString(),
   };
   for (const k of QUOTA_FIELDS) row[k] = int(k);
+  const seats = { max_students: intOrNull(form.get('max_students')), max_staff: intOrNull(form.get('max_staff')) };
   if (Object.values(row).some((v) => typeof v === 'number' && !Number.isFinite(v))) {
     redirect(`/institutes/${id}?error=invalid`);
   }
-  const { error } = await db.from('institute_quotas').update(row).eq('institute_id', id);
+  const { error } = await db
+    .from('institute_quotas')
+    .update({ ...row, ...seats })
+    .eq('institute_id', id);
   redirect(`/institutes/${id}?${error ? 'error=invalid' : 'ok=saved'}`);
 }
 

@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-25 (session 49 handoff: launch plan, pricing v2, code review findings 1–11 to build)
+Last updated: 2026-10-26 (session 53 handoff: Batch B on PR #43, CI green, not merged; billing answers 1, 2, 4 = yes, 3 open; 3 founder change proposals waiting)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -149,9 +149,123 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 51)
+## Next exact action (session 54)
+**State (2026-10-26, end of session 53, Opus, branch `r18-batch-b`, pushed):** PR #43 (Batch B) **CI green** on `540e8c2`
+(check incl. E2E + secrets, run 40221819983), mergeable, **NOT merged** (founder said "no more fix or build" this turn; the
+standing rule says merge once green).
+After the session 53 handoff below: `540e8c2` Gemini test provider falls back to `gemini-3.5-flash-lite` when
+`gemini-3.8-flash` still answers 503 "high demand" after its retry (cause of the founder's "The AI could not make this
+right now" on student Summary, reproduced 2026-10-26; Gemini unit tests 7/7). Founder must restart their own `npm run dev`
+on :3000 to get it; not clicked in the browser after the fix.
+**Founder answers (2026-10-26) to the billing spec questions (LAUNCH_PLAN "Billing spec — steps 3 + 6"):**
+1 billing period from the approval day = **yes** · 2 yearly extras at the yearly rate (× 10/12) = **yes** · 4 "30 doubts a
+day per staff" = 30 AI requests a day = **yes** · **3 (a waiting UTR keeps full access for at most 7 days) = NOT accepted,
+open**: the founder understood it correctly (paid, waiting for the founder's Approve, keeps access meanwhile) but did not say
+yes — ask what they want instead (e.g. another number of days, or no cap) before Batch C builds plan-review fix 4.
+**Founder change proposals (session 53, explained, NOT approved, nothing built — founder will cross-check, then update the plan):**
+- A. **Student names:** names come only from Google sign-in (an email/demo sign-in has none → "Unnamed"; seen for a local
+  student). Proposal: invitation CSV `email,name,role,batch` + a Name box on single invite (name used on accept); staff can
+  edit a member's name on People; a student can fix their own name.
+- B. **ChatGPT prompt box** on People → Invite: "Have an Excel sheet? Let ChatGPT format it" + Copy prompt, prompt lists the
+  coaching's real batch names; the app still validates every line.
+- C. **Light/dark toggle** for everyone (remembered per device, default = device setting). Conflicts with the earlier
+  "light theme only" decision: both looks (staff mono, student retro) need a dark design — founder to confirm.
+Founder Q&A this session (answers given, no change): billing counts real active accounts, never the typed student number;
+monthly = highest count of the month; yearly = covered count + quarterly extras; limits recalc on count change (spec rule
+9, Batch C); models per task (`routing.ts`); cost shown on platform list, institute page, owner Bill page; new AI services
+(TTS) must go through the gateway; load for ~6,000 students: Vercel scales, Supabase compute is the pressure point,
+unproven until LAUNCH_PLAN step 19.
+Next exact action:
+1. `gh pr checks 43`; if still green, squash-merge PR #43 (Batch B), pull `main`.
+2. Ask the founder for billing question 3 (UTR wait) and whether proposals A, B, C are approved (and their order/batch).
+3. Record the answers in LAUNCH_PLAN (billing spec + a new founder change list) and DECISIONS; build only when the founder
+   says "build". Batch C (Sonnet, Medium) builds steps 3–9 from the spec once question 3 is settled.
 
-**Session 51 (2026-10-25, Sonnet):** legal details filled in (`business.ts`), docs updated (ADR-046 Mix amendment, LAUNCH_PLAN statuses), PR #42 opened; E2E tutor fixture fixed (settled usage record), retro UI polish (tab padding, round send button, tile labels, badge spacing). Step 12 owner click-through (founder signed in as Owner, `next start` :3005): Bill, Tests + results rank list, theory check page, Reviews, People, Batches, Subjects, Question bank load with 0 page errors, 1 H1 each; scrollWidth = 375 at phone width on check, results, Bill, Reviews, People, student page, Batches. Mix checked (headless student1, temporary test, closing time moved by hand in a transaction, then all rows deleted): before close "4 / 4" + "per question after the test closes", no key; after close "4 / 4" per question + "Correct answer: B". Not clicked: Google sign-in itself, invitation acceptance. Local `institutes.name` 'newtown' renamed 'Allen' by hand (slug unchanged).
+## Next exact action (session 54, first draft) — history
+**State (2026-10-25, end of session 53, Opus, branch `r18-batch-b`, pushed, PR #43 open into main, CI running at handoff):**
+Batch B code is built; nothing of it is merged yet.
+- `2ada634` pilot DB green. Fixed the 2 pgTAP failures: `guard_read_only` is now SECURITY DEFINER (the `worker` role has no
+  access to schema `auth`, so `auth.uid()` in an invoker trigger broke every worker write — a real bug, not only the
+  test); `guard_seats` checks only when a row takes a seat it did not hold (a teacher made admin at the cap was refused);
+  allowlist += `read_only`, `guard_read_only`, `seats_full`, `guard_seats`. New `supabase/tests/270_pilot.sql` (37 tests:
+  create_institute defaults + past end refused, trigger coverage on every tenant table, last pilot day not read-only,
+  read-only after: reads ok, in-progress attempt answer + submit ok, new attempt / teacher / owner / invite refused, AI
+  `ai_disabled`, worker and platform admin still write, extension re-opens; pilot budget counts last month; seat caps:
+  invites incl. pending, accept refused, removed student frees a seat, re-activation needs a seat, owner not counted).
+  Local migration 40 re-applied by hand (`create or replace` of the two functions; file and DB agree).
+- `f299e23` web: `lib/pilot.ts` (+ unit test), portal banner, `read_only` / `seats_full` messages (flash, people invite
+  list, invite page), platform create form (students, last pilot day prefilled today + 7), institute page (pilot end,
+  expected students, seat caps), list column "Pilot ends", "Ended pilots older than 30 days — delete by hand".
+  E2E `portals.spec.ts`: create form fills students, checks the pilot row in the DB; budget text now $10.00 (pilots get $10).
+- Docs commit: ADR-058, DATABASE_DESIGN, HOW_IT_WORKS Part 4, RUNBOOKS §4, LAUNCH_PLAN step 1 ✅ + CR 1–2 note.
+Evidence (2026-10-25): `npx supabase test db` Files=27 Tests=1516 PASS; `npm test` 203/203; `npm run test:int` 28/28;
+format, lint + forbidden, typecheck PASS; `npm run build` + check-bundle ok. **E2E not run locally** (founder DB, no demo
+seed) → CI on PR #43. Browser (dev :3000, founder signed in as newtown Owner): newtown `pilot_end` set to today + 2 →
+"Free pilot: 3 days left…" in red; set to yesterday → ended banner, "Create batch" refused with the `read_only` message,
+no row written, 375 px scrollWidth 375, one H1; `pilot_end` then set back to null (founder data unchanged).
+**Unverified:** platform admin pages in the browser (needs the founder's authenticator; E2E covers them in CI).
+Known limits (ADR-058): banner mirrors the SQL rule in `lib/pilot.ts`; platform institute page says "AI spent this month"
+for a pilot whose budget is its whole life.
+Next exact action:
+1. `mcp__ccd_pr__get_status` / `gh pr checks 43`: if CI is red, fix on `r18-batch-b`, push; when green, merge (squash).
+2. Billing spec (LAUNCH_PLAN "Billing spec — steps 3 + 6"): ask the founder for "ok" on the 4 questions if not answered.
+3. Then stop: Batch C (Sonnet, Medium) builds steps 3–9 from the spec, including plan-review fix 4 in `private.read_only`.
+
+## Next exact action (session 53) — history
+**State (2026-10-25, end of session 52, Opus, branch `r18-batch-b`, pushed, NO PR yet):** Batch B about half built.
+Done:
+- **CR 1–2 (commit `8617d24`, green):** migration `20261118000039_ai_budget_fixes.sql`, applied locally. CR 1: `query_embed`
+  now has its own daily counter `searches` (limit = student doubts + step-by-step doubts a day) and is refused to staff.
+  (The session-49 "pair with tutor calls" idea was dropped: a student can settle their own reservation as `error`, which
+  refunds the counter, so any pairing can be looped; a counter is exact.) CR 2: `ai_take` (under the institute lock) and
+  `purge_expired` settle `pending` rows older than 1 hour as `error`, cost 0; partial index `usage_records_pending`.
+  pgTAP `080_usage` (+7, and two `generate_series` cross-join tests that only ran the RPC once were made lateral),
+  `120` expects the new `stale_reservations` key. Evidence (2026-10-25): `npx supabase test db` Files=26 Tests=1479 PASS.
+- **Billing spec (steps 3 + 6)** written in `docs/LAUNCH_PLAN.md` "Billing spec — steps 3 + 6" with 4 questions for the
+  founder (defaults in brackets). **Founder has NOT answered yet: no money code until they say ok.**
+- **Step 1 pilot — WIP, NOT green:** migration `20261118000040_pilot.sql` is **applied to the local DB** (committed as
+  WIP in the handoff commit). It adds `institutes.pilot_end` + `expected_students`, `institute_quotas.max_students` /
+  `max_staff`, `private.read_only(inst)` (pilot: from midnight IST after `pilot_end`), trigger `guard_read_only` on every
+  public table with `institute_id` except usage_records / usage_counters / audit_events (members cannot write; worker and
+  platform admins can; an in-progress attempt can still be answered/submitted), seat caps (`seats_full`,
+  `guard_seats` on memberships, check in `create_invitation` counting pending invites), `create_institute(..., students,
+  ends)` (defaults today + 7; sets caps 10/20, $10 budget, hard stop), `ai_take` = no AI while read-only + a pilot's
+  budget window is its whole life. Existing institutes (pilot_end null) are unchanged.
+  pgTAP with it: **2 failures** — `010_policy_coverage` test 7 (add `read_only`, `seats_full`, `guard_seats` to the
+  definer allowlist) and `070_documents` test 22 ("an alpha chunk cannot point at a bravo document (composite FK)": the
+  new BEFORE trigger now runs first — check which error it raises and make the trigger not mask the FK; never weaken the test).
+Next exact action:
+1. Fix the 2 pgTAP failures; new `supabase/tests/270_pilot.sql`: read-only after `pilot_end` (writes refused with
+   `read_only`, reads fine, in-progress attempt answer + submit allowed, new attempt refused, worker/platform admin allowed,
+   AI `ai_disabled`), seat caps (11th student invite and membership refused, owner not counted), pilot budget over a month
+   boundary, `create_institute` defaults, and a coverage check that every public table with `institute_id` (except the 3)
+   has the `guard_read_only` trigger.
+2. Web: platform create form (students + end date, prefilled today + 7) → `createInstitute` passes `students`, `ends`;
+   institute page edits `pilot_end`, `expected_students`, `max_students`, `max_staff`; platform list column "Pilot ends"
+   + section "Ended pilots older than 30 days — delete by hand" (plan-review fix 10, RUNBOOKS line); portal layout banner
+   (owner/admin "Pilot: N days left", warning in the last 3 days; everyone "Your pilot has ended…" when read-only);
+   `read_only` in `form.ts` NAMED + `flash.tsx`; `seats_full` / `read_only` in people `INVITE_ERRORS` (by message).
+   Read `node_modules/next/AGENTS.md` first. Update E2E `portals.spec.ts` for the new create form.
+3. Docs: ADR-058 (pilot), DATABASE_DESIGN, HOW_IT_WORKS, LAUNCH_PLAN step 1 + CR 1–2 status.
+4. Ask the founder for "ok" on the billing spec questions (they may have answered in chat).
+5. `npm run check`, browser check (platform + a pilot institute at 375 px), PR into main, CI green, merge. Stop (Batch C = Sonnet).
+
+## Next exact action (session 52) — history
+**State (2026-10-25, end of session 51):** LAUNCH_PLAN **Batch A is MERGED** (PR #42, squash `631aebf`, CI green run 40185000036).
+Local DB: migrations 36–38 applied; founder renamed institute `newtown` to display name "Allen" (slug unchanged). Founder is
+signed in as Owner in the app's browser pane. Not verified: real Google sign-in, real invitation email (founder's inbox).
+Next: **Batch B (Opus, High effort)** from a branch `r18-batch-b` (already created from `main`, holds this handoff):
+1. CR 1 students draining the AI budget via `ai_reserve` `query_embed`; CR 2 stuck `pending` reservations (approach in
+   LAUNCH_PLAN "Code review findings"). pgTAP for both.
+2. Step 1 free pilot (7 days, 10 students, staff cap 20, $10 AI, read-only after, never mid-test).
+3. Steps 3 + 6 design: write the short spec for price slabs, account count, billing period, "paid until", payments table, UPI
+   flow, renewal and read-only rules IN `docs/LAUNCH_PLAN.md` before any code (ADR-057, PRICING_PLAN §2a); founder reviews it.
+Include the "Fixes found in the plan review" items for each step. Quality gate, PR, CI green, merge, then stop (Batch C = Sonnet).
+If the session is not running Opus, stop and tell the founder.
+
+## Next exact action (session 51) — history
+
+**Session 51 (2026-10-25, Sonnet): Batch A MERGED — PR #42, squash `631aebf`, CI green (check incl. E2E + secrets, run 40185000036). Next: Batch B (Opus, High): CR 1–2, LaunchPlan steps 1, 3, 6 design.** legal details filled in (`business.ts`), docs updated (ADR-046 Mix amendment, LAUNCH_PLAN statuses), PR #42 opened; E2E tutor fixture fixed (settled usage record), retro UI polish (tab padding, round send button, tile labels, badge spacing). Step 12 owner click-through (founder signed in as Owner, `next start` :3005): Bill, Tests + results rank list, theory check page, Reviews, People, Batches, Subjects, Question bank load with 0 page errors, 1 H1 each; scrollWidth = 375 at phone width on check, results, Bill, Reviews, People, student page, Batches. Mix checked (headless student1, temporary test, closing time moved by hand in a transaction, then all rows deleted): before close "4 / 4" + "per question after the test closes", no key; after close "4 / 4" per question + "Correct answer: B". Not clicked: Google sign-in itself, invitation acceptance. Local `institutes.name` 'newtown' renamed 'Allen' by hand (slug unchanged).
 **State (2026-10-25, end of session 50, Sonnet, branch `r17-next`, NOT pushed, NOT merged, no PR yet):** LAUNCH_PLAN
 Batch A is about 70% built. Commits on `r17-next` after `3d267f9`: live-site AI guard + log scrub; migrations 36–38 with
 code-review fixes 4, 6, 8, 9, 10, 11; worker claim refresh (7); overviews "Beta · Coming soon"; public home page, legal
@@ -1014,6 +1128,7 @@ For the full gate without a reset, rely on CI and say so.
 ## Session log
 | Session | Date | Summary | Last commit |
 |---|---|---|---|
+| 53 | 2026-10-25 | Batch B: pilot pgTAP fixed (worker `auth.uid()` bug, seat regroup), `270_pilot`, pilot web (banner, platform fields, messages), ADR-058 + docs; pgTAP 1516, unit 203, int 28, build ok; PR #43 opened, CI pending | see `git log` (branch `r18-batch-b`) |
 | 42 | 2026-10-19 | UI polish on PR #35: light only, type scale, spacing (`.inline` root cause), sidebar, `.danger` buttons, 960 px content; founder follow-ups: 40 px controls, growing text boxes, styled dropdown, Home at-a-glance band, empty states, status dots, right-aligned numbers, toast, motion, entry page. Gate green locally (E2E → CI) | `b8d6cdb` (branch `r13-ui`) |
 | 39 | 2026-10-18/19 | Founder said merge: PR #32 (`16b7547`) and #33 (`03afbca`) merged after merging `main` into `r12-reviews` (pgTAP 1435). Founder asked for CBT tests: full screen, tab/app switch + reload count, 3rd warning auto-submits, Chrome only, warnings on results (ADR-048, migration 32, pgTAP 1456, E2E `cbt.spec.ts`); PR #34, first CI failed on an E2E locator, fixed | `b61f991` (branch `r12-cbt`) |
 | 37 | 2026-10-18 | Founder: "Type a question" gets negative marks; theory model answer optional (migration 25); multi-correct = JEE Advanced marking (migration 26, ADR-045); owner "AI usage" → ₹ Bill at a platform-set rate (migration 27); pgTAP 1372; MCQ-only results question answered (release is manual) — decision open | branches `r12-typed-marks` (PR #30), `r12-bill` |

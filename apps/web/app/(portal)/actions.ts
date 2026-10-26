@@ -268,6 +268,8 @@ const INVITE_ERRORS: Record<string, string> = {
   '42501': 'not allowed to invite this role',
   '23505': 'already invited',
   '23514': 'invalid',
+  seats_full: 'no free seats for this role (remove someone or ask ExamEdge for more)',
+  read_only: 'the free pilot has ended',
 };
 
 // Single invite or a CSV list (one per line: email[,role[,batch name]]). Each link is emailed (ADR-035) and also
@@ -311,7 +313,8 @@ export async function createInvitations(_prev: InviteState, form: FormData): Pro
         invite_role: role,
         batch: role === 'teacher' || role === 'student' ? batch : null,
       });
-      if (error) results.push({ email, error: INVITE_ERRORS[error.code ?? ''] ?? 'failed' });
+      if (error)
+        results.push({ email, error: INVITE_ERRORS[error.message] ?? INVITE_ERRORS[error.code ?? ''] ?? 'failed' });
       else results.push({ email, link: `${base}/invite/${token}`, role });
     }
   }

@@ -34,6 +34,8 @@ const ERRORS: Record<string, string> = {
   no_sources: 'There are no published notes for this topic yet, so there is nothing to make it from.',
   coming_soon: 'Audio and video overviews are coming soon.',
   notes_refused: 'The AI could not write notes from this explanation. Try explaining it differently.',
+  read_only: 'Your free pilot has ended, so nothing can be changed. Everything can still be read.',
+  seats_full: 'Your plan has no free seats for this role. Remove someone or ask ExamEdge for more seats.',
   storage_full: 'Your institute’s storage is full. Ask your admin.',
   refused: 'The AI could not make this from these notes. Please ask your teacher.',
   generation_failed: 'The AI could not make this right now. Please try again.',

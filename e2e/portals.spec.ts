@@ -210,11 +210,23 @@ test('platform admin needs MFA, then manages institutes (AC2.7, Phase 3 platform
   await page.getByLabel('Institute name').fill(`Gamma ${tag}`);
   await page.getByLabel('Web address (subdomain)').fill(`gamma-${tag}`);
   await page.getByLabel('Owner email').fill(`owner-${tag}@gamma.test`);
+  await page.getByLabel('How many students do you have?').fill('40');
+  const pilotEnd = await page.getByLabel('Free pilot ends (last day)').inputValue(); // prefilled: today + 7 (IST)
   await page.getByRole('button', { name: 'Create institute' }).click();
   await expect(page.getByLabel('Owner invitation link')).toHaveValue(
     new RegExp(`^http://gamma-${tag}\\.localhost:3000/invite/[0-9a-f]{64}$`),
   );
   await expect(page.getByRole('link', { name: `Gamma ${tag}` })).toBeVisible(); // list updates without a reload
+  // A new institute is a free pilot (LAUNCH_PLAN step 1, ADR-058).
+  const { rows: pilot } = await sql(
+    `select i.status, i.pilot_end::text, i.expected_students, q.max_students, q.max_staff,
+            i.pilot_end = (now() at time zone 'Asia/Kolkata')::date + 7 as in_7_days
+     from public.institutes i join public.institute_quotas q on q.institute_id = i.id where i.slug = $1`,
+    [`gamma-${tag}`],
+  );
+  expect(pilot).toEqual([
+    { status: 'pilot', pilot_end: pilotEnd, expected_students: 40, max_students: 10, max_staff: 20, in_7_days: true },
+  ]);
   // AI this month per institute (ADR-041): Demo's seeded use is counted, a new institute has none.
   const row = (name: string) => page.getByRole('row').filter({ has: page.getByRole('link', { name, exact: true }) });
   await expect(row('Demo Classes')).toContainText(/[1-9][\d,]* tokens · \$\d+\.\d{2}/);
@@ -232,7 +244,7 @@ test('platform admin needs MFA, then manages institutes (AC2.7, Phase 3 platform
   await page.getByRole('combobox', { name: /^Status/ }).selectOption('suspended');
   await page.getByRole('button', { name: 'Save institute' }).click();
   await expect(page.getByRole('status')).toHaveText('Saved.');
-  await expect(page.getByText(/^AI spent this month: \$0\.00 of \$20\.00$/)).toBeVisible();
+  await expect(page.getByText(/^AI spent this month: \$0\.00 of \$10\.00$/)).toBeVisible();
   await page.getByLabel('Doubts per student per day').fill('25');
   // AI off for this institute only (never the global switch here: other specs run the worker in parallel).
   await page.getByLabel('AI enabled').uncheck();
