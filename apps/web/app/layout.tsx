@@ -1,7 +1,11 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { IBM_Plex_Mono, Inter, Silkscreen, Source_Serif_4 } from 'next/font/google';
 import 'katex/dist/katex.min.css';
 import './globals.css';
+
+// Runs before paint: saved choice, else the device setting (no flash of the wrong theme).
+const THEME_SCRIPT = `try{var t=localStorage.getItem('theme');document.documentElement.dataset.theme=t==='dark'||t==='light'?t:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}catch(e){}`;
 
 // Mono theme: Inter for text, IBM Plex Mono for labels and numbers, Silkscreen (bitmap) for the students' retro
 // headings, Source Serif 4 for long reading.
@@ -18,7 +22,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${ui.variable} ${mono.variable} ${pixel.variable} ${read.variable}`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${ui.variable} ${mono.variable} ${pixel.variable} ${read.variable}`}
+    >
+      <head>
+        <Script id="theme" strategy="beforeInteractive">
+          {THEME_SCRIPT}
+        </Script>
+      </head>
       <body>{children}</body>
     </html>
   );

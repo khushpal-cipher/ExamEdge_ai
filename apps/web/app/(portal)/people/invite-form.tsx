@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { createInvitations, type InviteState } from '../actions';
+import { CopyField, PromptHelp } from '../../copy-button';
 
 type Batch = { id: string; name: string };
 
@@ -14,6 +15,10 @@ export function InviteForm({ roles, batches }: { roles: string[]; batches: Batch
           <label>
             Email
             <input name="email" type="email" maxLength={254} placeholder="riya@example.com" />
+          </label>
+          <label>
+            Name (optional)
+            <input name="name" maxLength={120} placeholder="Riya Sharma" />
           </label>
           <label>
             Role
@@ -41,13 +46,21 @@ export function InviteForm({ roles, batches }: { roles: string[]; batches: Batch
           <summary>Invite many at once (CSV)</summary>
           <div className="stack" style={{ marginTop: 10 }}>
             <p className="small muted">
-              One person per line: <code>email,role,batch name</code>. Role and batch are optional and default to the
-              choices above. Leave the single email box empty when using a list.
+              One person per line: <code>email,name,role,batch name</code>. Name, role and batch are optional; role and
+              batch default to the choices above. Leave the single email box empty when using a list.
             </p>
-            <label>
-              Paste a list
-              <textarea name="csv" rows={5} placeholder={'riya@example.com,student,JEE 2027 Morning'} />
-            </label>
+            <div className="stack" style={{ gap: 6 }}>
+              <span style={{ fontWeight: 500 }}>
+                <span id="csv-label">Paste a list</span>
+                <PromptHelp batches={batches.map((b) => b.name)} />
+              </span>
+              <textarea
+                name="csv"
+                rows={5}
+                aria-labelledby="csv-label"
+                placeholder={'riya@example.com,Riya Sharma,student,JEE 2027 Morning'}
+              />
+            </div>
             <label>
               Or choose a .csv file
               <input name="file" type="file" accept=".csv,text/csv,text/plain" />
@@ -87,11 +100,10 @@ export function InviteForm({ roles, batches }: { roles: string[]; batches: Batch
                     </td>
                     <td>
                       {r.link ? (
-                        <input
-                          readOnly
+                        <CopyField
                           value={r.link}
-                          aria-label={`Invitation link for ${r.email}`}
-                          style={{ width: '100%' }}
+                          label={`Invitation link for ${r.email}`}
+                          copyLabel={`Copy link for ${r.email}`}
                         />
                       ) : (
                         <span className="badge bad">{r.error}</span>

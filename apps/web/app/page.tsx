@@ -1,3 +1,4 @@
+import { ThemeToggle } from './theme-toggle';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { currentHost, currentInstitute, currentMember, isRootHost } from '@/lib/tenant';
@@ -38,6 +39,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ e
   if (member?.role) redirect(member.role === 'student' ? '/home' : '/dashboard');
   return (
     <main className="center">
+      <ThemeToggle corner />
       <div>
         <h1>{institute.name}</h1>
         <p className="lede">Your notes, tests, results and Smart Study, in one place.</p>

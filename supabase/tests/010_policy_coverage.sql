@@ -55,7 +55,7 @@ select set_eq($$ select proname::text from pg_temp.our_functions
         'submit_practice', 'practice_activity', 'guard_upload', 'job_slot_free', 'purge_expired', 'purgeable', 'is_service_account',
         'purgeable_files', 'delete_institute', 'reinvite_owner', 'inr_per_usd', 'set_inr_per_usd',
         'record_review_author', 'my_reviews', 'cbt_warning', 'batch_standing_count', 'artifact_content',
-        'read_only', 'guard_read_only', 'seats_full', 'guard_seats'],
+        'read_only', 'guard_read_only', 'seats_full', 'guard_seats', 'set_member_name'],
   'SECURITY DEFINER functions match the reviewed allowlist');
 
 select is_empty($$ select proname from pg_temp.our_functions

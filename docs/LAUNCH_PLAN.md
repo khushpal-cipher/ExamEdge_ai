@@ -113,8 +113,8 @@ platform admins read all; nobody updates a row except through these functions.
 every write and every AI call (no job flips a status at midnight; it is derived from dates, like test states, ADR-023):
 - pilot: from midnight IST after `pilot_end` (the last pilot day) [built in B];
 - paid: from midnight IST after `paid_until` + **3 days' grace** (step 8);
-- **never while a payment is `waiting`** for the founder (plan-review fix 4), for at most 7 days after the UTR was typed
-  (so a made-up UTR cannot keep a coaching open for ever);
+- **a waiting payment gives NO extra access** (founder, 2026-10-26, question 3: "access only after the approval"; this
+  replaces plan-review fix 4): full access resumes only when the founder presses Approve; the owner can still start a payment;
 - read-only = members can read everything but write nothing; AI is off; **an attempt already started can still be
   answered and submitted** (plan-review fix 5) [built in B]; the owner can still start a payment.
 - The owner/admin banner turns into a warning **3 days before** the end (pilot or paid) [pilot part built in B]; the
@@ -132,7 +132,15 @@ founder can change them), $10 AI for the **whole pilot** (the budget window of a
 read-only after `pilot_end` (rule 8). The founder extends a pilot by changing `pilot_end` or makes it `active` by hand.
 Ended pilots older than 30 days are listed on the platform page for deletion by hand (plan-review fix 10).
 
-**Founder answers (2026-10-26): 1 yes · 2 yes · 4 yes · 3 open (not accepted yet; ask what instead).**
+**Founder answers (2026-10-26): 1 yes · 2 yes · 4 yes · 3 = no grace while a UTR waits, access only after Approve (read from "no cap only access after the approval"; confirm if meant otherwise).**
+Consequence to tell coachings: pay before the pilot/paid period ends; the founder should approve quickly.
+
+**Founder change list (2026-10-26):** A student names (approved) · B ChatGPT prompt help on People → Invite as an info icon
+next to "paste the list" (approved; opens on hover AND click/tap, with a Copy button, because hover does not work on phones) ·
+C light/dark toggle for everyone (approved; the earlier "light theme only" is cancelled; remembered per device, default =
+device setting; staff mono look and student retro look each need a dark design) · D **copy icon** (two overlapping squares,
+founder's screenshot) next to every invitation link on People, one click copies it, brief "Copied" feedback, so nobody has to
+select the link by hand (approved). **A–D built 2026-10-26 (ADR-059, PR on `r19-founder-list`).**
 
 **Questions for the founder (my default in brackets; say "ok" to take all defaults):**
 1. Billing period from the approval day, not the 1st of the calendar month? [yes — no part-month bills]

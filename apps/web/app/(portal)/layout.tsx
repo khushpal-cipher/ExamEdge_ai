@@ -1,3 +1,4 @@
+import { ThemeToggle } from '../theme-toggle';
 import { brandStyle, logoUrl } from '@/lib/brand';
 import { pilotState } from '@/lib/pilot';
 import { studentBatches } from '@/lib/student';
@@ -76,6 +77,7 @@ export default async function PortalLayout({ children }: { children: React.React
           <span>
             <b>{me?.full_name ?? 'Signed in'}</b> · <span className="role">{member.role}</span>
           </span>
+          <ThemeToggle />
           <form action={signOut}>
             <button type="submit">Sign out</button>
           </form>

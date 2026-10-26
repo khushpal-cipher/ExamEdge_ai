@@ -740,3 +740,18 @@ sitemap or robots.txt).
 - **Disadvantages:** the web banner mirrors the pilot rule of `read_only()` in `lib/pilot.ts` (shortcut until Batch
   C); the platform institute page still shows "AI spent this month" for a pilot whose budget is its whole life;
   storage logo uploads and the institute's own row are not guarded (platform-admin only anyway).
+
+### ADR-059 Names on invitations, ChatGPT list help, copy buttons, light/dark toggle (founder, 2026-10-26, built)
+- **Decision:** (A) an invitation may carry a name (single box, or CSV `email,name,role,batch`; the old `email,role,batch`
+  still reads); the name fills the profile only when it is empty (a Google name is kept); staff edit the name of students
+  (teachers: own batches) and teachers (owner/admin) on People, and a student edits their own on My progress. (B) an info
+  icon beside "Paste a list" opens (hover, focus, click) a ChatGPT prompt listing the coaching's real batch names, with a
+  Copy button; every line is still validated by the server. (D) a copy icon beside every invitation link. (C) a light/dark
+  toggle for everyone: choice kept in `localStorage` on the device, default = device setting; this **replaces** "light
+  theme only" of ADR-049 polish. Dark = token overrides only (`:root[data-theme='dark']` at the end of `globals.css`).
+- **How:** migration 41 (`invitations.full_name`, `create_invitation(..., invite_name)`, `accept_invitation` fills an empty
+  profile name, definer `set_member_name`); pgTAP `280_member_names`; `layout.tsx` sets `data-theme` before paint via
+  `next/script`; `theme-toggle.tsx`; hard-coded whites in retro/goal CSS became tokens.
+- **Disadvantages:** profiles are one per person across institutes, so a rename shows in every institute the person
+  belongs to (owners and admins cannot be renamed by others); the copy button needs clipboard permission (https or
+  localhost) and shows "Select and copy" otherwise; the Google button and logos stay white by design.

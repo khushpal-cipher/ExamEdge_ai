@@ -259,6 +259,23 @@ export async function revokeInvitation(form: FormData) {
   done('/people?tab=invitations', error, 'revoked');
 }
 
+// Staff sets a student's/teacher's name (DB decides who may); a student fixes their own name on My progress.
+export async function setMemberName(form: FormData) {
+  const { db } = await requireMember(STAFF);
+  const id = form.get('membership_id');
+  if (!isUuid(id)) done('/people', { code: '23514' });
+  const { error } = await db.rpc('set_member_name', { membership: id, new_name: text(form, 'name') });
+  done(`/people?tab=${text(form, 'tab', 20) === 'staff' ? 'staff' : 'students'}`, error);
+}
+
+export async function setOwnName(form: FormData) {
+  const { member, db } = await requireMember(['student']);
+  const name = text(form, 'name');
+  if (!name) done('/progress', { message: 'name_invalid' });
+  const { error } = await db.from('profiles').update({ full_name: name }).eq('user_id', member.userId);
+  done('/progress', error);
+}
+
 export type InviteResult = { email: string; link?: string; error?: string; role?: string; emailed?: boolean };
 export type InviteState = { results: InviteResult[] } | null;
 
@@ -299,7 +316,10 @@ export async function createInvitations(_prev: InviteState, form: FormData): Pro
 
   const results: InviteResult[] = [];
   for (const line of lines) {
-    const [rawEmail = '', rawRole = '', rawBatch = ''] = line.split(',').map((c) => c.trim());
+    const cols = line.split(',').map((c) => c.trim());
+    // New format: email,name,role,batch. Old format email,role,batch is still read (a name is never a role word).
+    const old = ROLES.includes((cols[1] ?? '').toLowerCase()) || (cols.length <= 2 && !cols[1]);
+    const [rawEmail = '', rawName = '', rawRole = '', rawBatch = ''] = old ? [cols[0], '', cols[1], cols[2]] : cols;
     const email = rawEmail.toLowerCase();
     const role = rawRole ? rawRole.toLowerCase() : defaultRole;
     const batch = rawBatch ? batchByName.get(rawBatch.toLowerCase()) : defaultBatch;
@@ -312,6 +332,7 @@ export async function createInvitations(_prev: InviteState, form: FormData): Pro
         invite_email: email,
         invite_role: role,
         batch: role === 'teacher' || role === 'student' ? batch : null,
+        invite_name: rawName || (single ? text(form, 'name') : '') || undefined,
       });
       if (error)
         results.push({ email, error: INVITE_ERRORS[error.message] ?? INVITE_ERRORS[error.code ?? ''] ?? 'failed' });

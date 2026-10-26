@@ -1,3 +1,4 @@
+import { ThemeToggle } from '../../theme-toggle';
 import { notFound } from 'next/navigation';
 import { currentInstitute, currentMember } from '@/lib/tenant';
 import { acceptInvite, signOut } from '../../actions';
@@ -28,6 +29,7 @@ export default async function Invite({
   const self = `/invite/${encodeURIComponent(token)}`;
   return (
     <main className="center">
+      <ThemeToggle corner />
       <div>
         <h1>Join {institute.name}</h1>
         <p className="lede">Sign in with the email address your institute invited.</p>
