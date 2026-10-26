@@ -121,8 +121,9 @@ export function PromptHelp({ batches }: { batches: string[] }) {
           strokeWidth="2"
           aria-hidden="true"
         >
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 11v6M12 7.5v.01" />
+          <circle cx="12" cy="12" r="9.5" strokeWidth="2.6" />
+          <circle cx="12" cy="7.6" r="1.2" fill="currentColor" strokeWidth="0.5" />
+          <path d="M12 11.2v6" strokeWidth="2.8" strokeLinecap="round" />
         </svg>
       </button>
       {open && (
