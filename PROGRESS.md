@@ -151,7 +151,25 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 55)
-**Session 54 (2026-10-26):** PR #43 merged (`57a7010`). Founder answers: billing Q3 = a waiting UTR gives NO extra access, access only after Approve (LAUNCH_PLAN rule 8 + plan-review fix 4 replaced); proposals A, C approved, B as an info icon, D copy icon; "build" given. Built on `r19-founder-list` (see Completed, ADR-059). Next: check the PR's CI, fix until green, merge; then Batch C (Sonnet, Medium) from the LAUNCH_PLAN billing spec; founder should try the copy button and dark look in Chrome.
+**State (2026-10-26, end of session 54, Opus, `main` = `bb6e953`):** PR #43 (Batch B) merged `57a7010`; PR #44 (founder list A names,
+B ChatGPT prompt info icon, C light/dark toggle, D copy icons, ADR-059, migration 41) merged `bb6e953`, CI green run 40291597369
+(check incl. E2E + secrets). Two CI fixes on the way, both real: copy-button label clashed with the link box label in E2E; an info
+button inside the "Paste a list" `<label>` stole the label from the textarea (now `aria-labelledby`). Founder answers: billing Q3 =
+a waiting UTR gives NO extra access, access only after Approve (LAUNCH_PLAN rule 8; plan-review fix 4 replaced); light-theme-only
+cancelled. This handoff is on branch `r20-handoff` (docs only, merge it first or fold it into the next branch).
+**Unverified:** copy button writing to the clipboard (the in-app pane denies it; founder to try in Chrome), invitation acceptance with a
+name in the browser (pgTAP only), dark look on every page (checked: sign-in, People, student Home, My progress), info icon redrawn after
+the founder's picture (not looked at). Founder noted invitation emails say "not emailed": Resend test sender reaches only the account
+owner until `examedgeai.in` is verified in Resend and `EMAIL_FROM` is set (Batch D); until then copy the link and send it by hand.
+Founder asked what Batch D holds (answered: money-code review, deploy step 16, real Claude test, first coaching, load test; needs the
+founder's accounts from steps 14-15 first).
+Next exact action:
+1. Merge `r20-handoff` (docs) or include it in the next branch; pull `main`.
+2. Founder says "build" for **Batch C** (Sonnet, Medium effort): LAUNCH_PLAN steps 3-9 from the "Billing spec - steps 3 + 6" section
+   (price slabs `private.price`, price lists, account counts + peaks, limits follow the count, Bill page, UPI payment by hand with
+   Approve/Reject, renewal, 80% warning + top-up). Q3 is settled: no access while a UTR waits. Plan-review fixes 1, 3, 6, 7 belong
+   here. Branch off `main`, one PR, full gate (`npm run check`; E2E in CI because the founder's `next dev` holds :3000).
+3. Then Batch D (Opus, High) only after the founder's accounts exist (LAUNCH_PLAN section B).
 
 ## Next exact action (session 54, superseded)
 **State (2026-10-26, end of session 53, Opus, branch `r18-batch-b`, pushed):** PR #43 (Batch B) **CI green** on `540e8c2`
