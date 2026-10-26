@@ -1,5 +1,6 @@
 'use client';
 
+import { CopyField } from '../copy-button';
 import { useActionState } from 'react';
 import { createInstitute, type CreateState } from './actions';
 
@@ -56,7 +57,7 @@ export function CreateInstitute({ root, today, defaultEnd }: { root: string; tod
               ? 'Created. The owner was emailed this invitation link. It is shown here only once:'
               : 'Created. The email could not be sent: send this owner invitation link yourself now — it is shown only once:'}
           </p>
-          <input readOnly value={state.link} aria-label="Owner invitation link" style={{ width: '100%' }} />
+          <CopyField value={state.link} label="Owner invitation link" />
         </div>
       )}
     </form>

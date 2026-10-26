@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { createInvitations, type InviteState } from '../actions';
-import { CopyButton, PromptHelp } from './copy-button';
+import { CopyField, PromptHelp } from '../../copy-button';
 
 type Batch = { id: string; name: string };
 
@@ -51,7 +51,8 @@ export function InviteForm({ roles, batches }: { roles: string[]; batches: Batch
             </p>
             <label>
               <span>
-                Paste a list <PromptHelp batches={batches.map((b) => b.name)} />
+                Paste a list
+                <PromptHelp batches={batches.map((b) => b.name)} />
               </span>
               <textarea name="csv" rows={5} placeholder={'riya@example.com,Riya Sharma,student,JEE 2027 Morning'} />
             </label>
@@ -94,15 +95,11 @@ export function InviteForm({ roles, batches }: { roles: string[]; batches: Batch
                     </td>
                     <td>
                       {r.link ? (
-                        <div className="row">
-                          <input
-                            readOnly
-                            value={r.link}
-                            aria-label={`Invitation link for ${r.email}`}
-                            style={{ width: '100%' }}
-                          />
-                          <CopyButton text={r.link} label={`Copy invitation link for ${r.email}`} />
-                        </div>
+                        <CopyField
+                          value={r.link}
+                          label={`Invitation link for ${r.email}`}
+                          copyLabel={`Copy link for ${r.email}`}
+                        />
                       ) : (
                         <span className="badge bad">{r.error}</span>
                       )}
