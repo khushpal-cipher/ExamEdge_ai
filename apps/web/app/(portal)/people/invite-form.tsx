@@ -49,13 +49,18 @@ export function InviteForm({ roles, batches }: { roles: string[]; batches: Batch
               One person per line: <code>email,name,role,batch name</code>. Name, role and batch are optional; role and
               batch default to the choices above. Leave the single email box empty when using a list.
             </p>
-            <label>
-              <span>
-                Paste a list
+            <div className="stack" style={{ gap: 6 }}>
+              <span style={{ fontWeight: 500 }}>
+                <span id="csv-label">Paste a list</span>
                 <PromptHelp batches={batches.map((b) => b.name)} />
               </span>
-              <textarea name="csv" rows={5} placeholder={'riya@example.com,Riya Sharma,student,JEE 2027 Morning'} />
-            </label>
+              <textarea
+                name="csv"
+                rows={5}
+                aria-labelledby="csv-label"
+                placeholder={'riya@example.com,Riya Sharma,student,JEE 2027 Morning'}
+              />
+            </div>
             <label>
               Or choose a .csv file
               <input name="file" type="file" accept=".csv,text/csv,text/plain" />
