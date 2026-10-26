@@ -25,6 +25,7 @@ const NAMED = [
   'formula_broken',
   'read_only',
   'seats_full',
+  'name_invalid',
 ];
 
 export function done(path: string, error?: { code?: string; message?: string } | null, okCode = 'saved'): never {

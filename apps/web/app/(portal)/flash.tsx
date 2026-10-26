@@ -36,6 +36,7 @@ const ERRORS: Record<string, string> = {
   notes_refused: 'The AI could not write notes from this explanation. Try explaining it differently.',
   read_only: 'Your free pilot has ended, so nothing can be changed. Everything can still be read.',
   seats_full: 'Your plan has no free seats for this role. Remove someone or ask ExamEdge for more seats.',
+  name_invalid: 'Please type a name of 1 to 120 characters.',
   storage_full: 'Your institute’s storage is full. Ask your admin.',
   refused: 'The AI could not make this from these notes. Please ask your teacher.',
   generation_failed: 'The AI could not make this right now. Please try again.',

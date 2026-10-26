@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { createInvitations, type InviteState } from '../actions';
+import { CopyButton, PromptHelp } from './copy-button';
 
 type Batch = { id: string; name: string };
 
@@ -14,6 +15,10 @@ export function InviteForm({ roles, batches }: { roles: string[]; batches: Batch
           <label>
             Email
             <input name="email" type="email" maxLength={254} placeholder="riya@example.com" />
+          </label>
+          <label>
+            Name (optional)
+            <input name="name" maxLength={120} placeholder="Riya Sharma" />
           </label>
           <label>
             Role
@@ -41,12 +46,14 @@ export function InviteForm({ roles, batches }: { roles: string[]; batches: Batch
           <summary>Invite many at once (CSV)</summary>
           <div className="stack" style={{ marginTop: 10 }}>
             <p className="small muted">
-              One person per line: <code>email,role,batch name</code>. Role and batch are optional and default to the
-              choices above. Leave the single email box empty when using a list.
+              One person per line: <code>email,name,role,batch name</code>. Name, role and batch are optional; role and
+              batch default to the choices above. Leave the single email box empty when using a list.
             </p>
             <label>
-              Paste a list
-              <textarea name="csv" rows={5} placeholder={'riya@example.com,student,JEE 2027 Morning'} />
+              <span>
+                Paste a list <PromptHelp batches={batches.map((b) => b.name)} />
+              </span>
+              <textarea name="csv" rows={5} placeholder={'riya@example.com,Riya Sharma,student,JEE 2027 Morning'} />
             </label>
             <label>
               Or choose a .csv file
@@ -87,12 +94,15 @@ export function InviteForm({ roles, batches }: { roles: string[]; batches: Batch
                     </td>
                     <td>
                       {r.link ? (
-                        <input
-                          readOnly
-                          value={r.link}
-                          aria-label={`Invitation link for ${r.email}`}
-                          style={{ width: '100%' }}
-                        />
+                        <div className="row">
+                          <input
+                            readOnly
+                            value={r.link}
+                            aria-label={`Invitation link for ${r.email}`}
+                            style={{ width: '100%' }}
+                          />
+                          <CopyButton text={r.link} label={`Copy invitation link for ${r.email}`} />
+                        </div>
                       ) : (
                         <span className="badge bad">{r.error}</span>
                       )}

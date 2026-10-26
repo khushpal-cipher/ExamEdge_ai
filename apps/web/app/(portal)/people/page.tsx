@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { MANAGERS, requireMember, STAFF } from '@/lib/tenant';
-import { revokeInvitation, updateMembership } from '../actions';
+import { revokeInvitation, setMemberName, updateMembership } from '../actions';
 import { Flash, type Search } from '../flash';
 import { InviteForm } from './invite-form';
 
@@ -134,7 +134,29 @@ export default async function People({ searchParams }: { searchParams: Search })
                 <tbody>
                   {list.map((p) => (
                     <tr key={p.id}>
-                      <td>{p.role === 'student' ? <Link href={`/students/${p.user_id}`}>{p.name}</Link> : p.name}</td>
+                      <td>
+                        {p.role === 'student' ? <Link href={`/students/${p.user_id}`}>{p.name}</Link> : p.name}
+                        {(p.role === 'student' || (manager && p.role === 'teacher')) && (
+                          <details>
+                            <summary className="small">Edit name</summary>
+                            <form action={setMemberName} className="row">
+                              <input type="hidden" name="membership_id" value={p.id} />
+                              <input type="hidden" name="tab" value={tab} />
+                              <label className="sr-only" htmlFor={`n-${p.id}`}>
+                                Name of {p.name}
+                              </label>
+                              <input
+                                id={`n-${p.id}`}
+                                name="name"
+                                maxLength={120}
+                                required
+                                defaultValue={p.name === 'Unnamed' ? '' : p.name}
+                              />
+                              <button type="submit">Save</button>
+                            </form>
+                          </details>
+                        )}
+                      </td>
                       <td className="small">
                         {p.batch_members
                           .map((b) => batchName.get(b.batch_id))
