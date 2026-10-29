@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import { isUuid, MANAGERS, requireMember, STAFF } from '@/lib/tenant';
 import { addBatchMember, createSubject, moveStudents, removeBatchMember, setBatchArchived } from '../../actions';
 import { Flash } from '../../flash';
-import { Standings } from './standings';
+import { Tabs } from '../../topics/[id]/tabs';
+import { Performance } from './performance';
 
 type Row = {
   membership_id: string;
@@ -90,135 +91,156 @@ export default async function Batch({
       </div>
       <Flash searchParams={searchParams} />
 
-      <section className="card stack" aria-labelledby="subjects">
-        <h2 id="subjects">Subjects</h2>
-        {!subjects?.length ? (
-          <p className="empty">No subjects in this batch yet.</p>
-        ) : (
-          <ul className="pills">
-            {subjects.map((s) => (
-              <li key={s.id}>
-                <Link href={`/subjects/${s.id}`}>{s.name}</Link>
-              </li>
-            ))}
-          </ul>
-        )}
-        {manager && (
-          <form action={createSubject} className="inline">
-            <input type="hidden" name="batch_id" value={batch.id} />
-            <label>
-              New subject
-              <input name="name" required maxLength={120} placeholder="Maths" />
-            </label>
-            <button type="submit">Add subject</button>
-          </form>
-        )}
-      </section>
+      <Tabs
+        label="Batch sections"
+        initial={(await searchParams).sort ? 'performance' : undefined}
+        tabs={[
+          {
+            key: 'manage',
+            label: 'Manage',
+            content: (
+              <>
+                <section className="card stack" aria-labelledby="subjects">
+                  <h2 id="subjects">Subjects</h2>
+                  {!subjects?.length ? (
+                    <p className="empty">No subjects in this batch yet.</p>
+                  ) : (
+                    <ul className="pills">
+                      {subjects.map((s) => (
+                        <li key={s.id}>
+                          <Link href={`/subjects/${s.id}`}>{s.name}</Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {manager && (
+                    <form action={createSubject} className="inline">
+                      <input type="hidden" name="batch_id" value={batch.id} />
+                      <label>
+                        New subject
+                        <input name="name" required maxLength={120} placeholder="Maths" />
+                      </label>
+                      <button type="submit">Add subject</button>
+                    </form>
+                  )}
+                </section>
 
-      <Standings ctx={{ institute, member, db }} batch={batch.id} sort={(await searchParams).sort} />
+                {(['teacher', 'student'] as const).map((role) => {
+                  const list = sorted(role);
+                  return (
+                    <section key={role} className="card stack" aria-labelledby={`${role}s`}>
+                      <h2 id={`${role}s`}>
+                        {role === 'teacher' ? 'Teachers' : 'Students'} ({list.length})
+                      </h2>
+                      {list.length === 0 ? (
+                        <p className="empty">No {role}s in this batch yet.</p>
+                      ) : (
+                        <div className="table-wrap">
+                          <table>
+                            <tbody>
+                              {list.map((r) => (
+                                <tr key={r.membership_id}>
+                                  <td>{r.name}</td>
+                                  <td>
+                                    {r.left_at && <span className="badge">Moved on</span>}
+                                    {r.memberships?.status !== 'active' && (
+                                      <span className="badge warn">{r.memberships?.status}</span>
+                                    )}
+                                  </td>
+                                  {manager && (
+                                    <td style={{ textAlign: 'right' }}>
+                                      <form action={removeBatchMember}>
+                                        <input type="hidden" name="batch_id" value={batch.id} />
+                                        <input type="hidden" name="membership_id" value={r.membership_id} />
+                                        <button
+                                          type="submit"
+                                          className="link danger"
+                                          aria-label={`Remove ${r.name} from batch`}
+                                        >
+                                          Remove
+                                        </button>
+                                      </form>
+                                    </td>
+                                  )}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </section>
+                  );
+                })}
 
-      {(['teacher', 'student'] as const).map((role) => {
-        const list = sorted(role);
-        return (
-          <section key={role} className="card stack" aria-labelledby={`${role}s`}>
-            <h2 id={`${role}s`}>
-              {role === 'teacher' ? 'Teachers' : 'Students'} ({list.length})
-            </h2>
-            {list.length === 0 ? (
-              <p className="empty">No {role}s in this batch yet.</p>
-            ) : (
-              <div className="table-wrap">
-                <table>
-                  <tbody>
-                    {list.map((r) => (
-                      <tr key={r.membership_id}>
-                        <td>{r.name}</td>
-                        <td>
-                          {r.left_at && <span className="badge">Moved on</span>}
-                          {r.memberships?.status !== 'active' && (
-                            <span className="badge warn">{r.memberships?.status}</span>
-                          )}
-                        </td>
-                        {manager && (
-                          <td style={{ textAlign: 'right' }}>
-                            <form action={removeBatchMember}>
-                              <input type="hidden" name="batch_id" value={batch.id} />
-                              <input type="hidden" name="membership_id" value={r.membership_id} />
-                              <button type="submit" className="link danger" aria-label={`Remove ${r.name} from batch`}>
-                                Remove
-                              </button>
-                            </form>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-        );
-      })}
+                {manager && current.length > 0 && (others ?? []).length > 0 && (
+                  <section className="card stack" aria-labelledby="move">
+                    <h2 id="move">Move students to another batch</h2>
+                    <p className="small muted">
+                      For promotion, e.g. Class 9 → Class 10. They stay in this batch&apos;s history and can still read
+                      its notes and results, but cannot take its new tests.
+                    </p>
+                    <form action={moveStudents} className="stack">
+                      <input type="hidden" name="batch_id" value={batch.id} />
+                      <fieldset className="stack">
+                        <legend>Students</legend>
+                        {current.map((r) => (
+                          <label key={r.membership_id} className="row">
+                            <input type="checkbox" name="membership_id" value={r.membership_id} defaultChecked />
+                            {r.name}
+                          </label>
+                        ))}
+                      </fieldset>
+                      <div className="inline">
+                        <label>
+                          New batch
+                          <select name="to_batch_id" required>
+                            {others!.map((b) => (
+                              <option key={b.id} value={b.id}>
+                                {b.name} {b.academic_year && `(${b.academic_year})`}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <button type="submit" className="primary">
+                          Move students
+                        </button>
+                      </div>
+                    </form>
+                  </section>
+                )}
 
-      {manager && current.length > 0 && (others ?? []).length > 0 && (
-        <section className="card stack" aria-labelledby="move">
-          <h2 id="move">Move students to another batch</h2>
-          <p className="small muted">
-            For promotion, e.g. Class 9 → Class 10. They stay in this batch&apos;s history and can still read its notes
-            and results, but cannot take its new tests.
-          </p>
-          <form action={moveStudents} className="stack">
-            <input type="hidden" name="batch_id" value={batch.id} />
-            <fieldset className="stack">
-              <legend>Students</legend>
-              {current.map((r) => (
-                <label key={r.membership_id} className="row">
-                  <input type="checkbox" name="membership_id" value={r.membership_id} defaultChecked />
-                  {r.name}
-                </label>
-              ))}
-            </fieldset>
-            <div className="inline">
-              <label>
-                New batch
-                <select name="to_batch_id" required>
-                  {others!.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name} {b.academic_year && `(${b.academic_year})`}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button type="submit" className="primary">
-                Move students
-              </button>
-            </div>
-          </form>
-        </section>
-      )}
-
-      {manager && addable.length > 0 && (
-        <section className="card stack" aria-labelledby="add-member">
-          <h2 id="add-member">Add someone to this batch</h2>
-          <form action={addBatchMember} className="inline">
-            <input type="hidden" name="batch_id" value={batch.id} />
-            <label>
-              Member
-              <select name="membership_id" required>
-                {addable.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.role})
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button type="submit" className="primary">
-              Add to batch
-            </button>
-          </form>
-          <p className="small muted">New people join through invitations on the People page.</p>
-        </section>
-      )}
+                {manager && addable.length > 0 && (
+                  <section className="card stack" aria-labelledby="add-member">
+                    <h2 id="add-member">Add someone to this batch</h2>
+                    <form action={addBatchMember} className="inline">
+                      <input type="hidden" name="batch_id" value={batch.id} />
+                      <label>
+                        Member
+                        <select name="membership_id" required>
+                          {addable.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.name} ({m.role})
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <button type="submit" className="primary">
+                        Add to batch
+                      </button>
+                    </form>
+                    <p className="small muted">New people join through invitations on the People page.</p>
+                  </section>
+                )}
+              </>
+            ),
+          },
+          {
+            key: 'performance',
+            label: 'Performance',
+            content: <Performance ctx={{ institute, member, db }} batch={batch.id} sort={(await searchParams).sort} />,
+          },
+        ]}
+      />
     </>
   );
 }

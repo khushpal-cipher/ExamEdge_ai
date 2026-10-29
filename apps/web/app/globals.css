@@ -1216,14 +1216,6 @@ ul.choices > li {
   .card {
     padding: var(--s4);
   }
-  .hero {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    padding: var(--s4) var(--s5);
-    gap: var(--s4);
-  }
-  .hero .stat:first-child {
-    grid-column: 1 / -1;
-  }
   .notice.toast {
     left: var(--s4);
     right: var(--s4);
@@ -1300,27 +1292,6 @@ ul.choices > li {
   box-shadow: var(--lift);
 }
 
-/* Home "at a glance" band: next test, overall rank, last rank */
-.hero {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--s5);
-  padding: var(--s5) var(--s6);
-  border-radius: var(--r);
-  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-  color: var(--on-accent);
-  box-shadow: var(--lift);
-}
-.hero .stat > span {
-  color: color-mix(in srgb, var(--on-accent) 80%, transparent);
-}
-.hero .stat > span:first-child {
-  font-size: var(--t-cap);
-  font-weight: 600;
-}
-.hero .stat > .small {
-  overflow-wrap: anywhere;
-}
 /* Subject tiles: a letter mark in mint */
 .tile .mark {
   width: 40px;
@@ -1622,9 +1593,6 @@ h1 {
   font-size: 16px;
   font-weight: 500;
   color: var(--ink);
-}
-.hero {
-  background: var(--ink);
 }
 .stat b {
   font-family: var(--font-mono), monospace;
@@ -2203,4 +2171,50 @@ td .badge::before {
   .copyfield .copy-btn {
     opacity: 1;
   }
+}
+
+/* Home: scrolling rank list inside the Overall rank tile */
+.rankbox {
+  position: relative;
+  height: 5.5rem;
+  padding-block: 1.85rem; /* lets the first and last row scroll to the middle */
+  box-sizing: border-box;
+  overflow-y: auto;
+  scrollbar-width: none;
+  scroll-snap-type: y proximity;
+  mask-image: linear-gradient(transparent, #000 20%, #000 80%, transparent);
+}
+.rankbox::-webkit-scrollbar {
+  display: none;
+}
+.rankrow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  height: 1.8rem;
+  scroll-snap-align: center;
+}
+.rankrow b {
+  min-width: 2.5rem;
+  font-size: 1.1rem;
+}
+.rankrow .who {
+  flex: 1;
+  filter: blur(var(--blur, 0px));
+}
+.rankrow[data-me] .who {
+  font-weight: 700;
+}
+
+/* Tab panels space their sections like the page does (the page grid only reaches direct children) */
+[role='tabpanel']:not([hidden]) {
+  display: grid;
+  gap: var(--s4);
+  align-content: start;
+}
+
+.plain {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }

@@ -23,7 +23,7 @@ const SORTS: Record<string, [string, (a: StandingRow, b: StandingRow) => number]
 // Batch view (HOW_IT_WORKS 2E): every student with overall rank, average %, last test score and tests missed.
 // Shared with the CSV export so the file matches the screen.
 export async function standingRows(db: Ctx['db'], batch: string) {
-  const [{ data: standings }, { data: last }, { data: profiles }] = await Promise.all([
+  const [{ data: standings }, { data: last }, { data: profiles }, { data: current }] = await Promise.all([
     db
       .from('batch_standings')
       .select('user_id, overall_rank, average_percentage, tests_counted, tests_missed')
@@ -37,7 +37,17 @@ export async function standingRows(db: Ctx['db'], batch: string) {
       .limit(1)
       .maybeSingle(),
     db.from('profiles').select('user_id, full_name'),
+    // Students who moved on stay in the history but are not ranked here.
+    db
+      .from('batch_members')
+      .select('memberships(user_id)')
+      .eq('batch_id', batch)
+      .eq('batch_role', 'student')
+      .is('left_at', null),
   ]);
+  const now = new Set(
+    ((current ?? []) as unknown as { memberships: { user_id: string } | null }[]).map((r) => r.memberships?.user_id),
+  );
   const name = new Map((profiles ?? []).map((p) => [p.user_id, p.full_name ?? 'Unnamed']));
   const lastScore = new Map(
     ((last?.test_attempts ?? []) as { user_id: string; score: number; max_score: number }[]).map((a) => [
@@ -45,11 +55,13 @@ export async function standingRows(db: Ctx['db'], batch: string) {
       pct(a.score, a.max_score),
     ]),
   );
-  const rows: StandingRow[] = (standings ?? []).map((s) => ({
-    ...s,
-    name: name.get(s.user_id) ?? 'Unnamed',
-    last: lastScore.get(s.user_id) ?? null,
-  }));
+  const rows: StandingRow[] = (standings ?? [])
+    .filter((s) => now.has(s.user_id))
+    .map((s) => ({
+      ...s,
+      name: name.get(s.user_id) ?? 'Unnamed',
+      last: lastScore.get(s.user_id) ?? null,
+    }));
   return { rows, lastTitle: last?.title as string | undefined };
 }
 
