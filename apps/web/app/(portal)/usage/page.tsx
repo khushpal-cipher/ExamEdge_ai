@@ -43,6 +43,7 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
       .from('payments')
       .select('id, kind, total_paise, utr, status, reject_reason, receipt_no, created_at')
       .eq('institute_id', institute.id)
+      .or('utr.not.is.null,status.neq.waiting') // a payment that is only started is not shown in the list
       .order('created_at', { ascending: false })
       .limit(20)
       .returns<Pay[]>(),

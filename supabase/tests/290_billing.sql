@@ -102,7 +102,8 @@ select tests.login('root@examedge.test', 'aal1');
 select throws_ok($$ select public.approve_payment((select v from ids where k = 'p1')) $$, '42501', null,
   'a platform admin without MFA cannot approve');
 select tests.login('root@examedge.test', 'aal2');
-select is((select count(*) from public.payments where reject_reason is distinct from 'fixture'), 2::bigint, 'the platform admin sees every payment');
+select is((select count(*) from public.payments where reject_reason is distinct from 'fixture'
+  and institute_id in (tests.inst('alpha'), tests.inst('bravo'))), 2::bigint, 'the platform admin sees every payment');
 select throws_ok($$ select public.approve_payment((select v from ids where k = 'b1')) $$, 'P0001', 'not_available',
   'a payment without a UTR cannot be approved');
 select throws_ok($$ select public.reject_payment((select v from ids where k = 'b1'), '  ') $$, 'P0001', 'reason_required',
@@ -209,6 +210,15 @@ select tests.login('root@examedge.test', 'aal2');
 select lives_ok($$ select public.approve_payment((select v from ids where k = 'e1')) $$, 'approved');
 select results_eq($$ select covered_accounts, extras_from > (select today - 10 from d) from public.institutes where slug = 'alpha' $$,
   $$ values (40, true) $$, 'the covered count rises and the quarter is closed');
+
+-- ---------------------------------------------------------------- one unpaid payment at a time
+select tests.login('owner@alpha.test');
+select lives_ok($$ select public.start_payment(tests.inst('alpha'), 'topup') $$, 'owner starts a top-up');
+select lives_ok($$ select public.start_payment(tests.inst('alpha'), 'monthly') $$, 'then a monthly payment');
+select results_eq($$ select kind from public.payments where status = 'waiting' and utr is null
+  and institute_id = tests.inst('alpha') $$,
+  $$ values ('monthly'::text) $$, 'only the newest unpaid payment is left');
+select tests.login('root@examedge.test', 'aal2');
 
 -- ---------------------------------------------------------------- rejection, price list change
 select lives_ok($$ select public.reject_payment((select v from ids where k = 'b1'), 'No such payment in the bank') $$,
