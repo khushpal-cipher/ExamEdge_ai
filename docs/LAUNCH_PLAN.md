@@ -98,6 +98,8 @@ removed and suspended memberships are not counted. The app counts; it never trus
 `n = greatest(accounts, 30)`; first 300 × ₹200 + next 700 × ₹120 + the rest × ₹89 (slabs like income tax).
 Examples: 30 → ₹6,000 · 100 → ₹20,000 · 301 → ₹60,120 · 1,000 → ₹1,44,000. Yearly = 10 × the monthly price for 12 months.
 
+**2a. Charm pricing (founder, 2026-10-29, migration 47).** Every payable total is ₹1 below the round figure: ₹6,000 → ₹5,999, ₹60,000 → ₹59,999, top-up ₹2,500 → ₹2,499 (`private.charm`; with GST the whole total, GST included, is ₹1 below). The UPI link and the bank check use this amount.
+
 **3. Price lists and price changes (plan-review fix 7).** Prices live in a `price_lists` table (slabs, minimum, yearly
 months paid); the platform admin (aal2, audited) adds a new row instead of editing one. Each coaching keeps the price list
 of its current paid period; the next payment after a change uses the newest list.
