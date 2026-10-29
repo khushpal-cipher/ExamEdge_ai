@@ -151,7 +151,18 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 55)
+## Next exact action (session 56)
+**State (2026-10-29, end of session 55, Sonnet, branch `r21-small-pilot`, pushed, NO PR yet):** no billing code built yet. This session
+answered founder questions and changed plans: (1) free pilot is now **5 students and $5 AI** (migration `20261120000042`, applied to the
+local DB with psql + history row; form/home text, pgTAP `270`, E2E updated; local gate green, see Completed 2026-10-29); the branch also
+holds the earlier handoff docs of `r20-handoff` and the new Batch C2 plan. (2) UI: founder says the student look is final and the font
+bugs are fixed; the founder's friend's design stays. `npm ci` in the repo is the normal setup (node_modules is gitignored), keep it.
+Unverified: E2E for the 5/$5 change (CI), create form in the browser. Untracked `.freebuff/` is not ours, leave it.
+Next exact action (session 56): 1) `gh pr create` for `r21-small-pilot` into main, wait for CI green, squash-merge, pull `main`
+(this also lands the old `r20-handoff` docs). 2) Founder says "build": Batch C below. 3) then Batch C2. 4) then Batch D.
+Detail of the older list follows.
+
+## Next exact action (session 55, superseded)
 **State (2026-10-26, end of session 54, Opus, `main` = `bb6e953`):** PR #43 (Batch B) merged `57a7010`; PR #44 (founder list A names,
 B ChatGPT prompt info icon, C light/dark toggle, D copy icons, ADR-059, migration 41) merged `bb6e953`, CI green run 40291597369
 (check incl. E2E + secrets). Two CI fixes on the way, both real: copy-button label clashed with the link box label in E2E; an info
