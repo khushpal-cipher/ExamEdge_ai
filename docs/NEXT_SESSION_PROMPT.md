@@ -10,8 +10,10 @@ Continue building ExamEdge AI Release 1 in ~/Documents/startup/examedge_ai.
    in that file — follow them exactly), docs/PROJECT_MASTER_PLAN.md, docs/IMPLEMENTATION_ROADMAP.md,
    docs/DATABASE_DESIGN.md, docs/SECURITY_THREAT_MODEL.md, docs/AI_PIPELINE_DESIGN.md, docs/TEST_STRATEGY.md,
    docs/DECISIONS.md, docs/HOW_IT_WORKS.md, docs/ARCHITECTURE.md, docs/LAUNCH_PLAN.md. Then run `git log --oneline -15` and `git status`.
-2. Continue from PROGRESS.md "Next exact action (session 55)" (PRs #43 and #44 are merged; build Batch C = billing, LAUNCH_PLAN
-   steps 3-9, when I say "build"; use Sonnet, Medium). Read docs/LAUNCH_PLAN.md too. Do not restart or redo finished work;
+2. Continue from PROGRESS.md "Next exact action (session 56)" (PRs #43 and #44 are merged; branch `r21-small-pilot` holds the
+   5-student/$5 pilot change + handoff docs: open its PR, get CI green, merge it first. Then build Batch C = billing,
+   LAUNCH_PLAN steps 3-9, when I say "build" (Sonnet, Medium); then Batch C2 (CSS clean-up + batch Performance tab); then
+   Batch D). Read docs/LAUNCH_PLAN.md too. Before building, answer my questions first if I ask any ("do not build or fix yet"). Do not restart or redo finished work;
    re-verify only what PROGRESS.md marks as unverified.
 3. First check `docker info` (run `open -a Docker` and wait if it fails) and `supabase status`
    (run `supabase start` from the repo root if stopped). Never reset the local database without asking me:
