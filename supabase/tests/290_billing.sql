@@ -1,5 +1,5 @@
 -- LAUNCH_PLAN steps 3-9: price slabs, account counts and peaks, limits that follow the count, UPI payments checked by
--- hand (start, UTR, approve, reject), read-only after paid_until + 3 days, top-ups, staff daily cap.
+-- hand (start, UTR, approve, reject), read-only the day after paid_until, top-ups, staff daily cap.
 begin;
 select tests.setup();
 select * from no_plan();
@@ -89,18 +89,18 @@ select is((select count(*) from public.payments where reject_reason is distinct 
 select tests.logout();
 update public.institutes set status = 'active', paid_until = (select today - 5 from d), period_start = (select today - 35 from d)
 where slug = 'alpha';
-select is(private.read_only(tests.inst('alpha')), true, 'unpaid and past the grace days: read-only');
+select is(private.read_only(tests.inst('alpha')), true, 'unpaid and past paid_until: read-only');
 select tests.login('owner@alpha.test');
 select is((select read_only from public.billing_status(tests.inst('alpha'))), true,
   'a waiting UTR does not lift read-only (founder: access only after Approve)');
 select throws_ok($$ update public.batches set name = 'Late' where name = 'Batch X' $$, 'P0001', 'read_only', 'owner cannot write');
 
--- grace: read-only starts at midnight after paid_until + 3 days
+-- no grace: the last paid day still works, read-only starts at the next midnight
 select tests.logout();
-update public.institutes set paid_until = (select today - 3 from d) where slug = 'alpha';
-select is(private.read_only(tests.inst('alpha')), false, 'within 3 days'' grace: not read-only');
-update public.institutes set paid_until = (select today - 4 from d) where slug = 'alpha';
-select is(private.read_only(tests.inst('alpha')), true, 'a day later: read-only');
+update public.institutes set paid_until = (select today from d) where slug = 'alpha';
+select is(private.read_only(tests.inst('alpha')), false, 'on the last paid day: not read-only');
+update public.institutes set paid_until = (select today - 1 from d) where slug = 'alpha';
+select is(private.read_only(tests.inst('alpha')), true, 'the day after: read-only');
 
 -- ---------------------------------------------------------------- approve and reject (aal2 only)
 select tests.login('owner@alpha.test');

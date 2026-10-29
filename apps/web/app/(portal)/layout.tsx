@@ -111,12 +111,9 @@ export default async function PortalLayout({ children }: { children: React.React
               className={(pilot ?? paid)!.daysLeft <= 3 ? 'alert' : 'notice'}
               hidden={!!paid && paid.daysLeft > 3}
             >
-              {pilot ? 'Free pilot' : 'Your plan'}:{' '}
-              {paid?.grace
-                ? 'unpaid, 3 days of grace'
-                : `${(pilot ?? paid)!.daysLeft} ${(pilot ?? paid)!.daysLeft === 1 ? 'day' : 'days'} left`}
-              .
-              {((pilot ?? paid)!.daysLeft <= 3 || paid?.grace) && ' After that the app becomes read-only and AI stops.'}
+              {pilot ? 'Free pilot' : 'Your plan'}: {(pilot ?? paid)!.daysLeft}{' '}
+              {(pilot ?? paid)!.daysLeft === 1 ? 'day' : 'days'} left.
+              {(pilot ?? paid)!.daysLeft <= 3 && ' After that the app becomes read-only and AI stops.'}
               {paid && ' Renew on the Bill page.'}
             </p>
           )

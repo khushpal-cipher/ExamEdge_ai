@@ -29,10 +29,8 @@ describe('paidState', () => {
     expect(paidState('pilot', '2026-10-30', '2026-10-25')).toBeNull();
     expect(paidState('active', null, '2026-10-25')).toBeNull();
   });
-  it('counts the last paid day, then 3 days of grace, then read-only', () => {
-    expect(paidState('active', '2026-10-25', '2026-10-25')).toEqual({ daysLeft: 1, grace: false, ended: false });
-    expect(paidState('active', '2026-10-24', '2026-10-25')).toEqual({ daysLeft: 0, grace: true, ended: false });
-    expect(paidState('active', '2026-10-22', '2026-10-25')).toEqual({ daysLeft: 0, grace: true, ended: false });
-    expect(paidState('active', '2026-10-21', '2026-10-25')).toEqual({ daysLeft: 0, grace: false, ended: true });
+  it('counts the last paid day, then read-only (no grace)', () => {
+    expect(paidState('active', '2026-10-25', '2026-10-25')).toEqual({ daysLeft: 1, ended: false });
+    expect(paidState('active', '2026-10-24', '2026-10-25')).toEqual({ daysLeft: 0, ended: true });
   });
 });

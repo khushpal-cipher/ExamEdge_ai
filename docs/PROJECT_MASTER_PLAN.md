@@ -29,7 +29,7 @@ built independently (NotebookLM has no API we rely on).
 
 ## 2. Architecture in one paragraph
 One Next.js app (Vercel) + one Supabase project in Mumbai (Postgres with Row-Level Security, Google sign-in, private storage,
-pgvector) + one Node worker (Railway) running a Postgres-backed job queue. Institutes are logical tenants identified by
+pgvector) + one Node worker (Render) running a Postgres-backed job queue. Institutes are logical tenants identified by
 subdomain; the database enforces isolation; no privileged key runs in request paths. All AI calls pass through a metering
 and quota gateway. Claude Haiku 5.5 answers most questions; Sonnet 5.5 handles hard ones; Opus 5.5 authors reviewed
 content. The design can move a large institute to its own database ("cell") later. Rejected: database-per-institute now

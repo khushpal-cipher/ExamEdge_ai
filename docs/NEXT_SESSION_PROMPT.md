@@ -10,11 +10,12 @@ Continue building ExamEdge AI Release 1 in ~/Documents/startup/examedge_ai.
    in that file — follow them exactly), docs/PROJECT_MASTER_PLAN.md, docs/IMPLEMENTATION_ROADMAP.md,
    docs/DATABASE_DESIGN.md, docs/SECURITY_THREAT_MODEL.md, docs/AI_PIPELINE_DESIGN.md, docs/TEST_STRATEGY.md,
    docs/DECISIONS.md, docs/HOW_IT_WORKS.md, docs/ARCHITECTURE.md, docs/LAUNCH_PLAN.md. Then run `git log --oneline -15` and `git status`.
-2. Continue from PROGRESS.md "Next exact action (session 59)" (PR #47 is merged; Batch C2 is about 25-30% done on branch
-   `r25-c2c`: batch_performance function + student Home rank list; left: Manage | Performance tabs on the batch page,
-   globals.css clean-up, gate, PR; then Batch D (Opus, High) once my accounts exist). I already said "build" for Batch C2.
-   Read docs/LAUNCH_PLAN.md too. Before building, answer my questions first if I ask any ("do not build or fix yet"). Do not restart or redo finished work;
-   re-verify only what PROGRESS.md marks as unverified.
+2. Continue from PROGRESS.md "Next exact action (session 60)": all Release 1 build work is done; PR #50 (no grace period) is
+   open with CI green, merge it first. Then Batch D (Opus, High): review all money code, then the deploy (Supabase cloud,
+   Vercel, Render worker, examedgeai.in wildcard, Google OAuth, backups) with me logged in to each account, then real Claude
+   test, first coaching, load test. Legal opinion (Q-01) is done AFTER launch (my decision). Read docs/LAUNCH_PLAN.md too.
+   Before building, answer my questions first if I ask any ("do not build or fix yet"). Do not restart or redo finished
+   work; re-verify only what PROGRESS.md marks as unverified.
 3. First check `docker info` (run `open -a Docker` and wait if it fails) and `supabase status`
    (run `supabase start` from the repo root if stopped). Never reset the local database without asking me:
    it holds my test institutes (see PROGRESS.md).
@@ -142,6 +143,7 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
   the link box, light/dark toggle, ADR-059) merged. Billing Q3 answered: no access while a UTR waits. Next: PROGRESS.md "Next exact
   action (session 55)" = Batch C billing (Sonnet, Medium).
 - Session 58 (2026-10-29, Sonnet): Batch C2 started on `r25-c2c`: batch_performance function, student Home scrolling rank list with names; PR #47 merged (`f68b9c0`). Left: tabs + CSS clean-up. Next: PROGRESS.md "Next exact action (session 59)".
+- Session 59 (2026-10-29, Sonnet): PRs #48 (batch Manage | Performance tabs) and #49 (renewal reminder email) merged; PR #50 (no grace period) open, CI green. Resend verified for examedgeai.in. Worker hosting is Render (ADR-050). Next: PROGRESS.md "Next exact action (session 60)" = Batch D (Opus, High).
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full
