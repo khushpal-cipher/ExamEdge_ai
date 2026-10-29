@@ -117,6 +117,8 @@ begin
   select inst, sp, am, user_id, 'What is torque?', 'Torque is the turning effect of a force.'
   from public.memberships where id = s1;
   insert into public.reviews (institute_id, batch_id, body) values (inst, bx, 'Review of ' || slug); -- ADR-047
+  insert into public.payments (institute_id, kind, price_list_id, base_paise, gst_paise, total_paise, status, reject_reason)
+  select inst, 'topup', id, 0, 0, 0, 'rejected', 'fixture' from public.price_lists limit 1; -- billing (migration 43)
   -- Phase 9: a practice quiz published to Batch X, student1's own flashcards and one graded try of the quiz.
   insert into public.generated_artifacts (institute_id, owner_scope, kind, subject_id, chapter_id, input_hash,
                                           prompt_version, model, content, status, approved_at)

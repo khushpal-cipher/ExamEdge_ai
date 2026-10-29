@@ -223,3 +223,30 @@ export async function setInrRate(form: FormData) {
   if (error) log.error('platform.set_inr_per_usd_failed', { code: error.code });
   redirect(error ? '/?error=rate' : '/');
 }
+
+// Payments by UPI (LAUNCH_PLAN step 7): the founder matches the UTR and amount in the bank app, then approves or
+// rejects. The database checks MFA, that the payment waits with a UTR, and (on reject) that a reason is given.
+export async function approvePayment(form: FormData) {
+  const db = await requireAal2();
+  const pay = String(form.get('pay') ?? '');
+  const { error } = isUuid(pay) ? await db.rpc('approve_payment', { pay }) : { error: { code: '22P02' } };
+  if (error) log.error('platform.approve_payment_failed', { code: error.code });
+  redirect(error ? '/?error=payment' : '/');
+}
+
+export async function rejectPayment(form: FormData) {
+  const db = await requireAal2();
+  const pay = String(form.get('pay') ?? '');
+  const reason = String(form.get('reason') ?? '').slice(0, 300);
+  const { error } = isUuid(pay) ? await db.rpc('reject_payment', { pay, reason }) : { error: { code: '22P02' } };
+  if (error) log.error('platform.reject_payment_failed', { code: error.code });
+  redirect(error ? '/?error=payment' : '/');
+}
+
+// GST number (15 characters). Without it no GST is added to payments (plan-review fix 1); empty clears it.
+export async function setGst(form: FormData) {
+  const db = await requireAal2();
+  const { error } = await db.rpc('set_gst_number', { num: String(form.get('gst') ?? '').slice(0, 15) });
+  if (error) log.error('platform.set_gst_failed', { code: error.code });
+  redirect(error ? '/?error=gst' : '/');
+}

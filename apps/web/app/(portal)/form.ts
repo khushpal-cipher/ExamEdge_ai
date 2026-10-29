@@ -26,6 +26,10 @@ const NAMED = [
   'read_only',
   'seats_full',
   'name_invalid',
+  'utr_invalid',
+  'utr_used',
+  'payment_waiting',
+  'not_available',
 ];
 
 export function done(path: string, error?: { code?: string; message?: string } | null, okCode = 'saved'): never {

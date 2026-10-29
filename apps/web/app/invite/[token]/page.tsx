@@ -10,7 +10,7 @@ const MESSAGES: Record<string, string> = {
   email_mismatch: 'You are signed in with a different email address than the one invited.',
   already_member: 'You are already a member of this institute.',
   seats_full: 'This institute has no free seats right now. Ask the person who invited you.',
-  read_only: "This institute's free pilot has ended, so nobody new can join. Ask the person who invited you.",
+  read_only: "This institute's free pilot or plan has ended, so nobody new can join. Ask the person who invited you.",
   failed: 'Something went wrong. Please try again.',
 };
 

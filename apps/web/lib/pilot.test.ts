@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { indiaDate, pilotState } from './pilot';
+import { indiaDate, paidState, pilotState } from './pilot';
 
 describe('pilotState', () => {
   it('is null for institutes that are not pilots', () => {
@@ -21,5 +21,18 @@ describe('indiaDate', () => {
     expect(indiaDate(new Date('2026-10-25T18:29:00Z'))).toBe('2026-10-25');
     expect(indiaDate(new Date('2026-10-25T18:30:00Z'))).toBe('2026-10-26');
     expect(indiaDate(new Date('2026-10-25T00:00:00Z'), 7)).toBe('2026-11-01');
+  });
+});
+
+describe('paidState', () => {
+  it('is null for pilots and institutes that never paid', () => {
+    expect(paidState('pilot', '2026-10-30', '2026-10-25')).toBeNull();
+    expect(paidState('active', null, '2026-10-25')).toBeNull();
+  });
+  it('counts the last paid day, then 3 days of grace, then read-only', () => {
+    expect(paidState('active', '2026-10-25', '2026-10-25')).toEqual({ daysLeft: 1, grace: false, ended: false });
+    expect(paidState('active', '2026-10-24', '2026-10-25')).toEqual({ daysLeft: 0, grace: true, ended: false });
+    expect(paidState('active', '2026-10-22', '2026-10-25')).toEqual({ daysLeft: 0, grace: true, ended: false });
+    expect(paidState('active', '2026-10-21', '2026-10-25')).toEqual({ daysLeft: 0, grace: false, ended: true });
   });
 });

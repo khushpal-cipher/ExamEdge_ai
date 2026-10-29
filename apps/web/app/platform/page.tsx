@@ -4,7 +4,8 @@ import { rootHost } from '@/lib/tenant';
 import { usd } from '@/lib/usage';
 import { indiaDate } from '@/lib/pilot';
 import { signOut } from '../actions';
-import { setGlobalAi, setInrRate } from './actions';
+import { approvePayment, rejectPayment, setGlobalAi, setGst, setInrRate } from './actions';
+import { rupees, KIND_LABEL } from '@/lib/billing';
 import { SignIn } from '../sign-in';
 import { CreateInstitute } from './create-form';
 import { Mfa } from './mfa';
@@ -42,15 +43,33 @@ export default async function Platform({ searchParams }: { searchParams: Promise
   }
 
   // RLS: rows appear only for platform admins with an aal2 session.
-  const [{ data: institutes }, { data: aiOn }, { data: usage }, { data: rate }] = await Promise.all([
-    db
-      .from('institutes')
-      .select('id, slug, name, status, pilot_end, created_at')
-      .order('created_at', { ascending: false }),
-    db.rpc('ai_enabled'),
-    db.rpc('platform_usage'), // this India month, ADR-041
-    db.rpc('inr_per_usd'),
-  ]);
+  const [{ data: institutes }, { data: aiOn }, { data: usage }, { data: rate }, { data: gst }, { data: waiting }] =
+    await Promise.all([
+      db
+        .from('institutes')
+        .select('id, slug, name, status, pilot_end, created_at')
+        .order('created_at', { ascending: false }),
+      db.rpc('ai_enabled'),
+      db.rpc('platform_usage'), // this India month, ADR-041
+      db.rpc('inr_per_usd'),
+      db.rpc('gst_number'),
+      db
+        .from('payments')
+        .select('id, kind, total_paise, utr, created_at, institutes(name)')
+        .eq('status', 'waiting')
+        .not('utr', 'is', null)
+        .order('created_at')
+        .returns<
+          {
+            id: string;
+            kind: string;
+            total_paise: number;
+            utr: string;
+            created_at: string;
+            institutes: { name: string } | null;
+          }[]
+        >(),
+    ]);
   const used = new Map<string, string>(
     (usage ?? []).map(
       (u: { institute_id: string; input_tokens: number; output_tokens: number; cost_micro_usd: number }) => [
@@ -88,6 +107,71 @@ export default async function Platform({ searchParams }: { searchParams: Promise
           </button>
         </form>
         <p className="small muted">Emergency switch: blocks every AI call of every institute from the next request.</p>
+      </section>
+      {(error === 'payment' || error === 'gst') && (
+        <p role="alert" className="alert">
+          Could not{' '}
+          {error === 'gst'
+            ? 'save the GST number (15 letters and digits)'
+            : 'decide that payment (give a reason to reject)'}
+          . Sign in again and retry.
+        </p>
+      )}
+      <section className="card stack" aria-labelledby="pay">
+        <h2 id="pay">Payments to check ({waiting?.length ?? 0})</h2>
+        {!waiting?.length ? (
+          <p className="muted">Nothing waiting.</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Institute</th>
+                <th scope="col">What</th>
+                <th scope="col">Amount</th>
+                <th scope="col">UTR</th>
+                <th scope="col">Decide</th>
+              </tr>
+            </thead>
+            <tbody>
+              {waiting.map((p) => (
+                <tr key={p.id}>
+                  <td>{p.institutes?.name}</td>
+                  <td>{KIND_LABEL[p.kind]}</td>
+                  <td>{rupees(p.total_paise)}</td>
+                  <td>{p.utr}</td>
+                  <td>
+                    <form action={approvePayment}>
+                      <input type="hidden" name="pay" value={p.id} />
+                      <button type="submit" className="primary">
+                        Approve
+                      </button>
+                    </form>
+                    <form action={rejectPayment} className="inline">
+                      <input type="hidden" name="pay" value={p.id} />
+                      <input name="reason" aria-label="Reason to reject" placeholder="Reason" required />
+                      <button type="submit" className="danger">
+                        Reject
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <p className="small muted">
+          Open your bank app first: approve only if a credit with this UTR and exactly this amount is there.
+        </p>
+        <form action={setGst} className="inline">
+          <label>
+            GST number
+            <input name="gst" maxLength={15} defaultValue={gst ?? ''} />
+          </label>
+          <button type="submit">Save GST number</button>
+        </form>
+        <p className="small muted">
+          {gst ? 'GST 18% is added to every new payment.' : 'Not set: no GST is added ("GST extra when applicable").'}
+        </p>
       </section>
       <section className="card stack" aria-labelledby="bill">
         <h2 id="bill">Institute bills</h2>
