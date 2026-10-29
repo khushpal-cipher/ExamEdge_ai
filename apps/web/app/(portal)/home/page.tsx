@@ -3,6 +3,7 @@ import { formatTime, PHASE_LABEL, requestTime, testPhase, TZ } from '@/lib/asses
 import { batchTests, studentBatches } from '@/lib/student';
 import { DAILY_GOAL, isToday, level, streak, XP } from '@/lib/streak';
 import { requireMember } from '@/lib/tenant';
+import { RankScroller } from './rank-scroller';
 
 // A 1-bit heart, one per step of the daily goal (retro student look)
 const Heart = ({ on }: { on: boolean }) => (
@@ -36,7 +37,7 @@ export default async function StudentHome() {
     tests,
     { data: attempts },
     { data: standings },
-    { data: classSize },
+    { data: rankList },
     { data: doubts },
     { data: tools },
   ] = await Promise.all([
@@ -54,7 +55,7 @@ export default async function StudentHome() {
       .eq('user_id', member.userId)
       .eq('batch_id', selected.id)
       .maybeSingle(),
-    db.rpc('batch_standing_count', { batch: selected.id }),
+    db.rpc('batch_rank_list', { batch: selected.id }),
     // RLS: only the student's own conversations' messages and own study tools.
     db.from('messages').select('created_at').eq('institute_id', institute.id).eq('role', 'user'),
     db
@@ -127,10 +128,14 @@ export default async function StudentHome() {
         </div>
         <div className="stat">
           <span>Overall rank</span>
-          <b>{overall ? `#${overall.overall_rank}` : '—'}</b>
-          <span className="small muted">
-            {overall ? `of ${classSize ?? '?'} · ${selected.name}` : 'after your first result'}
-          </span>
+          {overall && Array.isArray(rankList) && rankList.length > 0 ? (
+            <RankScroller rows={rankList as { rank: number; average: number; me: boolean }[]} />
+          ) : (
+            <>
+              <b>—</b>
+              <span className="small muted">after your first result</span>
+            </>
+          )}
         </div>
       </section>
       <section className="card goal" aria-labelledby="goal">

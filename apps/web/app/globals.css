@@ -2204,3 +2204,35 @@ td .badge::before {
     opacity: 1;
   }
 }
+
+/* Home: scrolling rank list inside the Overall rank tile */
+.rankbox {
+  position: relative;
+  height: 5.5rem;
+  overflow-y: auto;
+  scrollbar-width: none;
+  scroll-snap-type: y proximity;
+  mask-image: linear-gradient(transparent, #000 25%, #000 75%, transparent);
+}
+.rankbox::-webkit-scrollbar {
+  display: none;
+}
+.rankrow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  height: 1.8rem;
+  scroll-snap-align: center;
+  transition: opacity 0.1s;
+}
+.rankrow b {
+  min-width: 2.5rem;
+  font-size: 1.1rem;
+}
+.rankrow .who {
+  flex: 1;
+  filter: blur(var(--blur, 0px));
+}
+.rankrow[data-me] .who {
+  font-weight: 700;
+}

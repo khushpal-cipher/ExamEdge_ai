@@ -57,7 +57,7 @@ select set_eq($$ select proname::text from pg_temp.our_functions
         'record_review_author', 'my_reviews', 'cbt_warning', 'batch_standing_count', 'artifact_content',
         'read_only', 'guard_read_only', 'seats_full', 'guard_seats', 'set_member_name',
         'account_count', 'apply_limits', 'on_accounts_change', 'topup_micro', 'bill_quote', 'start_payment', 'submit_utr',
-        'batch_performance', 'approve_payment', 'reject_payment', 'add_price_list', 'gst_number', 'set_gst_number', 'billing_status'],
+        'batch_performance', 'batch_rank_list', 'approve_payment', 'reject_payment', 'add_price_list', 'gst_number', 'set_gst_number', 'billing_status'],
   'SECURITY DEFINER functions match the reviewed allowlist');
 
 select is_empty($$ select proname from pg_temp.our_functions
