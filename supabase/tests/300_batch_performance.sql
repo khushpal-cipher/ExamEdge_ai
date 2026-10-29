@@ -7,8 +7,7 @@ create temp table ids on commit drop as
   select (select id from public.batches where institute_id = tests.inst('alpha') and name = 'Batch X') as bx,
          (select id from public.batches where institute_id = tests.inst('alpha') and name = 'Batch Y') as by_;
 grant select on ids to authenticated;
-insert into public.batch_standings (batch_id, user_id, institute_id, average_percentage, tests_counted, overall_rank)
-values ((select bx from ids), tests.uid('student1@alpha.test'), tests.inst('alpha'), 50, 1, 1);
+update public.batch_standings set overall_rank = 1 where batch_id = (select bx from ids);
 
 select tests.login('owner@alpha.test');
 select is((public.batch_performance(tests.inst('alpha'), (select bx from ids)) ->> 'students')::int, 2,
