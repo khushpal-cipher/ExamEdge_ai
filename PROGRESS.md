@@ -46,6 +46,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-29 | Free pilot cut to 5 students and $5 AI (founder: "I do not have that much money"), branch `r21-small-pilot` | Migration `20261120000042_pilot_smaller.sql` (`create or replace private.create_institute`; applied locally with psql + history row, no reset); platform create form + home page text; pgTAP `270_pilot` and E2E `portals.spec.ts` expectations (5, $5.00). Existing institutes keep their caps. Local: format, lint + forbidden, typecheck PASS; `npm test` 203/203; `npx supabase test db` Files=28 Tests=1526 PASS. **Unverified:** E2E (port 3000 held by the founder's dev server) → CI; create form in the browser. |
 | 2026-10-26 | Session 54: PR #43 (Batch B) merged `57a7010` (CI green run 40245697831). Founder change list A names, B ChatGPT prompt info icon, C light/dark toggle, D copy icon (ADR-059), branch `r19-founder-list` | Migration `20261119000041_member_names.sql` applied with `supabase migration up` (no reset). Local: format, lint + forbidden, typecheck PASS; `npm test` 203/203; `npx supabase test db` Files=28 Tests=1526 PASS (new `280_member_names`); `npm run test:int` 28/28; `npm run build` + bundle PASS. Browser (founder's `next dev` :3000, newtown): teacher.jee People → Invitations: Name box, prompt popover (batch names listed), invitation with name stored (`invitations.full_name`), copy button renders; Students tab: Edit name saved ("Tmp Rename", reverted with psql), invitation deleted; student2: dark retro Home, My progress "Change my name"; toggle works, device setting used when nothing saved (headless pane dark). **Unverified:** the copy button writing to the clipboard (the in-app pane denies clipboard permission → shows "Select and copy"; try in Chrome), accept-invitation name flow in the browser (pgTAP only), E2E (port 3000 held by the dev server → CI), dark look on every page (checked: sign-in, staff People, student Home, My progress). |
 | 2026-10-23 | PR #40 merged (founder: "push #40") | CI green on `95abc4a` (check incl. E2E + secrets), `gh pr merge 40 --squash` → main `707294d`. Founder's friend will suggest the UI next; `r16-fun-ui` / `r16-violet` / `r16-saffron` stay local, unmerged. |
 | 2026-10-23 | Session 47b: founder liked the gamified Home but said the bright look felt AI-made; sent a Squarespace space template as the look they like. LOCAL branch `r16-fun-ui` | "Play theme" CSS block replaced by a "Space theme" block (end of `globals.css`): dark starfield page (CSS gradients), neon lime `#d4ff6b`, Anton uppercase titles, Space Mono uppercase labels/nav/buttons, Space Grotesk text, pill buttons (lime fill / lime outline), hairline cards, lime goal ring, scrolling ticker on Home (`aria-hidden`, stops with reduced motion). Contrast by script: muted `#9db0c2` ≥ 7.1 on all dark surfaces, lime ≥ 12.4. Evidence (2026-10-23): lint + forbidden, typecheck PASS; `npm test` 195/195; `npm run build` PASS; headless Chromium on the production build (`next start`, :3002): student Home 1280 + 375 (scrollWidth = viewport), subject page, teacher Dashboard + Question bank; 0 page errors. The other chat's `next dev` on :3000 shows a 500 for the new Google fonts (Turbopack "Can't resolve @vercel/turbopack-next/internal/font/google/font") until it is restarted; the build is fine. NOT pushed; E2E/axe not run. Undo: `git checkout d5b4eac` (bright version) or `git checkout r15-next` (old). |
@@ -150,8 +151,40 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 55)
-**Session 54 (2026-10-26):** PR #43 merged (`57a7010`). Founder answers: billing Q3 = a waiting UTR gives NO extra access, access only after Approve (LAUNCH_PLAN rule 8 + plan-review fix 4 replaced); proposals A, C approved, B as an info icon, D copy icon; "build" given. Built on `r19-founder-list` (see Completed, ADR-059). Next: check the PR's CI, fix until green, merge; then Batch C (Sonnet, Medium) from the LAUNCH_PLAN billing spec; founder should try the copy button and dark look in Chrome.
+## Next exact action (session 56)
+**State (2026-10-29, end of session 55, Sonnet, branch `r21-small-pilot`, pushed, NO PR yet):** no billing code built yet. This session
+answered founder questions and changed plans: (1) free pilot is now **5 students and $5 AI** (migration `20261120000042`, applied to the
+local DB with psql + history row; form/home text, pgTAP `270`, E2E updated; local gate green, see Completed 2026-10-29); the branch also
+holds the earlier handoff docs of `r20-handoff` and the new Batch C2 plan. (2) UI: founder says the student look is final and the font
+bugs are fixed; the founder's friend's design stays. `npm ci` in the repo is the normal setup (node_modules is gitignored), keep it.
+Unverified: E2E for the 5/$5 change (CI), create form in the browser. Untracked `.freebuff/` is not ours, leave it.
+Next exact action (session 56): 1) `gh pr create` for `r21-small-pilot` into main, wait for CI green, squash-merge, pull `main`
+(this also lands the old `r20-handoff` docs). 2) Founder says "build": Batch C below. 3) then Batch C2. 4) then Batch D.
+Detail of the older list follows.
+
+## Next exact action (session 55, superseded)
+**State (2026-10-26, end of session 54, Opus, `main` = `bb6e953`):** PR #43 (Batch B) merged `57a7010`; PR #44 (founder list A names,
+B ChatGPT prompt info icon, C light/dark toggle, D copy icons, ADR-059, migration 41) merged `bb6e953`, CI green run 40291597369
+(check incl. E2E + secrets). Two CI fixes on the way, both real: copy-button label clashed with the link box label in E2E; an info
+button inside the "Paste a list" `<label>` stole the label from the textarea (now `aria-labelledby`). Founder answers: billing Q3 =
+a waiting UTR gives NO extra access, access only after Approve (LAUNCH_PLAN rule 8; plan-review fix 4 replaced); light-theme-only
+cancelled. This handoff is on branch `r20-handoff` (docs only, merge it first or fold it into the next branch).
+**Unverified:** copy button writing to the clipboard (the in-app pane denies it; founder to try in Chrome), invitation acceptance with a
+name in the browser (pgTAP only), dark look on every page (checked: sign-in, People, student Home, My progress), info icon redrawn after
+the founder's picture (not looked at). Founder noted invitation emails say "not emailed": Resend test sender reaches only the account
+owner until `examedgeai.in` is verified in Resend and `EMAIL_FROM` is set (Batch D); until then copy the link and send it by hand.
+Founder asked what Batch D holds (answered: money-code review, deploy step 16, real Claude test, first coaching, load test; needs the
+founder's accounts from steps 14-15 first).
+Next exact action:
+1. Merge `r20-handoff` (docs) or include it in the next branch; pull `main`.
+2. Founder says "build" for **Batch C** (Sonnet, Medium effort): LAUNCH_PLAN steps 3-9 from the "Billing spec - steps 3 + 6" section
+   (price slabs `private.price`, price lists, account counts + peaks, limits follow the count, Bill page, UPI payment by hand with
+   Approve/Reject, renewal, 80% warning + top-up). Q3 is settled: no access while a UTR waits. Plan-review fixes 1, 3, 6, 7 belong
+   here. Branch off `main`, one PR, full gate (`npm run check`; E2E in CI because the founder's `next dev` holds :3000).
+3. Then **Batch C2** (LAUNCH_PLAN "Batch C2", Sonnet, Medium; founder 2026-10-29): font bugs are fixed, so (a) clean `globals.css`
+   to only the CSS the current UI uses, no visible change anywhere; (b) batch page with two tabs, Manage then Performance (rank list + whole-batch
+   view suggested by the founder's teacher); "Needs attention" = average < 50% or no activity for 5 days; export link next to the rank list. Not started.
+4. Then Batch D (Opus, High) only after the founder's accounts exist (LAUNCH_PLAN section B).
 
 ## Next exact action (session 54, superseded)
 **State (2026-10-26, end of session 53, Opus, branch `r18-batch-b`, pushed):** PR #43 (Batch B) **CI green** on `540e8c2`

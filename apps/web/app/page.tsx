@@ -125,7 +125,7 @@ function Landing() {
           </tbody>
         </table>
         <p className="small muted">
-          Pilot: 7 days free for up to 10 students, then read-only until you subscribe. Write to support@examedgeai.in.
+          Pilot: 7 days free for up to 5 students, then read-only until you subscribe. Write to support@examedgeai.in.
         </p>
       </section>
     </SiteShell>

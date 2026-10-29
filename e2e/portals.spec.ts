@@ -225,7 +225,7 @@ test('platform admin needs MFA, then manages institutes (AC2.7, Phase 3 platform
     [`gamma-${tag}`],
   );
   expect(pilot).toEqual([
-    { status: 'pilot', pilot_end: pilotEnd, expected_students: 40, max_students: 10, max_staff: 20, in_7_days: true },
+    { status: 'pilot', pilot_end: pilotEnd, expected_students: 40, max_students: 5, max_staff: 20, in_7_days: true },
   ]);
   // AI this month per institute (ADR-041): Demo's seeded use is counted, a new institute has none.
   const row = (name: string) => page.getByRole('row').filter({ has: page.getByRole('link', { name, exact: true }) });
@@ -244,7 +244,7 @@ test('platform admin needs MFA, then manages institutes (AC2.7, Phase 3 platform
   await page.getByRole('combobox', { name: /^Status/ }).selectOption('suspended');
   await page.getByRole('button', { name: 'Save institute' }).click();
   await expect(page.getByRole('status')).toHaveText('Saved.');
-  await expect(page.getByText(/^AI spent this month: \$0\.00 of \$10\.00$/)).toBeVisible();
+  await expect(page.getByText(/^AI spent this month: \$0\.00 of \$5\.00$/)).toBeVisible();
   await page.getByLabel('Doubts per student per day').fill('25');
   // AI off for this institute only (never the global switch here: other specs run the worker in parallel).
   await page.getByLabel('AI enabled').uncheck();

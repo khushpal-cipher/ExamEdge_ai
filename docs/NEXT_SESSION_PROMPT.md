@@ -10,8 +10,10 @@ Continue building ExamEdge AI Release 1 in ~/Documents/startup/examedge_ai.
    in that file — follow them exactly), docs/PROJECT_MASTER_PLAN.md, docs/IMPLEMENTATION_ROADMAP.md,
    docs/DATABASE_DESIGN.md, docs/SECURITY_THREAT_MODEL.md, docs/AI_PIPELINE_DESIGN.md, docs/TEST_STRATEGY.md,
    docs/DECISIONS.md, docs/HOW_IT_WORKS.md, docs/ARCHITECTURE.md, docs/LAUNCH_PLAN.md. Then run `git log --oneline -15` and `git status`.
-2. Continue from PROGRESS.md "Next exact action (session 54)" (merge PR #43 = Batch B if CI is still green; then ask me
-   billing question 3 and whether change proposals A, B, C are approved). Read docs/LAUNCH_PLAN.md too. Do not restart or redo finished work;
+2. Continue from PROGRESS.md "Next exact action (session 56)" (PRs #43 and #44 are merged; branch `r21-small-pilot` holds the
+   5-student/$5 pilot change + handoff docs: open its PR, get CI green, merge it first. Then build Batch C = billing,
+   LAUNCH_PLAN steps 3-9, when I say "build" (Sonnet, Medium); then Batch C2 (CSS clean-up + batch Performance tab); then
+   Batch D). Read docs/LAUNCH_PLAN.md too. Before building, answer my questions first if I ask any ("do not build or fix yet"). Do not restart or redo finished work;
    re-verify only what PROGRESS.md marks as unverified.
 3. First check `docker info` (run `open -a Docker` and wait if it fails) and `supabase status`
    (run `supabase start` from the repo root if stopped). Never reset the local database without asking me:
@@ -118,8 +120,8 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
   ruled number bands. Founder approved it as final: merged as PR #41 (`f1b9d3f`, ADR-056). Founder's pricing plan
   (no code) is in docs/PRICING_PLAN.md. Next: PROGRESS.md "Next exact action (session 49)" — ask what to build next.
 - Session 49 (2026-10-24/25, docs only, no code): founder's launch order is docs/LAUNCH_PLAN.md (read it fully).
-  Decisions: pricing per account in slabs, teachers charged (ADR-057, PRICING_PLAN §2a); pilot 7 days, 10 students,
-  up to 20 staff, $10 AI; audio/video overviews shown "Beta · Coming soon"; UPI payment checked by hand until
+  Decisions: pricing per account in slabs, teachers charged (ADR-057, PRICING_PLAN §2a); pilot 7 days, 5 students,
+  up to 20 staff, $5 AI; audio/video overviews shown "Beta · Coming soon"; UPI payment checked by hand until
   Razorpay; yearly = no refund; "Mix" results (total at once, right/wrong after close). Next: follow LAUNCH_PLAN
   "Build order by model": Batch A (Sonnet) → B (Opus) → C (Sonnet) → D (Opus); one batch per session, only the batch
   PROGRESS.md names; if a task needs a different model than the session runs on, stop and tell the founder; build launch steps only
@@ -136,6 +138,9 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
 - Session 53 (2026-10-25/26, Opus): Batch B on PR #43 (CR 1–2, free pilot ADR-058, billing spec, Gemini 503 fallback),
   CI green, not merged. Founder: billing questions 1, 2, 4 = yes, 3 (UTR wait 7 days) open; proposals A student names,
   B ChatGPT prompt box, C light/dark toggle explained, not approved. Next: PROGRESS.md "Next exact action (session 54)".
+- Session 54 (2026-10-26, Opus): PR #43 (Batch B) and PR #44 (names on invitations + People, ChatGPT prompt info icon, copy icons in
+  the link box, light/dark toggle, ADR-059) merged. Billing Q3 answered: no access while a UTR waits. Next: PROGRESS.md "Next exact
+  action (session 55)" = Batch C billing (Sonnet, Medium).
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full

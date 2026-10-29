@@ -209,8 +209,8 @@ Each student has a daily AI limit (for example 40 doubts a day). When it's reach
 
 ## Part 4 — Your side (platform owner)
 - Add new institutes, set their web address, logo and limits. A new institute is a **free pilot** (ADR-058): you type
-  "How many students do you have?" and the last pilot day (filled in as 7 days from today). A pilot has at most 10
-  students and 20 teachers/admins (you can change both) and $10 of AI for the whole pilot. Owner/admin see "Free pilot:
+  "How many students do you have?" and the last pilot day (filled in as 7 days from today). A pilot has at most 5
+  students and 20 teachers/admins (you can change both) and $5 of AI for the whole pilot. Owner/admin see "Free pilot:
   N days left" (red in the last 3 days). From the next midnight (India time) the app is read-only for everyone ("Your
   free pilot has ended"): everything can be read, nothing changed, AI is off; a student already writing a test can
   still finish and submit it. Extend it by changing the date, or set the status to active. Pilots that ended more than

@@ -721,8 +721,8 @@ sitemap or robots.txt).
 ### ADR-058 Free pilot: 7 days, seat caps, read-only after (founder, LAUNCH_PLAN step 1, built 2026-10-25)
 - **Decision:** every institute created on the platform page is a free pilot: status `pilot`, `pilot_end` (last pilot
   day, India date, default today + 7, the founder can type another), "How many students do you have?"
-  (`expected_students`), at most 10 students and 20 staff (`institute_quotas.max_students` / `max_staff`, blank = no
-  cap, owner never counted), $10 of AI with the hard stop on, and the pilot's AI budget covers its **whole life**, not
+  (`expected_students`), at most 5 students and 20 staff (`institute_quotas.max_students` / `max_staff`, blank = no
+  cap, owner never counted), $5 of AI with the hard stop on, and the pilot's AI budget covers its **whole life**, not
   one month. From midnight IST after `pilot_end` the institute is **read-only**: members read everything but write
   nothing, AI is off, an attempt already started can still be answered and submitted, no new attempt can start (plan-
   review fix 5). The founder extends a pilot by changing `pilot_end` or makes it `active` by hand. Ended pilots older

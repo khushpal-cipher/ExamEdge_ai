@@ -38,6 +38,27 @@ founder may raise the effort for that part.
 | Step 3 + 4 price and limits in code · Step 5 Bill page · Step 7 UPI payment by hand · Step 8 renewal · Step 9 80% warning + top-ups | Sonnet / Medium |
 | Quality gate, PR, CI, merge | Haiku / Low |
 
+**Batch C2 — CSS clean-up + batch Performance tab (founder, 2026-10-29; after Batch C is merged, before Batch D)** — Sonnet / Medium
+Founder update (same day): the font bugs are fixed, so the font-correction step is **dropped**. The UI looks stay exactly
+as they are (student and staff).
+1. **Clean `apps/web/app/globals.css`:** remove the old CSS left from earlier looks (ADR-049, session 47 space/play
+   theme tries) and keep only the rules the current UI uses (ADR-056 staff mono look, student retro look, shared base).
+   Method: list every selector, grep it in `apps/web` (classes in `.tsx`, `data-*`, `:has`, dynamic class names), delete
+   only what no page uses; do it in small steps. **Proof nothing changed:** screenshots before/after of every staff and
+   student page at 375 and 1280 px (light and dark), computed styles of key elements equal, then format, lint,
+   typecheck, build + bundle scan, full E2E (axe contrast) in CI. Any visible difference = revert that deletion.
+2. **Staff batch page `batches/[id]` gets two tabs, like the topic page (Subtopics / Smart Study)** (founder confirmed:
+   staff page; the student topic page was only the reference). **Manage is the first tab (default), Performance the second.**
+   - **Manage** tab: what the page holds today except the rank list: Subjects, Teachers and Students lists (with Remove),
+     Move students to another batch, Add someone to this batch.
+   - **Performance** tab: the overall rank list (today's `standings.tsx`, same sort) with the **export link next to it** (founder, 2026-10-29) plus the whole-batch view:
+     number band (average score %, tests taken, active this week "X of N", needs attention), test trend, topic strength
+     (weakest first, hide topics with fewer than 3 answers), students needing attention / top students (each links to the
+     student progress page).
+   Data from existing attempts and answers (no AI cost); definer functions check batch membership; pgTAP isolation test;
+   `.meter` bars, no chart library. "Needs attention" = average below **50%** or no activity for **5 days** (founder, 2026-10-29).
+3. ~~Free pilot smaller~~ **Done 2026-10-29** (migration 42, branch `r21-small-pilot`): new pilots get 5 students and $5 of AI.
+
 **Batch D — Opus** (going online, after the founder's accounts exist)
 | Task | Model / Effort |
 |---|---|
@@ -49,7 +70,7 @@ founder may raise the effort for that part.
 
 | # | Step | What it means | Model / Effort | Status |
 |---|---|---|---|---|
-| 1 | Free pilot | 7 days free, 10 students, up to 20 teachers/admins (founder can raise), $10 AI for the whole pilot (teachers share it). Founder types "How many students do you have?" and the end date when creating it. Banner "N days left". After day 7: AI off, app read-only, banner "Your pilot has ended". Founder can extend it. Data kept 30 days, then deleted by hand. | Sonnet / Medium | ✅ 2026-10-25 (ADR-058, migration 40; plan-review fixes 5 and 10 built, fix 4 waits for step 7) |
+| 1 | Free pilot | 7 days free, 5 students, up to 20 teachers/admins (founder can raise), $5 AI for the whole pilot (teachers share it). Founder types "How many students do you have?" and the end date when creating it. Banner "N days left". After day 7: AI off, app read-only, banner "Your pilot has ended". Founder can extend it. Data kept 30 days, then deleted by hand. | Sonnet / Medium | ✅ 2026-10-25 (ADR-058, migration 40; plan-review fixes 5 and 10 built, fix 4 waits for step 7) |
 | 2 | Audio + Video overview "Beta · Coming soon" | Real users still see both tiles, greyed out with a "Beta · Coming soon" badge, and cannot open or make them (`OVERVIEWS_BETA` off; the server also refuses). Fully usable locally for testing. | Haiku / Low | ✅ 2026-10-25 |
 | 3 | Price per account | Every active account charged (students, teachers, admins; owner free; removed accounts not counted): first 300 at ₹200, 301–1,000 at ₹120, above 1,000 at ₹89, slabs like income tax; minimum 30 accounts (₹6,000); yearly = pay 10 get 12; +18% GST (PRICING_PLAN §2a). Only the platform admin edits prices. | Opus / High | ⬜ |
 | 4 | Limits follow the count | AI budget = accounts × $0.60 + $31 (stop AI on), 15 doubts / 5 study tools a day per student, 30 doubts a day per teacher, storage 1 GB per 50 accounts — all set automatically. | Sonnet / Medium | ⬜ |
@@ -127,8 +148,8 @@ stop on); storage 1 GB per 50 accounts (minimum 5 GB); background jobs 2 / 3 abo
 ₹2,500 = $20) adds to the month it is approved in.
 
 **10. Pilot (step 1) [built in B].** Status `pilot`, `pilot_end` date (default today + 7), "How many students do you
-have?" stored as `expected_students`, at most 10 students and 20 staff (`institute_quotas.max_students` / `max_staff`,
-founder can change them), $10 AI for the **whole pilot** (the budget window of a pilot is its whole life, not the month),
+have?" stored as `expected_students`, at most 5 students and 20 staff (`institute_quotas.max_students` / `max_staff`,
+founder can change them), $5 AI for the **whole pilot** (the budget window of a pilot is its whole life, not the month),
 read-only after `pilot_end` (rule 8). The founder extends a pilot by changing `pilot_end` or makes it `active` by hand.
 Ended pilots older than 30 days are listed on the platform page for deletion by hand (plan-review fix 10).
 

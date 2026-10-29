@@ -43,7 +43,7 @@ export function CreateInstitute({ root, today, defaultEnd }: { root: string; tod
       </div>
       <p className="small muted">
         The address becomes &lt;subdomain&gt;.{root}: at least 3 characters (lowercase letters, digits or hyphens). A
-        new institute is a free pilot: 10 students, 20 staff, $10 of AI; read-only from the day after it ends.
+        new institute is a free pilot: 5 students, 20 staff, $5 of AI; read-only from the day after it ends.
       </p>
       {state && 'error' in state && (
         <p role="alert" className="alert">
