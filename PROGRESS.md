@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-29 (session 60, Opus: PR #50 was already merged `9a50f5f`; Batch D money review, migration 52 on `r28-money-review`; session 59: PRs #48, #49 merged; session 54: PR #43 merged `57a7010`; founder change list A+B+C+D built on `r19-founder-list`, PR open; billing Q3 = no grace, access only after Approve)
+Last updated: 2026-10-29 (session 60, Opus: Batch D money review + founder rules M4-M7 merged as PR #51 `9a18a97`, migrations 52-53; session 59: PRs #48, #49 merged; session 54: PR #43 merged `57a7010`; founder change list A+B+C+D built on `r19-founder-list`, PR open; billing Q3 = no grace, access only after Approve)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -158,8 +158,10 @@ See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for buil
 review done: M1–M3 fixed on `r28-money-review` (migration 52, see Completed); M4–M7 wait for the founder's rule
 (LAUNCH_PLAN "Money review"). Then the founder's rules M4–M7 were built on the same branch (migration 53, ADR-061).
 Local DB has migrations up to 53.
-**Next exact action:** 1) Merge PR #51 (`r28-money-review`) when CI is green (if not merged yet), pull `main`.
-2) Batch D (b) deploy (LAUNCH_PLAN step 16) with the founder
+**PR #51 MERGED** (`9a18a97`, CI green: check incl. E2E + secrets, 2026-10-29). Founder is creating the Anthropic
+Console organization ("ExamEdge AI", small business, external users, under-18 users = Yes); advised $20 credit, spend limit on, auto-reload off;
+the key goes straight into Vercel/Render, never into chat or git.
+**Next exact action:** 1) Batch D (b) deploy (LAUNCH_PLAN step 16) with the founder
 logged in: Supabase cloud project (Mumbai), Vercel, Render worker, `*.examedgeai.in`, Google OAuth production, backups.
 Money rules are settled; real payments can start after the deploy.
 
