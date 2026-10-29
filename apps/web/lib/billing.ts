@@ -6,7 +6,7 @@ export const rupees = (paise: number | string) =>
 export const KIND_LABEL: Record<string, string> = {
   monthly: 'Monthly plan',
   yearly: 'Yearly plan (pay 10 months, get 12)',
-  extras: 'Extra accounts this quarter',
+  extras: 'New accounts, rest of the year',
   topup: 'AI top-up',
 };
 export const PAY_KINDS = Object.keys(KIND_LABEL);
@@ -22,3 +22,6 @@ export function upiLink(upiId: string, paise: number | string, note: string) {
   });
   return `upi://pay?${q.toString()}`;
 }
+
+/** An unpaid payment's amount is valid for 24 hours (M7); the database refuses a UTR for an older one. */
+export const isFresh = (createdAt: string, now = Date.now()) => Date.parse(createdAt) > now - 86_400_000;

@@ -30,6 +30,7 @@ const NAMED = [
   'utr_used',
   'payment_waiting',
   'not_available',
+  'payment_expired',
 ];
 
 export function done(path: string, error?: { code?: string; message?: string } | null, okCode = 'saved'): never {

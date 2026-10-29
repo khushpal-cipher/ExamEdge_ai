@@ -32,9 +32,10 @@ const initials = (name: string) =>
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const { institute, member, db } = await requireMember();
-  const [{ data: me }, { data: inst }] = await Promise.all([
+  const [{ data: me }, { data: inst }, { data: readOnly }] = await Promise.all([
     db.from('profiles').select('full_name').eq('user_id', member.userId).maybeSingle(),
     db.from('institutes').select('status, pilot_end, paid_until').eq('id', institute.id).maybeSingle(),
+    db.rpc('institute_read_only', { inst: institute.id }),
   ]);
   const pilot = inst && pilotState(inst.status, inst.pilot_end);
   const paid = inst && paidState(inst.status, inst.paid_until);
@@ -97,10 +98,14 @@ export default async function PortalLayout({ children }: { children: React.React
         </div>
       </header>
       <main className="main">
-        {pilot?.ended || paid?.ended ? (
+        {readOnly || pilot?.ended || paid?.ended ? (
           <p role="alert" className="alert">
-            {pilot?.ended ? 'Your free pilot has ended.' : 'Your plan has ended.'} Everything can still be read, but
-            nothing can be changed and AI is off.
+            {pilot?.ended
+              ? 'Your free pilot has ended.'
+              : paid?.ended
+                ? 'Your plan has ended.'
+                : 'A bill for new accounts is unpaid.'}{' '}
+            Everything can still be read, but nothing can be changed and AI is off.
             {manager && ' Pay on the Bill page to continue.'}
           </p>
         ) : (

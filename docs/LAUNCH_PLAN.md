@@ -74,18 +74,21 @@ read-only and the renewal job. Each finding below was reproduced in a rolled-bac
 - M2 An early renewal kept `period_start` at the first period, so the next monthly bill counted old peaks again
   (probe: 500 accounts last month, 6 today → next bill was for 500).
 - M3 An AI top-up was offered while read-only, when AI is off.
-**Open: these need the founder's rule (defaults in brackets, not built):**
-- M4 Pay far ahead: an owner can pay month after month in advance at today's small count, or pay yearly and then one
-  monthly (which drops the yearly extras), then grow without paying more. [A monthly or yearly payment can be started
-  only when nothing is paid yet, the period has ended, or in its last 7 days.]
-- M5 Extras are never enforced: a yearly coaching can ignore the extras bill. [Read-only if an extras bill is unpaid
-  7 days after its quarter ends.]
-- M6 The last quarter of every year is never billed for extras (it ends on the renewal day, and the renewal resets the
-  quarters). [The yearly renewal adds that quarter's extras to its amount.]
-- M7 An unpaid payment keeps its first amount forever: start it at 30 accounts, add 900 students, then pay the old
-  ₹5,999 (probe: the live bill was ₹1,31,999). [An unpaid payment expires after 24 hours; "Pay" makes a fresh one.]
-**Noted, low (no change):** a period starting on the 29th–31st shifts to an earlier day once (Jan 31 → Feb 27);
-the count carried into a period from before its first day is not in its peak until something changes.
+**Founder's rules, built 2026-10-29 (migration 53, pgTAP `320_money_review` 21 tests, `290_billing` updated):**
+- M4 A monthly or yearly payment can be started only when nothing is paid yet, the paid period has ended (any number
+  of days ago), or in its last 7 days; an unpaid extras bill comes first. No paying months ahead at a small count.
+- M5 An extras bill still unpaid 7 days after its month ends makes the app read-only until the payment is approved.
+- M6 (founder changed it) Yearly extras are checked **every month**, not every 3 months: accounts above the covered
+  count are charged at the **full** monthly price (no yearly discount, founder) for every month left in the paid year,
+  the month they joined included. Example: 100 accounts, 1 added with 9 months left = ₹200 × 9 = ₹1,800 → ₹1,799.
+  Fewer accounts = no money back. Accounts added in the last month are covered by the renewal at today's count.
+  The AI budget still follows the count at once.
+- M7 An unpaid payment's amount is valid for 24 hours; then the UTR is refused (`payment_expired`) and "Pay" makes a
+  fresh one at today's amount.
+- Also fixed: a month's peak now includes the count carried in from before it (`account_peaks.last`), so accounts
+  added just before a month starts are seen in that month (this was the second "low" note).
+**Noted, low (no change):** a period starting on the 29th–31st shifts to an earlier day once (Jan 31 → Feb 27); a
+late payment starts a new period on the approval day, so the read-only gap is not charged.
 
 ## A. Build (code, no money needed)
 
