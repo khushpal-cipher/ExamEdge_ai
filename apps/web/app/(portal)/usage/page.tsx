@@ -52,6 +52,7 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
       ? Math.round((Number(st.ai_used_micro) / Number(st.ai_budget_micro)) * 100)
       : 0;
   const open = (pays ?? []).find((p) => p.status === 'waiting' && !p.utr); // started, UTR not typed yet
+  const shown = (pays ?? []).filter((p) => p.utr || p.status !== 'waiting'); // a payment only started is not listed
   const checking = (pays ?? []).some((p) => p.status === 'waiting' && p.utr);
   const upiId = process.env.UPI_ID;
   const saving = monthly && yearly ? Number(monthly.base_paise) * 12 - Number(yearly.base_paise) : 0;
@@ -154,11 +155,6 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
             </tbody>
           </table>
         )}
-        <p className="small muted">
-          Monthly is billed on the highest number of accounts you had in the month. GST extra when applicable. No
-          refunds; you can stop any time and keep access until the paid period ends.
-          {!owner && ' Only the owner can pay.'}
-        </p>
         {owner && open && (
           <div className="card stack" role="group" aria-label="Pay by UPI">
             <h3>
@@ -184,13 +180,18 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
             </form>
           </div>
         )}
+        <p className="small muted">
+          Monthly is billed on the highest number of accounts you had in the month. GST extra when applicable. No
+          refunds; you can stop any time and keep access until the paid period ends.
+          {!owner && ' Only the owner can pay.'}
+        </p>
         {checking && (
           <p role="status" className="notice">
             Your payment is waiting to be checked. Access continues as it is until ExamEdge approves it.
           </p>
         )}
       </section>
-      {(pays ?? []).length > 0 && (
+      {shown.length > 0 && (
         <section className="card stack" aria-labelledby="payments">
           <h2 id="payments">Payments</h2>
           <table>
@@ -204,7 +205,7 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
               </tr>
             </thead>
             <tbody>
-              {(pays ?? []).map((p) => (
+              {shown.map((p) => (
                 <tr key={p.id}>
                   <td>{p.created_at.slice(0, 10)}</td>
                   <td>{KIND_LABEL[p.kind]}</td>

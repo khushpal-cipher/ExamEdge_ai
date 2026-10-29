@@ -27,12 +27,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
       className={`${ui.variable} ${mono.variable} ${pixel.variable} ${read.variable}`}
     >
-      <head>
+      <body>
+        {children}
+        {/* Next docs place beforeInteractive scripts in the body (it moves them to the head); inside <head> React 19 warns in dev. */}
         <Script id="theme" strategy="beforeInteractive">
           {THEME_SCRIPT}
         </Script>
-      </head>
-      <body>{children}</body>
+      </body>
     </html>
   );
 }

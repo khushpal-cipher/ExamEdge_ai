@@ -19,6 +19,14 @@ select is((select private.price(301, id) from pl), 6012000::bigint, '301 account
 select is((select private.price(1000, id) from pl), 14400000::bigint, '1,000 accounts: ₹1,44,000');
 select is((select private.price(1001, id) from pl), 14408900::bigint, '1,001st account at ₹89');
 
+-- ---------------------------------------------------------------- charm pricing: nearest price ending in 99
+select is(private.charm(600000), 599900::bigint, '₹6,000 -> ₹5,999');
+select is(private.charm(620000), 619900::bigint, '₹6,200 -> ₹6,199');
+select is(private.charm(8944500), 8939900::bigint, '₹89,445 -> ₹89,399 (the nearer 99)');
+select is(private.charm(8946000), 8949900::bigint, '₹89,460 -> ₹89,499');
+select is(private.charm(250000), 249900::bigint, '₹2,500 -> ₹2,499');
+select is(private.charm(5000), 5000::bigint, 'below ₹100 stays as it is');
+
 -- ---------------------------------------------------------------- who is counted and the daily peak
 select is(private.account_count(tests.inst('alpha')), 6, 'admin, 2 teachers and 3 students count; the owner is free');
 select is((select peak from public.account_peaks where institute_id = tests.inst('alpha') and day = (select today from d)),
@@ -41,7 +49,7 @@ select throws_ok($$ select public.billing_status(tests.inst('alpha')) $$, '42501
 
 select tests.login('owner@alpha.test');
 select results_eq($$ select accounts, total_paise from public.bill_quote(tests.inst('alpha'), 'monthly') $$,
-  $$ values (6, 600000::bigint) $$, 'the monthly quote is the minimum 30 accounts, no GST without a GST number');
+  $$ values (6, 599900::bigint) $$, 'the monthly quote is the minimum 30 accounts (₹6,000), charm price ₹5,999, no GST without a GST number');
 select is((select count(*) from public.bill_quote(tests.inst('alpha'), 'topup')), 0::bigint, 'no top-up for a pilot');
 select is((select count(*) from public.bill_quote(tests.inst('alpha'), 'extras')), 0::bigint, 'no extras without a year');
 insert into ids select 'p1', public.start_payment(tests.inst('alpha'), 'monthly');
@@ -55,10 +63,10 @@ select tests.login('root@examedge.test', 'aal2');
 select lives_ok($$ select public.set_gst_number('27ABCDE1234F1Z5') $$, 'the platform admin saves a GST number');
 select tests.login('owner@alpha.test');
 select is(public.start_payment(tests.inst('alpha'), 'monthly'), (select v from ids where k = 'p1'), 'same waiting row');
-select is((select total_paise from public.payments where id = (select v from ids where k = 'p1')), 600000::bigint,
+select is((select total_paise from public.payments where id = (select v from ids where k = 'p1')), 599900::bigint,
   'the waiting amount did not change');
 select results_eq($$ select base_paise, gst_paise, total_paise from public.bill_quote(tests.inst('alpha'), 'yearly') $$,
-  $$ values (6000000::bigint, 1080000::bigint, 7080000::bigint) $$, 'a new yearly quote: 10 months + 18% GST');
+  $$ values (5999915::bigint, 1079985::bigint, 7079900::bigint) $$, 'a new yearly quote: 10 months + 18% GST, total ₹70,799');
 select tests.login('root@examedge.test', 'aal2');
 select lives_ok($$ select public.set_gst_number('') $$, 'and clears it again');
 select tests.login('owner@alpha.test');
@@ -102,7 +110,8 @@ select tests.login('root@examedge.test', 'aal1');
 select throws_ok($$ select public.approve_payment((select v from ids where k = 'p1')) $$, '42501', null,
   'a platform admin without MFA cannot approve');
 select tests.login('root@examedge.test', 'aal2');
-select is((select count(*) from public.payments where reject_reason is distinct from 'fixture'), 2::bigint, 'the platform admin sees every payment');
+select is((select count(*) from public.payments where reject_reason is distinct from 'fixture'
+  and institute_id in (tests.inst('alpha'), tests.inst('bravo'))), 2::bigint, 'the platform admin sees every payment');
 select throws_ok($$ select public.approve_payment((select v from ids where k = 'b1')) $$, 'P0001', 'not_available',
   'a payment without a UTR cannot be approved');
 select throws_ok($$ select public.reject_payment((select v from ids where k = 'b1'), '  ') $$, 'P0001', 'reason_required',
@@ -136,7 +145,7 @@ select results_eq($$ select monthly_ai_budget_micro_usd, max_storage_bytes, max_
   'the AI budget and storage follow the count at once, not on the 1st');
 select tests.login('root@examedge.test', 'aal2');
 select results_eq($$ select accounts, total_paise from public.bill_quote(tests.inst('alpha'), 'monthly') $$,
-  $$ values (306, 6012000::bigint + 5 * 12000) $$, 'next month''s bill uses the highest count (306: 300 × ₹200 + 6 × ₹120)');
+  $$ values (306, 6069900::bigint) $$, 'next month''s bill uses the highest count (306: 300 × ₹200 + 6 × ₹120)');
 
 select tests.logout();
 delete from public.memberships where user_id in (select id from auth.users where email like 'bulk%@alpha.test');
@@ -147,7 +156,7 @@ select results_eq($$ select accounts from public.bill_quote(tests.inst('alpha'),
 -- ---------------------------------------------------------------- top-up (step 9)
 select tests.login('owner@alpha.test');
 select results_eq($$ select accounts, total_paise from public.bill_quote(tests.inst('alpha'), 'topup') $$,
-  $$ values (null::int, 250000::bigint) $$, 'a top-up is ₹2,500');
+  $$ values (null::int, 249900::bigint) $$, 'a top-up is ₹2,500, charm price ₹2,499');
 select results_eq($$ select ai_budget_micro, accounts from public.billing_status(tests.inst('alpha')) $$,
   $$ select monthly_ai_budget_micro_usd, 6 from public.institute_quotas where institute_id = tests.inst('alpha') $$,
   'the Bill page budget before the top-up');
@@ -184,7 +193,7 @@ update public.institutes set paid_until = (select today + 10 from d), period_sta
 where slug = 'alpha';
 select tests.login('owner@alpha.test');
 select results_eq($$ select base_paise from public.bill_quote(tests.inst('alpha'), 'yearly') $$,
-  $$ values (private.price(6, private.newest_price_list()) * 10) $$, 'yearly = 10 months at the count today');
+  $$ values (private.price(6, private.newest_price_list()) * 10 - 100) $$, 'yearly = 10 months at the count today');
 insert into ids select 'y1', public.start_payment(tests.inst('alpha'), 'yearly');
 select lives_ok($$ select public.submit_utr((select v from ids where k = 'y1'), '999999999992') $$, 'owner pays yearly');
 select tests.login('root@examedge.test', 'aal2');
@@ -201,7 +210,7 @@ where slug = 'alpha';
 insert into public.account_peaks (institute_id, day, peak) values (tests.inst('alpha'), (select today - 50 from d), 40);
 select tests.login('owner@alpha.test');
 select results_eq($$ select accounts, base_paise from public.bill_quote(tests.inst('alpha'), 'extras') $$,
-  $$ values (40, 500000::bigint) $$,
+  $$ values (40, 499900::bigint) $$,
   'extras: 3 months of the price difference (₹8,000 - ₹6,000) at 10/12 = ₹5,000');
 insert into ids select 'e1', public.start_payment(tests.inst('alpha'), 'extras');
 select lives_ok($$ select public.submit_utr((select v from ids where k = 'e1'), '999999999993') $$, 'owner pays extras');
@@ -209,6 +218,15 @@ select tests.login('root@examedge.test', 'aal2');
 select lives_ok($$ select public.approve_payment((select v from ids where k = 'e1')) $$, 'approved');
 select results_eq($$ select covered_accounts, extras_from > (select today - 10 from d) from public.institutes where slug = 'alpha' $$,
   $$ values (40, true) $$, 'the covered count rises and the quarter is closed');
+
+-- ---------------------------------------------------------------- one unpaid payment at a time
+select tests.login('owner@alpha.test');
+select lives_ok($$ select public.start_payment(tests.inst('alpha'), 'topup') $$, 'owner starts a top-up');
+select lives_ok($$ select public.start_payment(tests.inst('alpha'), 'monthly') $$, 'then a monthly payment');
+select results_eq($$ select kind from public.payments where status = 'waiting' and utr is null
+  and institute_id = tests.inst('alpha') $$,
+  $$ values ('monthly'::text) $$, 'only the newest unpaid payment is left');
+select tests.login('root@examedge.test', 'aal2');
 
 -- ---------------------------------------------------------------- rejection, price list change
 select lives_ok($$ select public.reject_payment((select v from ids where k = 'b1'), 'No such payment in the bank') $$,
