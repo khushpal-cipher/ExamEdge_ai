@@ -2209,7 +2209,7 @@ td .badge::before {
 /* Tab panels space their sections like the page does (the page grid only reaches direct children) */
 [role='tabpanel']:not([hidden]) {
   display: grid;
-  gap: var(--s7);
+  gap: var(--s4);
   align-content: start;
 }
 
