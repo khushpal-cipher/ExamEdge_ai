@@ -2209,10 +2209,12 @@ td .badge::before {
 .rankbox {
   position: relative;
   height: 5.5rem;
+  padding-block: 1.85rem; /* lets the first and last row scroll to the middle */
+  box-sizing: border-box;
   overflow-y: auto;
   scrollbar-width: none;
   scroll-snap-type: y proximity;
-  mask-image: linear-gradient(transparent, #000 25%, #000 75%, transparent);
+  mask-image: linear-gradient(transparent, #000 20%, #000 80%, transparent);
 }
 .rankbox::-webkit-scrollbar {
   display: none;
