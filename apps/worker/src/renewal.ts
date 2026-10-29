@@ -25,7 +25,7 @@ export async function remindRenewals(pool: pg.Pool, env = process.env) {
         from: env.EMAIL_FROM || 'ExamEdge <onboarding@resend.dev>',
         to: r.owners,
         subject: `Renew ${r.name} on ExamEdge`,
-        text: `${r.name} is paid up to ${day}.\n\nOpen the Bill page and pay before then. After 3 more days without payment the institute becomes read-only (nothing is deleted).`,
+        text: `${r.name} is paid up to ${day}.\n\nOpen the Bill page and pay before then. After that day the institute becomes read-only until you pay (nothing is deleted).`,
       }),
     }).catch(() => null);
     if (res?.ok) {
