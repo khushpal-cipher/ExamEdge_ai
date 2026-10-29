@@ -19,6 +19,14 @@ select is((select private.price(301, id) from pl), 6012000::bigint, '301 account
 select is((select private.price(1000, id) from pl), 14400000::bigint, '1,000 accounts: ₹1,44,000');
 select is((select private.price(1001, id) from pl), 14408900::bigint, '1,001st account at ₹89');
 
+-- ---------------------------------------------------------------- charm pricing: nearest price ending in 99
+select is(private.charm(600000), 599900::bigint, '₹6,000 -> ₹5,999');
+select is(private.charm(620000), 619900::bigint, '₹6,200 -> ₹6,199');
+select is(private.charm(8944500), 8939900::bigint, '₹89,445 -> ₹89,399 (the nearer 99)');
+select is(private.charm(8946000), 8949900::bigint, '₹89,460 -> ₹89,499');
+select is(private.charm(250000), 249900::bigint, '₹2,500 -> ₹2,499');
+select is(private.charm(5000), 5000::bigint, 'below ₹100 stays as it is');
+
 -- ---------------------------------------------------------------- who is counted and the daily peak
 select is(private.account_count(tests.inst('alpha')), 6, 'admin, 2 teachers and 3 students count; the owner is free');
 select is((select peak from public.account_peaks where institute_id = tests.inst('alpha') and day = (select today from d)),
@@ -137,7 +145,7 @@ select results_eq($$ select monthly_ai_budget_micro_usd, max_storage_bytes, max_
   'the AI budget and storage follow the count at once, not on the 1st');
 select tests.login('root@examedge.test', 'aal2');
 select results_eq($$ select accounts, total_paise from public.bill_quote(tests.inst('alpha'), 'monthly') $$,
-  $$ values (306, 6012000::bigint + 5 * 12000 - 100) $$, 'next month''s bill uses the highest count (306: 300 × ₹200 + 6 × ₹120)');
+  $$ values (306, 6069900::bigint) $$, 'next month''s bill uses the highest count (306: 300 × ₹200 + 6 × ₹120)');
 
 select tests.logout();
 delete from public.memberships where user_id in (select id from auth.users where email like 'bulk%@alpha.test');
