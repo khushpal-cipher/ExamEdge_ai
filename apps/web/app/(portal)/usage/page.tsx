@@ -96,6 +96,31 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
       )}
       <section className="card stack" aria-labelledby="plan">
         <h2 id="plan">Your plan</h2>
+        {owner && open && (
+          <div className="card stack" role="group" aria-label="Pay by UPI">
+            <h3>
+              Pay {rupees(open.total_paise)} by UPI — {KIND_LABEL[open.kind]}
+            </h3>
+            {upiId ? (
+              <p>
+                UPI id: <b>{upiId}</b> ·{' '}
+                <a href={upiLink(upiId, open.total_paise, `ExamEdge ${institute.slug}`)}>Pay with UPI</a>
+              </p>
+            ) : (
+              <p className="muted">Write to support@examedgeai.in for the UPI id.</p>
+            )}
+            <form action={submitUtr} className="inline">
+              <input type="hidden" name="pay" value={open.id} />
+              <label>
+                UTR (12 digits, shown by your UPI app after paying)
+                <input name="utr" inputMode="numeric" pattern="[0-9]{12}" maxLength={12} required />
+              </label>
+              <button type="submit" className="primary">
+                I have paid
+              </button>
+            </form>
+          </div>
+        )}
         <section className="stats three" aria-label="Plan">
           <div className="stat">
             <span>Accounts</span>
@@ -160,31 +185,6 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
           refunds; you can stop any time and keep access until the paid period ends.
           {!owner && ' Only the owner can pay.'}
         </p>
-        {owner && open && (
-          <div className="card stack" role="group" aria-label="Pay by UPI">
-            <h3>
-              Pay {rupees(open.total_paise)} by UPI — {KIND_LABEL[open.kind]}
-            </h3>
-            {upiId ? (
-              <p>
-                UPI id: <b>{upiId}</b> ·{' '}
-                <a href={upiLink(upiId, open.total_paise, `ExamEdge ${institute.slug}`)}>Pay with UPI</a>
-              </p>
-            ) : (
-              <p className="muted">Write to support@examedgeai.in for the UPI id.</p>
-            )}
-            <form action={submitUtr} className="inline">
-              <input type="hidden" name="pay" value={open.id} />
-              <label>
-                UTR (12 digits, shown by your UPI app after paying)
-                <input name="utr" inputMode="numeric" pattern="[0-9]{12}" maxLength={12} required />
-              </label>
-              <button type="submit" className="primary">
-                I have paid
-              </button>
-            </form>
-          </div>
-        )}
         {checking && (
           <p role="status" className="notice">
             Your payment is waiting to be checked. Access continues as it is until ExamEdge approves it.
