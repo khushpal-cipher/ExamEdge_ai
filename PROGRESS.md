@@ -152,6 +152,7 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 56)
+**Session 56 (2026-10-29, Sonnet): PR #45 (`r21-small-pilot`: 5 students / $5 pilot, migration 42, handoff docs) CI green (run 40820032188: check incl. E2E + secrets), squash-merged `d2ca3bb`; `main` pulled. Docker + `supabase start` OK (local DB untouched). Step 1 below is DONE; waiting for the founder to say "build" for Batch C.**
 **State (2026-10-29, end of session 55, Sonnet, branch `r21-small-pilot`, pushed, NO PR yet):** no billing code built yet. This session
 answered founder questions and changed plans: (1) free pilot is now **5 students and $5 AI** (migration `20261120000042`, applied to the
 local DB with psql + history row; form/home text, pgTAP `270`, E2E updated; local gate green, see Completed 2026-10-29); the branch also
