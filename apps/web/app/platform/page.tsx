@@ -140,19 +140,21 @@ export default async function Platform({ searchParams }: { searchParams: Promise
                   <td>{rupees(p.total_paise)}</td>
                   <td>{p.utr}</td>
                   <td>
-                    <form action={approvePayment}>
-                      <input type="hidden" name="pay" value={p.id} />
-                      <button type="submit" className="primary">
-                        Approve
-                      </button>
-                    </form>
-                    <form action={rejectPayment} className="inline">
-                      <input type="hidden" name="pay" value={p.id} />
-                      <input name="reason" aria-label="Reason to reject" placeholder="Reason" required />
-                      <button type="submit" className="danger">
-                        Reject
-                      </button>
-                    </form>
+                    <div className="stack">
+                      <form action={approvePayment}>
+                        <input type="hidden" name="pay" value={p.id} />
+                        <button type="submit" className="primary">
+                          Approve
+                        </button>
+                      </form>
+                      <form action={rejectPayment} className="inline">
+                        <input type="hidden" name="pay" value={p.id} />
+                        <input name="reason" aria-label="Reason to reject" placeholder="Reason" required />
+                        <button type="submit" className="danger">
+                          Reject
+                        </button>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               ))}
