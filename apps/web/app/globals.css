@@ -1216,14 +1216,6 @@ ul.choices > li {
   .card {
     padding: var(--s4);
   }
-  .hero {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    padding: var(--s4) var(--s5);
-    gap: var(--s4);
-  }
-  .hero .stat:first-child {
-    grid-column: 1 / -1;
-  }
   .notice.toast {
     left: var(--s4);
     right: var(--s4);
@@ -1300,27 +1292,6 @@ ul.choices > li {
   box-shadow: var(--lift);
 }
 
-/* Home "at a glance" band: next test, overall rank, last rank */
-.hero {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--s5);
-  padding: var(--s5) var(--s6);
-  border-radius: var(--r);
-  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-  color: var(--on-accent);
-  box-shadow: var(--lift);
-}
-.hero .stat > span {
-  color: color-mix(in srgb, var(--on-accent) 80%, transparent);
-}
-.hero .stat > span:first-child {
-  font-size: var(--t-cap);
-  font-weight: 600;
-}
-.hero .stat > .small {
-  overflow-wrap: anywhere;
-}
 /* Subject tiles: a letter mark in mint */
 .tile .mark {
   width: 40px;
@@ -1622,9 +1593,6 @@ h1 {
   font-size: 16px;
   font-weight: 500;
   color: var(--ink);
-}
-.hero {
-  background: var(--ink);
 }
 .stat b {
   font-family: var(--font-mono), monospace;
