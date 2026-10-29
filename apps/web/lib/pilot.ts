@@ -14,3 +14,13 @@ export function pilotState(status: string, pilotEnd: string | null, today = indi
   const daysLeft = Math.round((Date.parse(pilotEnd) - Date.parse(today)) / 86_400_000) + 1; // the last day counts
   return { daysLeft: Math.max(daysLeft, 0), ended: daysLeft <= 0 };
 }
+
+export type Paid = { daysLeft: number; grace: boolean; ended: boolean } | null;
+
+// shortcut: mirrors the paid rule of private.read_only(): the last paid day counts, then 3 days' grace, then read-only
+// from the following midnight IST. Old institutes without paid_until are never read-only.
+export function paidState(status: string, paidUntil: string | null, today = indiaDate()): Paid {
+  if (status !== 'active' || !paidUntil) return null;
+  const daysLeft = Math.round((Date.parse(paidUntil) - Date.parse(today)) / 86_400_000) + 1;
+  return { daysLeft: Math.max(daysLeft, 0), grace: daysLeft <= 0 && daysLeft > -3, ended: daysLeft <= -3 };
+}

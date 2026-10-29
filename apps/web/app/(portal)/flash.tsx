@@ -34,9 +34,13 @@ const ERRORS: Record<string, string> = {
   no_sources: 'There are no published notes for this topic yet, so there is nothing to make it from.',
   coming_soon: 'Audio and video overviews are coming soon.',
   notes_refused: 'The AI could not write notes from this explanation. Try explaining it differently.',
-  read_only: 'Your free pilot has ended, so nothing can be changed. Everything can still be read.',
+  read_only: 'Your free pilot or plan has ended, so nothing can be changed. Everything can still be read.',
   seats_full: 'Your plan has no free seats for this role. Remove someone or ask ExamEdge for more seats.',
   name_invalid: 'Please type a name of 1 to 120 characters.',
+  utr_invalid: 'A UTR is the 12-digit transaction number your UPI app shows after paying.',
+  utr_used: 'That UTR was already used for another payment. Check the number in your UPI app.',
+  payment_waiting: 'A payment is already waiting for ExamEdge to check. Wait for it to be approved or rejected.',
+  not_available: 'That payment is not available right now.',
   storage_full: 'Your institute’s storage is full. Ask your admin.',
   refused: 'The AI could not make this from these notes. Please ask your teacher.',
   generation_failed: 'The AI could not make this right now. Please try again.',
@@ -69,6 +73,8 @@ const OK: Record<string, string> = {
   question_added: 'Question added to the test and saved in the question bank.',
   reply_saved: 'Reply saved.',
   review_sent: 'Thank you. Your review was sent to the owner and admins.',
+  utr_sent: 'Thank you. ExamEdge checks the payment in the bank and approves it, usually within a day.',
+  payment_started: 'Pay the amount below, then type the UTR.',
   moved: 'Moved. The old batch stays in their history (read-only).',
 };
 
