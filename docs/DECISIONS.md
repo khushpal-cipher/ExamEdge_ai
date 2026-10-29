@@ -755,3 +755,10 @@ sitemap or robots.txt).
 - **Disadvantages:** profiles are one per person across institutes, so a rename shows in every institute the person
   belongs to (owners and admins cannot be renamed by others); the copy button needs clipboard permission (https or
   localhost) and shows "Select and copy" otherwise; the Google button and logos stay white by design.
+
+### ADR-050 Worker hosting: Render replaces Railway
+- **Decision:** the Node worker runs on Render (Background Worker, deployed from GitHub). This supersedes the Railway part of ADR-003.
+- **Why:** Railway sign-ups were disabled for the founder on 2026-10-29 (message "Sign ups are currently disabled") and stayed so on repeated tries. Render has a GitHub sign-in, runs a long-lived process, and needs no code change: the worker only needs Node and `WORKER_DATABASE_URL`.
+- **Alternatives:** Fly.io (needs Dockerfile and card), Hetzner VPS (cheapest, self-managed), Koyeb (less proven).
+- **Cost:** about $7/month for a Background Worker `[U: verify current Render price and card requirement before sign-up]`.
+- **Revisit when:** Render price or reliability is a problem; the worker is host-neutral, so moving is a settings change.

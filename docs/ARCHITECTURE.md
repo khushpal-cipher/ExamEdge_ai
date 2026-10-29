@@ -74,7 +74,7 @@ institute **can later be moved** to its own database without rewriting the app (
                │ role `worker` + per-job       │
                │ tenant context (RLS applies)  │
 ┌──────────────┴───────────────────────────────┴────────────────────────────┐
-│ WORKER — Node/TypeScript container on Railway [D: host]                   │
+│ WORKER — Node/TypeScript container on Render [D: host]                   │
 │  ingestion · AI generation · grading/rank release · emails · sweepers     │
 │  (Release 2–3: audio TTS, video render with Remotion/Manim + ffmpeg)      │
 └──────────────┬────────────────────────────────────────────────────────────┘
@@ -174,8 +174,8 @@ Session-level `SET` is forbidden in worker code (pooled connections would leak t
 | Environment | Web | Database/Auth/Storage | Worker | AI keys |
 |---|---|---|---|---|
 | Local | `next dev` on `*.localhost` | Supabase CLI local stack (needs Docker — **not installed** on this Mac) | `node` locally | Dev keys, low spend cap |
-| Staging | Vercel Preview/Staging | Supabase project `examedge-staging` | Railway staging service | Staging keys, low cap |
-| Production | Vercel Production (Mumbai region `bom1` [U]) | Supabase project `examedge-prod` (ap-south-1 [V]) | Railway production [U: region near Mumbai] | Prod keys, spend alerts |
+| Staging | Vercel Preview/Staging | Supabase project `examedge-staging` | Render staging service | Staging keys, low cap |
+| Production | Vercel Production (Mumbai region `bom1` [U]) | Supabase project `examedge-prod` (ap-south-1 [V]) | Render production [U: region near Mumbai] | Prod keys, spend alerts |
 
 ## 8. Repository layout (proposed, created in Phase 1)
 

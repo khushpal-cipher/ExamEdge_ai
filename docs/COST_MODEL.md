@@ -129,3 +129,5 @@ variable_AI = 1.05 × (active_students × $0.53 + institutes × $31)
 - Railway: https://railway.com/pricing · Resend: https://resend.com/pricing
 - Remotion licence: https://github.com/remotion-dev/remotion/blob/main/LICENSE.md · Manim: https://www.manim.community/
 - pgvector filtering: https://github.com/pgvector/pgvector · Razorpay webhooks: https://razorpay.com/docs/webhooks/validate-test/
+
+> Note: ADR-050 moved the worker from Railway to Render. Worker prices in this file are still Railway's and need re-checking against Render [U].

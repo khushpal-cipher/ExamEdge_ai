@@ -135,7 +135,7 @@ platform admins read all; nobody updates a row except through these functions.
 **8. When the app is read-only [shared function built in B].** One function `private.read_only(inst)` decides, for
 every write and every AI call (no job flips a status at midnight; it is derived from dates, like test states, ADR-023):
 - pilot: from midnight IST after `pilot_end` (the last pilot day) [built in B];
-- paid: from midnight IST after `paid_until` + **3 days' grace** (step 8);
+- paid: from midnight IST after `paid_until`, **no grace** (founder, 2026-10-29; was 3 days);
 - **a waiting payment gives NO extra access** (founder, 2026-10-26, question 3: "access only after the approval"; this
   replaces plan-review fix 4): full access resumes only when the founder presses Approve; the owner can still start a payment;
 - read-only = members can read everything but write nothing; AI is off; **an attempt already started can still be
@@ -179,13 +179,13 @@ About **₹10,000–15,000 for the first 2 months**; keep ₹20,000 to be safe (
 | # | Step | Who | Cost (2 months) | Status |
 |---|---|---|---|---|
 | 14 | Buy `examedgeai.in`; Zoho Mail free (`khushpal@`, `hello@`, `support@`); Google account on `khushpal@`; Udyam | Founder | ₹800–1,200 a year | 🟨 domain bought 2026-10-25 (GoDaddy, 1 year, ₹117 with GOINDIA; renews Oct 2027 at ₹899); Zoho, Google account, Udyam next |
-| 15 | Accounts with `khushpal@examedgeai.in`: Vercel Pro (website), Railway Hobby (worker), Supabase (free, Pro the day a real pilot starts), Anthropic $20 credits with a monthly spend limit | Founder | ≈ ₹3,600 + ₹900 + ₹0–4,400 + ₹1,800 | ⬜ |
+| 15 | Accounts with `khushpal@examedgeai.in`: Vercel Pro (website), Render Background Worker (worker) [U], Supabase (free, Pro the day a real pilot starts), Anthropic $20 credits with a monthly spend limit | Founder | ≈ ₹3,600 + ₹900 + ₹0–4,400 + ₹1,800 | ⬜ |
 | 16 | Set up: cloud database + migrations, website, worker, `*.examedgeai.in` wildcard (Vercel nameservers), Google sign-in on the live address (publish consent screen), Resend domain (`noreply@`), secret keys, `AI_PROVIDER=anthropic` (never Gemini for real users), built-in notes search (Voyage later), demo login off, Sentry alerts (free), nightly backup + one test restore. Change docs from `examedge.in` to `examedgeai.in`. | Claude (Opus / High) | — | ⬜ |
 | 17 | Real Claude test: every AI feature once with the real key (tutor, AI notes, AI test, study tools, scanned pages) — so far only fake and Gemini AI were used | Claude (Sonnet / Medium) | ≈ $1–2 of credits | ⬜ |
 | 18 | Platform admin account with MFA, then a test run with one coaching | Founder + Claude (Sonnet / Medium) | — | ⬜ |
 | 19 | Before any 1,000+ student coaching: load test (many students opening a test at once), Claude's per-minute limits for our account, rollback rehearsal | Claude (Sonnet / Medium) | — | ⬜ |
 
-The founder's Mac does not need to stay on: Vercel, Supabase and Railway run the site all the time.
+The founder's Mac does not need to stay on: Vercel, Supabase and Render run the site all the time.
 
 ## C. Paperwork and decisions (founder)
 
@@ -285,7 +285,7 @@ Founder said "fix 1 to 10" on 2026-10-25, then "work for the next session": noth
 - **How `newtown.examedgeai.in` works:** owning `examedgeai.in` gives every name under it for free. One wildcard DNS
   record `*.examedgeai.in` → Vercel (needs Vercel nameservers [U]); Vercel adds https for each; the app reads
   `newtown` from the address and finds that institute. A new coaching = one row, no DNS change.
-- **The Mac can be off:** Vercel, Supabase and Railway run the site; the Mac is only for building and testing.
+- **The Mac can be off:** Vercel, Supabase and Render run the site; the Mac is only for building and testing.
 - **Payment by UPI by hand (step 7):** owner picks a price → your UPI QR or "Pay with UPI" link with the amount →
   pays in GPay/PhonePe → types the 12-digit UTR → you get an email + "Payments to check" → you match it in the bank
   app → Approve (paid, limits set, "paid until" date, receipt) or Reject with a reason. Razorpay later automates it.
@@ -311,7 +311,7 @@ Founder said "fix 1 to 10" on 2026-10-25, then "work for the next session": noth
   auto-renew and two-step login; check the renewal price, not only the first-year offer. Then Claude moves the
   nameservers to Vercel at deploy.
 - **Legal documents (step 11; text from a lawyer or approved template, Claude builds the pages) [U: confirm with the lawyer]:**
-  website pages — Privacy Policy (what data, why, sub-processors Anthropic/Supabase/Vercel/Railway/Resend/Google,
+  website pages — Privacy Policy (what data, why, sub-processors Anthropic/Supabase/Vercel/Render/Resend/Google,
   data outside India, retention and deletion, essential cookies only, grievance officer contact), Terms of Service
   (subscription, pilot, prices, "one account = one coaching", acceptable use, AI answers can be wrong, the coaching owns
   rights to uploaded notes, suspension), Refund & Cancellation Policy, Contact Us (name, address, email, phone),

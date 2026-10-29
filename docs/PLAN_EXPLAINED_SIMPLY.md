@@ -66,7 +66,7 @@ expert-checked study library (for example JEE → Physics → Rotational Motion 
 |---|---|---|
 | Website for institutes and students | Next.js, hosted on Vercel | One app serves all three levels |
 | Database, Google login, file storage | Supabase (servers in Mumbai) | One service with the privacy rules built in |
-| Background work (reading PDFs, making quizzes) | A small worker server on Railway | Long jobs don't slow down the website |
+| Background work (reading PDFs, making quizzes) | A small worker server on Render | Long jobs don't slow down the website |
 | AI that answers and creates content | Claude (Anthropic): a fast, cheap model for most doubts, a stronger model for hard problems, the strongest model for writing tests and library content | Good quality, can point to its sources, clear prices |
 | Search inside notes | Voyage AI | Finds the right paragraph for each question |
 | Indian-language voices (later) | Sarvam AI | Natural voices in 11 Indian languages |

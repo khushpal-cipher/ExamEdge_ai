@@ -169,7 +169,7 @@ The AI stops for that coaching until the 1st. To avoid angry students:
 |---|---|
 | Vercel Pro (website) | $20 ≈ ₹1,800 |
 | Supabase Pro + Small compute (database, logins, files; Mumbai) | $40 ≈ ₹3,500 |
-| Railway (background worker) | $5–20 ≈ ₹450–1,800 |
+| Render (background worker) [U] | $7–20 ≈ ₹450–1,800 |
 | Resend (emails; free up to 3,000 a month) | $0–20 ≈ ₹0–1,800 |
 | Claude API (pilots + first paying coachings; capped by each budget) | prepaid, see below |
 | **Total servers** | **≈ $65–100 ≈ ₹6,000–9,000** |

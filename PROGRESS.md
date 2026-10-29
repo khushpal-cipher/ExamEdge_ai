@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-26 (session 54: PR #43 merged `57a7010`; founder change list A+B+C+D built on `r19-founder-list`, PR open; billing Q3 = no grace, access only after Approve)
+Last updated: 2026-10-29 (session 59: PRs #48, #49 merged, #50 open; session 54: PR #43 merged `57a7010`; founder change list A+B+C+D built on `r19-founder-list`, PR open; billing Q3 = no grace, access only after Approve)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -126,7 +126,7 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 |---|---|
 | Embedding real institute documents (Phase 4) | Q-08 Voyage data-use terms |
 | Pilot launch (Phase 10) | Q-01 legal opinion on minors' data (G8, AC10.4) |
-| Phase 10 cloud parts | Founder approval for accounts: production Supabase/Vercel/Railway, domain + wildcard TLS, prod Google OAuth, Sentry + spend alerts, independent backup storage; then the real restore drill (G7, AC10.2), k6 load test (AC10.3, AC7.4), rollback rehearsal (AC10.5) |
+| Phase 10 cloud parts | Founder approval for accounts: production Supabase/Vercel/Render, domain + wildcard TLS, prod Google OAuth, Sentry + spend alerts, independent backup storage; then the real restore drill (G7, AC10.2), k6 load test (AC10.3, AC7.4), rollback rehearsal (AC10.5) |
 | Invitation emails to anyone but the founder | A domain + Resend domain verification, then `EMAIL_FROM` (Resend test sender only reaches the account owner) — ADR-035 |
 | Google sign-in for everyone | Google consent screen is in Testing (only listed test users); publish it, and add the production callback URL when Supabase cloud exists |
 | Real AI | Anthropic key (tutor, Studio, OCR and AI bank questions ready); Voyage client not written (Q-08) — RUNBOOKS §5 |
@@ -151,7 +151,14 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 59)
+## Next exact action (session 60)
+**State (2026-10-29, end of session 59, Sonnet, `main` = `30550db`):** all Release 1 build work is done. Merged this session: PR #48 (`be2ebc1`, batch page Manage | Performance tabs, rank list shows only students currently in the batch, student Home rank list without opacity fade because axe failed contrast, unused `.hero` CSS removed) and PR #49 (`30550db`, renewal reminder email: worker job `renewal` 09:00 IST, once per `paid_until`, migration 50, pgTAP `310`, unit `renewal.test.ts`). **PR #50 (branch `r27-no-grace`, CI green) is OPEN, not merged:** no grace period (founder 2026-10-29): `private.read_only` is true from midnight IST after `paid_until` (migration 51), grace banner removed, `290_billing` + `pilot.test.ts` updated; after expiry the Bill page lists the plans again and the owner pays by UPI as before. The same PR carries the founder-approved doc edits of another session (ADR-050: worker on **Render**, not Railway, because Railway sign-ups were disabled).
+**Evidence (2026-10-29):** `npx supabase test db` Files=31 Tests=1677, only `290_billing` test 51 "audited" fails locally (it counts ALL `billing.payment_approved` audit rows; the founder's own test approval left one extra, local data, not code; CI uses a fresh DB and is green); unit 206/206; typecheck, format, lint PASS; renewal job run once by hand (newtown set to paid_until +3 days, `{due:1, sent:1}`, then restored to `2028-10-28`). Resend: `examedgeai.in` verified (Tokyo region); `.env` and `apps/web/.env.local` hold `RESEND_API_KEY`, `EMAIL_FROM=ExamEdge <support@examedgeai.in>`, `PAYMENTS_ALERT_EMAIL=examedgeai1@gmail.com` (gitignored). Founder tested and confirmed working: invitation email, payment approve/reject on the platform page, copy button, accepting an invitation with a name, dark mode everywhere, audio voice, Home rank list on a phone.
+**Not building (founder):** price-list screen (later), UPI QR image + `UPI_ID` (not now). **Legal opinion on minors' data (Q-01, G8): founder does it AFTER launch; accepted risk, do not block on it.** Unverified: the scheduled 09:00 run itself (worker was not running; same code was run by hand).
+**Next exact action:** 1) Merge PR #50 (`gh pr checks 50`, `gh pr merge 50 --squash`), pull `main`. 2) **Batch D (Opus, High; one batch per session):** (a) one Opus review of ALL money code (migrations 43, 46-48, 50, 51, billing actions, platform approve/reject, UTR handling, charm pricing, top-ups) before real payments; (b) Step 16 deploy: Supabase cloud (Pro the day a real pilot starts), Vercel (web), Render Background Worker (worker, `WORKER_DATABASE_URL`, RESEND_API_KEY + EMAIL_FROM on the worker; PAYMENTS_ALERT_EMAIL on web), `*.examedgeai.in` wildcard + TLS, production Google OAuth (consent screen to be published), backups; each needs the founder's logged-in accounts (see memory `launch-accounts`: GitHub sign-in for Vercel/Supabase/Resend/Render, `examedgeai1@gmail.com` for Google Cloud; `khushpal@examedgeai.in` is Zoho mail only); (c) steps 17-19 real Claude test (needs an Anthropic key), first coaching institute, load test (Sonnet). Never create accounts or deploy without the founder in the loop.
+**Rule learned:** another chat can edit docs in this checkout; run `git status` first and never revert changes the founder says they approved.
+
+## Next exact action (session 59, superseded)
 **State (2026-10-29, end of session 58, Sonnet, branch `r25-c2c` = `main` + 6 commits; `main` = `f68b9c0`):** PR #47 (one unpaid payment, pay box fixes, charm pricing, migrations 46-48) is MERGED (`f68b9c0`, CI green, 2026-10-29); `r25-c2c` is rebased on `main` = `f68b9c0`. Docs handoff of sessions 55-57 lives on local branch `r24-handoff` (`b2ef2da`, not merged; PROGRESS "session 58" text and NEXT_SESSION_PROMPT there are older than this section).
 **Done this session (Batch C2, about 25-30%):**
 - Migration `20261122000045_batch_performance.sql` (applied locally with psql + history row, no reset): `public.batch_performance(inst, batch)` returns number band (students, active this week, average, tests released, needs attention = average < 50% or no activity 5 days), test trend, topic strength (topics with >= 3 answers), per-student list (user_id, average, last_at, attention). Owner/admin or the batch's teacher only (`private.teaches_batch`). Allowlisted in `010_policy_coverage.sql`.
