@@ -43,7 +43,6 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
       .from('payments')
       .select('id, kind, total_paise, utr, status, reject_reason, receipt_no, created_at')
       .eq('institute_id', institute.id)
-      .or('utr.not.is.null,status.neq.waiting') // a payment that is only started is not shown in the list
       .order('created_at', { ascending: false })
       .limit(20)
       .returns<Pay[]>(),
@@ -53,6 +52,7 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
       ? Math.round((Number(st.ai_used_micro) / Number(st.ai_budget_micro)) * 100)
       : 0;
   const open = (pays ?? []).find((p) => p.status === 'waiting' && !p.utr); // started, UTR not typed yet
+  const shown = (pays ?? []).filter((p) => p.utr || p.status !== 'waiting'); // a payment only started is not listed
   const checking = (pays ?? []).some((p) => p.status === 'waiting' && p.utr);
   const upiId = process.env.UPI_ID;
   const saving = monthly && yearly ? Number(monthly.base_paise) * 12 - Number(yearly.base_paise) : 0;
@@ -191,7 +191,7 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
           </p>
         )}
       </section>
-      {(pays ?? []).length > 0 && (
+      {shown.length > 0 && (
         <section className="card stack" aria-labelledby="payments">
           <h2 id="payments">Payments</h2>
           <table>
@@ -205,7 +205,7 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
               </tr>
             </thead>
             <tbody>
-              {(pays ?? []).map((p) => (
+              {shown.map((p) => (
                 <tr key={p.id}>
                   <td>{p.created_at.slice(0, 10)}</td>
                   <td>{KIND_LABEL[p.kind]}</td>
