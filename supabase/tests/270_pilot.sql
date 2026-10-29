@@ -1,4 +1,4 @@
--- LAUNCH_PLAN step 1, ADR-058: the free pilot. New institutes start as a 7-day pilot with seat caps and $10 of AI for
+-- LAUNCH_PLAN step 1, ADR-058: the free pilot. New institutes start as a 7-day pilot with seat caps and $5 of AI for
 -- its whole life; from midnight IST after pilot_end the institute is read-only (members write nothing, AI off), but an
 -- attempt already started can still be answered and submitted. The worker and platform admins keep working.
 begin;
@@ -18,7 +18,7 @@ select results_eq($$ select status, pilot_end, expected_students from public.ins
   $$ select 'pilot'::text, (select today + 7 from d), 40 $$, 'it is a pilot ending in 7 days (India date)');
 select results_eq($$ select max_students, max_staff, monthly_ai_budget_micro_usd, hard_stop
   from public.institute_quotas where institute_id = tests.inst('pilotx') $$,
-  $$ values (10, 20, 10000000::bigint, true) $$, 'with 10 students, 20 staff and $10 of AI, hard stop on');
+  $$ values (5, 20, 5000000::bigint, true) $$, 'with 5 students, 20 staff and $5 of AI, hard stop on');
 select lives_ok($$ select public.create_institute('pilotz', 'Pilot Z', 'pilotz.localhost', 'o@pilotz.test', null,
   (select today + 30 from d)) $$, 'the founder can type another end date');
 select is((select pilot_end from public.institutes where slug = 'pilotz'), (select today + 30 from d),

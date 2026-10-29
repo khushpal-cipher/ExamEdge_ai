@@ -118,8 +118,8 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
   ruled number bands. Founder approved it as final: merged as PR #41 (`f1b9d3f`, ADR-056). Founder's pricing plan
   (no code) is in docs/PRICING_PLAN.md. Next: PROGRESS.md "Next exact action (session 49)" — ask what to build next.
 - Session 49 (2026-10-24/25, docs only, no code): founder's launch order is docs/LAUNCH_PLAN.md (read it fully).
-  Decisions: pricing per account in slabs, teachers charged (ADR-057, PRICING_PLAN §2a); pilot 7 days, 10 students,
-  up to 20 staff, $10 AI; audio/video overviews shown "Beta · Coming soon"; UPI payment checked by hand until
+  Decisions: pricing per account in slabs, teachers charged (ADR-057, PRICING_PLAN §2a); pilot 7 days, 5 students,
+  up to 20 staff, $5 AI; audio/video overviews shown "Beta · Coming soon"; UPI payment checked by hand until
   Razorpay; yearly = no refund; "Mix" results (total at once, right/wrong after close). Next: follow LAUNCH_PLAN
   "Build order by model": Batch A (Sonnet) → B (Opus) → C (Sonnet) → D (Opus); one batch per session, only the batch
   PROGRESS.md names; if a task needs a different model than the session runs on, stop and tell the founder; build launch steps only

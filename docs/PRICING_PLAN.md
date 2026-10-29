@@ -140,14 +140,14 @@ The AI stops for that coaching until the 1st. To avoid angry students:
 
 ## 10. Free pilot (prices and paying: see §2a and docs/LAUNCH_PLAN.md steps 5–7, "Pay now" by UPI until Razorpay) (founder's idea, 2026-10-24, not built)
 - **Who:** a new coaching starts with status `pilot` (the column already exists: `pilot|active|suspended|offboarding`).
-- **Free for 7 days** (founder, 2026-10-25; was 14), **10 students** (invite limit), teachers and admins up to
+- **Free for 7 days** (founder, 2026-10-25; was 14), **5 students** (invite limit), teachers and admins up to
   **20** (enough for a real coaching; the founder can raise it by hand). Stops students being added as "teachers" to get
   past the 10-student limit; staff also see answer keys and everyone's marks, so a coaching will not add students as staff,
   and staff get the same 30 doubts a day limit (ADR-057).
 - **Same AI as the paid plans** (cheap Claude Haiku for most features), not the free Gemini key: Gemini's free tier
   uses the content to improve Google's products (ADR-051 forbids real student data on it), its shared rate limits
   break when several pilots run together, and a weaker pilot AI would not sell the real product.
-- **Pilot AI budget: $10** with "Stop AI when the budget is used up" on. Expected use: about $3–5 per pilot [E].
+- **Pilot AI budget: $5** with "Stop AI when the budget is used up" on. Expected use: about $3–5 per pilot [E].
 - **How many students they have:** asked once when the pilot is created ("How many students do you have?", typed by
   you or by the owner). That number picks the suggested plan (section 3). After they pay, the app counts real
   student accounts and the 10% rule (section 6) applies, so a wrong guess corrects itself.
