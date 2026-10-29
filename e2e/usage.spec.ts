@@ -19,6 +19,7 @@ test('owner sees this month’s AI bill in ₹ and the tokens used, no dollars; 
   await login(page, 'owner@demo.test');
   await page.getByRole('link', { name: 'Bill' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Bill');
+  await expect(page.getByRole('heading', { name: 'Your plan' })).toBeVisible(); // billing (Batch C)
   await expect(page.locator('.stat').filter({ hasText: "This month's AI charge" }).locator('b')).toHaveText(
     /^₹[\d,]+\.\d{2}$/,
   );
