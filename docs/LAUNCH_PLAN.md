@@ -66,6 +66,27 @@ as they are (student and staff).
 | Step 16 deploy (cloud database, keys, wildcard domain, Google sign-in, email, backups) | Opus / High |
 | Steps 17–19 real Claude test, first coaching, load test | Sonnet / Medium |
 
+### Money review (Batch D, Opus, 2026-10-29)
+Reviewed migrations 43, 46–48, 50, 51, the Bill page, UPI/UTR actions, platform Approve/Reject, charm pricing, top-ups,
+read-only and the renewal job. Each finding below was reproduced in a rolled-back transaction on the local DB.
+**Fixed (migration 52, pgTAP `320_money_review`), they broke the written spec:**
+- M1 Extras stopped forever after one quarter without growth (`extras_from` moved only on an approved extras payment).
+- M2 An early renewal kept `period_start` at the first period, so the next monthly bill counted old peaks again
+  (probe: 500 accounts last month, 6 today → next bill was for 500).
+- M3 An AI top-up was offered while read-only, when AI is off.
+**Open: these need the founder's rule (defaults in brackets, not built):**
+- M4 Pay far ahead: an owner can pay month after month in advance at today's small count, or pay yearly and then one
+  monthly (which drops the yearly extras), then grow without paying more. [A monthly or yearly payment can be started
+  only when nothing is paid yet, the period has ended, or in its last 7 days.]
+- M5 Extras are never enforced: a yearly coaching can ignore the extras bill. [Read-only if an extras bill is unpaid
+  7 days after its quarter ends.]
+- M6 The last quarter of every year is never billed for extras (it ends on the renewal day, and the renewal resets the
+  quarters). [The yearly renewal adds that quarter's extras to its amount.]
+- M7 An unpaid payment keeps its first amount forever: start it at 30 accounts, add 900 students, then pay the old
+  ₹5,999 (probe: the live bill was ₹1,31,999). [An unpaid payment expires after 24 hours; "Pay" makes a fresh one.]
+**Noted, low (no change):** a period starting on the 29th–31st shifts to an earlier day once (Jan 31 → Feb 27);
+the count carried into a period from before its first day is not in its peak until something changes.
+
 ## A. Build (code, no money needed)
 
 | # | Step | What it means | Model / Effort | Status |

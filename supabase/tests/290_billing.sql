@@ -127,7 +127,8 @@ select results_eq($$ select status, paid_until, billing_plan from public.institu
 select is(private.read_only(tests.inst('alpha')), false, 'access is back');
 select throws_ok($$ select public.approve_payment((select v from ids where k = 'p1')) $$, 'P0001', 'not_available',
   'a payment is decided once');
-select is((select count(*) from public.audit_events where action = 'billing.payment_approved'), 1::bigint, 'audited');
+select is((select count(*) from public.audit_events where action = 'billing.payment_approved'
+  and target_id = (select v from ids where k = 'p1')), 1::bigint, 'audited');
 
 -- ---------------------------------------------------------------- limits follow the count (rule 9)
 select results_eq($$ select monthly_ai_budget_micro_usd, max_storage_bytes, student_daily_messages,

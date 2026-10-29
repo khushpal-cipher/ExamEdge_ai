@@ -756,7 +756,7 @@ sitemap or robots.txt).
   belongs to (owners and admins cannot be renamed by others); the copy button needs clipboard permission (https or
   localhost) and shows "Select and copy" otherwise; the Google button and logos stay white by design.
 
-### ADR-050 Worker hosting: Render replaces Railway
+### ADR-060 Worker hosting: Render replaces Railway (numbered ADR-050 by mistake until 2026-10-29)
 - **Decision:** the Node worker runs on Render (Background Worker, deployed from GitHub). This supersedes the Railway part of ADR-003.
 - **Why:** Railway sign-ups were disabled for the founder on 2026-10-29 (message "Sign ups are currently disabled") and stayed so on repeated tries. Render has a GitHub sign-in, runs a long-lived process, and needs no code change: the worker only needs Node and `WORKER_DATABASE_URL`.
 - **Alternatives:** Fly.io (needs Dockerfile and card), Hetzner VPS (cheapest, self-managed), Koyeb (less proven).
