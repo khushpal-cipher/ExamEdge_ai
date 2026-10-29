@@ -4,6 +4,7 @@ import { log } from '@examedge/core/log';
 import { assertLiveAi } from '@examedge/core/demo';
 import { ingestVersion, pendingJobs, type Job } from './ingest';
 import { purge } from './purge';
+import { remindRenewals } from './renewal';
 import { workerDownloader, workerStorage } from './storage';
 
 assertLiveAi(process.env);
@@ -36,6 +37,9 @@ await boss.work('heartbeat', heartbeat);
 await boss.createQueue('purge');
 await boss.schedule('purge', '0 3 * * *', null, { tz: 'Asia/Kolkata' });
 await boss.work('purge', async () => log.info('purge.done', await purge(pool, storage)));
+await boss.createQueue('renewal');
+await boss.schedule('renewal', '0 9 * * *', null, { tz: 'Asia/Kolkata' });
+await boss.work('renewal', async () => log.info('renewal.done', await remindRenewals(pool)));
 await boss.createQueue('ingest', { policy: 'stately' });
 await boss.work<Job>('ingest', async ([job]) => {
   if (job) await ingestVersion({ pool, download }, job.data);
