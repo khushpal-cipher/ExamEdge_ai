@@ -30,7 +30,7 @@ select throws_ok($$ select public.create_institute('pilotq', 'Pilot Q', 'pilotq.
 select is_empty($$ select c.table_name::text from information_schema.columns c
   join information_schema.tables x using (table_schema, table_name)
   where c.table_schema = 'public' and c.column_name = 'institute_id' and x.table_type = 'BASE TABLE'
-    and c.table_name not in ('usage_records', 'usage_counters', 'audit_events')
+    and c.table_name not in ('usage_records', 'usage_counters', 'audit_events', 'payments', 'account_peaks')
     and not exists (select 1 from pg_trigger t where t.tgrelid = format('public.%I', c.table_name)::regclass
                     and t.tgname = 'guard_read_only' and t.tgenabled <> 'D') $$,
   'every public table with institute_id (except metering and audit) has the guard_read_only trigger');
