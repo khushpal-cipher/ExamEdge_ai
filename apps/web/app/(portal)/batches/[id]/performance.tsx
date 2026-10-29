@@ -73,40 +73,44 @@ export async function Performance({ ctx, batch, sort }: { ctx: Ctx; batch: strin
       {p && p.trend.length > 0 && (
         <section className="card stack" aria-labelledby="trend">
           <h2 id="trend">Test trend</h2>
-          <table>
-            <tbody>
-              {p.trend.map((t, i) => (
-                <tr key={i}>
-                  <td>{t.title}</td>
-                  <td>
-                    <Bar value={t.average} />
-                  </td>
-                  <td className="num">{t.average == null ? '—' : `${t.average}%`}</td>
-                  <td className="num muted small">{t.takers} took it</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="table-wrap">
+            <table>
+              <tbody>
+                {p.trend.map((t, i) => (
+                  <tr key={i}>
+                    <td>{t.title}</td>
+                    <td>
+                      <Bar value={t.average} />
+                    </td>
+                    <td className="num">{t.average == null ? '—' : `${t.average}%`}</td>
+                    <td className="num muted small">{t.takers} took it</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
       {p && p.topics.length > 0 && (
         <section className="card stack" aria-labelledby="weak">
           <h2 id="weak">Weakest topics</h2>
-          <table>
-            <tbody>
-              {p.topics.slice(0, 8).map((t, i) => (
-                <tr key={i}>
-                  <td>
-                    {t.subject} · {t.chapter}
-                  </td>
-                  <td>
-                    <Bar value={t.percentage} />
-                  </td>
-                  <td className="num">{t.percentage == null ? '—' : `${t.percentage}%`}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="table-wrap">
+            <table>
+              <tbody>
+                {p.topics.slice(0, 8).map((t, i) => (
+                  <tr key={i}>
+                    <td>
+                      {t.subject} · {t.chapter}
+                    </td>
+                    <td>
+                      <Bar value={t.percentage} />
+                    </td>
+                    <td className="num">{t.percentage == null ? '—' : `${t.percentage}%`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
       {p && (top.length > 0 || need.length > 0) && (
