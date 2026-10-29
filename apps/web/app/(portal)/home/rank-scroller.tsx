@@ -18,7 +18,6 @@ export function RankScroller({ rows }: { rows: Row[] }) {
       items.forEach((it) => {
         const d = Math.abs(it.offsetTop + it.offsetHeight / 2 - mid) / it.offsetHeight;
         it.style.setProperty('--blur', it.dataset.me ? '0px' : `${Math.min(d * 2, 5).toFixed(1)}px`);
-        it.style.opacity = String(Math.max(0.25, 1 - d * 0.35));
       });
     };
     const me = items.find((i) => i.dataset.me);

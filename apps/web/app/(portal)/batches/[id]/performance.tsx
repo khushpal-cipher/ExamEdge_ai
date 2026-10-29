@@ -33,7 +33,7 @@ export async function Performance({ ctx, batch, sort }: { ctx: Ctx; batch: strin
   const top = [...scored].sort((a, b) => b.average - a.average).slice(0, 5);
   const need = (p?.people ?? []).filter((x) => x.attention);
   const list = (rows: typeof top) => (
-    <ul className="stack">
+    <ul className="stack plain">
       {rows.map((x) => (
         <li key={x.user_id}>
           <Link href={`/students/${x.user_id}`}>{name.get(x.user_id) ?? 'Unnamed'}</Link>{' '}
@@ -47,26 +47,26 @@ export async function Performance({ ctx, batch, sort }: { ctx: Ctx; batch: strin
       {p && (
         <section className="card stack" aria-labelledby="numbers">
           <h2 id="numbers">This batch</h2>
-          <dl className="stats">
+          <div className="stats">
             <div className="stat">
-              <dt>Average score</dt>
-              <dd>{p.average == null ? '—' : `${p.average}%`}</dd>
+              <span>Average score</span>
+              <b>{p.average == null ? '—' : `${p.average}%`}</b>
             </div>
             <div className="stat">
-              <dt>Tests released</dt>
-              <dd>{p.tests_released}</dd>
+              <span>Tests released</span>
+              <b>{p.tests_released}</b>
             </div>
             <div className="stat">
-              <dt>Active this week</dt>
-              <dd>
+              <span>Active this week</span>
+              <b>
                 {p.active_week} of {p.students}
-              </dd>
+              </b>
             </div>
             <div className="stat">
-              <dt>Need attention</dt>
-              <dd>{p.attention}</dd>
+              <span>Need attention</span>
+              <b>{p.attention}</b>
             </div>
-          </dl>
+          </div>
         </section>
       )}
       <Standings ctx={ctx} batch={batch} sort={sort} />

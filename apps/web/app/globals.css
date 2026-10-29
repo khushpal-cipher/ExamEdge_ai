@@ -2193,7 +2193,6 @@ td .badge::before {
   align-items: baseline;
   height: 1.8rem;
   scroll-snap-align: center;
-  transition: opacity 0.1s;
 }
 .rankrow b {
   min-width: 2.5rem;
@@ -2205,4 +2204,17 @@ td .badge::before {
 }
 .rankrow[data-me] .who {
   font-weight: 700;
+}
+
+/* Tab panels space their sections like the page does (the page grid only reaches direct children) */
+[role='tabpanel']:not([hidden]) {
+  display: grid;
+  gap: var(--s7);
+  align-content: start;
+}
+
+.plain {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
