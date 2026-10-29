@@ -1,4 +1,4 @@
-import { KIND_LABEL, rupees, upiLink } from '@/lib/billing';
+import { isFresh, KIND_LABEL, rupees, upiLink } from '@/lib/billing';
 import { MANAGERS, requireMember } from '@/lib/tenant';
 import { FEATURE_LABEL, monthUsage } from '@/lib/usage';
 import { Flash, type Search } from '../flash';
@@ -51,7 +51,8 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
     st && Number(st.ai_budget_micro) > 0
       ? Math.round((Number(st.ai_used_micro) / Number(st.ai_budget_micro)) * 100)
       : 0;
-  const open = (pays ?? []).find((p) => p.status === 'waiting' && !p.utr); // started, UTR not typed yet
+  // started, UTR not typed yet, less than 24 hours old
+  const open = (pays ?? []).find((p) => p.status === 'waiting' && !p.utr && isFresh(p.created_at));
   const shown = (pays ?? []).filter((p) => p.utr || p.status !== 'waiting'); // a payment only started is not listed
   const checking = (pays ?? []).some((p) => p.status === 'waiting' && p.utr);
   const upiId = process.env.UPI_ID;
@@ -82,8 +83,8 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
       <Flash searchParams={searchParams} />
       {st?.read_only && (
         <p role="alert" className="alert">
-          Your plan has ended, so nothing can be changed and AI is off. Pay below to continue; access returns when
-          ExamEdge approves the payment.
+          A payment is due, so nothing can be changed and AI is off. Pay below to continue; access returns when ExamEdge
+          approves the payment.
         </p>
       )}
       {st && aiPct >= 80 && !st.read_only && (
@@ -117,7 +118,7 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
           </div>
         </section>
         {offers.length === 0 ? (
-          <p className="muted">Nothing to pay right now.</p>
+          <p className="muted">Nothing to pay right now. Renewal opens 7 days before your paid period ends.</p>
         ) : (
           <table>
             <thead>
@@ -181,8 +182,10 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
           </div>
         )}
         <p className="small muted">
-          Monthly is billed on the highest number of accounts you had in the month. GST extra when applicable. No
-          refunds; you can stop any time and keep access until the paid period ends.
+          Monthly is billed on the highest number of accounts you had in the month. On a yearly plan, accounts added
+          during the year are billed each month for the months left in the year; pay within 7 days or the app becomes
+          read-only. An amount is valid for 24 hours. GST extra when applicable. No refunds; you can stop any time and
+          keep access until the paid period ends.
           {!owner && ' Only the owner can pay.'}
         </p>
         {checking && (

@@ -143,7 +143,7 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
   the link box, light/dark toggle, ADR-059) merged. Billing Q3 answered: no access while a UTR waits. Next: PROGRESS.md "Next exact
   action (session 55)" = Batch C billing (Sonnet, Medium).
 - Session 58 (2026-10-29, Sonnet): Batch C2 started on `r25-c2c`: batch_performance function, student Home scrolling rank list with names; PR #47 merged (`f68b9c0`). Left: tabs + CSS clean-up. Next: PROGRESS.md "Next exact action (session 59)".
-- Session 59 (2026-10-29, Sonnet): PRs #48 (batch Manage | Performance tabs) and #49 (renewal reminder email) merged; PR #50 (no grace period) open, CI green. Resend verified for examedgeai.in. Worker hosting is Render (ADR-050). Next: PROGRESS.md "Next exact action (session 60)" = Batch D (Opus, High).
+- Session 59 (2026-10-29, Sonnet): PRs #48 (batch Manage | Performance tabs) and #49 (renewal reminder email) merged; PR #50 (no grace period) open, CI green. Resend verified for examedgeai.in. Worker hosting is Render (ADR-060). Next: PROGRESS.md "Next exact action (session 60)" = Batch D (Opus, High).
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full

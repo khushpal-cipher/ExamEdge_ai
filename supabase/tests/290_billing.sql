@@ -127,7 +127,8 @@ select results_eq($$ select status, paid_until, billing_plan from public.institu
 select is(private.read_only(tests.inst('alpha')), false, 'access is back');
 select throws_ok($$ select public.approve_payment((select v from ids where k = 'p1')) $$, 'P0001', 'not_available',
   'a payment is decided once');
-select is((select count(*) from public.audit_events where action = 'billing.payment_approved'), 1::bigint, 'audited');
+select is((select count(*) from public.audit_events where action = 'billing.payment_approved'
+  and target_id = (select v from ids where k = 'p1')), 1::bigint, 'audited');
 
 -- ---------------------------------------------------------------- limits follow the count (rule 9)
 select results_eq($$ select monthly_ai_budget_micro_usd, max_storage_bytes, student_daily_messages,
@@ -143,6 +144,8 @@ select results_eq($$ select monthly_ai_budget_micro_usd, max_storage_bytes, max_
   from public.institute_quotas where institute_id = tests.inst('alpha') $$,
   $$ values (306 * 600000::bigint + 31000000, 7::bigint * 1073741824, 2) $$,
   'the AI budget and storage follow the count at once, not on the 1st');
+-- renewal opens in the last 7 days of the paid period (M4)
+update public.institutes set paid_until = (select today + 3 from d) where slug = 'alpha';
 select tests.login('root@examedge.test', 'aal2');
 select results_eq($$ select accounts, total_paise from public.bill_quote(tests.inst('alpha'), 'monthly') $$,
   $$ values (306, 6069900::bigint) $$, 'next month''s bill uses the highest count (306: 300 × ₹200 + 6 × ₹120)');
@@ -189,7 +192,7 @@ select is((select blocked from public.ai_reserve(tests.inst('alpha'), 'question_
 
 -- ---------------------------------------------------------------- yearly, early payment, extras (rules 5, 6)
 select tests.logout();
-update public.institutes set paid_until = (select today + 10 from d), period_start = (select today - 20 from d)
+update public.institutes set paid_until = (select today + 5 from d), period_start = (select today - 20 from d)
 where slug = 'alpha';
 select tests.login('owner@alpha.test');
 select results_eq($$ select base_paise from public.bill_quote(tests.inst('alpha'), 'yearly') $$,
@@ -200,26 +203,29 @@ select tests.login('root@examedge.test', 'aal2');
 select lives_ok($$ select public.approve_payment((select v from ids where k = 'y1')) $$, 'approved');
 select results_eq($$ select y.period_start, i.paid_until, i.billing_plan, i.covered_accounts from public.payments y
   join public.institutes i on i.id = y.institute_id where y.id = (select v from ids where k = 'y1') $$,
-  $$ select (select today + 11 from d), ((select today + 11 from d) + interval '12 months')::date - 1,
+  $$ select (select today + 6 from d), ((select today + 6 from d) + interval '12 months')::date - 1,
      'yearly'::text, 6 $$, 'paying early extends from the old end: no paid day is lost');
 select is((select count(*) from public.bill_quote(tests.inst('alpha'), 'extras')), 0::bigint,
-  'no extras before the first quarter is over');
+  'no extras before the first month is over');
 select tests.logout();
 update public.institutes set extras_from = (select today - 100 from d), paid_until = (select today + 200 from d)
 where slug = 'alpha';
 insert into public.account_peaks (institute_id, day, peak) values (tests.inst('alpha'), (select today - 50 from d), 40);
 select tests.login('owner@alpha.test');
 select results_eq($$ select accounts, base_paise from public.bill_quote(tests.inst('alpha'), 'extras') $$,
-  $$ values (40, 499900::bigint) $$,
-  'extras: 3 months of the price difference (₹8,000 - ₹6,000) at 10/12 = ₹5,000');
+  $$ values (40, 1799900::bigint) $$,
+  'extras: 9 months left × (₹8,000 - ₹6,000), no yearly discount = ₹18,000, charm price ₹17,999');
 insert into ids select 'e1', public.start_payment(tests.inst('alpha'), 'extras');
 select lives_ok($$ select public.submit_utr((select v from ids where k = 'e1'), '999999999993') $$, 'owner pays extras');
 select tests.login('root@examedge.test', 'aal2');
 select lives_ok($$ select public.approve_payment((select v from ids where k = 'e1')) $$, 'approved');
-select results_eq($$ select covered_accounts, extras_from > (select today - 10 from d) from public.institutes where slug = 'alpha' $$,
-  $$ values (40, true) $$, 'the covered count rises and the quarter is closed');
+select results_eq($$ select covered_accounts, extras_from from public.institutes where slug = 'alpha' $$,
+  $$ select 40, period_end + 1 from public.payments where id = (select v from ids where k = 'e1') $$,
+  'the covered count rises and that month is closed');
 
 -- ---------------------------------------------------------------- one unpaid payment at a time
+select tests.logout();
+update public.institutes set paid_until = (select today + 3 from d) where slug = 'alpha';
 select tests.login('owner@alpha.test');
 select lives_ok($$ select public.start_payment(tests.inst('alpha'), 'topup') $$, 'owner starts a top-up');
 select lives_ok($$ select public.start_payment(tests.inst('alpha'), 'monthly') $$, 'then a monthly payment');

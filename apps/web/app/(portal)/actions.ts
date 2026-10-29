@@ -286,7 +286,7 @@ const INVITE_ERRORS: Record<string, string> = {
   '23505': 'already invited',
   '23514': 'invalid',
   seats_full: 'no free seats for this role (remove someone or ask ExamEdge for more)',
-  read_only: 'the free pilot or plan has ended',
+  read_only: 'a payment is due (pilot or plan ended, or a bill unpaid)',
 };
 
 // Single invite or a CSV list (one per line: email[,role[,batch name]]). Each link is emailed (ADR-035) and also

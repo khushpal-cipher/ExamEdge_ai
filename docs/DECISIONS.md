@@ -756,9 +756,18 @@ sitemap or robots.txt).
   belongs to (owners and admins cannot be renamed by others); the copy button needs clipboard permission (https or
   localhost) and shows "Select and copy" otherwise; the Google button and logos stay white by design.
 
-### ADR-050 Worker hosting: Render replaces Railway
+### ADR-060 Worker hosting: Render replaces Railway (numbered ADR-050 by mistake until 2026-10-29)
 - **Decision:** the Node worker runs on Render (Background Worker, deployed from GitHub). This supersedes the Railway part of ADR-003.
 - **Why:** Railway sign-ups were disabled for the founder on 2026-10-29 (message "Sign ups are currently disabled") and stayed so on repeated tries. Render has a GitHub sign-in, runs a long-lived process, and needs no code change: the worker only needs Node and `WORKER_DATABASE_URL`.
 - **Alternatives:** Fly.io (needs Dockerfile and card), Hetzner VPS (cheapest, self-managed), Koyeb (less proven).
 - **Cost:** about $7/month for a Background Worker `[U: verify current Render price and card requirement before sign-up]`.
 - **Revisit when:** Render price or reliability is a problem; the worker is host-neutral, so moving is a settings change.
+
+### ADR-061 Billing rules from the money review (founder, 2026-10-29)
+- **Decision:** renewal only in the last 7 days of a paid period or after it ended (M4); an extras bill unpaid 7 days
+  after its month makes the app read-only (M5); yearly extras are checked monthly and charged at the full monthly price
+  for every month left in the year, no yearly discount (M6, replaces the quarterly extras at 10/12 of LAUNCH_PLAN rule
+  6 and billing answer 2); an unpaid amount lasts 24 hours (M7).
+- **Why:** each closed a way to use more accounts than were paid for (LAUNCH_PLAN "Money review").
+- **How:** migrations 52-53; `private.extras_due` (internal) is the one rule used by the Bill quote and `read_only`;
+  `public.institute_read_only` lets the portal banner show the lock to every member. pgTAP `320_money_review`.

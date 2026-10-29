@@ -66,6 +66,30 @@ as they are (student and staff).
 | Step 16 deploy (cloud database, keys, wildcard domain, Google sign-in, email, backups) | Opus / High |
 | Steps 17–19 real Claude test, first coaching, load test | Sonnet / Medium |
 
+### Money review (Batch D, Opus, 2026-10-29)
+Reviewed migrations 43, 46–48, 50, 51, the Bill page, UPI/UTR actions, platform Approve/Reject, charm pricing, top-ups,
+read-only and the renewal job. Each finding below was reproduced in a rolled-back transaction on the local DB.
+**Fixed (migration 52, pgTAP `320_money_review`), they broke the written spec:**
+- M1 Extras stopped forever after one quarter without growth (`extras_from` moved only on an approved extras payment).
+- M2 An early renewal kept `period_start` at the first period, so the next monthly bill counted old peaks again
+  (probe: 500 accounts last month, 6 today → next bill was for 500).
+- M3 An AI top-up was offered while read-only, when AI is off.
+**Founder's rules, built 2026-10-29 (migration 53, pgTAP `320_money_review` 21 tests, `290_billing` updated):**
+- M4 A monthly or yearly payment can be started only when nothing is paid yet, the paid period has ended (any number
+  of days ago), or in its last 7 days; an unpaid extras bill comes first. No paying months ahead at a small count.
+- M5 An extras bill still unpaid 7 days after its month ends makes the app read-only until the payment is approved.
+- M6 (founder changed it) Yearly extras are checked **every month**, not every 3 months: accounts above the covered
+  count are charged at the **full** monthly price (no yearly discount, founder) for every month left in the paid year,
+  the month they joined included. Example: 100 accounts, 1 added with 9 months left = ₹200 × 9 = ₹1,800 → ₹1,799.
+  Fewer accounts = no money back. Accounts added in the last month are covered by the renewal at today's count.
+  The AI budget still follows the count at once.
+- M7 An unpaid payment's amount is valid for 24 hours; then the UTR is refused (`payment_expired`) and "Pay" makes a
+  fresh one at today's amount.
+- Also fixed: a month's peak now includes the count carried in from before it (`account_peaks.last`), so accounts
+  added just before a month starts are seen in that month (this was the second "low" note).
+**Noted, low (no change):** a period starting on the 29th–31st shifts to an earlier day once (Jan 31 → Feb 27); a
+late payment starts a new period on the approval day, so the read-only gap is not charged.
+
 ## A. Build (code, no money needed)
 
 | # | Step | What it means | Model / Effort | Status |
