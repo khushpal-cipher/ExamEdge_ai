@@ -2,10 +2,10 @@
 
 import { useEffect, useRef } from 'react';
 
-type Row = { rank: number; average: number; me: boolean };
+type Row = { rank: number; average: number; name: string; me: boolean };
 
-// Scrollable rank list inside the "Overall rank" tile. Always opens on the student's own row. Other students' names
-// are never sent: their rows blur more the further they are from the middle of the box.
+// Scrollable rank list inside the "Overall rank" tile. Always opens on the student's own row. Other students' rows
+// blur more the further they are from the middle of the box.
 export function RankScroller({ rows }: { rows: Row[] }) {
   const box = useRef<HTMLDivElement>(null);
 
@@ -33,7 +33,7 @@ export function RankScroller({ rows }: { rows: Row[] }) {
       {rows.map((r, i) => (
         <div key={i} className="rankrow" role="listitem" data-me={r.me ? '1' : undefined}>
           <b>#{r.rank}</b>
-          <span className="who">{r.me ? 'You' : 'Student'}</span>
+          <span className="who">{r.me ? 'You' : r.name}</span>
           <span className="avg">{r.average}%</span>
         </div>
       ))}

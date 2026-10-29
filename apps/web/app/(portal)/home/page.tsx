@@ -129,7 +129,7 @@ export default async function StudentHome() {
         <div className="stat">
           <span>Overall rank</span>
           {overall && Array.isArray(rankList) && rankList.length > 0 ? (
-            <RankScroller rows={rankList as { rank: number; average: number; me: boolean }[]} />
+            <RankScroller rows={rankList as { rank: number; average: number; name: string; me: boolean }[]} />
           ) : (
             <>
               <b>—</b>

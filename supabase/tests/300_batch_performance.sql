@@ -7,6 +7,8 @@ create temp table ids on commit drop as
   select (select id from public.batches where institute_id = tests.inst('alpha') and name = 'Batch X') as bx,
          (select id from public.batches where institute_id = tests.inst('alpha') and name = 'Batch Y') as by_;
 grant select on ids to authenticated;
+insert into public.batch_standings (batch_id, user_id, institute_id, average_percentage, tests_counted, overall_rank)
+values ((select bx from ids), tests.uid('student1@alpha.test'), tests.inst('alpha'), 50, 1, 1);
 
 select tests.login('owner@alpha.test');
 select is((public.batch_performance(tests.inst('alpha'), (select bx from ids)) ->> 'students')::int, 2,
@@ -30,11 +32,11 @@ select throws_ok(format($$ select public.batch_performance(%L, %L) $$, tests.ins
 select throws_ok(format($$ select public.batch_performance(%L, %L) $$, tests.inst('bravo'), (select bx from ids)),
   '42501', 'not_allowed', 'nor with their own institute id and our batch');
 
--- Rank list for students: no names, own row marked, outsiders refused.
+-- Rank list for students: with names, own row marked, outsiders refused.
 select tests.login('student1@alpha.test');
 select ok(public.batch_rank_list((select bx from ids)) is not null, 'student: rank list readable');
-select is((select count(*) from jsonb_array_elements(public.batch_rank_list((select bx from ids))) r where r::text ~ 'name'),
-  0::bigint, 'rank list carries no names');
+select ok((select bool_and(r ? 'name') from jsonb_array_elements(public.batch_rank_list((select bx from ids))) r),
+  'rank list carries names');
 select throws_ok(format($$ select public.batch_rank_list(%L) $$, (select by_ from ids)), '42501', 'not_allowed',
   'student of Batch X cannot read Batch Y ranks');
 select tests.login('owner@bravo.test');
