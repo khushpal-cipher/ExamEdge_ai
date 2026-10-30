@@ -13,6 +13,8 @@ grant usage on schema tests to worker;
 
 -- ---------------------------------------------------------------- price slabs (rule 2)
 create temp table pl on commit drop as select private.newest_price_list() as id;
+select is((select private.price(10, id) from pl), 1000000::bigint, 'the default minimum is 50 accounts: ₹10,000');
+update public.price_lists set min_accounts = 30; -- the price rules below were written for a minimum of 30
 select is((select private.price(10, id) from pl), 600000::bigint, 'below the minimum of 30 accounts: ₹6,000');
 select is((select private.price(100, id) from pl), 2000000::bigint, '100 accounts: ₹20,000');
 select is((select private.price(301, id) from pl), 6012000::bigint, '301 accounts: ₹60,120 (slabs)');
@@ -65,8 +67,13 @@ select tests.login('owner@alpha.test');
 select is(public.start_payment(tests.inst('alpha'), 'monthly'), (select v from ids where k = 'p1'), 'same waiting row');
 select is((select total_paise from public.payments where id = (select v from ids where k = 'p1')), 599900::bigint,
   'the waiting amount did not change');
+select is((select count(*) from public.bill_quote(tests.inst('alpha'), 'yearly')), 0::bigint,
+  'yearly is offered only from 50 accounts (alpha has 6)');
+select tests.logout();
+update public.price_lists set yearly_min_accounts = 1; -- the yearly price rules below are not about the floor
+select tests.login('owner@alpha.test');
 select results_eq($$ select base_paise, gst_paise, total_paise from public.bill_quote(tests.inst('alpha'), 'yearly') $$,
-  $$ values (5999915::bigint, 1079985::bigint, 7079900::bigint) $$, 'a new yearly quote: 10 months + 18% GST, total ₹70,799');
+  $$ values (6601610::bigint, 1188290::bigint, 7789900::bigint) $$, 'a new yearly quote: 11 months + 18% GST, total ₹77,899');
 select tests.login('root@examedge.test', 'aal2');
 select lives_ok($$ select public.set_gst_number('') $$, 'and clears it again');
 select tests.login('owner@alpha.test');
@@ -134,8 +141,8 @@ select is((select count(*) from public.audit_events where action = 'billing.paym
 select results_eq($$ select monthly_ai_budget_micro_usd, max_storage_bytes, student_daily_messages,
   student_daily_generations, staff_daily_requests, max_students, hard_stop
   from public.institute_quotas where institute_id = tests.inst('alpha') $$,
-  $$ values (49000000::bigint, 5368709120::bigint, 15, 5, 30, null::int, true) $$,
-  '30 accounts: $18 + $31 of AI, 5 GB, 15 doubts and 5 study tools, 30 staff requests, no seat cap');
+  $$ values (61000000::bigint, 5368709120::bigint, 40, 20, 60, null::int, true) $$,
+  'under 50 accounts counts as 50: $30 + $31 of AI, 5 GB, 40 doubts and 20 study tools, 60 staff requests, no seat cap');
 select tests.logout();
 insert into public.memberships (institute_id, user_id, role)
 select tests.inst('alpha'), tests.create_user('bulk' || g || '@alpha.test'), 'student' from generate_series(1, 300) g;
@@ -196,7 +203,7 @@ update public.institutes set paid_until = (select today + 5 from d), period_star
 where slug = 'alpha';
 select tests.login('owner@alpha.test');
 select results_eq($$ select base_paise from public.bill_quote(tests.inst('alpha'), 'yearly') $$,
-  $$ values (private.price(6, private.newest_price_list()) * 10 - 100) $$, 'yearly = 10 months at the count today');
+  $$ values (private.price(6, private.newest_price_list()) * 11 - 100) $$, 'yearly = 11 months at the count today');
 insert into ids select 'y1', public.start_payment(tests.inst('alpha'), 'yearly');
 select lives_ok($$ select public.submit_utr((select v from ids where k = 'y1'), '999999999992') $$, 'owner pays yearly');
 select tests.login('root@examedge.test', 'aal2');

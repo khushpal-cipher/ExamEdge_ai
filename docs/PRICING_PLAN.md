@@ -24,8 +24,8 @@ Charge **per student**, give each coaching an **AI budget that grows with its st
 
 - **Slabs work like income tax:** each rate applies only to the accounts inside that slab, so adding an account
   always costs more, never less. 301 accounts = 300 × ₹200 + 1 × ₹120 = ₹60,120.
-- **Minimum charge: 30 accounts (₹6,000 a month)**, even if they have fewer (below about 26 we lose money).
-- **Yearly:** pay 10 months, get 12, for the account count on the day they pay. Extra accounts are billed every 3 months.
+- **Minimum charge: 50 accounts (₹10,000 a month)** (founder 2026-10-30, migration 56; was 30), even if they have fewer.
+- **Yearly (from 50 accounts only, founder 2026-10-30, migration 54):** pay 11 months, get 12 (founder 2026-10-30, migration 55; was 10), for the account count on the day they pay. Extra accounts are billed every 3 months.
 - **GST 18% on top** of every price.
 - **Pay at the start of the month** for the current count; accounts added during the month go on the next bill
   (charged on the **highest** count of the month). Unpaid after a few days' grace → app read-only.
@@ -45,7 +45,7 @@ AI + hosting share), with more hosting at 4,000.
 **Limits, set automatically from the count (no typing by hand):**
 - **Monthly AI budget = accounts × $0.60 + $31**, "Stop AI when the budget is used up" always on. This caps our AI
   cost below what they pay, so we never lose money on AI.
-- 15 doubts and 5 study tools a day per student; **30 doubts a day per teacher/admin** (staff had no daily limit).
+- 40 doubts and 20 study tools a day per student (founder 2026-10-30; was 15 and 5); **60 AI requests a day per teacher/admin** (staff had no daily limit).
 - Storage: 1 GB per 50 accounts (minimum 5 GB). Background jobs: 2, 3 above 600 accounts, 4 above 1,000, 6 above 3,000.
 
 **Loopholes and fixes:**
@@ -64,7 +64,7 @@ a weaker rupee raises our dollar AI cost (review prices yearly).
 
 ## 3. The plans (prices before 18% GST) — superseded by §2a
 
-| Plan | Students | Monthly | Per student | Yearly (pay 10 months, get 12) |
+| Plan | Students | Monthly | Per student | Yearly (pay 11 months, get 12) |
 |---|---|---|---|---|
 | **Mini** | up to 150 | ₹19,999 | ₹133 | ₹1,99,990 |
 | **Basic** | up to 300 | ₹34,999 | ₹117 | ₹3,49,990 |
@@ -178,7 +178,7 @@ The AI stops for that coaching until the 1st. To avoid angry students:
 
 | Item | Cost |
 |---|---|
-| Domain `examedge.in` (yearly) | ≈ ₹800–1,200 |
+| Domain `examedgeai.in` (yearly) | ≈ ₹800–1,200 |
 | Claude API credits to start (covers ~5 pilots + buffer) | $50–100 ≈ ₹4,500–9,000 |
 | Lawyer's opinion on minors' data (Q-01) | ≈ ₹10,000–30,000 [U] |
 | Business registration + GST via a CA (needed for Razorpay KYC and invoices) | ≈ ₹3,000–15,000 [U] (proprietorship cheaper, Pvt Ltd more) |

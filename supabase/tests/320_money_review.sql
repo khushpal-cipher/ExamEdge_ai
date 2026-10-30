@@ -9,6 +9,7 @@ create temp table d on commit drop as select (now() at time zone 'Asia/Kolkata')
 grant select on d to authenticated;
 create temp table ids (k text primary key, v uuid);
 grant select, insert on ids to authenticated;
+update public.price_lists set min_accounts = 30, yearly_min_accounts = 1; -- written for a minimum of 30 and a free yearly floor
 
 -- ---------------------------------------------------------------- M1, M6: extras month by month, rest of the year
 -- A yearly plan for 6 accounts that started 200 days ago; 40 accounts in its 3rd month only.
@@ -66,7 +67,7 @@ select is((select count(*) from public.bill_quote(tests.inst('alpha'), 'monthly'
 select tests.logout();
 update public.institutes set paid_until = (select today + 6 from d) where slug = 'alpha';
 select tests.login('owner@alpha.test');
-select is((select count(*) from public.bill_quote(tests.inst('alpha'), 'yearly')), 1::bigint,
+select is((select count(*) from public.bill_quote(tests.inst('alpha'), 'monthly')), 1::bigint,
   '7 paid days left: renewal opens');
 
 -- ---------------------------------------------------------------- M2: period_start moves on an early renewal

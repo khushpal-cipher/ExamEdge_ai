@@ -5,7 +5,7 @@ export const rupees = (paise: number | string) =>
 
 export const KIND_LABEL: Record<string, string> = {
   monthly: 'Monthly plan',
-  yearly: 'Yearly plan (pay 10 months, get 12)',
+  yearly: 'Yearly plan (pay 11 months, get 12)',
   extras: 'New accounts, rest of the year',
   topup: 'AI top-up',
 };

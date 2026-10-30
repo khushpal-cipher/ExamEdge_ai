@@ -3,7 +3,7 @@
 Last updated: 2026-10-16 · Tried on this Mac only, not on a live site yet.
 
 **How to read this:**
-- **BLOCKED** = needs the live-site accounts (Supabase cloud, Vercel, Railway, Resend, Sentry). They don't exist yet.
+- **BLOCKED** = needs the live-site accounts (Supabase cloud, Vercel, Render, Resend, Sentry). They don't exist yet.
 - **[U]** = not checked yet. Confirm it before relying on it.
 - Each time you really use a runbook, write a line in [PROGRESS.md](../PROGRESS.md): date, who, what happened.
 
@@ -21,7 +21,7 @@ your password manager.
 | A key or password leaked | See §2, "If a key leaked". |
 | Wrong answer key in a test | The teacher fixes the key, then clicks **Recalculate results** on the test. Marks and both ranks are worked out again. |
 | Wrong or harmful notes uploaded | The teacher or admin clicks **Withdraw**. Students lose access on their next click. Who uploaded it is in the audit record. |
-| Site is down | Check the status pages of Supabase, Vercel and Railway. Open `/api/health` for the website. Check the worker log for a `worker.heartbeat` line (one every minute). If the last release broke it, go back to the previous version (§6). |
+| Site is down | Check the status pages of Supabase, Vercel and Render. Open `/api/health` for the website. Check the worker log for a `worker.heartbeat` line (one every minute). If the last release broke it, go back to the previous version (§6). |
 
 **Finding out why:**
 - **Logs** hold only ids, never names, emails or chat text.
@@ -44,11 +44,11 @@ check the provider's usage page for strange use while the key was out. More deta
 
 | Key / password | Used by | How to change it | How often |
 |---|---|---|---|
-| Anthropic key (`ANTHROPIC_API_KEY`) | Website (Vercel) and worker (Railway) | Anthropic console → new key → put it in both → redeploy both → delete old key | Every 90 days |
+| Anthropic key (`ANTHROPIC_API_KEY`) | Website (Vercel) and worker (Render) | Anthropic console → new key → put it in both → redeploy both → delete old key | Every 90 days |
 | Voyage key (`VOYAGE_API_KEY`) | Same | Same steps in the Voyage dashboard (not used yet) | Every 90 days |
 | Supabase secret key | Admin scripts on your own computer only — never the website or worker | Supabase dashboard → API keys → new secret key → save in password manager → delete old key | When needed |
-| Worker database password (`WORKER_DATABASE_URL`) | Worker (Railway) | In the Supabase SQL editor run `alter role worker password '<new>'` → update Railway → redeploy → heartbeat appears within 1 minute | Every 3 months |
-| Worker file-download password (`WORKER_STORAGE_PASSWORD`) | Worker (Railway) | Supabase → Auth → users → worker account → new password → update Railway → redeploy → upload a test PDF and check it reaches **Ready** | When needed |
+| Worker database password (`WORKER_DATABASE_URL`) | Worker (Render) | In the Supabase SQL editor run `alter role worker password '<new>'` → update Render → redeploy → heartbeat appears within 1 minute | Every 3 months |
+| Worker file-download password (`WORKER_STORAGE_PASSWORD`) | Worker (Render) | Supabase → Auth → users → worker account → new password → update Render → redeploy → upload a test PDF and check it reaches **Ready** | When needed |
 | Google sign-in secret | Supabase sign-in settings | Google Cloud console → add new secret → paste it in Supabase → test signing in → delete old secret | Once a year |
 | Platform admin login code (authenticator app) | Your phone | Lost phone: use the recovery method set up in advance **[U: check how Supabase does this]**, then remove the old phone | — |
 
@@ -72,16 +72,21 @@ database and the files.
   - stops with an error if anything is different
 - **Needs:** the PostgreSQL 17 tools (`brew install postgresql@17`). They must be the same version as the database.
 
-**For the live site (BLOCKED until it exists):**
-1. **Every night:** run the same backup against the live database, and store it somewhere separate from Supabase
-   (storage provider not chosen yet). Today the script refuses anything except this Mac; it needs the live settings
-   added when the live site exists.
-2. **Practice a restore (before the pilot, then every 90 days):**
-   - create a spare Supabase project and restore the backup into it, following Supabase's steps **[U: check the current commands]**
-   - upload the files from the backup
-   - run the same row and fingerprint checks
-   - time it (must be under 8 hours) and write the result in PROGRESS.md
-3. **After a real restore, before reopening:**
+**For the live site (works, drilled 2026-10-30):**
+- **Make a backup:** `scripts/backup-prod.sh backup` (needs Docker running and `supabase login` + `supabase link`; no secret key).
+  Creates `backups/prod-<time>/` (never in git) with `data.sql` (every row of public, private, auth, storage), `storage/`
+  (every uploaded file) and `manifest.txt` (checksums). The schema is not in it: it comes from `supabase/migrations`.
+- **Test it:** `scripts/backup-prod.sh drill backups/prod-<time>`. Starts a scratch Postgres in Docker, applies the migrations,
+  loads `data.sql`, compares row counts with the live database, prints the time, deletes the scratch container.
+  Needs the local Supabase stack running (its auth/storage definitions are reused).
+- **A real restore:** new Supabase project, `supabase db push`, empty the seeded tables (the drill shows how), load `data.sql`,
+  create the `worker` login role first, upload `storage/` again, set the worker password again.
+- **Result 2026-10-30:** 17 MB database + 0.7 MB files gave a 972 KB backup; the drill restored in 3 s with every count equal
+  (6 users, 1 institute, 3 memberships, 2 platform admins, 2 files, 44 tables). File checksums are listed in the manifest but
+  not yet compared automatically. Keep the folder somewhere other than Supabase (an encrypted copy on Google Drive is fine);
+  nothing runs it nightly yet, so run it by hand weekly during the pilot.
+- **Still to do:** nightly automatic run and off-site storage (decide with the founder), repeat the drill every 90 days.
+- **After a real restore, before reopening:**
    - delete again anyone who asked to be deleted after the backup was made
    - check that `/api/health` works, signing in works, the tutor answers, and a PDF opens
 
@@ -128,7 +133,7 @@ the limits. The settings are `AI_PROVIDER=fake` and `EMBEDDINGS_PROVIDER=fake`.
 1. Create an Anthropic key and set a spending limit in the Anthropic console.
 2. On the website (Vercel), set `AI_PROVIDER=anthropic` and `ANTHROPIC_API_KEY=<key>`.
    - Keep `EMBEDDINGS_PROVIDER=fake` until the Voyage part is written.
-   - On the worker (Railway), set the same `AI_PROVIDER=anthropic` and `ANTHROPIC_API_KEY=<key>` so scanned pages
+   - On the worker (Render), set the same `AI_PROVIDER=anthropic` and `ANTHROPIC_API_KEY=<key>` so scanned pages
      and photos are read by Claude.
 3. Redeploy. On a test institute, ask the tutor one question, make one summary, make 5 AI questions on the question bank and upload one scanned page (a phone
    photo of handwritten notes). The `/usage` page should show `anthropic` with a real cost, and the uploaded page's
@@ -142,10 +147,10 @@ the limits. The settings are `AI_PROVIDER=fake` and `EMBEDDINGS_PROVIDER=fake`.
 
 **To undo:** set `AI_PROVIDER=fake` and redeploy, or use **Turn AI off for everyone** (§1) to stop all AI at once.
 
-## 6. Undoing a bad release — BLOCKED (no Vercel or Railway account yet)
+## 6. Undoing a bad release — BLOCKED (the live site now exists)
 
 - **Website:** Vercel → Deployments → pick the previous working version → **Promote** **[U]**.
-- **Worker:** Railway → service → previous version → **Redeploy** **[U]**.
+- **Worker:** Render → service → previous version → **Redeploy** **[U]**.
 - **Database changes are never undone by editing an old one.** Fix a bad change with a new database change.
 
 Practise this once before the pilot.

@@ -111,7 +111,7 @@ function Landing() {
         <h2 id="prices">Pricing</h2>
         <p>
           You pay for every active account (students and teachers; the owner is free), in slabs like income tax. Minimum
-          30 accounts. Pay for 10 months, get 12 on a yearly plan. GST extra when applicable.
+          50 accounts. Pay for 11 months, get 12 on a yearly plan (from 50 accounts). GST extra when applicable.
         </p>
         <table>
           <caption className="sr-only">Price per account</caption>
