@@ -180,6 +180,7 @@ verified after the DNS move; OCR of a scanned page through the worker; delivered
 notes answer quality in the browser (founder says tested); automatic file-checksum check in the restore drill; nightly backup
 schedule and an off-Mac copy; Anthropic per-minute limits are 500K input / 80K output tokens / 1,000 requests per model on the
 Evaluation tier (founder screenshot; per-minute assumed) and the app retries 429 only once (`maxRetries: 1`).
+**Session 63 (2026-10-30, evening) verified with the founder:** Vercel rollback rehearsal done (live back on `d259b40`, health ok); test mail to `support@examedgeai.in` arrives in Zoho; invitation email arrives (Resend works); `examedge-loadtest` deleted; Anthropic credit topped up (spend limit on, auto-reload off); Google Authenticator backup to Google account on. Live site shows minimum 50 accounts and 11 months. Nothing blocks launch.
 **Next exact actions, in order:**
 1. Founder: do the Vercel rollback rehearsal, delete `examedge-loadtest`, add Anthropic credit (balance $4.80) with the spend limit
    on and auto-reload off, save MFA backup codes. Claude: confirm the live site shows "minimum 50 accounts" and "11 months".
