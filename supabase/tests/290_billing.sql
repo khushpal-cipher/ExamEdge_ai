@@ -13,6 +13,8 @@ grant usage on schema tests to worker;
 
 -- ---------------------------------------------------------------- price slabs (rule 2)
 create temp table pl on commit drop as select private.newest_price_list() as id;
+select is((select private.price(10, id) from pl), 1000000::bigint, 'the default minimum is 50 accounts: ₹10,000');
+update public.price_lists set min_accounts = 30; -- the price rules below were written for a minimum of 30
 select is((select private.price(10, id) from pl), 600000::bigint, 'below the minimum of 30 accounts: ₹6,000');
 select is((select private.price(100, id) from pl), 2000000::bigint, '100 accounts: ₹20,000');
 select is((select private.price(301, id) from pl), 6012000::bigint, '301 accounts: ₹60,120 (slabs)');
@@ -139,8 +141,8 @@ select is((select count(*) from public.audit_events where action = 'billing.paym
 select results_eq($$ select monthly_ai_budget_micro_usd, max_storage_bytes, student_daily_messages,
   student_daily_generations, staff_daily_requests, max_students, hard_stop
   from public.institute_quotas where institute_id = tests.inst('alpha') $$,
-  $$ values (49000000::bigint, 5368709120::bigint, 15, 5, 30, null::int, true) $$,
-  '30 accounts: $18 + $31 of AI, 5 GB, 15 doubts and 5 study tools, 30 staff requests, no seat cap');
+  $$ values (61000000::bigint, 5368709120::bigint, 40, 20, 60, null::int, true) $$,
+  'under 50 accounts counts as 50: $30 + $31 of AI, 5 GB, 40 doubts and 20 study tools, 60 staff requests, no seat cap');
 select tests.logout();
 insert into public.memberships (institute_id, user_id, role)
 select tests.inst('alpha'), tests.create_user('bulk' || g || '@alpha.test'), 'student' from generate_series(1, 300) g;

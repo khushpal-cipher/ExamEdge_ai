@@ -370,3 +370,6 @@ Founder said "fix 1 to 10" on 2026-10-25, then "work for the next session": noth
 - Worst-case profit per coaching (AI pool fully used), before the platform's fixed costs of about ₹4,700 a month
   (Vercel Pro, Supabase Pro, Render, domain): 50 accounts yearly ≈ ₹2,600, 100 yearly ≈ ₹8,900, 300 yearly ≈ ₹34,200 [E].
   One small coaching cannot cover the fixed costs; break-even is about 60 accounts monthly or 70 yearly [E].
+- Minimum **50 accounts** (₹10,000 a month) and daily AI caps **40 doubts / 20 study tools** per student, **60 requests** per staff
+  member (migration 56). The monthly AI pool (accounts × $0.60 + $31, never below 50 accounts) is unchanged, so the
+  worst-case AI cost is unchanged. Pilots get the same caps; a pilot still has its own $5 pool.

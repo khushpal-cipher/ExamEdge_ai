@@ -9,6 +9,7 @@ create temp table d on commit drop as select (now() at time zone 'Asia/Kolkata')
 grant select on d to authenticated;
 create temp table ids (k text primary key, v uuid);
 grant select, insert on ids to authenticated;
+update public.price_lists set min_accounts = 30, yearly_min_accounts = 1; -- written for a minimum of 30 and a free yearly floor
 
 -- ---------------------------------------------------------------- M1, M6: extras month by month, rest of the year
 -- A yearly plan for 6 accounts that started 200 days ago; 40 accounts in its 3rd month only.
