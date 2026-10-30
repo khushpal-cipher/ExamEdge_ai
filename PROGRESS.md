@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-29 (session 60, Opus: Batch D money review + founder rules M4-M7 merged as PR #51 `9a18a97`, migrations 52-53; session 59: PRs #48, #49 merged; session 54: PR #43 merged `57a7010`; founder change list A+B+C+D built on `r19-founder-list`, PR open; billing Q3 = no grace, access only after Approve)
+Last updated: 2026-10-30 (session 61, deploy part 1: Supabase cloud + Vercel + domain live, see Completed; session 60, Opus: Batch D money review + founder rules M4-M7 merged as PR #51 `9a18a97`, migrations 52-53; session 59: PRs #48, #49 merged; session 54: PR #43 merged `57a7010`; founder change list A+B+C+D built on `r19-founder-list`, PR open; billing Q3 = no grace, access only after Approve)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -46,6 +46,7 @@ GitHub remote: `origin` = https://github.com/khushpal-cipher/ExamEdge_ai (**PUBL
 ## Completed (with evidence)
 | Date | Item | Evidence |
 |---|---|---|
+| 2026-10-30 | Session 61: deploy part 1 (LAUNCH_PLAN step 16), founder clicked every account step, `main` = `9219f62`, no code change | **Supabase cloud:** org "ExamEdge ai" (Free plan, upgrade to Pro before the first real pilot), project `examedge-prod`, ref `hugmseujwsuvsymcobwo`, region **Southeast Asia (Singapore)** (Mumbai was not offered), GitHub integration left unused. `supabase login` + `supabase link` + `supabase db push` by the founder: migrations 1-53 applied (repo has no number 44); `seed.sql` NOT run. Worker DB role: first set to the placeholder text by mistake, then changed to a random 32-character password by the founder (value only in their password manager). **Vercel:** team `khushpal-cipher's projects`, 14-day Pro trial (no card yet; decide before it ends), project `exam-edge-ai`, root `apps/web`, env vars set in Production + Preview (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `ROOT_HOST=examedgeai.in`, `AI_PROVIDER=anthropic`, `EMBEDDINGS_PROVIDER=fake`, `RESEND_API_KEY`, `EMAIL_FROM`, `PAYMENTS_ALERT_EMAIL`, `ANTHROPIC_API_KEY`); `DEMO_LOGIN_ENABLED` unset. First build failed (`@types/node` missing: Vercel installed only the web workspace) → Install Command override `cd ../.. && npm ci`, second build Ready (54 s). **Domain:** `examedgeai.in` + `*.examedgeai.in` added to the project, nameservers moved GoDaddy → `ns1/ns2.vercel-dns.com`, both "Valid Configuration"; the Zoho mail and Resend records were re-created in Vercel DNS and checked with `dig` against the old GoDaddy values (MX 10/20/50, SPF, Zoho verification, both DKIM keys exact match, `send` CNAME `send.forge.rmta.net`, `_dmarc` imported). `https://examedgeai.in` shows the public home page (founder). **Anthropic:** Console org funded with $5.00, key created (name/expiry chosen by the founder, expiry value not recorded) and pasted into Vercel only. |
 | 2026-10-29 | Session 60 (Opus): founder's billing rules M4–M7 (ADR-061), same branch `r28-money-review` | Founder: M4 renewal only in the last 7 days or after the period ended; M5 my default (read-only 7 days after an unpaid extras month); M6 changed to monthly checks, full price (no discount) × months left in the year; M7 24-hour unpaid amount. Migration `20261130000053_billing_rules.sql` (applied locally with `psql -1 -f` + history row): `account_peaks.last` + `private.peak_between` (count carried in from before a month), internal `private.extras_due`, `read_only` + extras lock, `bill_quote` (M4 window, monthly extras), `start_payment` / `submit_utr` (24 h, `payment_expired`), `public.institute_read_only` for the portal banner. pgTAP `320_money_review` rewritten (21 tests), `290_billing` expectations moved to the new rules (renewal window, monthly extras amount ₹17,999), allowlist +2. Web: Bill page text + 24 h draft, banner shows the extras lock, `payment_expired` message, read-only texts. Evidence (2026-10-29): `npx supabase test db` Files=32 Tests=1698 PASS; `npm test` 207/207; `npm run test:int` 28/28; typecheck, lint + forbidden, prettier PASS; `npm run build` + check-bundle ok. **Unverified:** Bill page and banner in the browser (owner sign-in is the founder's Google) → E2E in CI. |
 | 2026-10-29 | Session 60 (Opus): Batch D part (a), review of all money code (LAUNCH_PLAN "Money review"), branch `r28-money-review` | 7 findings, each reproduced first in a rolled-back transaction on the local DB (probe script, nothing kept). Fixed M1–M3 in migration `20261129000052_money_review_fixes.sql` (`bill_quote`: extras = first finished quarter with growth, no top-up while read-only; `approve_payment`: `period_start` = start of the newly paid period). New pgTAP `320_money_review.sql` (7 tests) failed 5/7 before the migration, passes after. Migration applied locally with `psql -1 -f` + history row (no reset). `290_billing` test 51 now counts only its own payment's audit row (it counted all rows, so the founder's 2 local approvals failed it; stricter, not weaker). Duplicate ADR-050 (Render) renumbered ADR-060. Evidence (2026-10-29): `npx supabase test db` Files=32 Tests=1684 PASS; `npm test` 207/207; typecheck, lint + forbidden, prettier PASS. **Open:** M4–M7 need the founder's rule (defaults in LAUNCH_PLAN). |
 | 2026-10-29 | Free pilot cut to 5 students and $5 AI (founder: "I do not have that much money"), branch `r21-small-pilot` | Migration `20261120000042_pilot_smaller.sql` (`create or replace private.create_institute`; applied locally with psql + history row, no reset); platform create form + home page text; pgTAP `270_pilot` and E2E `portals.spec.ts` expectations (5, $5.00). Existing institutes keep their caps. Local: format, lint + forbidden, typecheck PASS; `npm test` 203/203; `npx supabase test db` Files=28 Tests=1526 PASS. **Unverified:** E2E (port 3000 held by the founder's dev server) → CI; create form in the browser. |
@@ -153,7 +154,36 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 61)
+## Next exact action (session 62)
+**State (2026-10-30, end of session 61, Opus):** deploy part 1 is done, see Completed (Supabase cloud with migrations 1-53,
+Vercel web live on `https://examedgeai.in`, wildcard + mail DNS on Vercel, Anthropic key in Vercel). Nothing in the repo
+changed except this handoff (branch `r29-deploy-handoff`).
+**Unverified (do first, cheap):** (a) `select count(*) from private.service_accounts;` in the cloud SQL Editor must be 1,
+after creating the Auth user `worker@examedgeai.in` (the founder was given the steps but never confirmed either);
+(b) a test mail sent to `support@examedgeai.in` arrives in Zoho; (c) in Supabase "Automatically expose new tables" was
+recommended off: check `\dp`/grants only if a page returns a permission error; (d) Resend still verifies after the DNS move
+(Resend dashboard → Domains); (e) `https://admin.examedgeai.in` and `https://newtown.examedgeai.in` answer (404 until an institute exists is correct).
+**Next exact actions, in order (founder logged in, Opus / High):**
+1. Supabase Auth → URL Configuration: Site URL `https://examedgeai.in`, redirect URLs `https://*.examedgeai.in/**` and
+   `https://examedgeai.in/**` (check how `apps/web/app/auth/callback` builds its redirect first).
+2. Google OAuth production: Google Cloud (account `examedgeai1@gmail.com`), web client with redirect
+   `https://hugmseujwsuvsymcobwo.supabase.co/auth/v1/callback`, publish the consent screen, paste id + secret into Supabase
+   → Authentication → Providers → Google (never into chat or git).
+3. Render Background Worker (confirm the price and card with the founder first, ADR-060): start command
+   `npm run start -w @examedge/worker`, env: `WORKER_DATABASE_URL` (Supabase **session pooler**, user
+   `worker.hugmseujwsuvsymcobwo`, the worker password), `WORKER_STORAGE_EMAIL`/`WORKER_STORAGE_PASSWORD`, the two
+   `NEXT_PUBLIC_SUPABASE_*`, `AI_PROVIDER=anthropic`, `EMBEDDINGS_PROVIDER=fake`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `EMAIL_FROM`.
+   Check the heartbeat/job log; upload a test PDF to see it reach Ready.
+4. First platform admin (sign in at `admin.examedgeai.in`, add the user to `private.platform_admins` by SQL, set up MFA, save the
+   backup codes; plan-review fix 9: a second admin). Create the first test institute on the platform page.
+5. Small PR: Privacy Policy text still says Railway, change to Render (`apps/web/app/legal/docs.ts`); docs from `examedge.in` to `examedgeai.in`.
+6. Backups: extend `scripts/backup.ts` for the live DB + independent storage, one timed restore drill (RUNBOOKS §3).
+7. Then LAUNCH_PLAN steps 17-19 (real Claude test with the $5 credit, first coaching, load test); founder adds Anthropic credit,
+   spend limit on, auto-reload off. Decide on a Vercel card before the 14-day trial ends (about 2026-11-12) and on Supabase Pro before the first real pilot.
+**Rules learned:** the Supabase CLI `link` does not ask for the DB password (uses the login), `db push` uses a login role;
+Vercel needs `cd ../.. && npm ci` as Install Command for this monorepo; never move nameservers before the mail records are ready.
+
+## Next exact action (session 61, superseded)
 **State (2026-10-29, session 60, Opus):** PR #50 was already merged (`9a50f5f`) before this session. Batch D (a) money
 review done: M1–M3 fixed on `r28-money-review` (migration 52, see Completed); M4–M7 wait for the founder's rule
 (LAUNCH_PLAN "Money review"). Then the founder's rules M4–M7 were built on the same branch (migration 53, ADR-061).

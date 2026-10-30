@@ -10,12 +10,14 @@ Continue building ExamEdge AI Release 1 in ~/Documents/startup/examedge_ai.
    in that file — follow them exactly), docs/PROJECT_MASTER_PLAN.md, docs/IMPLEMENTATION_ROADMAP.md,
    docs/DATABASE_DESIGN.md, docs/SECURITY_THREAT_MODEL.md, docs/AI_PIPELINE_DESIGN.md, docs/TEST_STRATEGY.md,
    docs/DECISIONS.md, docs/HOW_IT_WORKS.md, docs/ARCHITECTURE.md, docs/LAUNCH_PLAN.md. Then run `git log --oneline -15` and `git status`.
-2. Continue from PROGRESS.md "Next exact action (session 61)": Batch D money review and the billing rules M4-M7 are
-   MERGED (PR #51). Now Batch D (b), the deploy (LAUNCH_PLAN step 16): Supabase cloud (Mumbai), Vercel, Render worker,
-   examedgeai.in wildcard (keep the Zoho mail records), Google OAuth production, Anthropic key, backups, demo login off,
-   AI_PROVIDER=anthropic. I log in to each account and click anything that costs money or creates an account; secret
-   keys go straight into the hosting dashboards, never into chat or git. Then steps 17-19 (real Claude test, first
-   coaching, load test). Legal opinion (Q-01) is done AFTER launch (my decision). Read docs/LAUNCH_PLAN.md too.
+2. Continue from PROGRESS.md "Next exact action (session 62)": deploy part 1 is DONE (Supabase cloud project with
+   migrations 1-53, Vercel web live on https://examedgeai.in, wildcard + Zoho/Resend mail DNS on Vercel, Anthropic key in
+   Vercel). Now the rest of Batch D (b), LAUNCH_PLAN step 16: first re-check the unverified items listed there (worker
+   auth user + `private.service_accounts` row, test mail, Resend), then Supabase Auth URLs, Google OAuth production,
+   Render worker, first platform admin + MFA, Privacy text Railway to Render, backups + restore drill. Then steps 17-19
+   (real Claude test, first coaching, load test). I log in to each account and click anything that costs money or
+   creates an account; secret keys go straight into the hosting dashboards, never into chat or git. Legal opinion
+   (Q-01) is done AFTER launch (my decision). Read docs/LAUNCH_PLAN.md too.
    Before building, answer my questions first if I ask any ("do not build or fix yet"). Do not restart or redo finished
    work; re-verify only what PROGRESS.md marks as unverified.
 3. First check `docker info` (run `open -a Docker` and wait if it fails) and `supabase status`
@@ -147,6 +149,7 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
 - Session 58 (2026-10-29, Sonnet): Batch C2 started on `r25-c2c`: batch_performance function, student Home scrolling rank list with names; PR #47 merged (`f68b9c0`). Left: tabs + CSS clean-up. Next: PROGRESS.md "Next exact action (session 59)".
 - Session 59 (2026-10-29, Sonnet): PRs #48 (batch Manage | Performance tabs) and #49 (renewal reminder email) merged; PR #50 (no grace period) open, CI green. Resend verified for examedgeai.in. Worker hosting is Render (ADR-060). Next: PROGRESS.md "Next exact action (session 60)" = Batch D (Opus, High).
 - Session 60 (2026-10-29, Opus): Batch D money review (M1-M3 fixed) and the founder's billing rules M4-M7 (ADR-061) merged as PR #51. Next: PROGRESS.md "Next exact action (session 61)" = deploy (Opus, High).
+- Session 61 (2026-10-30, Opus): deploy part 1 with the founder logged in: Supabase cloud (Singapore, migrations 1-53), Vercel web (Install Command `cd ../.. && npm ci`), `examedgeai.in` + wildcard on Vercel nameservers with the mail records copied, Anthropic key in Vercel. Next: PROGRESS.md "Next exact action (session 62)".
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full
