@@ -120,7 +120,7 @@ removed and suspended memberships are not counted. The app counts; it never trus
 
 **2. Price of a count** (one SQL function `private.price(accounts, price_list)`, the web only shows what it returns):
 `n = greatest(accounts, 30)`; first 300 × ₹200 + next 700 × ₹120 + the rest × ₹89 (slabs like income tax).
-Examples: 30 → ₹6,000 · 100 → ₹20,000 · 301 → ₹60,120 · 1,000 → ₹1,44,000. Yearly = 10 × the monthly price for 12 months.
+Examples: 30 → ₹6,000 · 100 → ₹20,000 · 301 → ₹60,120 · 1,000 → ₹1,44,000. Yearly = 11 × the monthly price for 12 months.
 
 **2a. Charm pricing (founder, 2026-10-29, migrations 47-48).** Every payable total ends in 99, at the nearest such figure: ₹6,000 → ₹5,999, ₹6,200 → ₹6,199, ₹89,445 → ₹89,399, ₹89,460 → ₹89,499, top-up ₹2,500 → ₹2,499 (`private.charm`; amounts below ₹100 unchanged; with GST the whole total, GST included, ends in 99). The UPI link and the bank check use this amount.
 
@@ -141,7 +141,7 @@ total on the payment row). Amounts already shown on a waiting payment do not cha
   current period (counted on every add/remove, so adding 200 at 10 am and removing them at 5 pm still counts).
 - **Monthly:** next bill = price(greatest(peak of the period now ending, count today)). Accounts added mid-month are paid
   for on the next bill, as the founder said; nothing is charged in arrears.
-- **Yearly:** pay 10 × price(count today); that count becomes the **covered count** for 12 months. Every 3 months the
+- **Yearly:** pay 11 × price(count today) (was 10 until 2026-10-30; yearly only from 50 accounts); that count becomes the **covered count** for 12 months. Every 3 months the
   Bill page shows an **extras** bill if the quarter's peak was above the covered count:
   3 × (price(peak) − price(covered)) × 10/12 (the yearly discount also applies to extras). The covered count then rises
   to that peak for the rest of the year.
@@ -364,3 +364,9 @@ Founder said "fix 1 to 10" on 2026-10-25, then "work for the next session": noth
 - **DNS:** the domain's address book (name → where it goes). Found in the registrar account: GoDaddy "My Products →
   Domain → DNS / Manage DNS", Namecheap "Domain List → Manage → Advanced DNS", Hostinger "Domains → DNS / Nameservers".
 
+
+## Founder money decisions, 2026-10-30 (go-live eve)
+- Yearly plan = **pay 11 months, get 12** (migration 55, was 10) and is offered **only from 50 accounts** (migration 54).
+- Worst-case profit per coaching (AI pool fully used), before the platform's fixed costs of about ₹4,700 a month
+  (Vercel Pro, Supabase Pro, Render, domain): 50 accounts yearly ≈ ₹2,600, 100 yearly ≈ ₹8,900, 300 yearly ≈ ₹34,200 [E].
+  One small coaching cannot cover the fixed costs; break-even is about 60 accounts monthly or 70 yearly [E].

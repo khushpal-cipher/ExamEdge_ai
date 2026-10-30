@@ -71,7 +71,7 @@ select tests.logout();
 update public.price_lists set yearly_min_accounts = 1; -- the yearly price rules below are not about the floor
 select tests.login('owner@alpha.test');
 select results_eq($$ select base_paise, gst_paise, total_paise from public.bill_quote(tests.inst('alpha'), 'yearly') $$,
-  $$ values (5999915::bigint, 1079985::bigint, 7079900::bigint) $$, 'a new yearly quote: 10 months + 18% GST, total ₹70,799');
+  $$ values (6601610::bigint, 1188290::bigint, 7789900::bigint) $$, 'a new yearly quote: 11 months + 18% GST, total ₹77,899');
 select tests.login('root@examedge.test', 'aal2');
 select lives_ok($$ select public.set_gst_number('') $$, 'and clears it again');
 select tests.login('owner@alpha.test');
@@ -201,7 +201,7 @@ update public.institutes set paid_until = (select today + 5 from d), period_star
 where slug = 'alpha';
 select tests.login('owner@alpha.test');
 select results_eq($$ select base_paise from public.bill_quote(tests.inst('alpha'), 'yearly') $$,
-  $$ values (private.price(6, private.newest_price_list()) * 10 - 100) $$, 'yearly = 10 months at the count today');
+  $$ values (private.price(6, private.newest_price_list()) * 11 - 100) $$, 'yearly = 11 months at the count today');
 insert into ids select 'y1', public.start_payment(tests.inst('alpha'), 'yearly');
 select lives_ok($$ select public.submit_utr((select v from ids where k = 'y1'), '999999999992') $$, 'owner pays yearly');
 select tests.login('root@examedge.test', 'aal2');
