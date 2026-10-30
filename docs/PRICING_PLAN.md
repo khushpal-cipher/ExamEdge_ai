@@ -178,7 +178,7 @@ The AI stops for that coaching until the 1st. To avoid angry students:
 
 | Item | Cost |
 |---|---|
-| Domain `examedge.in` (yearly) | ≈ ₹800–1,200 |
+| Domain `examedgeai.in` (yearly) | ≈ ₹800–1,200 |
 | Claude API credits to start (covers ~5 pilots + buffer) | $50–100 ≈ ₹4,500–9,000 |
 | Lawyer's opinion on minors' data (Q-01) | ≈ ₹10,000–30,000 [U] |
 | Business registration + GST via a CA (needed for Razorpay KYC and invoices) | ≈ ₹3,000–15,000 [U] (proprietorship cheaper, Pvt Ltd more) |

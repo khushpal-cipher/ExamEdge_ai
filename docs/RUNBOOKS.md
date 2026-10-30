@@ -3,7 +3,7 @@
 Last updated: 2026-10-16 · Tried on this Mac only, not on a live site yet.
 
 **How to read this:**
-- **BLOCKED** = needs the live-site accounts (Supabase cloud, Vercel, Railway, Resend, Sentry). They don't exist yet.
+- **BLOCKED** = needs the live-site accounts (Supabase cloud, Vercel, Render, Resend, Sentry). They don't exist yet.
 - **[U]** = not checked yet. Confirm it before relying on it.
 - Each time you really use a runbook, write a line in [PROGRESS.md](../PROGRESS.md): date, who, what happened.
 
@@ -21,7 +21,7 @@ your password manager.
 | A key or password leaked | See §2, "If a key leaked". |
 | Wrong answer key in a test | The teacher fixes the key, then clicks **Recalculate results** on the test. Marks and both ranks are worked out again. |
 | Wrong or harmful notes uploaded | The teacher or admin clicks **Withdraw**. Students lose access on their next click. Who uploaded it is in the audit record. |
-| Site is down | Check the status pages of Supabase, Vercel and Railway. Open `/api/health` for the website. Check the worker log for a `worker.heartbeat` line (one every minute). If the last release broke it, go back to the previous version (§6). |
+| Site is down | Check the status pages of Supabase, Vercel and Render. Open `/api/health` for the website. Check the worker log for a `worker.heartbeat` line (one every minute). If the last release broke it, go back to the previous version (§6). |
 
 **Finding out why:**
 - **Logs** hold only ids, never names, emails or chat text.
@@ -44,11 +44,11 @@ check the provider's usage page for strange use while the key was out. More deta
 
 | Key / password | Used by | How to change it | How often |
 |---|---|---|---|
-| Anthropic key (`ANTHROPIC_API_KEY`) | Website (Vercel) and worker (Railway) | Anthropic console → new key → put it in both → redeploy both → delete old key | Every 90 days |
+| Anthropic key (`ANTHROPIC_API_KEY`) | Website (Vercel) and worker (Render) | Anthropic console → new key → put it in both → redeploy both → delete old key | Every 90 days |
 | Voyage key (`VOYAGE_API_KEY`) | Same | Same steps in the Voyage dashboard (not used yet) | Every 90 days |
 | Supabase secret key | Admin scripts on your own computer only — never the website or worker | Supabase dashboard → API keys → new secret key → save in password manager → delete old key | When needed |
-| Worker database password (`WORKER_DATABASE_URL`) | Worker (Railway) | In the Supabase SQL editor run `alter role worker password '<new>'` → update Railway → redeploy → heartbeat appears within 1 minute | Every 3 months |
-| Worker file-download password (`WORKER_STORAGE_PASSWORD`) | Worker (Railway) | Supabase → Auth → users → worker account → new password → update Railway → redeploy → upload a test PDF and check it reaches **Ready** | When needed |
+| Worker database password (`WORKER_DATABASE_URL`) | Worker (Render) | In the Supabase SQL editor run `alter role worker password '<new>'` → update Render → redeploy → heartbeat appears within 1 minute | Every 3 months |
+| Worker file-download password (`WORKER_STORAGE_PASSWORD`) | Worker (Render) | Supabase → Auth → users → worker account → new password → update Render → redeploy → upload a test PDF and check it reaches **Ready** | When needed |
 | Google sign-in secret | Supabase sign-in settings | Google Cloud console → add new secret → paste it in Supabase → test signing in → delete old secret | Once a year |
 | Platform admin login code (authenticator app) | Your phone | Lost phone: use the recovery method set up in advance **[U: check how Supabase does this]**, then remove the old phone | — |
 
@@ -128,7 +128,7 @@ the limits. The settings are `AI_PROVIDER=fake` and `EMBEDDINGS_PROVIDER=fake`.
 1. Create an Anthropic key and set a spending limit in the Anthropic console.
 2. On the website (Vercel), set `AI_PROVIDER=anthropic` and `ANTHROPIC_API_KEY=<key>`.
    - Keep `EMBEDDINGS_PROVIDER=fake` until the Voyage part is written.
-   - On the worker (Railway), set the same `AI_PROVIDER=anthropic` and `ANTHROPIC_API_KEY=<key>` so scanned pages
+   - On the worker (Render), set the same `AI_PROVIDER=anthropic` and `ANTHROPIC_API_KEY=<key>` so scanned pages
      and photos are read by Claude.
 3. Redeploy. On a test institute, ask the tutor one question, make one summary, make 5 AI questions on the question bank and upload one scanned page (a phone
    photo of handwritten notes). The `/usage` page should show `anthropic` with a real cost, and the uploaded page's
@@ -142,10 +142,10 @@ the limits. The settings are `AI_PROVIDER=fake` and `EMBEDDINGS_PROVIDER=fake`.
 
 **To undo:** set `AI_PROVIDER=fake` and redeploy, or use **Turn AI off for everyone** (§1) to stop all AI at once.
 
-## 6. Undoing a bad release — BLOCKED (no Vercel or Railway account yet)
+## 6. Undoing a bad release — BLOCKED (the live site now exists)
 
 - **Website:** Vercel → Deployments → pick the previous working version → **Promote** **[U]**.
-- **Worker:** Railway → service → previous version → **Redeploy** **[U]**.
+- **Worker:** Render → service → previous version → **Redeploy** **[U]**.
 - **Database changes are never undone by editing an old one.** Fix a bad change with a new database change.
 
 Practise this once before the pilot.
