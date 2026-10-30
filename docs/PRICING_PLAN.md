@@ -25,7 +25,7 @@ Charge **per student**, give each coaching an **AI budget that grows with its st
 - **Slabs work like income tax:** each rate applies only to the accounts inside that slab, so adding an account
   always costs more, never less. 301 accounts = 300 × ₹200 + 1 × ₹120 = ₹60,120.
 - **Minimum charge: 30 accounts (₹6,000 a month)**, even if they have fewer (below about 26 we lose money).
-- **Yearly:** pay 10 months, get 12, for the account count on the day they pay. Extra accounts are billed every 3 months.
+- **Yearly (from 50 accounts only, founder 2026-10-30, migration 54):** pay 10 months, get 12, for the account count on the day they pay. Extra accounts are billed every 3 months.
 - **GST 18% on top** of every price.
 - **Pay at the start of the month** for the current count; accounts added during the month go on the next bill
   (charged on the **highest** count of the month). Unpaid after a few days' grace → app read-only.

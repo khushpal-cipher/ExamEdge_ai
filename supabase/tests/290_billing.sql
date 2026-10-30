@@ -65,6 +65,11 @@ select tests.login('owner@alpha.test');
 select is(public.start_payment(tests.inst('alpha'), 'monthly'), (select v from ids where k = 'p1'), 'same waiting row');
 select is((select total_paise from public.payments where id = (select v from ids where k = 'p1')), 599900::bigint,
   'the waiting amount did not change');
+select is((select count(*) from public.bill_quote(tests.inst('alpha'), 'yearly')), 0::bigint,
+  'yearly is offered only from 50 accounts (alpha has 6)');
+select tests.logout();
+update public.price_lists set yearly_min_accounts = 1; -- the yearly price rules below are not about the floor
+select tests.login('owner@alpha.test');
 select results_eq($$ select base_paise, gst_paise, total_paise from public.bill_quote(tests.inst('alpha'), 'yearly') $$,
   $$ values (5999915::bigint, 1079985::bigint, 7079900::bigint) $$, 'a new yearly quote: 10 months + 18% GST, total ₹70,799');
 select tests.login('root@examedge.test', 'aal2');

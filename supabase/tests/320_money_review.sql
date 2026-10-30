@@ -66,7 +66,7 @@ select is((select count(*) from public.bill_quote(tests.inst('alpha'), 'monthly'
 select tests.logout();
 update public.institutes set paid_until = (select today + 6 from d) where slug = 'alpha';
 select tests.login('owner@alpha.test');
-select is((select count(*) from public.bill_quote(tests.inst('alpha'), 'yearly')), 1::bigint,
+select is((select count(*) from public.bill_quote(tests.inst('alpha'), 'monthly')), 1::bigint,
   '7 paid days left: renewal opens');
 
 -- ---------------------------------------------------------------- M2: period_start moves on an early renewal
