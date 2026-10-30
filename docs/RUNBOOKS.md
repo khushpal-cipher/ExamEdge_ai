@@ -72,16 +72,21 @@ database and the files.
   - stops with an error if anything is different
 - **Needs:** the PostgreSQL 17 tools (`brew install postgresql@17`). They must be the same version as the database.
 
-**For the live site (BLOCKED until it exists):**
-1. **Every night:** run the same backup against the live database, and store it somewhere separate from Supabase
-   (storage provider not chosen yet). Today the script refuses anything except this Mac; it needs the live settings
-   added when the live site exists.
-2. **Practice a restore (before the pilot, then every 90 days):**
-   - create a spare Supabase project and restore the backup into it, following Supabase's steps **[U: check the current commands]**
-   - upload the files from the backup
-   - run the same row and fingerprint checks
-   - time it (must be under 8 hours) and write the result in PROGRESS.md
-3. **After a real restore, before reopening:**
+**For the live site (works, drilled 2026-10-30):**
+- **Make a backup:** `scripts/backup-prod.sh backup` (needs Docker running and `supabase login` + `supabase link`; no secret key).
+  Creates `backups/prod-<time>/` (never in git) with `data.sql` (every row of public, private, auth, storage), `storage/`
+  (every uploaded file) and `manifest.txt` (checksums). The schema is not in it: it comes from `supabase/migrations`.
+- **Test it:** `scripts/backup-prod.sh drill backups/prod-<time>`. Starts a scratch Postgres in Docker, applies the migrations,
+  loads `data.sql`, compares row counts with the live database, prints the time, deletes the scratch container.
+  Needs the local Supabase stack running (its auth/storage definitions are reused).
+- **A real restore:** new Supabase project, `supabase db push`, empty the seeded tables (the drill shows how), load `data.sql`,
+  create the `worker` login role first, upload `storage/` again, set the worker password again.
+- **Result 2026-10-30:** 17 MB database + 0.7 MB files gave a 972 KB backup; the drill restored in 3 s with every count equal
+  (6 users, 1 institute, 3 memberships, 2 platform admins, 2 files, 44 tables). File checksums are listed in the manifest but
+  not yet compared automatically. Keep the folder somewhere other than Supabase (an encrypted copy on Google Drive is fine);
+  nothing runs it nightly yet, so run it by hand weekly during the pilot.
+- **Still to do:** nightly automatic run and off-site storage (decide with the founder), repeat the drill every 90 days.
+- **After a real restore, before reopening:**
    - delete again anyone who asked to be deleted after the backup was made
    - check that `/api/health` works, signing in works, the tutor answers, and a PDF opens
 
