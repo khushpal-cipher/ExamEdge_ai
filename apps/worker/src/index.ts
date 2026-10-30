@@ -4,6 +4,7 @@ import { log } from '@examedge/core/log';
 import { assertLiveAi } from '@examedge/core/demo';
 import { ingestVersion, pendingJobs, type Job } from './ingest';
 import { purge } from './purge';
+import { updateInrRate } from './rate';
 import { remindRenewals } from './renewal';
 import { workerDownloader, workerStorage } from './storage';
 
@@ -40,6 +41,10 @@ await boss.work('purge', async () => log.info('purge.done', await purge(pool, st
 await boss.createQueue('renewal');
 await boss.schedule('renewal', '0 9 * * *', null, { tz: 'Asia/Kolkata' });
 await boss.work('renewal', async () => log.info('renewal.done', await remindRenewals(pool)));
+await boss.createQueue('rate');
+await boss.schedule('rate', '0 8 * * *', null, { tz: 'Asia/Kolkata' });
+await boss.work('rate', async () => log.info('rate.done', await updateInrRate(pool)));
+await boss.send('rate', null, { singletonKey: 'rate-start' }); // set on the first start, not a day later
 await boss.createQueue('ingest', { policy: 'stately' });
 await boss.work<Job>('ingest', async ([job]) => {
   if (job) await ingestVersion({ pool, download }, job.data);

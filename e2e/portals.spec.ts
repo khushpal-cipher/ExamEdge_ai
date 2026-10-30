@@ -200,12 +200,9 @@ test('platform admin needs MFA, then manages institutes (AC2.7, Phase 3 platform
   await expect(page.getByRole('button', { name: 'Turn AI off for everyone' })).toBeVisible();
   await noSeriousA11yIssues(page);
 
-  // ₹ per US$ for the institutes' bills (ADR-041 part 2)
-  await page.getByLabel('₹ per US$').fill('88.5');
-  await page.getByRole('button', { name: 'Save rate' }).click();
-  await expect(page.getByText('Could not save the rate')).toHaveCount(0);
-  await page.reload();
-  await expect(page.getByLabel('₹ per US$')).toHaveValue('88.5');
+  // the ₹ per US$ rate is shown, and set daily by the worker (ADR-041 part 2); there is no field for it
+  await expect(page.getByText('₹ per US$:')).toBeVisible();
+  await expect(page.getByLabel('₹ per US$')).toHaveCount(0);
 
   await page.getByLabel('Institute name').fill(`Gamma ${tag}`);
   await page.getByLabel('Web address (subdomain)').fill(`gamma-${tag}`);

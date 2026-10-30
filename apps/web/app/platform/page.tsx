@@ -4,7 +4,7 @@ import { rootHost } from '@/lib/tenant';
 import { usd } from '@/lib/usage';
 import { indiaDate } from '@/lib/pilot';
 import { signOut } from '../actions';
-import { approvePayment, rejectPayment, setGlobalAi, setGst, setInrRate } from './actions';
+import { approvePayment, rejectPayment, setGlobalAi, setGst } from './actions';
 import { rupees, KIND_LABEL } from '@/lib/billing';
 import { SignIn } from '../sign-in';
 import { CreateInstitute } from './create-form';
@@ -177,20 +177,12 @@ export default async function Platform({ searchParams }: { searchParams: Promise
       </section>
       <section className="card stack" aria-labelledby="bill">
         <h2 id="bill">Institute bills</h2>
-        {error === 'rate' && (
-          <p role="alert" className="alert">
-            Could not save the rate. Enter a number above 0, sign in again and retry.
-          </p>
-        )}
-        <form action={setInrRate} className="inline">
-          <label>
-            ₹ per US$
-            <input name="rate" type="number" min={0.01} step={0.01} required defaultValue={rate ?? ''} />
-          </label>
-          <button type="submit">Save rate</button>
-        </form>
+        <p>
+          ₹ per US$: <b>{rate ?? 'not set yet'}</b>
+        </p>
         <p className="small muted">
-          Each institute&apos;s Bill page shows this month&apos;s AI cost × this rate, in ₹.
+          Each institute&apos;s Bill page shows this month&apos;s AI cost × this rate, in ₹. The rate updates itself
+          every day.
           {rate == null && ' Not set yet: institutes see "Not available yet".'}
         </p>
       </section>

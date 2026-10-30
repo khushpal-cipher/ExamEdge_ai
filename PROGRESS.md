@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-30 (session 61, deploy part 1: Supabase cloud + Vercel + domain live, see Completed; session 60, Opus: Batch D money review + founder rules M4-M7 merged as PR #51 `9a18a97`, migrations 52-53; session 59: PRs #48, #49 merged; session 54: PR #43 merged `57a7010`; founder change list A+B+C+D built on `r19-founder-list`, PR open; billing Q3 = no grace, access only after Approve)
+Last updated: 2026-10-30 (session 62: deploy part 2 done and merged as PR #53 `d259b40`, live DB has migrations 1-56; session 61, deploy part 1: Supabase cloud + Vercel + domain live, see Completed; session 60, Opus: Batch D money review + founder rules M4-M7 merged as PR #51 `9a18a97`, migrations 52-53; session 59: PRs #48, #49 merged; session 54: PR #43 merged `57a7010`; founder change list A+B+C+D built on `r19-founder-list`, PR open; billing Q3 = no grace, access only after Approve)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -160,7 +160,44 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 62)
+## Next exact action (session 63)
+**State (2026-10-30 evening, end of session 62, `main` = `d259b40`, live DB = migrations 1-56):** the site is deployed and
+launch is planned for 2026-10-31 with real users. Done and verified in session 62 (see Completed): Supabase Auth URLs,
+Google OAuth production (sign-in redirects to Google), Render worker (Starter, Singapore, heartbeat in the log), worker DB
+role password + `worker@examedgeai.in` password reset (both in the founder's Google Password Manager), Vercel region `sin1`,
+platform admins `khushalsinghchouhan4@gmail.com` + `aaradhychinche@gmail.com` (MFA), Test Coaching, a 21-page PDF read by the
+worker (27 chunks) and real Claude calls (about $0.21), `scripts/backup-prod.sh` (backup + restore drill, 972 KB, 3 s, counts
+equal), public-page load test (100 users, p95 1.31 s), step 18 dry run (founder says done). Money decisions built and applied
+live: yearly = pay 11 months, get 12 and only from 50 accounts (migrations 54-55); minimum 50 accounts; daily AI caps 40
+doubts / 20 study tools per student, 60 requests per staff, pool unchanged at accounts x $0.60 + $31 (migration 56). The founder
+chose to stay on Supabase **Free** until the first payment is approved (then Pro) and Vercel Pro trial ends about 2026-11-12.
+**Load test result (Free compute):** 50 students starting a test at once already gave 8% errors and p95 above 5 s, so AC7.4
+(500 concurrent starts, p95 under 2 s) is NOT met on Free; the 1,000-student run was not done. Throwaway project
+`examedge-loadtest` (ref `skqkzttjakmxbtmoskwn`) should be deleted by the founder in Supabase; `supabase/.temp` is linked back to
+`examedge-prod`. Local Docker Desktop was repeatedly "manually paused" (founder resumes it from the whale menu).
+**Unverified:** rollback rehearsal in Vercel (Instant Rollback, founder); test mail to `support@examedgeai.in`; Resend still
+verified after the DNS move; OCR of a scanned page through the worker; delivered invitation email on the live site; tutor and
+notes answer quality in the browser (founder says tested); automatic file-checksum check in the restore drill; nightly backup
+schedule and an off-Mac copy; Anthropic per-minute limits are 500K input / 80K output tokens / 1,000 requests per model on the
+Evaluation tier (founder screenshot; per-minute assumed) and the app retries 429 only once (`maxRetries: 1`).
+**Session 63 (2026-10-30, evening) verified with the founder:** Vercel rollback rehearsal done (live back on `d259b40`, health ok); test mail to `support@examedgeai.in` arrives in Zoho; invitation email arrives (Resend works); `examedge-loadtest` deleted; Anthropic credit topped up (spend limit on, auto-reload off); Google Authenticator backup to Google account on. Live site shows minimum 50 accounts and 11 months. Nothing blocks launch.
+**Next exact actions, in order:**
+1. Founder: do the Vercel rollback rehearsal, delete `examedge-loadtest`, add Anthropic credit (balance $4.80) with the spend limit
+   on and auto-reload off, save MFA backup codes. Claude: confirm the live site shows "minimum 50 accounts" and "11 months".
+2. First real coaching: watch the Render worker log, the Bill page (real AI cost per account), and `scripts/backup-prod.sh backup`
+   weekly. Upgrade Supabase to Pro when the first payment is approved.
+3. Before any coaching with more than about 20 students taking a test at the same moment: Supabase Pro + Small compute, rerun
+   `scripts/load/students.js` (seed with `scripts/load/seed-loadtest.sql` on a throwaway project), then Medium/Large for 1,000+.
+   Cheaper app-side ideas not built: batch answer saves, staggered test starts.
+4. Open risks to keep in mind (founder asked, 2026-10-30): GST registration makes displayed totals GST-inclusive (about 15% less
+   income), approve a UTR only when the bank shows the exact amount, free pilots cost up to $5 of AI each, rupee/dollar and
+   Anthropic price changes (the pool is capped), fixed costs about Rs 4,700 a month (Vercel Pro, Supabase Pro, Render, domain).
+5. Later: Razorpay, Voyage embeddings (Q-08, search is `fake` now), audio/video overviews, legal opinion Q-01 after launch.
+**Rules learned:** `supabase db query --linked` runs SQL on the linked project with the CLI login (no password); always check
+`cat supabase/.temp/project-ref` before `db push`; the auto-mode checker blocks production permission grants until the founder
+confirms in chat; macOS sed needs `-i ''`; zsh does not word-split a command stored in a variable (use a function).
+
+## Next exact action (session 62, superseded)
 **State (2026-10-30, end of session 61, Opus):** deploy part 1 is done, see Completed (Supabase cloud with migrations 1-53,
 Vercel web live on `https://examedgeai.in`, wildcard + mail DNS on Vercel, Anthropic key in Vercel). Nothing in the repo
 changed except this handoff (branch `r29-deploy-handoff`).

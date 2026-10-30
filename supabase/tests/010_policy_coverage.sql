@@ -53,7 +53,7 @@ select set_eq($$ select proname::text from pg_temp.our_functions
         'ai_settle_job', 'ai_globally_enabled', 'set_ai_enabled', 'report_answer', 'tutor_activity',
         'can_read_artifact',
         'submit_practice', 'practice_activity', 'guard_upload', 'job_slot_free', 'purge_expired', 'purgeable', 'is_service_account',
-        'purgeable_files', 'delete_institute', 'reinvite_owner', 'inr_per_usd', 'set_inr_per_usd',
+        'purgeable_files', 'delete_institute', 'reinvite_owner', 'inr_per_usd', 'set_inr_per_usd', 'auto_inr_per_usd',
         'record_review_author', 'my_reviews', 'cbt_warning', 'batch_standing_count', 'artifact_content',
         'read_only', 'guard_read_only', 'seats_full', 'guard_seats', 'set_member_name',
         'account_count', 'apply_limits', 'on_accounts_change', 'topup_micro', 'bill_quote', 'start_payment', 'submit_utr',
