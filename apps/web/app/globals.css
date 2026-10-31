@@ -2046,13 +2046,20 @@ td .badge::before {
 .site-foot nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.5rem 1.5rem;
+  font-size: 0.875rem;
+}
+.site-foot {
+  border-top: 1px solid var(--border, rgba(128, 128, 128, 0.25));
+  padding-block: 1.5rem;
 }
 .site-brand {
   font-weight: 700;
 }
 .site-main {
+  min-height: calc(100vh - 10rem);
   display: grid;
+  align-content: start;
   gap: 2.5rem;
   max-width: 44rem;
   margin: 0 auto;
