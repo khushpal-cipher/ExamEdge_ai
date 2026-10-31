@@ -26,7 +26,7 @@ export const LEGAL_DOCS: Record<string, Doc> = {
       [
         'Who processes it',
         [
-          'Supabase (database and files), Vercel (website), Render (background jobs), Anthropic (AI answers), Resend (emails) and Google (sign-in). Some of these store data outside India.',
+          'Supabase (database and files), Vercel (website), Render (background jobs), Anthropic (AI answers), Resend (emails), Google (sign-in) and Razorpay (online payments; card and bank details go to Razorpay, never to us). Some of these store data outside India.',
           'Your institute’s staff see your marks and progress. Staff never see the text of a student’s AI chats, only counts and topics, except an answer a student chooses to report.',
         ],
       ],

@@ -204,7 +204,7 @@ Ranking rules (ADR-012, ADR-016) — **two ranks, both from institute-conducted 
 
 | Table | Release | Note |
 |---|---|---|
-| `subscriptions`, `invoices`, `payment_events (provider, event_id unique)` | R2 | Razorpay; `event_id` unique = idempotent webhooks |
+| `private.payment_events (provider, event_id)` primary key, `payments.razorpay_payment_id` unique | R1 (migration 58, ADR-062) | Razorpay; one row per webhook event = idempotent; `subscriptions`/`invoices` not built (one-time orders) |
 | `ai_grading_suggestions` | R2 | Optional AI-suggested marks for written answers shown to the teacher; teacher marks stay final |
 | `topic_mastery (institute_id, user_id, chapter_id, accuracy, attempts, updated_at)` | R2 | Feeds recommendations; derived, rebuildable |
 | `notifications` | R2 | In-app + email |

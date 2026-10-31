@@ -771,3 +771,33 @@ sitemap or robots.txt).
 - **Why:** each closed a way to use more accounts than were paid for (LAUNCH_PLAN "Money review").
 - **How:** migrations 52-53; `private.extras_due` (internal) is the one rule used by the Bill quote and `read_only`;
   `public.institute_read_only` lets the portal banner show the lock to every member. pgTAP `320_money_review`.
+
+### ADR-062 Razorpay online payment next to manual UPI (founder said "build", session 64-65, 2026-10-31)
+- **Decision:** the owner can pay a Bill-page amount online with Razorpay Standard Checkout (UPI, cards, netbanking);
+  the manual UPI + UTR path stays as the fallback. The same `payments` row is used, so a Razorpay payment unlocks the
+  same plan, `paid_until`, limits and receipt as a hand-approved UPI payment. This supersedes the "Subscriptions in R2"
+  part of ADR-013: one-time orders, no AutoPay.
+- **How (trust):** the web has no privileged database access by design (no Supabase secret key, CLAUDE.md), and the
+  webhook arrives with no signed-in user. So **the database itself checks the webhook signature**:
+  `public.razorpay_webhook(body, signature, event_id)` is callable by anyone, recomputes HMAC-SHA256(raw body, webhook
+  secret) with pgcrypto and refuses a mismatch, keeps every event id once in `private.payment_events` (a repeat does
+  nothing), and acts only on `order.paid`: the order's `receipt` is our payment id (set by our server when it creates
+  the order), `amount_paid` must equal the stored `total_paise` and the currency INR, the payment must still wait.
+  Then an internal approve (not callable by users) does exactly what the platform Approve does, audited as `system`.
+  The webhook secret is typed once by a platform admin (MFA) on the platform page and is never readable back.
+  Key ID + Key Secret live only in Vercel env (`RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`): the server creates the
+  order (amount from the stored payment, never from the browser) and checks the Checkout signature
+  HMAC-SHA256(order_id|payment_id, key secret). A good Checkout signature only records the Razorpay payment id on the
+  payment (like a UTR: "waiting to be checked", no second Pay); it never approves, because an owner could call that
+  function directly. If the webhook never arrives, the platform admin approves it by hand from "Payments to check"
+  after finding the payment id in the Razorpay dashboard.
+- **Why the webhook secret is in the database, not in Vercel:** a web-side check followed by an "approve" call would
+  need a database function that a signed-in user (or anyone) could also call with a forged result. The alternatives
+  were a new privileged Postgres role for the web (a database password in Vercel plus a `pg` pool in serverless) or
+  the worker re-checking each order with the Razorpay API (secrets on Render too, slower). The database check is the
+  smallest and keeps the rule "authorization lives in the database".
+- **Disadvantages:** the webhook secret sits in `private.settings` (anyone with database superuser access can read
+  it; same trust as the data it protects); we trust the signed payload instead of re-fetching the order from the
+  Razorpay API (SECURITY_THREAT_MODEL TH-13 suggested a re-fetch); a second order paid for the same payment (two
+  Checkout windows) is not approved twice but needs a refund by hand (alert email, audit `billing.razorpay_unmatched`);
+  Razorpay's fee (about 2% + GST `[U]`) comes out of our income.

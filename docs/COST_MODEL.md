@@ -26,7 +26,7 @@ Exchange rate assumption: **₹88 = $1** [A].
 | Railway | Hobby $5 (incl. $5 usage), Pro $20 (incl. $20); ~$20/vCPU-month, ~$10/GB-RAM-month, egress $0.05/GB | [V] railway.com/pricing |
 | Resend | Free 3,000/month, 100/day; Pro $20 for 50,000/month | [V] resend.com/pricing |
 | Sentry | Free developer tier assumed sufficient for pilot | [U] |
-| Razorpay transaction fees | not verified | [U] |
+| Razorpay transaction fees | about 2% per payment + 18% GST on the fee, taken from our income (ADR-062) | [U] verify on the Razorpay pricing page before relying on it |
 | Remotion company licence | required > 3 employees; price not verified | [V] requirement / [U] price |
 
 ## 2. Assumptions

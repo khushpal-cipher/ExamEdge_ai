@@ -31,6 +31,7 @@ const NAMED = [
   'payment_waiting',
   'not_available',
   'payment_expired',
+  'razorpay_invalid',
 ];
 
 export function done(path: string, error?: { code?: string; message?: string } | null, okCode = 'saved'): never {

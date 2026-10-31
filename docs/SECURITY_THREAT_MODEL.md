@@ -121,8 +121,8 @@ Each threat: **Scenario → Prevention → Verification test → Monitoring → 
 
 ### TH-13 Payment webhook forgery (R2)
 - **Scenario:** attacker posts fake "subscription.activated".
-- **Prevention:** verify `X-Razorpay-Signature` = HMAC-SHA256(raw body, webhook secret) [V]; reject on mismatch; idempotency via unique `x-razorpay-event-id` [V]; re-fetch subscription state from Razorpay API before granting access.
-- **Test:** T-SEC-13 (bad signature → 400, duplicate event → no double effect).
+- **Prevention:** verify `X-Razorpay-Signature` = HMAC-SHA256(raw body, webhook secret) [V]; reject on mismatch; idempotency via unique `x-razorpay-event-id` [V]. Built (ADR-062): the check runs inside the database (`private.razorpay_webhook`, pgcrypto HMAC) because the web has no privileged DB access; only `order.paid` with receipt = our payment id, amount = stored total and INR approves; no re-fetch from the Razorpay API (accepted). The Checkout success signature only records the payment id, never approves.
+- **Test:** T-SEC-13 (bad signature → 400, duplicate event → no double effect): pgTAP `340_razorpay`, Playwright `e2e/razorpay.spec.ts`.
 - **Monitoring:** alert on signature failures.
 - **Residual:** low.
 

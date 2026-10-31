@@ -4,7 +4,7 @@ import { rootHost } from '@/lib/tenant';
 import { usd } from '@/lib/usage';
 import { indiaDate } from '@/lib/pilot';
 import { signOut } from '../actions';
-import { approvePayment, rejectPayment, setGlobalAi, setGst } from './actions';
+import { approvePayment, rejectPayment, setGlobalAi, setGst, setRazorpaySecret } from './actions';
 import { rupees, KIND_LABEL } from '@/lib/billing';
 import { SignIn } from '../sign-in';
 import { CreateInstitute } from './create-form';
@@ -43,33 +43,42 @@ export default async function Platform({ searchParams }: { searchParams: Promise
   }
 
   // RLS: rows appear only for platform admins with an aal2 session.
-  const [{ data: institutes }, { data: aiOn }, { data: usage }, { data: rate }, { data: gst }, { data: waiting }] =
-    await Promise.all([
-      db
-        .from('institutes')
-        .select('id, slug, name, status, pilot_end, created_at')
-        .order('created_at', { ascending: false }),
-      db.rpc('ai_enabled'),
-      db.rpc('platform_usage'), // this India month, ADR-041
-      db.rpc('inr_per_usd'),
-      db.rpc('gst_number'),
-      db
-        .from('payments')
-        .select('id, kind, total_paise, utr, created_at, institutes(name)')
-        .eq('status', 'waiting')
-        .not('utr', 'is', null)
-        .order('created_at')
-        .returns<
-          {
-            id: string;
-            kind: string;
-            total_paise: number;
-            utr: string;
-            created_at: string;
-            institutes: { name: string } | null;
-          }[]
-        >(),
-    ]);
+  const [
+    { data: institutes },
+    { data: aiOn },
+    { data: usage },
+    { data: rate },
+    { data: gst },
+    { data: waiting },
+    { data: rzpReady },
+  ] = await Promise.all([
+    db
+      .from('institutes')
+      .select('id, slug, name, status, pilot_end, created_at')
+      .order('created_at', { ascending: false }),
+    db.rpc('ai_enabled'),
+    db.rpc('platform_usage'), // this India month, ADR-041
+    db.rpc('inr_per_usd'),
+    db.rpc('gst_number'),
+    db
+      .from('payments')
+      .select('id, kind, total_paise, utr, razorpay_payment_id, created_at, institutes(name)')
+      .eq('status', 'waiting')
+      .or('utr.not.is.null,razorpay_payment_id.not.is.null')
+      .order('created_at')
+      .returns<
+        {
+          id: string;
+          kind: string;
+          total_paise: number;
+          utr: string | null;
+          razorpay_payment_id: string | null;
+          created_at: string;
+          institutes: { name: string } | null;
+        }[]
+      >(),
+    db.rpc('razorpay_ready'),
+  ]);
   const used = new Map<string, string>(
     (usage ?? []).map(
       (u: { institute_id: string; input_tokens: number; output_tokens: number; cost_micro_usd: number }) => [
@@ -108,12 +117,14 @@ export default async function Platform({ searchParams }: { searchParams: Promise
         </form>
         <p className="small muted">Emergency switch: blocks every AI call of every institute from the next request.</p>
       </section>
-      {(error === 'payment' || error === 'gst') && (
+      {(error === 'payment' || error === 'gst' || error === 'razorpay') && (
         <p role="alert" className="alert">
           Could not{' '}
           {error === 'gst'
             ? 'save the GST number (15 letters and digits)'
-            : 'decide that payment (give a reason to reject)'}
+            : error === 'razorpay'
+              ? 'save the Razorpay webhook secret (at least 8 characters)'
+              : 'decide that payment (give a reason to reject)'}
           . Sign in again and retry.
         </p>
       )}
@@ -128,7 +139,7 @@ export default async function Platform({ searchParams }: { searchParams: Promise
                 <th scope="col">Institute</th>
                 <th scope="col">What</th>
                 <th scope="col">Amount</th>
-                <th scope="col">UTR</th>
+                <th scope="col">UTR / Razorpay</th>
                 <th scope="col">Decide</th>
               </tr>
             </thead>
@@ -138,7 +149,7 @@ export default async function Platform({ searchParams }: { searchParams: Promise
                   <td>{p.institutes?.name}</td>
                   <td>{KIND_LABEL[p.kind]}</td>
                   <td>{rupees(p.total_paise)}</td>
-                  <td>{p.utr}</td>
+                  <td>{p.utr ?? p.razorpay_payment_id}</td>
                   <td>
                     <div className="stack">
                       <form action={approvePayment}>
@@ -162,7 +173,8 @@ export default async function Platform({ searchParams }: { searchParams: Promise
           </table>
         )}
         <p className="small muted">
-          Open your bank app first: approve only if a credit with this UTR and exactly this amount is there.
+          Open your bank app first: approve only if a credit with this UTR and exactly this amount is there. A Razorpay
+          id here means its webhook did not arrive: find the payment in the Razorpay dashboard first.
         </p>
         <form action={setGst} className="inline">
           <label>
@@ -173,6 +185,20 @@ export default async function Platform({ searchParams }: { searchParams: Promise
         </form>
         <p className="small muted">
           {gst ? 'GST 18% is added to every new payment.' : 'Not set: no GST is added ("GST extra when applicable").'}
+        </p>
+        <form action={setRazorpaySecret} className="inline">
+          <label>
+            Razorpay webhook secret
+            <input name="secret" type="password" autoComplete="off" minLength={8} maxLength={200} required />
+          </label>
+          <button type="submit">Save secret</button>
+        </form>
+        <p className="small muted">
+          {rzpReady
+            ? 'Set: Razorpay payments are approved automatically. Saving again replaces it.'
+            : 'Not set: online payments wait here until you approve them.'}{' '}
+          Use the secret you typed for the webhook https://examedgeai.in/api/razorpay/webhook (event order.paid) in the
+          Razorpay dashboard. It cannot be read back.
         </p>
       </section>
       <section className="card stack" aria-labelledby="bill">
