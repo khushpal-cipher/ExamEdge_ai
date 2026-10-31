@@ -10,10 +10,14 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         <Link href="/" className="site-brand">
           ExamEdge AI
         </Link>
-        <a href="mailto:support@examedgeai.in?subject=Book%20a%20demo">Book a demo</a>
         <ThemeToggle />
       </header>
       <main className="site-main">{children}</main>
+      <p className="site-cta">
+        <a className="button primary" href="mailto:support@examedgeai.in?subject=Book%20a%20demo">
+          Book a demo
+        </a>
+      </p>
       <footer className="site-foot">
         <nav aria-label="Legal">
           {Object.entries(LEGAL_DOCS).map(([slug, d]) => (

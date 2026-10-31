@@ -2053,6 +2053,10 @@ td .badge::before {
   border-top: 1px solid var(--border, rgba(128, 128, 128, 0.25));
   padding-block: 1.5rem;
 }
+.site-cta {
+  text-align: center;
+  padding: 0 1.5rem 2rem;
+}
 .site-brand {
   font-weight: 700;
 }
