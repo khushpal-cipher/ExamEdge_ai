@@ -161,6 +161,12 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 65)
+**UPDATE (2026-10-31, session 66, later): LIVE RAZORPAY DONE (founder-reported, not independently verified by Claude).**
+Razorpay verified `https://examedgeai.in`; live keys in Vercel; live webhook + new secret on the platform page; founder tested a
+live payment (Payment Link) and reports everything tested. Bill page hides manual UPI/UTR when Razorpay is on (PR #58); footer and
+"Book a demo" bottom button (PRs #57, #59, #60). STILL OPEN: confirm the ₹ settlement reaches the founder's bank (about 2 working
+days, Settlements page); change the testcoaching test password given to Razorpay; launch-day watching (Render log, Bill page, weekly
+`scripts/backup-prod.sh backup`). Not built: rupee-fall protection, yearly = 10 months from 100 accounts.
 **State (2026-10-31, session 65, Opus): Razorpay BUILT on branch `r34-razorpay`, PR #56 open, NOT merged, migration 58 NOT pushed live.**
 Commits: `7514b8d` (ADR-062, migration `20261205000058_razorpay.sql`, pgTAP `340_razorpay`, policy allowlist) and `db3a2e6`
 (web: Bill page "Pay online" (`usage/pay-online.tsx`, `onlineOrder` / `onlinePaid` in `usage/actions.ts`, `lib/razorpay.ts`),
