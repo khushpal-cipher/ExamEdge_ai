@@ -5,34 +5,42 @@
 ```text
 Continue building ExamEdge AI Release 1 in ~/Documents/startup/examedge_ai.
 
+First run `git fetch && git checkout r35-handoff && git pull` (the session 65 handoff lives only on that branch until it is
+merged; `main` = `eba7792` already has all the Razorpay code), then follow the steps below.
+
 1. Read these files fully before doing anything else, in this order, so you have the complete picture:
    CLAUDE.md, PROGRESS.md, docs/NEXT_SESSION_PROMPT.md (your full instructions are the "Full instructions" box
    in that file — follow them exactly), docs/PROJECT_MASTER_PLAN.md, docs/IMPLEMENTATION_ROADMAP.md,
    docs/DATABASE_DESIGN.md, docs/SECURITY_THREAT_MODEL.md, docs/AI_PIPELINE_DESIGN.md, docs/TEST_STRATEGY.md,
-   docs/DECISIONS.md, docs/HOW_IT_WORKS.md, docs/ARCHITECTURE.md, docs/LAUNCH_PLAN.md. Then run `git log --oneline -15` and `git status`.
-2. TASK NOW: build Razorpay (founder said "build", session 64). Follow PROGRESS.md "Razorpay build plan (session 64)" step by step (ADR first, then migration, routes, Checkout button, tests). Then continue from PROGRESS.md "Next exact action (session 63)" and its "Session 63 handoff" note: deploy is DONE and merged (PRs #53-#55, `main` = `5725cea`; live
-   Supabase has migrations 1-57 (verified 2026-10-31), Vercel web on https://examedgeai.in, Render worker running, Google sign-in, two platform
-   admins, backup + restore drill script). The founder launches with real users on 2026-10-31. Check what PROGRESS.md marks
-   as unverified (Vercel rollback rehearsal, test mail, Resend, OCR of a scanned page, invitation email, `examedge-loadtest`
-   deleted, Anthropic credit and spend limit) and help with launch day: watch the Render log and the Bill page, weekly
-   `scripts/backup-prod.sh backup`. Open work after launch: Supabase Pro + bigger compute and a repeat of the signed-in load
-   test before any coaching with more than about 20 simultaneous test takers (the Free project failed at 50), Razorpay,
-   Voyage embeddings (Q-08), legal opinion Q-01 (after launch, founder's decision). I log in to each account and click
-   anything that costs money or creates an account; secret keys go straight into the hosting dashboards, never into chat
-   or git. Read docs/LAUNCH_PLAN.md and docs/PITCH_DECK_SCRIPT.md too. Remind me of the rupee-fall risk and the future "yearly = 10 months from 100 accounts" idea (PROGRESS.md), both not built.
-   Before building, answer my questions first if I ask any ("do not build or fix yet"). Do not restart or redo finished
-   work; re-verify only what PROGRESS.md marks as unverified.
-3. First check `docker info` (run `open -a Docker` and wait if it fails) and `supabase status`
-   (run `supabase start` from the repo root if stopped). Never reset the local database without asking me:
-   it holds my test institutes (see PROGRESS.md).
+   docs/DECISIONS.md (ADR-062 = Razorpay), docs/HOW_IT_WORKS.md, docs/ARCHITECTURE.md, docs/LAUNCH_PLAN.md,
+   docs/API_AND_SECRETS_INVENTORY.md. Then run `git log --oneline -15` and `git status`.
+2. TASK NOW: Razorpay test-mode run with me (PROGRESS.md "Next exact action (session 65)", steps 3-4). Razorpay is BUILT and
+   LIVE: migration 58 pushed to hugmseujwsuvsymcobwo, PR #56 merged (`main` = `eba7792`), live webhook answers 400 without a
+   signature and 503 while no webhook secret is set. The webhook secret is NOT a Vercel env var (ADR-062): I type it on the
+   platform page; Key ID + Key Secret go into Vercel env (`RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`) by me, never into chat or
+   git. Guide me step by step: test keys in Vercel + redeploy, webhook `https://examedgeai.in/api/razorpay/webhook` (only
+   `order.paid`), same secret on the platform page, then a test payment (UPI `success@razorpay`) on a throwaway test coaching;
+   check the payment turns approved, the receipt shows, and `failure@razorpay` leaves it payable. Check the Bill page "Pay
+   online" button at phone width and in dark mode. Then help me switch to LIVE keys (new live webhook + secret). Fix anything
+   found on a new branch off `main` (PR, CI green, merge). Then launch-day watching (Render log, Bill page, weekly
+   `scripts/backup-prod.sh backup`). Remind me of the rupee-fall risk and the "yearly = 10 months from 100 accounts" idea
+   (PROGRESS.md), both not built.
+   Before building, answer my questions first if I ask any ("do not build or fix yet"). Do not restart or redo finished work.
+3. First check `docker info` (run `open -a Docker` and wait if it fails; if it says "manually paused", ask me to resume it
+   from the whale menu) and `supabase status` (run `supabase start` from the repo root if stopped). Never reset the local
+   database without asking me: it holds my test institutes (local DB has migrations 1-58). Check
+   `cat supabase/.temp/project-ref` (live = hugmseujwsuvsymcobwo) before any `supabase db push`, and push only when I say so.
+   Port 3000 may be used by my other project (~/Desktop/project/mango): never stop it; use another port.
+   The Supabase CLI may show a macOS keychain window: I type my Mac password there, never in chat.
 4. Before writing any Next.js code, read node_modules/next/AGENTS.md and the relevant files in
    node_modules/next/dist/docs/. This is Next 16: middleware.ts is now proxy.ts.
 5. Standing rule: install any free dev tool you need from trusted sources without asking and log it in
    PROGRESS.md; only ask me about money, new online accounts/deployments, or product decisions not in the docs.
-6. Commit after every green task and push the phase branch. When a phase passes the full quality gate, open a PR
+   Use absolute paths instead of `cd ... &&` in commands so I get fewer permission prompts.
+6. Commit after every green task and push the branch. When the work passes the full quality gate, open a PR
    into main, check CI, fix until green, then merge. The repo is PUBLIC: never commit secrets.
 7. Keep PROGRESS.md accurate as you go (done / unverified / failing / blocked / next exact action, with commands,
-   results, dates and commit hashes) so any new session can continue.
+   results, dates and commit hashes) so any new session can continue. Launch is 2026-10-31.
 8. When I type "give me a prompt": update PROGRESS.md with a precise handoff, commit and push, then reply with
    the "Prompt to paste" box from docs/NEXT_SESSION_PROMPT.md (updated if anything changed) so I can start a
    new context window.
@@ -152,6 +160,9 @@ docs/HOW_IT_WORKS.md is the product behaviour spec for every screen. DATABASE_DE
 - Session 59 (2026-10-29, Sonnet): PRs #48 (batch Manage | Performance tabs) and #49 (renewal reminder email) merged; PR #50 (no grace period) open, CI green. Resend verified for examedgeai.in. Worker hosting is Render (ADR-060). Next: PROGRESS.md "Next exact action (session 60)" = Batch D (Opus, High).
 - Session 60 (2026-10-29, Opus): Batch D money review (M1-M3 fixed) and the founder's billing rules M4-M7 (ADR-061) merged as PR #51. Next: PROGRESS.md "Next exact action (session 61)" = deploy (Opus, High).
 - Session 61 (2026-10-30, Opus): deploy part 1 with the founder logged in: Supabase cloud (Singapore, migrations 1-53), Vercel web (Install Command `cd ../.. && npm ci`), `examedgeai.in` + wildcard on Vercel nameservers with the mail records copied, Anthropic key in Vercel. Next: PROGRESS.md "Next exact action (session 62)".
+- Session 65 (2026-10-31, Opus): Razorpay built (ADR-062, migration 58: the database checks the webhook HMAC; Checkout id
+  recorded like a UTR), migration 58 pushed live on the founder's word, PR #56 merged (`eba7792`). Next: test-mode run with the
+  founder's keys (PROGRESS.md "Next exact action (session 65)").
 - `examedge_ai/` is its own git repository (the parent repo ignores this folder). Work on a branch per phase,
   commit after every green task with clear messages, and push the phase branch. The GitHub remote exists:
   origin = github.com/khushpal-cipher/ExamEdge_ai (PUBLIC — never commit secrets). When a phase passes the full
