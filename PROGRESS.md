@@ -161,6 +161,13 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 65)
+**UPDATE (2026-10-31, session 66): Razorpay TEST-MODE RUN PASSED (founder-run, evidence = founder's report + screenshots).**
+Test keys in Vercel + redeploy; webhook `https://examedgeai.in/api/razorpay/webhook` (`order.paid` only) with same secret on platform
+page; unsigned POST now 400 (was 503). On `testcoaching.examedgeai.in/usage`: netbanking Success -> bill approved + receipt text;
+Failure -> "Pay online" still available. Pay online button OK at phone width and in dark mode. NOT done: LIVE keys (needs Razorpay
+website verification for `https://examedgeai.in`, 24-48 h; then live keys in Vercel + redeploy, NEW live webhook + NEW secret on
+platform page), launch-day watching (Render log, Bill page, weekly `scripts/backup-prod.sh backup`). Not built: rupee-fall
+protection, yearly = 10 months from 100 accounts. UPI-ID entry is not offered in Razorpay test checkout (QR only); netbanking used.
 **UPDATE (2026-10-31, later in session 65): LIVE.** Founder said "push": `supabase db push --linked` applied migration 58
 to `hugmseujwsuvsymcobwo` (checked project-ref first; live latest = `20261205000058`, pgcrypto `extensions.hmac` works, webhook
 secret empty). PR #56 CI 4/4 green, squash-merged: `main` = `eba7792`. Vercel live: `/api/health` commit `eba7792`; POST
