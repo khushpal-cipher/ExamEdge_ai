@@ -1,6 +1,6 @@
 # ExamEdge AI — Progress
 
-Last updated: 2026-10-31 (session 65: Razorpay built on `r34-razorpay`, PR #56 open, migration 58 local only; session 63: launch checks verified, business/pitch work, no code; `main` = `5725cea`, live DB migrations 1-57 (verified with `supabase migration list --linked`); session 62: deploy part 2 done and merged as PR #53 `d259b40`, live DB has migrations 1-56; session 61, deploy part 1: Supabase cloud + Vercel + domain live, see Completed; session 60, Opus: Batch D money review + founder rules M4-M7 merged as PR #51 `9a18a97`, migrations 52-53; session 59: PRs #48, #49 merged; session 54: PR #43 merged `57a7010`; founder change list A+B+C+D built on `r19-founder-list`, PR open; billing Q3 = no grace, access only after Approve)
+Last updated: 2026-10-31 (session 65: Razorpay merged as PR #56 `eba7792`, migration 58 live, test-mode run waits for the founder's keys; session 63: launch checks verified, business/pitch work, no code; `main` = `5725cea`, live DB migrations 1-57 (verified with `supabase migration list --linked`); session 62: deploy part 2 done and merged as PR #53 `d259b40`, live DB has migrations 1-56; session 61, deploy part 1: Supabase cloud + Vercel + domain live, see Completed; session 60, Opus: Batch D money review + founder rules M4-M7 merged as PR #51 `9a18a97`, migrations 52-53; session 59: PRs #48, #49 merged; session 54: PR #43 merged `57a7010`; founder change list A+B+C+D built on `r19-founder-list`, PR open; billing Q3 = no grace, access only after Approve)
 
 ## Current phase
 **Phase 1 MERGED** into `main` (PR #1, merge commit `913ec7f`, CI green: check + secrets, 2026-10-15).
@@ -161,6 +161,11 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
 ## Next exact action (session 65)
+**UPDATE (2026-10-31, later in session 65): LIVE.** Founder said "push": `supabase db push --linked` applied migration 58
+to `hugmseujwsuvsymcobwo` (checked project-ref first; live latest = `20261205000058`, pgcrypto `extensions.hmac` works, webhook
+secret empty). PR #56 CI 4/4 green, squash-merged: `main` = `eba7792`. Vercel live: `/api/health` commit `eba7792`; POST
+`/api/razorpay/webhook` without signature = 400, with headers but no secret set = 503 (Razorpay retries). Steps 1-2 below are DONE;
+next is step 3 (founder: test keys in Vercel, webhook in the Razorpay dashboard, secret on the platform page), then step 4.
 **State (2026-10-31, session 65, Opus): Razorpay BUILT on branch `r34-razorpay`, PR #56 open, NOT merged, migration 58 NOT pushed live.**
 Commits: `7514b8d` (ADR-062, migration `20261205000058_razorpay.sql`, pgTAP `340_razorpay`, policy allowlist) and `db3a2e6`
 (web: Bill page "Pay online" (`usage/pay-online.tsx`, `onlineOrder` / `onlinePaid` in `usage/actions.ts`, `lib/razorpay.ts`),
