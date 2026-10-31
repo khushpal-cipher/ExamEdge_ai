@@ -2054,7 +2054,9 @@ td .badge::before {
   padding-block: 1.5rem;
 }
 .site-cta {
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  max-width: none; /* a bare p is capped to a reading width and sits at the left on wide screens */
   padding: 0 1.5rem 2rem;
 }
 .site-brand {
