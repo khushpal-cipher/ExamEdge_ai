@@ -2,7 +2,9 @@ import { isFresh, KIND_LABEL, rupees, upiLink } from '@/lib/billing';
 import { MANAGERS, requireMember } from '@/lib/tenant';
 import { FEATURE_LABEL, monthUsage } from '@/lib/usage';
 import { Flash, type Search } from '../flash';
+import { razorpayOn } from '@/lib/razorpay';
 import { startPay, submitUtr } from './actions';
+import { PayOnline } from './pay-online';
 
 type Quote = { kind: string; accounts: number | null; base_paise: number; gst_paise: number; total_paise: number };
 type Pay = {
@@ -10,6 +12,7 @@ type Pay = {
   kind: string;
   total_paise: number;
   utr: string | null;
+  razorpay_payment_id: string | null;
   status: string;
   reject_reason: string | null;
   receipt_no: string | null;
@@ -41,7 +44,7 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
     quote('topup'),
     db
       .from('payments')
-      .select('id, kind, total_paise, utr, status, reject_reason, receipt_no, created_at')
+      .select('id, kind, total_paise, utr, razorpay_payment_id, status, reject_reason, receipt_no, created_at')
       .eq('institute_id', institute.id)
       .order('created_at', { ascending: false })
       .limit(20)
@@ -51,10 +54,11 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
     st && Number(st.ai_budget_micro) > 0
       ? Math.round((Number(st.ai_used_micro) / Number(st.ai_budget_micro)) * 100)
       : 0;
-  // started, UTR not typed yet, less than 24 hours old
-  const open = (pays ?? []).find((p) => p.status === 'waiting' && !p.utr && isFresh(p.created_at));
-  const shown = (pays ?? []).filter((p) => p.utr || p.status !== 'waiting'); // a payment only started is not listed
-  const checking = (pays ?? []).some((p) => p.status === 'waiting' && p.utr);
+  const said = (p: Pay) => Boolean(p.utr || p.razorpay_payment_id); // the owner said "paid" (UTR or online)
+  // started, not paid yet, less than 24 hours old
+  const open = (pays ?? []).find((p) => p.status === 'waiting' && !said(p) && isFresh(p.created_at));
+  const shown = (pays ?? []).filter((p) => said(p) || p.status !== 'waiting'); // a payment only started is not listed
+  const checking = (pays ?? []).some((p) => p.status === 'waiting' && said(p));
   const upiId = process.env.UPI_ID;
   const saving = monthly && yearly ? Number(monthly.base_paise) * 12 - Number(yearly.base_paise) : 0;
   const offers = [monthly, yearly, extras, topup].filter((o): o is Quote => !!o);
@@ -161,6 +165,7 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
             <h3>
               Pay {rupees(open.total_paise)} by UPI — {KIND_LABEL[open.kind]}
             </h3>
+            {razorpayOn() && <PayOnline pay={open.id} />}
             {upiId ? (
               <p>
                 UPI id: <b>{upiId}</b> ·{' '}

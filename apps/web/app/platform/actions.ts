@@ -241,3 +241,11 @@ export async function setGst(form: FormData) {
   if (error) log.error('platform.set_gst_failed', { code: error.code });
   redirect(error ? '/?error=gst' : '/');
 }
+
+// Razorpay webhook secret (ADR-062): the database checks webhook signatures with it; it is never read back.
+export async function setRazorpaySecret(form: FormData) {
+  const db = await requireAal2();
+  const { error } = await db.rpc('set_razorpay_secret', { secret: String(form.get('secret') ?? '').slice(0, 200) });
+  if (error) log.error('platform.set_razorpay_secret_failed', { code: error.code });
+  redirect(error ? '/?error=razorpay' : '/');
+}

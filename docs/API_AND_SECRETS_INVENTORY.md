@@ -30,7 +30,7 @@ Status: **Draft for approval** · Last updated: 2026-10-14 · Labels: see [ARCHI
 | 9 | GitHub | Code, CI | **MVP** | Actions secrets: `SUPABASE_ACCESS_TOKEN`, staging/prod DB URLs | GitHub repo settings (environments with required reviewers for prod) | No | staging/prod environments | — | — | Yearly |
 | 10 | Backup storage (independent) | Nightly DB dump + storage copy | **Before pilot** | Access key pair | Render env (backup job) | No | prod only | provider dashboard | Alert on failure | 90 days [D: provider] |
 | 11 | Sarvam AI | TTS (audio overviews, video narration) | R2 | API subscription key | Render env | No | Yes | `usage_records` (characters) | Per-line retry; English fallback voice [D] | 90 days |
-| 12 | Razorpay | Subscriptions, payments | R2 | Key id (public), key secret, webhook secret | Vercel env | key id yes | Yes (test mode vs live mode keys) | Razorpay dashboard | Webhook retries are idempotent | On suspicion; webhook secret rotation supports old-secret validation window [V] |
+| 12 | Razorpay | One-time payments next to manual UPI (ADR-062) | **Built (R1, 2026-10-31)** | Key id (`RAZORPAY_KEY_ID`), key secret (`RAZORPAY_KEY_SECRET`), webhook secret | Key id + secret: Vercel env; webhook secret: platform page → `private.settings` (write-only; the database checks the HMAC) | key id yes | Yes (test mode vs live mode keys) | Razorpay dashboard | Webhook retries are idempotent | On suspicion; webhook secret rotation supports old-secret validation window [V] |
 | 13 | Anthropic web search | Current affairs | R3 | (same Anthropic key) | — | — | — | per search | Disable per subject | — |
 | 14 | Remotion licence | Video rendering | R3 | Licence (not a runtime secret) [U] | — | — | — | — | — | — |
 

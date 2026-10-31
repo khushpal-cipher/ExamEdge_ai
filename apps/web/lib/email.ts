@@ -42,7 +42,7 @@ export async function sendInvites(institute: string, invites: Invite[]): Promise
 
 // Tells the founder a payment waits to be checked (Payments to check). Needs RESEND_API_KEY and PAYMENTS_ALERT_EMAIL;
 // without them nothing is sent and the platform page still lists the payment.
-export async function alertPayment(institute: string, summary: string) {
+export async function alertPayment(institute: string, summary: string, note = `${institute} typed a UTR.`) {
   const key = process.env.RESEND_API_KEY;
   const to = process.env.PAYMENTS_ALERT_EMAIL;
   if (!key || !to) return;
@@ -54,7 +54,7 @@ export async function alertPayment(institute: string, summary: string) {
         from: process.env.EMAIL_FROM || 'ExamEdge <onboarding@resend.dev>',
         to: [to],
         subject: `Payment to check: ${institute}`,
-        text: `${institute} typed a UTR.\n${summary}\nOpen the platform page, match it in the bank app, then Approve or Reject.`,
+        text: `${note}\n${summary}\nOpen the platform page, match it in the bank app, then Approve or Reject.`,
       }),
     });
     if (!res.ok) log.error('email.payment_alert_failed', { status: res.status });

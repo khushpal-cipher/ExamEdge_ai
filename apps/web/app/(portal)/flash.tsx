@@ -38,6 +38,8 @@ const ERRORS: Record<string, string> = {
   seats_full: 'Your plan has no free seats for this role. Remove someone or ask ExamEdge for more seats.',
   name_invalid: 'Please type a name of 1 to 120 characters.',
   utr_invalid: 'A UTR is the 12-digit transaction number your UPI app shows after paying.',
+  razorpay_invalid:
+    'The online payment could not be confirmed here. If money was taken, write to support@examedgeai.in.',
   utr_used: 'That UTR was already used for another payment. Check the number in your UPI app.',
   payment_waiting: 'A payment is already waiting for ExamEdge to check. Wait for it to be approved or rejected.',
   not_available: 'That payment is not available right now.',
@@ -75,6 +77,7 @@ const OK: Record<string, string> = {
   reply_saved: 'Reply saved.',
   review_sent: 'Thank you. Your review was sent to the owner and admins.',
   utr_sent: 'Thank you. ExamEdge checks the payment in the bank and approves it, usually within a day.',
+  online_paid: 'Payment received. It is confirmed automatically, usually within a minute; reload this page to see it.',
   payment_started: 'Pay the amount below, then type the UTR.',
   moved: 'Moved. The old batch stays in their history (read-only).',
 };
