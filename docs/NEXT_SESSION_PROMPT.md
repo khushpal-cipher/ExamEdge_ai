@@ -10,7 +10,7 @@ Continue building ExamEdge AI Release 1 in ~/Documents/startup/examedge_ai.
    in that file — follow them exactly), docs/PROJECT_MASTER_PLAN.md, docs/IMPLEMENTATION_ROADMAP.md,
    docs/DATABASE_DESIGN.md, docs/SECURITY_THREAT_MODEL.md, docs/AI_PIPELINE_DESIGN.md, docs/TEST_STRATEGY.md,
    docs/DECISIONS.md, docs/HOW_IT_WORKS.md, docs/ARCHITECTURE.md, docs/LAUNCH_PLAN.md. Then run `git log --oneline -15` and `git status`.
-2. Continue from PROGRESS.md "Next exact action (session 63)" and its "Session 63 handoff" note: deploy is DONE and merged (PRs #53-#55, `main` = `5725cea`; live
+2. TASK NOW: build Razorpay (founder said "build", session 64). Follow PROGRESS.md "Razorpay build plan (session 64)" step by step (ADR first, then migration, routes, Checkout button, tests). Then continue from PROGRESS.md "Next exact action (session 63)" and its "Session 63 handoff" note: deploy is DONE and merged (PRs #53-#55, `main` = `5725cea`; live
    Supabase has migrations 1-57 (verified 2026-10-31), Vercel web on https://examedgeai.in, Render worker running, Google sign-in, two platform
    admins, backup + restore drill script). The founder launches with real users on 2026-10-31. Check what PROGRESS.md marks
    as unverified (Vercel rollback rehearsal, test mail, Resend, OCR of a scanned page, invitation email, `examedge-loadtest`
