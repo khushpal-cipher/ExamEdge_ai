@@ -62,14 +62,12 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
   const upiId = process.env.UPI_ID;
   const saving = monthly && yearly ? Number(monthly.base_paise) * 12 - Number(yearly.base_paise) : 0;
   const offers = [monthly, yearly, extras, topup].filter((o): o is Quote => !!o);
-  const [{ data: bill }, { data: q }, { data: globalOn }, { rows }] = await Promise.all([
-    db.rpc('institute_bill', { inst: institute.id }).single<{ amount_inr: number | null }>(),
+  const [{ data: q }, { data: globalOn }, { rows }] = await Promise.all([
     db.from('institute_quotas').select('ai_enabled').eq('institute_id', institute.id).single(),
     db.rpc('ai_enabled'),
     monthUsage(db, institute.id),
   ]);
   const on = Boolean(globalOn && q?.ai_enabled);
-  const amount = bill?.amount_inr;
   const tokens = (r: { input_tokens: number; output_tokens: number }) =>
     Number(r.input_tokens) + Number(r.output_tokens);
   const totalTokens = rows.reduce((s, r) => s + tokens(r), 0);
@@ -234,18 +232,7 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
           </table>
         </section>
       )}
-      <section className="stats three" aria-label="This month">
-        <div className="stat">
-          <span>This month&apos;s AI charge</span>
-          <b>
-            {amount == null
-              ? '—'
-              : `₹${Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          </b>
-          <span className="muted small">
-            {amount == null ? 'Not available yet: ExamEdge has not set the price.' : 'Updates as AI is used.'}
-          </span>
-        </div>
+      <section className="stats two" aria-label="This month">
         <div className="stat">
           <span>AI used this month</span>
           <b>

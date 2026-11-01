@@ -1650,6 +1650,9 @@ ul.rows > li > span:first-child > .small {
   .stats.three {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+  .stats.two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .stats > .stat {
   padding: var(--s5);
