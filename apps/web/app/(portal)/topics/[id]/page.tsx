@@ -290,6 +290,19 @@ export default async function TopicPage(props: { params: Promise<{ id: string }>
                               'Almost done',
                             ]}
                           >
+                            {subtopics.length > 0 && (
+                              <label>
+                                Make it from
+                                <select name="subtopic_id" defaultValue="">
+                                  <option value="">The whole topic</option>
+                                  {subtopics.map((s) => (
+                                    <option key={s.id} value={s.id}>
+                                      {s.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                            )}
                             {Object.entries(STUDIO_KIND).map(([k, label]) => (
                               <button
                                 key={k}

@@ -32,6 +32,7 @@ export async function generate(form: FormData) {
   const kind = form.get('kind') as Kind;
   if (!isUuid(subject) || !isUuid(chapter)) redirect('/');
   const here = `/topics/${chapter}`;
+  const subtopicId = form.get('subtopic_id');
   if (!KINDS.includes(kind)) back(here, 'invalid');
   if (BETA_KINDS.has(kind) && !overviewsEnabled(process.env)) back(here, 'coming_soon');
   const student = member.role === 'student';
@@ -45,13 +46,26 @@ export async function generate(form: FormData) {
     .eq('id', chapter)
     .maybeSingle();
   if (!ch) back(here, 'denied');
+  // Optional: make it from one subtopic's notes only. It must be a subtopic of this chapter (RLS also applies).
+  let subtopic: { id: string; name: string } | null = null;
+  if (isUuid(subtopicId)) {
+    const { data } = await db
+      .from('subtopics')
+      .select('id, name')
+      .eq('institute_id', institute.id)
+      .eq('chapter_id', chapter)
+      .eq('id', subtopicId)
+      .maybeSingle();
+    if (!data) back(here, 'denied');
+    subtopic = data;
+  }
   // RLS: students read only notes published to their batches; generation uses published notes for staff too.
   // No notes yet → the AI writes from general knowledge of the topic, labelled as such (ADR-050).
-  const { ids, sources } = await chapterNotes(db, institute.id, chapter as string);
+  const { ids, sources } = await chapterNotes(db, institute.id, chapter as string, subtopic?.id);
   // Staff: same kind, chapter and notes (chunk ids change when a note is replaced) → same artifact (AC9.2). Students
   // get a new one each time until their AI limit stops them (ADR-054).
   const inputHash = createHash('sha256')
-    .update(JSON.stringify([kind, chapter, [...ids].sort()]))
+    .update(JSON.stringify([kind, chapter, subtopic?.id ?? null, [...ids].sort()]))
     .digest('hex');
   const scope = student ? 'student' : 'institute';
   const existing = async () => {
@@ -73,7 +87,7 @@ export async function generate(form: FormData) {
     const subjectName = (ch!.subjects as unknown as { name: string } | null)?.name;
     made = await generateArtifact(webMeter(db, institute.id), {
       kind,
-      chapter: ch!.name,
+      chapter: subtopic ? `${ch!.name} — ${subtopic.name}` : ch!.name,
       subject: subjectName,
       sources,
     });

@@ -6,15 +6,17 @@ import type { supabase } from './supabase';
 type Db = Awaited<ReturnType<typeof supabase>>;
 
 // Ordered by document title, then chunk. `ids` are the chunk ids (they change when a note is replaced).
-export async function chapterNotes(db: Db, inst: string, chapter: string) {
-  const { data: docs } = await db
+// `subtopic` limits it to the notes filed under that one subtopic of the chapter.
+export async function chapterNotes(db: Db, inst: string, chapter: string, subtopic?: string) {
+  let q = db
     .from('documents')
     .select('id, title')
     .eq('institute_id', inst)
     .eq('chapter_id', chapter)
     .eq('status', 'published')
-    .is('deleted_at', null)
-    .order('title');
+    .is('deleted_at', null);
+  if (subtopic) q = q.eq('subtopic_id', subtopic);
+  const { data: docs } = await q.order('title');
   const title = new Map((docs ?? []).map((d) => [d.id as string, d.title as string]));
   const { data: chunks } = title.size
     ? await db
