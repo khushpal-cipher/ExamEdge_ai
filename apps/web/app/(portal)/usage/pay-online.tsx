@@ -21,8 +21,13 @@ export function PayOnline({ pay }: { pay: string }) {
     setBusy(true);
     setProblem('');
     const o = await onlineOrder(pay);
+    if ('error' in o && o.error === 'expired') {
+      setProblem('This payment expired after 15 minutes. Press Pay again to start a new one.');
+      setBusy(false);
+      return;
+    }
     if ('error' in o || !window.Razorpay) {
-      setProblem('Online payment is not available right now. Pay by UPI below, or try again in a minute.');
+      setProblem('Online payment is not available right now. Try again in a minute.');
       setBusy(false);
       return;
     }

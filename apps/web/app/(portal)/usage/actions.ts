@@ -5,7 +5,7 @@
 import { redirect } from 'next/navigation';
 import { done, text } from '../form';
 import { alertPayment } from '@/lib/email';
-import { isFresh, PAY_KINDS, rupees } from '@/lib/billing';
+import { isOnlineFresh, PAY_KINDS, rupees } from '@/lib/billing';
 import { checkoutSignatureOk, createOrder, razorpayOn } from '@/lib/razorpay';
 import { isUuid, requireMember } from '@/lib/tenant';
 
@@ -39,9 +39,8 @@ export async function onlineOrder(pay: string): Promise<Order> {
     .eq('id', pay)
     .eq('institute_id', institute.id)
     .maybeSingle();
-  if (!p || p.status !== 'waiting' || p.utr || p.razorpay_payment_id || !isFresh(p.created_at)) {
-    return { error: 'not_available' };
-  }
+  if (!p || p.status !== 'waiting' || p.utr || p.razorpay_payment_id) return { error: 'not_available' };
+  if (!isOnlineFresh(p.created_at)) return { error: 'expired' };
   const order = await createOrder(Number(p.total_paise), p.id);
   if (!order) return { error: 'failed' };
   return { key: process.env.RAZORPAY_KEY_ID!, order, amount: Number(p.total_paise), name: institute.name };
@@ -54,5 +53,10 @@ export async function onlinePaid(pay: string, order: string, payment: string, si
     done('/usage', { message: 'razorpay_invalid' });
   }
   const { error } = await db.rpc('submit_razorpay', { pay, ref: payment });
+  if (error?.message === 'not_available') {
+    // The webhook can approve the payment before this step runs; the signature above is valid, so that is success.
+    const { data: p } = await db.from('payments').select('status').eq('id', pay).maybeSingle();
+    if (p?.status === 'approved') done('/usage', null, 'online_paid');
+  }
   done('/usage', error, 'online_paid');
 }

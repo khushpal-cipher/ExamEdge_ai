@@ -1,3 +1,5 @@
+import { razorpayOn } from '@/lib/razorpay';
+
 const ERRORS: Record<string, string> = {
   denied: 'You are not allowed to do that.',
   duplicate: 'That name is already used.',
@@ -90,13 +92,18 @@ export async function Flash({ searchParams }: { searchParams: Promise<{ ok?: str
         {ERRORS[error]}
       </p>
     );
-  if (ok && OK[ok])
+  if (ok && OK[ok]) {
+    const text =
+      ok === 'payment_started' && razorpayOn()
+        ? 'Press Pay online below. This payment stays open for 15 minutes.'
+        : OK[ok];
     return (
       // Short confirmations float and fade away; longer ones stay because they say what to do next.
-      <p role="status" className={OK[ok].length <= 60 ? 'notice toast' : 'notice'}>
-        {OK[ok]}
+      <p role="status" className={text.length <= 60 ? 'notice toast' : 'notice'}>
+        {text}
       </p>
     );
+  }
   return null;
 }
 

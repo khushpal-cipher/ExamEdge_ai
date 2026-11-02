@@ -2,7 +2,7 @@
 -- read-only when extras stay unpaid, renewal only near the end, unpaid payments expire, period_start, top-ups.
 begin;
 select tests.setup();
-select plan(21);
+select plan(23);
 
 insert into private.platform_admins (user_id, granted_by) values (tests.create_user('root@examedge.test'), 'test');
 create temp table d on commit drop as select (now() at time zone 'Asia/Kolkata')::date as today;
@@ -101,6 +101,15 @@ insert into ids select 'new', public.start_payment(tests.inst('alpha'), 'monthly
 select isnt((select v from ids where k = 'new'), (select v from ids where k = 'old'), 'Pay makes a fresh payment');
 select results_eq($$ select accounts from public.payments where id = (select v from ids where k = 'new') $$,
   $$ values (106) $$, 'at today''s count');
+
+-- A draft is reused for 15 minutes only: pressing Pay later makes a fresh payment (and a fresh date).
+select is(public.start_payment(tests.inst('alpha'), 'monthly'), (select v from ids where k = 'new'),
+  'Pay again within 15 minutes gives the same payment');
+select tests.logout();
+update public.payments set created_at = now() - interval '20 minutes' where id = (select v from ids where k = 'new');
+select tests.login('owner@alpha.test');
+select isnt(public.start_payment(tests.inst('alpha'), 'monthly'), (select v from ids where k = 'new'),
+  'Pay after 15 minutes drops the old draft and makes a new one');
 
 -- ---------------------------------------------------------------- M3: no top-up while read-only
 select is((select count(*) from public.bill_quote(tests.inst('alpha'), 'topup')), 1::bigint, 'top-up while paid');
