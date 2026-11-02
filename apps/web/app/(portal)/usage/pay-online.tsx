@@ -1,7 +1,8 @@
 'use client';
 
 import Script from 'next/script';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { onlineOrder, onlinePaid } from './actions';
 
 type Success = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
@@ -13,9 +14,16 @@ declare global {
 }
 
 // Razorpay Standard Checkout for one stored payment (ADR-062). The server makes the order; this only opens it.
-export function PayOnline({ pay }: { pay: string }) {
+export function PayOnline({ pay, expiresAt }: { pay: string; expiresAt: number }) {
+  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState('');
+
+  // When the 15 minutes end the page reloads and this box is gone; the owner presses Pay again for a new one.
+  useEffect(() => {
+    const t = setTimeout(() => router.refresh(), Math.max(0, expiresAt - Date.now()) + 500);
+    return () => clearTimeout(t);
+  }, [expiresAt, router]);
 
   async function start() {
     setBusy(true);

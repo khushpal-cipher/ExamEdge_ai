@@ -1,4 +1,4 @@
-import { isFresh, isOnlineFresh, KIND_LABEL, rupees, upiLink } from '@/lib/billing';
+import { isFresh, isOnlineFresh, ONLINE_MINUTES, KIND_LABEL, rupees, upiLink } from '@/lib/billing';
 import { MANAGERS, requireMember } from '@/lib/tenant';
 import { FEATURE_LABEL, monthUsage } from '@/lib/usage';
 import { Flash, type Search } from '../flash';
@@ -55,8 +55,9 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
       ? Math.round((Number(st.ai_used_micro) / Number(st.ai_budget_micro)) * 100)
       : 0;
   const said = (p: Pay) => Boolean(p.utr || p.razorpay_payment_id); // the owner said "paid" (UTR or online)
-  // started, not paid yet, less than 24 hours old
-  const open = (pays ?? []).find((p) => p.status === 'waiting' && !said(p) && isFresh(p.created_at));
+  // started, not paid yet: 15 minutes with online payment, 24 hours for the manual UPI one
+  const fresh = razorpayOn() ? isOnlineFresh : isFresh;
+  const open = (pays ?? []).find((p) => p.status === 'waiting' && !said(p) && fresh(p.created_at));
   const shown = (pays ?? []).filter((p) => said(p) || p.status !== 'waiting'); // a payment only started is not listed
   const checking = (pays ?? []).some((p) => p.status === 'waiting' && said(p));
   const upiId = process.env.UPI_ID;
@@ -166,12 +167,9 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
               Pay {rupees(open.total_paise)}
               {razorpayOn() ? '' : ' by UPI'} — {KIND_LABEL[open.kind]}
             </h3>
-            {razorpayOn() &&
-              (isOnlineFresh(open.created_at) ? (
-                <PayOnline pay={open.id} />
-              ) : (
-                <p className="muted">This payment expired after 15 minutes. Press Pay again to start a new one.</p>
-              ))}
+            {razorpayOn() && (
+              <PayOnline pay={open.id} expiresAt={Date.parse(open.created_at) + ONLINE_MINUTES * 60_000} />
+            )}
             {!razorpayOn() && (
               <>
                 {upiId ? (
