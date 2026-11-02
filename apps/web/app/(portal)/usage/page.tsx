@@ -122,41 +122,43 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
         {offers.length === 0 ? (
           <p className="muted">Nothing to pay right now. Renewal opens 7 days before your paid period ends.</p>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">What</th>
-                <th scope="col">Accounts</th>
-                <th scope="col">Amount</th>
-                {owner && <th scope="col" />}
-              </tr>
-            </thead>
-            <tbody>
-              {offers.map((o) => (
-                <tr key={o.kind}>
-                  <td>
-                    {KIND_LABEL[o.kind]}
-                    {o.kind === 'yearly' && saving > 0 && <small className="muted"> · save {rupees(saving)}</small>}
-                  </td>
-                  <td>{o.accounts ?? '—'}</td>
-                  <td>
-                    {rupees(o.total_paise)}
-                    {Number(o.gst_paise) > 0 && <small className="muted"> incl. GST</small>}
-                  </td>
-                  {owner && (
-                    <td>
-                      <form action={startPay}>
-                        <input type="hidden" name="kind" value={o.kind} />
-                        <button type="submit" disabled={checking}>
-                          Pay
-                        </button>
-                      </form>
-                    </td>
-                  )}
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">What</th>
+                  <th scope="col">Accounts</th>
+                  <th scope="col">Amount</th>
+                  {owner && <th scope="col" />}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {offers.map((o) => (
+                  <tr key={o.kind}>
+                    <td>
+                      {KIND_LABEL[o.kind]}
+                      {o.kind === 'yearly' && saving > 0 && <small className="muted"> · save {rupees(saving)}</small>}
+                    </td>
+                    <td>{o.accounts ?? '—'}</td>
+                    <td>
+                      {rupees(o.total_paise)}
+                      {Number(o.gst_paise) > 0 && <small className="muted"> incl. GST</small>}
+                    </td>
+                    {owner && (
+                      <td>
+                        <form action={startPay}>
+                          <input type="hidden" name="kind" value={o.kind} />
+                          <button type="submit" disabled={checking}>
+                            Pay
+                          </button>
+                        </form>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         {owner && open && (
           <div className="card stack" role="group" aria-label="Pay by UPI">
@@ -205,31 +207,33 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
       {shown.length > 0 && (
         <section className="card stack" aria-labelledby="payments">
           <h2 id="payments">Payments</h2>
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Date</th>
-                <th scope="col">What</th>
-                <th scope="col">Amount</th>
-                <th scope="col">Status</th>
-                <th scope="col">Receipt</th>
-              </tr>
-            </thead>
-            <tbody>
-              {shown.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.created_at.slice(0, 10)}</td>
-                  <td>{KIND_LABEL[p.kind]}</td>
-                  <td>{rupees(p.total_paise)}</td>
-                  <td>
-                    <span className={`badge ${STATUS_BADGE[p.status]}`}>{p.status}</span>
-                    {p.reject_reason && <small className="muted"> {p.reject_reason}</small>}
-                  </td>
-                  <td>{p.receipt_no ?? '—'}</td>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Date</th>
+                  <th scope="col">What</th>
+                  <th scope="col">Amount</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Receipt</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {shown.map((p) => (
+                  <tr key={p.id}>
+                    <td>{p.created_at.slice(0, 10)}</td>
+                    <td>{KIND_LABEL[p.kind]}</td>
+                    <td>{rupees(p.total_paise)}</td>
+                    <td>
+                      <span className={`badge ${STATUS_BADGE[p.status]}`}>{p.status}</span>
+                      {p.reject_reason && <small className="muted"> {p.reject_reason}</small>}
+                    </td>
+                    <td>{p.receipt_no ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
       <section className="stats two" aria-label="This month">
@@ -253,24 +257,26 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
         {rows.length === 0 ? (
           <p className="muted">No AI used yet this month.</p>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Feature</th>
-                <th scope="col">Requests</th>
-                <th scope="col">Tokens</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.feature}>
-                  <td>{FEATURE_LABEL[r.feature] ?? r.feature}</td>
-                  <td>{n(Number(r.calls))}</td>
-                  <td>{n(tokens(r))}</td>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Feature</th>
+                  <th scope="col">Requests</th>
+                  <th scope="col">Tokens</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.feature}>
+                    <td>{FEATURE_LABEL[r.feature] ?? r.feature}</td>
+                    <td>{n(Number(r.calls))}</td>
+                    <td>{n(tokens(r))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </>

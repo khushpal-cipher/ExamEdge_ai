@@ -216,24 +216,26 @@ export function ProgressView({
           {p.chapters.length === 0 ? (
             <p className="empty">Appears after the first released test.</p>
           ) : (
-            <table>
-              <tbody>
-                {p.chapters.map((c) => {
-                  const v = pct(c.marks, c.max_marks);
-                  return (
-                    <tr key={`${c.subject}-${c.chapter}`}>
-                      <td>
-                        {c.chapter}
-                        <div className="small muted">{c.subject}</div>
-                      </td>
-                      <td>
-                        <Bar value={v} /> {v ?? 0}%
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="table-wrap">
+              <table>
+                <tbody>
+                  {p.chapters.map((c) => {
+                    const v = pct(c.marks, c.max_marks);
+                    return (
+                      <tr key={`${c.subject}-${c.chapter}`}>
+                        <td>
+                          {c.chapter}
+                          <div className="small muted">{c.subject}</div>
+                        </td>
+                        <td>
+                          <Bar value={v} /> {v ?? 0}%
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
         <section className="card stack" aria-labelledby="types">
@@ -241,24 +243,26 @@ export function ProgressView({
           {p.types.length === 0 ? (
             <p className="empty">Appears after the first released test.</p>
           ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Type</th>
-                  <th>Score</th>
-                  <th>Lost to negative marks</th>
-                </tr>
-              </thead>
-              <tbody>
-                {p.types.map((t) => (
-                  <tr key={t.type}>
-                    <td>{TYPE_SHORT[t.type]}</td>
-                    <td>{pct(t.marks, t.max_marks) ?? 0}%</td>
-                    <td>{t.negative}</td>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Score</th>
+                    <th>Lost to negative marks</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {p.types.map((t) => (
+                    <tr key={t.type}>
+                      <td>{TYPE_SHORT[t.type]}</td>
+                      <td>{pct(t.marks, t.max_marks) ?? 0}%</td>
+                      <td>{t.negative}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
       </div>
@@ -268,24 +272,26 @@ export function ProgressView({
         {p.subjects.length === 0 ? (
           <p className="empty">Appears after the first released test.</p>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Subject</th>
-                <th>{staff ? 'Student' : 'You'}</th>
-                <th>Batch average</th>
-              </tr>
-            </thead>
-            <tbody>
-              {p.subjects.map((s) => (
-                <tr key={s.subject}>
-                  <td>{s.subject}</td>
-                  <td>{s.percentage ?? 0}%</td>
-                  <td>{s.batch_percentage ?? 0}%</td>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th>{staff ? 'Student' : 'You'}</th>
+                  <th>Batch average</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {p.subjects.map((s) => (
+                  <tr key={s.subject}>
+                    <td>{s.subject}</td>
+                    <td>{s.percentage ?? 0}%</td>
+                    <td>{s.batch_percentage ?? 0}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
 

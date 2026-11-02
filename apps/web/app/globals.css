@@ -343,6 +343,7 @@ img.logo {
 }
 .stack {
   display: grid;
+  grid-template-columns: minmax(0, 1fr); /* a wide formula must not stretch the column past its card */
   gap: var(--s3);
   align-content: start;
 }
@@ -1028,6 +1029,10 @@ ul.choices > li {
 }
 .md > :last-child {
   margin-bottom: 0;
+}
+.md .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 .md pre {
   overflow-x: auto;

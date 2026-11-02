@@ -133,44 +133,46 @@ export default async function Platform({ searchParams }: { searchParams: Promise
         {!waiting?.length ? (
           <p className="muted">Nothing waiting.</p>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Institute</th>
-                <th scope="col">What</th>
-                <th scope="col">Amount</th>
-                <th scope="col">UTR / Razorpay</th>
-                <th scope="col">Decide</th>
-              </tr>
-            </thead>
-            <tbody>
-              {waiting.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.institutes?.name}</td>
-                  <td>{KIND_LABEL[p.kind]}</td>
-                  <td>{rupees(p.total_paise)}</td>
-                  <td>{p.utr ?? p.razorpay_payment_id}</td>
-                  <td>
-                    <div className="stack">
-                      <form action={approvePayment}>
-                        <input type="hidden" name="pay" value={p.id} />
-                        <button type="submit" className="primary">
-                          Approve
-                        </button>
-                      </form>
-                      <form action={rejectPayment} className="inline">
-                        <input type="hidden" name="pay" value={p.id} />
-                        <input name="reason" aria-label="Reason to reject" placeholder="Reason" required />
-                        <button type="submit" className="danger">
-                          Reject
-                        </button>
-                      </form>
-                    </div>
-                  </td>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Institute</th>
+                  <th scope="col">What</th>
+                  <th scope="col">Amount</th>
+                  <th scope="col">UTR / Razorpay</th>
+                  <th scope="col">Decide</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {waiting.map((p) => (
+                  <tr key={p.id}>
+                    <td>{p.institutes?.name}</td>
+                    <td>{KIND_LABEL[p.kind]}</td>
+                    <td>{rupees(p.total_paise)}</td>
+                    <td>{p.utr ?? p.razorpay_payment_id}</td>
+                    <td>
+                      <div className="stack">
+                        <form action={approvePayment}>
+                          <input type="hidden" name="pay" value={p.id} />
+                          <button type="submit" className="primary">
+                            Approve
+                          </button>
+                        </form>
+                        <form action={rejectPayment} className="inline">
+                          <input type="hidden" name="pay" value={p.id} />
+                          <input name="reason" aria-label="Reason to reject" placeholder="Reason" required />
+                          <button type="submit" className="danger">
+                            Reject
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         <p className="small muted">
           Open your bank app first: approve only if a credit with this UTR and exactly this amount is there. A Razorpay
