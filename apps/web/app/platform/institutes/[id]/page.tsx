@@ -92,11 +92,11 @@ export default async function InstituteAdmin({
             <input name="expected_students" type="number" min={0} defaultValue={inst.expected_students ?? ''} />
           </label>
           <label>
-            Owner email
+            Contact email
             <input name="contact_email" type="email" maxLength={254} defaultValue={inst.contact_email ?? ''} />
           </label>
           <label>
-            Owner phone
+            Contact phone
             <input
               name="contact_phone"
               type="tel"
