@@ -95,6 +95,37 @@ test('teachers have no Smart Study; students see teacher material and make their
   }
 });
 
+test('a student can make study material from one subtopic only', async ({ browser }) => {
+  const chapter = await topic('Laws of Motion');
+  const { rows: subs } = await sql(
+    `select s.id, s.name from subtopics s where s.chapter_id = $1 and exists (
+       select 1 from documents d where d.subtopic_id = s.id and d.status = 'published' and d.deleted_at is null)
+     order by s.position limit 1`,
+    [chapter],
+  );
+  expect(subs).toHaveLength(1); // the seed files published notes under a subtopic
+  const page = await (await browser.newContext()).newPage();
+  await login(page, 'student03@demo.test');
+  const form = (await smartStudy(page, 'Laws of Motion')).getByRole('form', { name: 'Make study material' });
+  await form.getByLabel('Make it from').selectOption({ label: subs[0].name });
+  await form.getByRole('button', { name: 'Mind map', exact: true }).click();
+  await expect(page).toHaveURL(/\/studio\/[0-9a-f-]{36}\?ok=generated$/);
+  const id = new URL(page.url()).pathname.split('/').pop()!;
+  try {
+    // Every source behind it is a note filed under the chosen subtopic.
+    const { rows } = await sql(
+      `select count(*)::int as n, count(*) filter (where d.subtopic_id = $2)::int as inside
+       from generated_artifacts a, jsonb_array_elements(a.source_refs) r
+       join documents d on d.id = (r ->> 'document_id')::uuid where a.id = $1`,
+      [id, subs[0].id],
+    );
+    expect(rows[0].n).toBeGreaterThan(0);
+    expect(rows[0].inside).toBe(rows[0].n);
+  } finally {
+    await sql('delete from generated_artifacts where id = $1', [id]);
+  }
+});
+
 test('a student practice quiz is graded by the database and private to its owner', async ({ browser }) => {
   const page = await (await browser.newContext()).newPage();
   await login(page, 'student02@demo.test');
