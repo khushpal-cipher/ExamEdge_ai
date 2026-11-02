@@ -30,7 +30,7 @@ export default async function InstituteAdmin({
   const [{ data: inst }, { data: q }, { spent }] = await Promise.all([
     db
       .from('institutes')
-      .select('id, slug, name, status, branding, pilot_end, expected_students')
+      .select('id, slug, name, status, branding, pilot_end, expected_students, contact_email, contact_phone')
       .eq('id', id)
       .maybeSingle(),
     db.from('institute_quotas').select('*').eq('institute_id', id).maybeSingle(),
@@ -51,6 +51,9 @@ export default async function InstituteAdmin({
           <h1>{inst.name}</h1>
           <p className="muted">
             {inst.slug}.{rootHost()}
+          </p>
+          <p className="muted">
+            {inst.contact_email ?? 'No email'} · {inst.contact_phone ?? 'No phone'}
           </p>
         </div>
       </div>
@@ -87,6 +90,20 @@ export default async function InstituteAdmin({
           <label>
             Students they said they have
             <input name="expected_students" type="number" min={0} defaultValue={inst.expected_students ?? ''} />
+          </label>
+          <label>
+            Owner email
+            <input name="contact_email" type="email" maxLength={254} defaultValue={inst.contact_email ?? ''} />
+          </label>
+          <label>
+            Owner phone
+            <input
+              name="contact_phone"
+              type="tel"
+              maxLength={20}
+              pattern="[0-9+() \-]{7,20}"
+              defaultValue={inst.contact_phone ?? ''}
+            />
           </label>
           <label>
             Brand colour

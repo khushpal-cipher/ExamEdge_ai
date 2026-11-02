@@ -74,10 +74,11 @@ export async function createInstitute(_prev: CreateState, form: FormData): Promi
     owner_email: email,
     students: intOrNull(form.get('students')),
     ends: dateOrNull(form.get('ends')),
+    phone: String(form.get('phone') ?? '').trim() || null,
   });
   if (error) {
     if (error.code === '23505') return { error: 'That address or name is already taken.' };
-    if (error.code === '23514') return { error: 'Please check the name and owner email.' };
+    if (error.code === '23514') return { error: 'Please check the name, owner email and phone number.' };
     if (CREATE_ERRORS[error.message]) return { error: CREATE_ERRORS[error.message]! };
     log.error('platform.create_institute_failed', { code: error.code });
     return { error: 'Could not create the institute.' };
@@ -136,6 +137,11 @@ export async function updateInstitute(form: FormData) {
       status: STATUSES.includes(status) ? status : 'pilot',
       pilot_end: dateOrNull(form.get('pilot_end')),
       expected_students: intOrNull(form.get('expected_students')),
+      contact_email:
+        String(form.get('contact_email') ?? '')
+          .trim()
+          .toLowerCase() || null,
+      contact_phone: String(form.get('contact_phone') ?? '').trim() || null,
       branding: { ...(/^#[0-9a-f]{6}$/.test(color) && { color }), ...(logo && { logo }) },
     })
     .eq('id', id);

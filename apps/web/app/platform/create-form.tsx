@@ -30,6 +30,18 @@ export function CreateInstitute({ root, today, defaultEnd }: { root: string; tod
           <input name="owner_email" type="email" required maxLength={254} />
         </label>
         <label>
+          Owner phone number
+          <input
+            name="phone"
+            type="tel"
+            required
+            maxLength={20}
+            pattern="[0-9+() \-]{7,20}"
+            title="7–20 characters: digits, spaces, + ( ) or -"
+            placeholder="+91 98765 43210"
+          />
+        </label>
+        <label>
           How many students do you have?
           <input name="students" type="number" min={0} max={1000000} />
         </label>
