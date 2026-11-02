@@ -160,7 +160,25 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 66 handoff)
+## Next exact action (session 67 handoff)
+**State (2026-11-02, session 67, Sonnet): `main` = `864a845`; live Supabase has migrations 1-60 (founder ran `supabase db push` for 59 and 60, seen in their terminal; not re-queried by Claude).**
+Done (CI green on each, merged): #61 Bill page hides the ₹ AI charge (institutes see tokens, requests, AI On/Off only; `institute_bill` call removed from that page);
+#62 migration 59 `institute_contact` (`institutes.contact_email`, `contact_phone`; `create_institute` takes `phone`; New institute form has a required
+"Owner phone number"; platform institute page shows both and edits them as "Contact email/phone"; older institutes got the email of their newest owner invitation);
+#63 migration 60 `lower_daily_caps` (student daily doubts 40 to 25, generations 20 to 10 in defaults, untouched rows and `apply_limits`; staff stay 60);
+#64 Smart Study "Make it from" dropdown (whole topic or one subtopic; `chapterNotes(..., subtopic)` filters `documents.subtopic_id`; subtopic is in the staff cache hash; no migration).
+Unverified (Claude did not look at the live site): the dropdown on a real topic page; the New institute phone box and institute page contact line on `admin.examedgeai.in`; the new 25/10 limits in
+Usage limits. The new e2e test (studio sub-topic, portals phone fill) ran only in CI.
+Facts told to the founder: AI pool = accounts x $0.60 + $31 per month (50 accounts = $61, about Rs 5,400), a 1-student full-limit day cost about $0.06 (Test Coaching 100,421 tokens),
+so a student who maxes the limit every day costs about $1.80 a month; keep $0.60 and review after the first 2-3 pilots (raise to $0.80-1.00 if a pool passes 70% before day 20).
+A successful Razorpay payment activates the plan by itself (webhook, `approve_core`, actor "system") and sends NO email to anyone; alert mail only on unmatched payments (needs `PAYMENTS_ALERT_EMAIL`).
+The AI top-up row shows for any active, not read-only coaching at any time (not only near 80%). Offered, NOT built: payment-received emails (to founder and owner), top-up only at 80%+,
+teacher-set per-size daily caps. Also not built: PYQ bank, rupee-fall protection, yearly = 10 months from 100 accounts.
+Other: YC application (Winter 2027) answers drafted with the founder; founder video and demo recording still to record; fundraising answer was flagged for correction. Logo: founder chose a text-only
+wordmark "ExamEdge AI" (ExamEdge semi-bold, AI light); no logo file exists in the repo yet. Disk clean-up freed about 8 GB (uv cache left because a running tool holds it).
+Next exact action: ask the founder what they want next (check the three unverified live items first if they report a problem); do not build without "build".
+
+## Next exact action (session 66 handoff, older)
 **State (2026-10-31, session 66, Sonnet): Razorpay LIVE and founder-tested; `main` = latest after PRs #57-#60.**
 Done: Razorpay test-mode run passed; website `https://examedgeai.in` verified by Razorpay; live keys in Vercel; live webhook +
 new secret on the platform page; founder tested a live ₹10 Payment Link and reports everything works (founder-reported, not

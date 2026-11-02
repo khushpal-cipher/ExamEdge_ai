@@ -10,16 +10,14 @@ Continue building ExamEdge AI Release 1 in ~/Documents/startup/examedge_ai.
    in that file — follow them exactly), docs/PROJECT_MASTER_PLAN.md, docs/IMPLEMENTATION_ROADMAP.md,
    docs/DATABASE_DESIGN.md, docs/SECURITY_THREAT_MODEL.md, docs/AI_PIPELINE_DESIGN.md, docs/TEST_STRATEGY.md,
    docs/DECISIONS.md, docs/HOW_IT_WORKS.md, docs/ARCHITECTURE.md, docs/LAUNCH_PLAN.md, docs/API_AND_SECRETS_INVENTORY.md. Then run `git log --oneline -15` and `git status`.
-2. TASK NOW: Razorpay is LIVE and founder-tested (PROGRESS.md "Next exact action (session 66 handoff)"; `main` has PRs #57-#60).
-   Do not redo it. Help with launch day (the founder launches with real users on 2026-10-31): first check what PROGRESS.md marks
-   unverified (a live "Pay online" payment on a throwaway coaching, the ₹10 settlement in the bank, support mail/phone, Vercel
-   rollback rehearsal, Resend, OCR of a scanned page, invitation email, Anthropic credit and spend limit); watch the Render log and the
-   Bill page; weekly `scripts/backup-prod.sh backup`. Open work: PYQ bank (discussed, NOT built: ask whether to write a plan,
-   ADR first, licence check), Supabase Pro + bigger compute and a repeat of the signed-in load test before any coaching with more than
-   about 20 simultaneous test takers, Voyage embeddings (Q-08), legal opinion Q-01 (after launch). I log in to each account and click
-   anything that costs money or creates an account; secret keys go straight into the hosting dashboards, never into chat or git.
-   The webhook secret is typed on the platform page (ADR-062), never an env var. Remind me of the rupee-fall risk and the future
-   "yearly = 10 months from 100 accounts" idea (PROGRESS.md), both not built.
+2. TASK NOW: Razorpay is LIVE; session 67 added PRs #61-#64 and live migrations 59-60 (PROGRESS.md "Next exact action (session 67 handoff)"; `main` = `864a845`).
+   Do not redo them. First ask me what I want next; if I report a problem, check the three unverified live items in that section (Smart Study
+   "Make it from" dropdown, owner phone/email on admin.examedgeai.in, the 25/10 daily limits). Launch-day help: watch the Render log and the Bill page;
+   weekly `scripts/backup-prod.sh backup`. Open work: PYQ bank (discussed, NOT built: plan first, ADR first, licence check), payment-received emails
+   (offered, not built), Supabase Pro + bigger compute and a repeat of the signed-in load test before any coaching with more than about 20 simultaneous
+   test takers, Voyage embeddings (Q-08), legal opinion Q-01 (after launch). I log in to each account and click anything that costs money or creates an
+   account; secret keys go straight into the hosting dashboards, never into chat or git. The Razorpay webhook secret is typed on the platform page
+   (ADR-062), never an env var. Remind me of the rupee-fall risk and the future "yearly = 10 months from 100 accounts" idea, both not built.
    Before building, answer my questions first if I ask any ("do not build or fix yet"). Do not restart or redo finished
    work; re-verify only what PROGRESS.md marks as unverified.
 3. First check `docker info` (run `open -a Docker` and wait if it fails) and `supabase status`
