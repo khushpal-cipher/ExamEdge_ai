@@ -113,17 +113,19 @@ function Landing() {
           You pay for every active account (students and teachers; the owner is free), in slabs like income tax. Minimum
           50 accounts. Pay for 11 months, get 12 on a yearly plan (from 50 accounts). GST extra when applicable.
         </p>
-        <table>
-          <caption className="sr-only">Price per account</caption>
-          <tbody>
-            {PRICES.map(([a, b]) => (
-              <tr key={a}>
-                <th scope="row">{a}</th>
-                <td>{b}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="table-wrap">
+          <table>
+            <caption className="sr-only">Price per account</caption>
+            <tbody>
+              {PRICES.map(([a, b]) => (
+                <tr key={a}>
+                  <th scope="row">{a}</th>
+                  <td>{b}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <p className="small muted">
           Pilot: 7 days free for up to 5 students, then read-only until you subscribe. Write to support@examedgeai.in.
         </p>
