@@ -869,6 +869,13 @@ tbody tr:hover td {
   background: var(--track);
   overflow: hidden;
 }
+.pace {
+  min-width: 170px;
+  white-space: nowrap;
+}
+.pace > * + * {
+  margin-top: var(--s2);
+}
 .meter.inline {
   display: inline-block;
   width: 120px;
