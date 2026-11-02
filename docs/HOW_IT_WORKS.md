@@ -203,7 +203,7 @@ The same full progress page teachers see (Part 2E): ranks, marks trend, topic st
 **Review** in the sidebar: the student writes what they like and what should be better (up to 2000 characters) and can tick **Hide my name**. Only the institute's owner and admins read it, never teachers. With the name hidden, the owner and admins see "Anonymous" and cannot find out who wrote it. Below the form, **Your reviews** lists all of the student's reviews (hidden-name ones marked "name hidden") with the institute's reply. (ADR-047)
 
 ### I. Limits
-Each student has a daily AI limit (for example 40 doubts a day). When it's reached: "You've used today's AI limit. It resets tomorrow." This keeps costs safe.
+Each student has a daily AI limit (for example 25 doubts a day). When it's reached: "You've used today's AI limit. It resets tomorrow." This keeps costs safe.
 
 ---
 

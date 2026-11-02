@@ -45,7 +45,7 @@ AI + hosting share), with more hosting at 4,000.
 **Limits, set automatically from the count (no typing by hand):**
 - **Monthly AI budget = accounts × $0.60 + $31**, "Stop AI when the budget is used up" always on. This caps our AI
   cost below what they pay, so we never lose money on AI.
-- 40 doubts and 20 study tools a day per student (founder 2026-10-30; was 15 and 5); **60 AI requests a day per teacher/admin** (staff had no daily limit).
+- 25 doubts and 10 study tools a day per student (founder 2026-11-02; was 40 and 20, before that 15 and 5); **60 AI requests a day per teacher/admin** (staff had no daily limit).
 - Storage: 1 GB per 50 accounts (minimum 5 GB). Background jobs: 2, 3 above 600 accounts, 4 above 1,000, 6 above 3,000.
 
 **Loopholes and fixes:**
