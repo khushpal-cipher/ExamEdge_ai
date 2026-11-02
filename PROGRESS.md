@@ -160,7 +160,27 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
-## Next exact action (session 65)
+## Next exact action (session 66 handoff)
+**State (2026-10-31, session 66, Sonnet): Razorpay LIVE and founder-tested; `main` = latest after PRs #57-#60.**
+Done: Razorpay test-mode run passed; website `https://examedgeai.in` verified by Razorpay; live keys in Vercel; live webhook +
+new secret on the platform page; founder tested a live ₹10 Payment Link and reports everything works (founder-reported, not
+re-verified by Claude). PRs merged: #57 legal footer at bottom, #58 manual UPI/UTR hidden when Razorpay is on (still the fallback
+when it is off), #59 "Book a demo" bottom button, #60 button centred on desktop. `scripts/backup-prod.sh backup` run by the founder:
+`backups/prod-20261031T130734Z` (git-ignored; keep a second copy off the Mac).
+Open / unverified: (1) one live payment through the app's "Pay online" on a throwaway coaching (proves the live webhook secret;
+Payment Link does not); (2) the ₹10 settlement reaching the founder's bank (~2 working days, Razorpay Settlements); (3) support@
+examedgeai.in and the Contact page phone reach the founder; (4) testcoaching password given to Razorpay (founder said not needed);
+(5) items the older notes mark unverified (Vercel rollback rehearsal, Resend, OCR of a scanned page, invitation email, Anthropic
+credit and spend limit). Weekly backup; launch-day watching (Render log, Bill page).
+Discussed, NOT built: PYQ bank. AI tests only use the subject's published notes (cites required), so "make MCQs from JEE Main PYQs"
+yields new questions, not real PYQs. Options: (1) teachers upload PYQ PDFs as notes (works today), (2) shared PYQ bank (new table,
+search, ADR first, licence/copyright check, expert review of keys), (3) model recall (rejected: hallucinated keys). Founder asked
+"how to add"; waiting on whether to write a plan for (2). Also not built: rupee-fall protection, yearly = 10 months from 100 accounts,
+a ₹10 test payment option (founder used a Razorpay Payment Link instead). Trial rules (ADR-058): 7 days, 5 students, 20 staff, $5
+AI, read-only after; extend via `pilot_end` or raise caps on the platform page.
+Next exact action: ask the founder what they want next (PYQ plan, first customers, launch-day problems); do not build without "build".
+
+## Next exact action (session 65, older)
 **UPDATE (2026-10-31, session 66, later): LIVE RAZORPAY DONE (founder-reported, not independently verified by Claude).**
 Razorpay verified `https://examedgeai.in`; live keys in Vercel; live webhook + new secret on the platform page; founder tested a
 live payment (Payment Link) and reports everything tested. Bill page hides manual UPI/UTR when Razorpay is on (PR #58); footer and
