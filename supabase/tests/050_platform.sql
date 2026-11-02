@@ -51,7 +51,7 @@ select throws_ok($$ select public.create_institute('gamma', 'Gamma', 'gamma', 'o
 select throws_ok($$ select public.create_institute('ga.*', 'Gamma', 'ga.*.localhost', 'o@gamma.test') $$, 'P0001',
   'slug_invalid', 'slug pattern enforced before building the host check');
 
-create temp table tok as select public.create_institute('Gamma', ' Gamma Classes ', 'gamma.localhost', 'Owner@Gamma.test') t;
+create temp table tok as select public.create_institute('Gamma', ' Gamma Classes ', 'gamma.localhost', 'Owner@Gamma.test', null, null, ' +91 98765 43210 ') t;
 select is((select r.name from public.resolve_institute('gamma.localhost') r), 'Gamma Classes',
   'new institute resolves by host');
 select is((select count(*) from public.institute_quotas q join public.institutes i on i.id = q.institute_id
@@ -60,6 +60,8 @@ reset role;
 select is((select email || '/' || role from public.invitations
   where token_hash = sha256(convert_to((select t from tok), 'UTF8'))), 'owner@gamma.test/owner',
   'owner invitation stored by hash for the lowercased email');
+select is((select contact_email || '/' || contact_phone from public.institutes where slug = 'gamma'),
+  'owner@gamma.test/+91 98765 43210', 'owner email and phone are stored for the platform page');
 select is((select count(*) from public.memberships m join public.institutes i on i.id = m.institute_id
   where i.slug = 'gamma'), 0::bigint, 'no membership until the owner accepts');
 
