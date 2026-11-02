@@ -1,4 +1,4 @@
-import { isFresh, KIND_LABEL, rupees, upiLink } from '@/lib/billing';
+import { isFresh, isOnlineFresh, KIND_LABEL, rupees, upiLink } from '@/lib/billing';
 import { MANAGERS, requireMember } from '@/lib/tenant';
 import { FEATURE_LABEL, monthUsage } from '@/lib/usage';
 import { Flash, type Search } from '../flash';
@@ -166,7 +166,12 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
               Pay {rupees(open.total_paise)}
               {razorpayOn() ? '' : ' by UPI'} — {KIND_LABEL[open.kind]}
             </h3>
-            {razorpayOn() && <PayOnline pay={open.id} />}
+            {razorpayOn() &&
+              (isOnlineFresh(open.created_at) ? (
+                <PayOnline pay={open.id} />
+              ) : (
+                <p className="muted">This payment expired after 15 minutes. Press Pay again to start a new one.</p>
+              ))}
             {!razorpayOn() && (
               <>
                 {upiId ? (
@@ -194,8 +199,8 @@ export default async function Bill({ searchParams }: { searchParams: Search }) {
         <p className="small muted">
           Monthly is billed on the highest number of accounts you had in the month. On a yearly plan, accounts added
           during the year are billed each month for the months left in the year; pay within 7 days or the app becomes
-          read-only. An amount is valid for 24 hours. GST extra when applicable. No refunds; you can stop any time and
-          keep access until the paid period ends.
+          read-only. An amount is valid for 24 hours (15 minutes to pay online). GST extra when applicable. No refunds;
+          you can stop any time and keep access until the paid period ends.
           {!owner && ' Only the owner can pay.'}
         </p>
         {checking && (

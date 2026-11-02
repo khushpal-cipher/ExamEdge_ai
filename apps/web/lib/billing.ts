@@ -23,5 +23,10 @@ export function upiLink(upiId: string, paise: number | string, note: string) {
   return `upi://pay?${q.toString()}`;
 }
 
+/** Online (Razorpay) payment: Pay online works for 15 minutes after Pay was pressed; the database drops older drafts. */
+export const ONLINE_MINUTES = 15;
+export const isOnlineFresh = (createdAt: string, now = Date.now()) =>
+  Date.parse(createdAt) > now - ONLINE_MINUTES * 60_000;
+
 /** An unpaid payment's amount is valid for 24 hours (M7); the database refuses a UTR for an older one. */
 export const isFresh = (createdAt: string, now = Date.now()) => Date.parse(createdAt) > now - 86_400_000;
