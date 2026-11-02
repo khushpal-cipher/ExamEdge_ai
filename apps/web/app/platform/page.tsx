@@ -88,6 +88,26 @@ export default async function Platform({ searchParams }: { searchParams: Promise
     ),
   );
   const today = indiaDate();
+  // AI budget pace per institute: billing_status allows platform admins, so no new migration. Paid plans count by India
+  // calendar month; a pilot counts over its own days, so it shows the percentage only.
+  const dayOfMonth = Number(today.slice(8));
+  const daysInMonth = new Date(Number(today.slice(0, 4)), Number(today.slice(5, 7)), 0).getDate();
+  const pace = new Map<string, string>(
+    await Promise.all(
+      (institutes ?? []).map(async (i): Promise<[string, string]> => {
+        const { data } = await db
+          .rpc('billing_status', { inst: i.id })
+          .single<{ ai_used_micro: number; ai_budget_micro: number }>();
+        const budget = Number(data?.ai_budget_micro ?? 0);
+        if (!data || budget <= 0) return [i.id, '—'];
+        const pct = Math.round((Number(data.ai_used_micro) / budget) * 100);
+        if (i.status === 'pilot') return [i.id, `${pct}%`];
+        const runsOut = pct > 0 ? Math.round((dayOfMonth * 100) / pct) : null;
+        const warn = runsOut !== null && runsOut < daysInMonth ? ` · runs out ~day ${runsOut}` : '';
+        return [i.id, `${pct}% · day ${dayOfMonth}/${daysInMonth}${warn}`];
+      }),
+    ),
+  );
   const deleteBy = indiaDate(new Date(), -30); // plan-review fix 10: ended pilot data is kept 30 days
   const oldPilots = (institutes ?? []).filter((i) => i.status === 'pilot' && i.pilot_end && i.pilot_end < deleteBy);
   return (
@@ -249,6 +269,7 @@ export default async function Platform({ searchParams }: { searchParams: Promise
                   <th>Pilot ends</th>
                   <th>Created</th>
                   <th>AI this month</th>
+                  <th>AI budget</th>
                 </tr>
               </thead>
               <tbody>
@@ -270,6 +291,7 @@ export default async function Platform({ searchParams }: { searchParams: Promise
                     </td>
                     <td>{new Date(i.created_at).toLocaleDateString('en-IN')}</td>
                     <td>{used.get(i.id) ?? '0 tokens · $0.00'}</td>
+                    <td>{pace.get(i.id)}</td>
                   </tr>
                 ))}
               </tbody>
