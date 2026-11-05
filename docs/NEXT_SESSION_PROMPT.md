@@ -10,18 +10,15 @@ Continue building ExamEdge AI Release 1 in ~/Documents/startup/examedge_ai.
    in that file — follow them exactly), docs/PROJECT_MASTER_PLAN.md, docs/IMPLEMENTATION_ROADMAP.md,
    docs/DATABASE_DESIGN.md, docs/SECURITY_THREAT_MODEL.md, docs/AI_PIPELINE_DESIGN.md, docs/TEST_STRATEGY.md,
    docs/DECISIONS.md, docs/HOW_IT_WORKS.md, docs/ARCHITECTURE.md, docs/LAUNCH_PLAN.md. Then run `git log --oneline -15` and `git status`.
-2. TASK NOW: build Razorpay (founder said "build", session 64). Follow PROGRESS.md "Razorpay build plan (session 64)" step by step (ADR first, then migration, routes, Checkout button, tests). Then continue from PROGRESS.md "Next exact action (session 63)" and its "Session 63 handoff" note: deploy is DONE and merged (PRs #53-#55, `main` = `5725cea`; live
-   Supabase has migrations 1-57 (verified 2026-10-31), Vercel web on https://examedgeai.in, Render worker running, Google sign-in, two platform
-   admins, backup + restore drill script). The founder launches with real users on 2026-10-31. Check what PROGRESS.md marks
-   as unverified (Vercel rollback rehearsal, test mail, Resend, OCR of a scanned page, invitation email, `examedge-loadtest`
-   deleted, Anthropic credit and spend limit) and help with launch day: watch the Render log and the Bill page, weekly
-   `scripts/backup-prod.sh backup`. Open work after launch: Supabase Pro + bigger compute and a repeat of the signed-in load
-   test before any coaching with more than about 20 simultaneous test takers (the Free project failed at 50), Razorpay,
-   Voyage embeddings (Q-08), legal opinion Q-01 (after launch, founder's decision). I log in to each account and click
-   anything that costs money or creates an account; secret keys go straight into the hosting dashboards, never into chat
-   or git. Read docs/LAUNCH_PLAN.md and docs/PITCH_DECK_SCRIPT.md too. Remind me of the rupee-fall risk and the future "yearly = 10 months from 100 accounts" idea (PROGRESS.md), both not built.
-   Before building, answer my questions first if I ask any ("do not build or fix yet"). Do not restart or redo finished
-   work; re-verify only what PROGRESS.md marks as unverified.
+2. TASK NOW: Razorpay is LIVE; read PROGRESS.md "Next exact action (session 68 handoff)" first, then the session 67 handoff on `origin/r37-handoff` (`git show origin/r37-handoff:PROGRESS.md`).
+   Branch `r41-pay-expiry` holds one unpushed-to-main commit (`812c75b`, Pay box hides after 15 minutes): open a PR if the founder says so.
+   Do not redo finished work. First ask me what I want next; if I report a problem, check the three unverified live items (Smart Study "Make it from" dropdown,
+   owner phone/email on admin.examedgeai.in, the 25/10 daily limits). Open work: client demo video (`video/examedge-demo.mp4`, voice still robotic, never listened to),
+   PYQ bank (NOT built: plan first, ADR first, licence check), payment-received emails (offered, not built), Supabase Pro + bigger compute and a repeat of the
+   signed-in load test before any coaching with more than about 20 simultaneous test takers, Voyage embeddings (Q-08), legal opinion Q-01 (after launch).
+   I log in to each account and click anything that costs money or creates an account; secret keys go straight into the hosting dashboards, never into chat or git.
+   The Razorpay webhook secret is typed on the platform page (ADR-062), never an env var. Remind me of the rupee-fall risk and the future "yearly = 10 months from
+   100 accounts" idea, both not built. Before building, answer my questions first if I ask any ("do not build or fix yet"). Do not restart or redo finished work.
 3. First check `docker info` (run `open -a Docker` and wait if it fails) and `supabase status`
    (run `supabase start` from the repo root if stopped). Never reset the local database without asking me:
    it holds my test institutes (see PROGRESS.md).
