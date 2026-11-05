@@ -10,7 +10,7 @@ Continue building ExamEdge AI Release 1 in ~/Documents/startup/examedge_ai.
    in that file — follow them exactly), docs/PROJECT_MASTER_PLAN.md, docs/IMPLEMENTATION_ROADMAP.md,
    docs/DATABASE_DESIGN.md, docs/SECURITY_THREAT_MODEL.md, docs/AI_PIPELINE_DESIGN.md, docs/TEST_STRATEGY.md,
    docs/DECISIONS.md, docs/HOW_IT_WORKS.md, docs/ARCHITECTURE.md, docs/LAUNCH_PLAN.md. Then run `git log --oneline -15` and `git status`.
-2. TASK NOW: Razorpay is LIVE; read PROGRESS.md "Next exact action (session 68 handoff)" first, then the session 67 handoff on `origin/r37-handoff` (`git show origin/r37-handoff:PROGRESS.md`).
+2. TASK NOW: Razorpay is LIVE; read PROGRESS.md "Next exact action (session 69 handoff)" first (open review findings, stopped security audit), then "(session 68 handoff)", then the session 67 handoff on `origin/r37-handoff` (`git show origin/r37-handoff:PROGRESS.md`).
    Branch `r41-pay-expiry` holds one unpushed-to-main commit (`812c75b`, Pay box hides after 15 minutes): open a PR if the founder says so.
    Do not redo finished work. First ask me what I want next; if I report a problem, check the three unverified live items (Smart Study "Make it from" dropdown,
    owner phone/email on admin.examedgeai.in, the 25/10 daily limits). Open work: client demo video (`video/examedge-demo.mp4`, voice still robotic, never listened to),
