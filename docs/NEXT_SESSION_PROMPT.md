@@ -1,38 +1,37 @@
-# Prompt for the next Claude Code session (build + self-test)
+# Prompt for the next Claude Code session
 
 ## Prompt to paste (copy everything inside this box into a new Claude Code session)
 
 ```text
-Continue building ExamEdge AI Release 1 in ~/Documents/startup/examedge_ai.
+Continue ExamEdge AI in ~/Documents/startup/examedge_ai. We are moving it from Indian coaching to US private schools.
+DO NOT BUILD OR CHANGE ANY CODE until I type "build".
 
-1. Read these files fully before doing anything else, in this order, so you have the complete picture:
-   CLAUDE.md, PROGRESS.md, docs/NEXT_SESSION_PROMPT.md (your full instructions are the "Full instructions" box
-   in that file — follow them exactly), docs/PROJECT_MASTER_PLAN.md, docs/IMPLEMENTATION_ROADMAP.md,
-   docs/DATABASE_DESIGN.md, docs/SECURITY_THREAT_MODEL.md, docs/AI_PIPELINE_DESIGN.md, docs/TEST_STRATEGY.md,
-   docs/DECISIONS.md, docs/HOW_IT_WORKS.md, docs/ARCHITECTURE.md, docs/LAUNCH_PLAN.md. Then run `git log --oneline -15` and `git status`.
-2. TASK NOW: Razorpay is LIVE; read PROGRESS.md "Next exact action (session 69 handoff)" first (open review findings, stopped security audit), then "(session 68 handoff)", then the session 67 handoff on `origin/r37-handoff` (`git show origin/r37-handoff:PROGRESS.md`).
-   Branch `r41-pay-expiry` holds one unpushed-to-main commit (`812c75b`, Pay box hides after 15 minutes): open a PR if the founder says so.
-   Do not redo finished work. First ask me what I want next; if I report a problem, check the three unverified live items (Smart Study "Make it from" dropdown,
-   owner phone/email on admin.examedgeai.in, the 25/10 daily limits). Open work: client demo video (`video/examedge-demo.mp4`, voice still robotic, never listened to),
-   PYQ bank (NOT built: plan first, ADR first, licence check), payment-received emails (offered, not built), Supabase Pro + bigger compute and a repeat of the
-   signed-in load test before any coaching with more than about 20 simultaneous test takers, Voyage embeddings (Q-08), legal opinion Q-01 (after launch).
-   I log in to each account and click anything that costs money or creates an account; secret keys go straight into the hosting dashboards, never into chat or git.
-   The Razorpay webhook secret is typed on the platform page (ADR-062), never an env var. Remind me of the rupee-fall risk and the future "yearly = 10 months from
-   100 accounts" idea, both not built. Before building, answer my questions first if I ask any ("do not build or fix yet"). Do not restart or redo finished work.
+1. Read these files fully before doing anything else, in this order:
+   CLAUDE.md, PROGRESS.md ("Next exact action (session 70 handoff)" first, then the session 69 block),
+   docs/designs/us-private-schools-validation.md (approved plan: talk to schools first),
+   docs/US_BUILD_PLAN.md (76-item US build plan, 6 phases), docs/NEXT_SESSION_PROMPT.md, docs/DECISIONS.md,
+   docs/HOW_IT_WORKS.md, docs/ARCHITECTURE.md. Then run `git log --oneline -15` and `git status`.
+2. TASK NOW: first ask me how the US school outreach is going (contacts sent, replies, what heads said about AI).
+   Help with outreach (messages, LinkedIn notes, the sheet `sales/us_private_schools.csv`, which is git-ignored and
+   must never be committed). Answer my questions first if I ask any. Build nothing before I say "build".
+   When I say "build": start with US plan step 0.1 (payment draft race fix, findings 1 and 6, in THIS coaching folder
+   because the live site takes money), then step 0.2 (clone to ~/Documents/startup/examedge_us with its own repo,
+   Supabase, Vercel, Render and ports), then the 1-day demo kit in the design doc. Nothing from Phases 1-6 of the US
+   plan before the week-3 review (by 2026-11-29). Open findings 1-6 and security leads (session 69) are not fixed.
+   I will run /security-audit myself in a few days; its confirmed findings go to US plan step 4.5.
 3. First check `docker info` (run `open -a Docker` and wait if it fails) and `supabase status`
-   (run `supabase start` from the repo root if stopped). Never reset the local database without asking me:
-   it holds my test institutes (see PROGRESS.md).
+   (run `supabase start` from the repo root if stopped). Never reset the local database without asking me.
 4. Before writing any Next.js code, read node_modules/next/AGENTS.md and the relevant files in
    node_modules/next/dist/docs/. This is Next 16: middleware.ts is now proxy.ts.
 5. Standing rule: install any free dev tool you need from trusted sources without asking and log it in
    PROGRESS.md; only ask me about money, new online accounts/deployments, or product decisions not in the docs.
-6. Commit after every green task and push the phase branch. When a phase passes the full quality gate, open a PR
-   into main, check CI, fix until green, then merge. The repo is PUBLIC: never commit secrets.
-7. Keep PROGRESS.md accurate as you go (done / unverified / failing / blocked / next exact action, with commands,
-   results, dates and commit hashes) so any new session can continue.
+   I log in to each account and click anything that costs money or creates an account; secret keys go straight
+   into the hosting dashboards, never into chat or git. The Razorpay webhook secret is typed on the platform page
+   (ADR-062), never an env var.
+6. Commit after every green task and push the branch. The repo is PUBLIC: never commit secrets or contact lists.
+7. Keep PROGRESS.md accurate as you go (done / unverified / failing / blocked / next exact action).
 8. When I type "give me a prompt": update PROGRESS.md with a precise handoff, commit and push, then reply with
-   the "Prompt to paste" box from docs/NEXT_SESSION_PROMPT.md (updated if anything changed) so I can start a
-   new context window.
+   the "Prompt to paste" box from docs/NEXT_SESSION_PROMPT.md (updated if anything changed).
 ```
 
 ---

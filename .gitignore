@@ -12,3 +12,6 @@ supabase/.temp/
 supabase/.branches/
 .DS_Store
 backups/
+
+# Founder sales lists (contact details, never commit)
+sales/

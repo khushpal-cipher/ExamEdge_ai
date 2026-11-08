@@ -160,6 +160,32 @@ Restart it (`npm run dev`) before using it; the production build (`web-prod-3001
 ## Unresolved decisions
 See docs/RISKS_AND_OPEN_QUESTIONS.md §1 (Q-05 resolved). Plan approved for building on 2026-10-15; Q-01 (legal) and Q-08 (Voyage terms) still open.
 
+## Next exact action (session 70 handoff)
+**State (2026-11-08, session 70, no product code changed): founder moved the product idea from Indian coaching to US
+private schools. Branch `r41-pay-expiry`; NO PR yet. Nothing built. Founder said: do NOT start the build yet.**
+Decided (chat, founder approved):
+- Many Indian coaching institutes said no; coaching version stays frozen in this folder (only urgent fixes).
+- US target: small private schools (often Christian), microschools, grades 6-12, 100-400 students, FL then TX, AZ.
+  Buyer = head of school. Not public districts for now.
+- Approach (office hours, design doc APPROVED): `docs/designs/us-private-schools-validation.md`. Talk to schools first:
+  about 150 contacts over 3 weeks, opening question "How is your school handling students using AI like ChatGPT?",
+  about 1 day of demo kit only, then a week-3 review (by 2026-11-29) with a decision table. Nothing in Phases 1-6 of
+  the US plan is built before that review.
+- Full US build plan (76 items, 6 phases, model/effort per step): `docs/US_BUILD_PLAN.md`. US work happens in a
+  separate copy `~/Documents/startup/examedge_us` (step 0.2: `git clone`, new private repo, new Supabase/Vercel/Render,
+  supabase ports +1000). Step 0.1 (payment race fix, findings 1 and 6 below) happens HERE first because the coaching
+  site is live.
+- Payments for US: start with Razorpay international cards (USD); no US company/Stripe until 2-3 paying customers.
+- Founder will run `/security-audit` in about 2-3 days without asking; confirmed findings go to US plan step 4.5.
+Created (not committed except docs below): `sales/us_private_schools.csv` (535 schools from NCES 2023-24, FL 309,
+TX 184, AZ 42; 12 FL rows with head names/public emails), git-ignored via `.gitignore` `sales/` (contact data, never
+commit). Deleted the rebuildable `apps/web/.next` cache (399 MB) and `apps/web/tsconfig.tsbuildinfo`.
+Founder's assignment this week (not code): contact 50 Florida schools from the sheet; log answers word for word.
+Open findings 1-6 and the security leads in the session 69 block below are still NOT fixed.
+Next exact action: ask the founder how outreach is going (replies, AI stance counts). Build nothing until the founder
+says "build"; when they do, start with US plan step 0.1 (payment fix here), then 0.2 (the copy), then the demo kit in
+the design doc. Writing the outreach email, contact-form message and LinkedIn note was offered, not done.
+
 ## Next exact action (session 69 handoff)
 **State (2026-11-05, session 69, no product code changed): branch `r41-pay-expiry` unchanged apart from this handoff; NO PR yet. Docker Desktop was "manually paused" (founder resumes it from the whale menu); local Supabase not checked.**
 Done (reviews only, in chat): `/ponytail-review` of `812c75b` and `/ponytail-audit` of the repo. Findings still OPEN, none fixed:
