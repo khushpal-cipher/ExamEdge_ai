@@ -97,6 +97,18 @@ function Landing() {
           </a>
         </p>
       </div>
+      <div className="stack">
+        <video
+          controls
+          preload="metadata"
+          playsInline
+          poster="/1-examedge-demo-poster.jpg"
+          aria-label="ExamEdge AI demo video"
+          style={{ width: '100%', borderRadius: 12 }}
+        >
+          <source src="/2-examedge-demo.mp4" type="video/mp4" />
+        </video>
+      </div>
       <section className="stack" aria-labelledby="features">
         <h2 id="features">What you get</h2>
         <ul className="stack">
