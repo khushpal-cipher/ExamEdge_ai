@@ -22,7 +22,10 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Home({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const institute = await currentInstitute();
   if (!institute) {
-    if (!isRootHost(await currentHost())) notFound();
+    const host = await currentHost();
+    // Preview-only (never in production): let Vercel preview hosts show the public landing page for review.
+    const isPreview = process.env.VERCEL_ENV === 'preview' && host.endsWith('.vercel.app');
+    if (!isRootHost(host) && !isPreview) notFound();
     return <Landing />;
   }
   if (institute.status === 'suspended') {
